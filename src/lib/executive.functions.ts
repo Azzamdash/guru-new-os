@@ -49,10 +49,11 @@ export const getExecutiveSnapshot = createServerFn({ method: "POST" })
     ]);
 
     // Cash flow (in/out) from cash_transactions
-    const cash = await fetchAllRows<{ amount: number; type: string; occurred_at: string; brand_id: string | null }>(() => {
+    const cash = await fetchAllRows<{ amount: number; type: string; occurred_at: string; brand_id: string | null; transfer_group: string | null }>(() => {
       let q = context.supabase.from("cash_transactions")
-        .select("amount, type, occurred_at, brand_id")
-        .gte("occurred_at", from).lte("occurred_at", `${to}T23:59:59`);
+        .select("amount, type, occurred_at, brand_id, transfer_group")
+        .gte("occurred_at", from).lte("occurred_at", `${to}T23:59:59`)
+        .is("transfer_group", null); // wallet transfers are internal, not P&L cash flow
       if (brandId) q = q.eq("brand_id", brandId);
       if (excludeList) q = q.not("brand_id", "in", excludeList);
       return q;
