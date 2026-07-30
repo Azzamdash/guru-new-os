@@ -135,7 +135,7 @@ function AppLayout() {
     <div className="flex h-full flex-col">
       <div className="p-6 border-b border-sidebar-border">
         <Link to={homeTo} className="flex items-center gap-3">
-          <img src={logoAsset.url} alt="e-Gurus" className="w-10 h-10 rounded-xl object-cover ring-1 ring-primary/30 shadow" />
+          <img src={logoAsset.url} alt="e-Gurus" className="w-10 h-10 rounded-xl object-contain p-1 ring-1 ring-primary/30 shadow" />
           <div className="flex flex-col">
             <span className="text-xl font-bold text-gradient-primary leading-none">e-Gurus</span>
             <span className="text-xs text-muted-foreground mt-1">{t("brand_tagline")}</span>
@@ -204,7 +204,7 @@ function AppLayout() {
             </SheetContent>
           </Sheet>
           <Link to={homeTo} className="flex items-center gap-2 font-bold text-gradient-primary">
-            <img src={logoAsset.url} alt="e-Gurus" className="w-6 h-6 rounded-md object-cover" />
+            <img src={logoAsset.url} alt="e-Gurus" className="w-6 h-6 rounded-md object-contain p-1" />
             e-Gurus
           </Link>
           <Button variant="ghost" size="icon" onClick={toggle} aria-label="Language">
