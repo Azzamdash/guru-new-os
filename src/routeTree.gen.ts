@@ -90,6 +90,7 @@ import { Route as AuthenticatedAppHubHubRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppHrRequestsRouteImport } from './routes/_authenticated/_app.hr.requests'
 import { Route as AuthenticatedAppHrAttendanceRouteImport } from './routes/_authenticated/_app.hr.attendance'
 import { Route as AuthenticatedAppCustomersIdRouteImport } from './routes/_authenticated/_app.customers.$id'
+import { Route as AuthenticatedAppBrandsHubTasksRouteImport } from './routes/_authenticated/_app.brands-hub.tasks'
 import { Route as AuthenticatedAppBrandsHubSlugRouteImport } from './routes/_authenticated/_app.brands-hub.$slug'
 import { Route as ApiPublicWebhooksShopifyOrdersRouteImport } from './routes/api/public/webhooks/shopify.orders'
 import { Route as ApiPublicWebhooksShopifyBrandIdRouteImport } from './routes/api/public/webhooks/shopify.$brandId'
@@ -566,6 +567,12 @@ const AuthenticatedAppCustomersIdRoute =
     path: '/customers/$id',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppBrandsHubTasksRoute =
+  AuthenticatedAppBrandsHubTasksRouteImport.update({
+    id: '/brands-hub/tasks',
+    path: '/brands-hub/tasks',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppBrandsHubSlugRoute =
   AuthenticatedAppBrandsHubSlugRouteImport.update({
     id: '/brands-hub/$slug',
@@ -644,6 +651,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
   '/brands-hub/$slug': typeof AuthenticatedAppBrandsHubSlugRoute
+  '/brands-hub/tasks': typeof AuthenticatedAppBrandsHubTasksRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -729,6 +737,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
   '/brands-hub/$slug': typeof AuthenticatedAppBrandsHubSlugRoute
+  '/brands-hub/tasks': typeof AuthenticatedAppBrandsHubTasksRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -819,6 +828,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
   '/_authenticated/_app/brands-hub/$slug': typeof AuthenticatedAppBrandsHubSlugRoute
+  '/_authenticated/_app/brands-hub/tasks': typeof AuthenticatedAppBrandsHubTasksRoute
   '/_authenticated/_app/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/_authenticated/_app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/_authenticated/_app/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -908,6 +918,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/treasury'
     | '/brands-hub/$slug'
+    | '/brands-hub/tasks'
     | '/customers/$id'
     | '/hr/attendance'
     | '/hr/requests'
@@ -993,6 +1004,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/treasury'
     | '/brands-hub/$slug'
+    | '/brands-hub/tasks'
     | '/customers/$id'
     | '/hr/attendance'
     | '/hr/requests'
@@ -1082,6 +1094,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/tasks'
     | '/_authenticated/_app/treasury'
     | '/_authenticated/_app/brands-hub/$slug'
+    | '/_authenticated/_app/brands-hub/tasks'
     | '/_authenticated/_app/customers/$id'
     | '/_authenticated/_app/hr/attendance'
     | '/_authenticated/_app/hr/requests'
@@ -1717,6 +1730,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCustomersIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/brands-hub/tasks': {
+      id: '/_authenticated/_app/brands-hub/tasks'
+      path: '/brands-hub/tasks'
+      fullPath: '/brands-hub/tasks'
+      preLoaderRoute: typeof AuthenticatedAppBrandsHubTasksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/brands-hub/$slug': {
       id: '/_authenticated/_app/brands-hub/$slug'
       path: '/brands-hub/$slug'
@@ -1865,6 +1885,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppTreasuryRoute: typeof AuthenticatedAppTreasuryRoute
   AuthenticatedAppBrandsHubSlugRoute: typeof AuthenticatedAppBrandsHubSlugRoute
+  AuthenticatedAppBrandsHubTasksRoute: typeof AuthenticatedAppBrandsHubTasksRoute
   AuthenticatedAppCustomersIdRoute: typeof AuthenticatedAppCustomersIdRoute
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrRequestsRoute: typeof AuthenticatedAppHrRequestsRoute
@@ -1931,6 +1952,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppTreasuryRoute: AuthenticatedAppTreasuryRoute,
   AuthenticatedAppBrandsHubSlugRoute: AuthenticatedAppBrandsHubSlugRoute,
+  AuthenticatedAppBrandsHubTasksRoute: AuthenticatedAppBrandsHubTasksRoute,
   AuthenticatedAppCustomersIdRoute: AuthenticatedAppCustomersIdRoute,
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrRequestsRoute: AuthenticatedAppHrRequestsRoute,
