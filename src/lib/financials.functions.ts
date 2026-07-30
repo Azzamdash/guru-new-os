@@ -213,8 +213,9 @@ export const getCashFlow = createServerFn({ method: "GET" })
     };
     const cashBuilder = () => {
       let q = context.supabase.from("cash_transactions")
-        .select("type, amount, occurred_at, brand_id")
-        .gte("occurred_at", from).lte("occurred_at", to);
+        .select("type, amount, occurred_at, brand_id, transfer_group")
+        .gte("occurred_at", from).lte("occurred_at", to)
+        .is("transfer_group", null); // wallet transfers are internal movements, not cash flow
       if (data.brandId) q = q.eq("brand_id", data.brandId);
       return q;
     };
