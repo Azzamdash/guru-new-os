@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "e-GURUS Dashboard" },
+      { title: "e-Gurus OS" },
       {
         name: "description",
         content:
@@ -89,8 +89,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "e-GURUS Dashboard" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:title", content: "e-GURUS Dashboard" },
-      { name: "twitter:title", content: "e-GURUS Dashboard" },
+      { property: "og:title", content: "e-Gurus OS" },
+      { name: "twitter:title", content: "e-Gurus OS" },
       { property: "og:description", content: "microSaaS لإدارة البراندات والفواتير والمخزون والتسويق مع لوحة تحكم تفاعلية ورسوم KPI وتقارير شاملة." },
       { name: "twitter:description", content: "microSaaS لإدارة البراندات والفواتير والمخزون والتسويق مع لوحة تحكم تفاعلية ورسوم KPI وتقارير شاملة." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/di3kU3qDRjYqK4xqg9WEnr8MgEl2/social-images/social-1784776314805-305406DA-562B-463A-86D6-7A405B1A98E1.webp" },
