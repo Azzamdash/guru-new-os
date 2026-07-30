@@ -99,6 +99,7 @@ import { Route as ApiPublicWebhooksShopifyBrandIdRouteImport } from './routes/ap
 import { Route as ApiPublicWebhooksBostaBrandIdRouteImport } from './routes/api/public/webhooks/bosta.$brandId'
 import { Route as ApiPublicOauthShopifyCallbackRouteImport } from './routes/api/public/oauth/shopify.callback'
 import { Route as AuthenticatedAppServicesDashboardProjectsIdRouteImport } from './routes/_authenticated/_app.services-dashboard.projects.$id'
+import { Route as AuthenticatedAppBrandsHubProfileUserIdRouteImport } from './routes/_authenticated/_app.brands-hub.profile.$userId'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -623,6 +624,12 @@ const AuthenticatedAppServicesDashboardProjectsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedAppServicesDashboardProjectsRoute,
   } as any)
+const AuthenticatedAppBrandsHubProfileUserIdRoute =
+  AuthenticatedAppBrandsHubProfileUserIdRouteImport.update({
+    id: '/brands-hub/profile/$userId',
+    path: '/brands-hub/profile/$userId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -708,6 +715,7 @@ export interface FileRoutesByFullPath {
   '/customers/': typeof AuthenticatedAppCustomersIndexRoute
   '/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
   '/suppliers/': typeof AuthenticatedAppSuppliersIndexRoute
+  '/brands-hub/profile/$userId': typeof AuthenticatedAppBrandsHubProfileUserIdRoute
   '/services-dashboard/projects/$id': typeof AuthenticatedAppServicesDashboardProjectsIdRoute
   '/api/public/oauth/shopify/callback': typeof ApiPublicOauthShopifyCallbackRoute
   '/api/public/webhooks/bosta/$brandId': typeof ApiPublicWebhooksBostaBrandIdRoute
@@ -796,6 +804,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AuthenticatedAppCustomersIndexRoute
   '/services-dashboard': typeof AuthenticatedAppServicesDashboardIndexRoute
   '/suppliers': typeof AuthenticatedAppSuppliersIndexRoute
+  '/brands-hub/profile/$userId': typeof AuthenticatedAppBrandsHubProfileUserIdRoute
   '/services-dashboard/projects/$id': typeof AuthenticatedAppServicesDashboardProjectsIdRoute
   '/api/public/oauth/shopify/callback': typeof ApiPublicOauthShopifyCallbackRoute
   '/api/public/webhooks/bosta/$brandId': typeof ApiPublicWebhooksBostaBrandIdRoute
@@ -889,6 +898,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/customers/': typeof AuthenticatedAppCustomersIndexRoute
   '/_authenticated/_app/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
   '/_authenticated/_app/suppliers/': typeof AuthenticatedAppSuppliersIndexRoute
+  '/_authenticated/_app/brands-hub/profile/$userId': typeof AuthenticatedAppBrandsHubProfileUserIdRoute
   '/_authenticated/_app/services-dashboard/projects/$id': typeof AuthenticatedAppServicesDashboardProjectsIdRoute
   '/api/public/oauth/shopify/callback': typeof ApiPublicOauthShopifyCallbackRoute
   '/api/public/webhooks/bosta/$brandId': typeof ApiPublicWebhooksBostaBrandIdRoute
@@ -981,6 +991,7 @@ export interface FileRouteTypes {
     | '/customers/'
     | '/services-dashboard/'
     | '/suppliers/'
+    | '/brands-hub/profile/$userId'
     | '/services-dashboard/projects/$id'
     | '/api/public/oauth/shopify/callback'
     | '/api/public/webhooks/bosta/$brandId'
@@ -1069,6 +1080,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/services-dashboard'
     | '/suppliers'
+    | '/brands-hub/profile/$userId'
     | '/services-dashboard/projects/$id'
     | '/api/public/oauth/shopify/callback'
     | '/api/public/webhooks/bosta/$brandId'
@@ -1161,6 +1173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/customers/'
     | '/_authenticated/_app/services-dashboard/'
     | '/_authenticated/_app/suppliers/'
+    | '/_authenticated/_app/brands-hub/profile/$userId'
     | '/_authenticated/_app/services-dashboard/projects/$id'
     | '/api/public/oauth/shopify/callback'
     | '/api/public/webhooks/bosta/$brandId'
@@ -1819,6 +1832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppServicesDashboardProjectsIdRouteImport
       parentRoute: typeof AuthenticatedAppServicesDashboardProjectsRoute
     }
+    '/_authenticated/_app/brands-hub/profile/$userId': {
+      id: '/_authenticated/_app/brands-hub/profile/$userId'
+      path: '/brands-hub/profile/$userId'
+      fullPath: '/brands-hub/profile/$userId'
+      preLoaderRoute: typeof AuthenticatedAppBrandsHubProfileUserIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
@@ -1958,6 +1978,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppReportsValuationRoute: typeof AuthenticatedAppReportsValuationRoute
   AuthenticatedAppBrandsHubIndexRoute: typeof AuthenticatedAppBrandsHubIndexRoute
   AuthenticatedAppCustomersIndexRoute: typeof AuthenticatedAppCustomersIndexRoute
+  AuthenticatedAppBrandsHubProfileUserIdRoute: typeof AuthenticatedAppBrandsHubProfileUserIdRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -2041,6 +2062,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppReportsValuationRoute: AuthenticatedAppReportsValuationRoute,
   AuthenticatedAppBrandsHubIndexRoute: AuthenticatedAppBrandsHubIndexRoute,
   AuthenticatedAppCustomersIndexRoute: AuthenticatedAppCustomersIndexRoute,
+  AuthenticatedAppBrandsHubProfileUserIdRoute:
+    AuthenticatedAppBrandsHubProfileUserIdRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
