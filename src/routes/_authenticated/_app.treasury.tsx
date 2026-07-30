@@ -24,7 +24,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Wallet, HandCoins, ArrowDownToLine, ArrowUpFromLine, Plus, Trash2, Lock, User, Truck } from "lucide-react";
+import { Wallet, HandCoins, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, Plus, Trash2, Lock, User, Truck } from "lucide-react";
 import { WalletsPanel } from "@/components/WalletsPanel";
 import { listWallets } from "@/lib/wallets.functions";
 import { useEffect } from "react";
@@ -564,21 +564,22 @@ function TreasuryPage() {
               </thead>
               <tbody>
                 {(listQ.data ?? []).map((r) => {
-                  const Icon = TYPE_ICON[r.type];
+                  const isTransfer = !!r.transfer_group;
+                  const Icon = isTransfer ? ArrowLeftRight : TYPE_ICON[r.type];
                   const isIn = r.type === "collection" || r.type === "deposit";
                   const rowCat = (categoriesQ.data ?? []).find((c) => c.id === r.category_id);
                   const isSupplierPay = rowCat?.slug === "supplier_payments";
                   return (
                     <tr key={r.id} className="border-b last:border-0">
                       <td className="p-2">{r.occurred_at}</td>
-                      <td className="p-2"><span className="inline-flex items-center gap-1"><Icon className="w-3 h-3" /> {TYPE_LABEL[r.type]}</span></td>
-                      <td className={`p-2 font-semibold ${isIn ? "text-emerald-500" : "text-destructive"}`}>{isIn ? "+" : "-"}{fmt(Number(r.amount))}</td>
+                      <td className="p-2"><span className="inline-flex items-center gap-1"><Icon className="w-3 h-3" /> {isTransfer ? "تحويل بين المحافظ" : TYPE_LABEL[r.type]}</span></td>
+                      <td className={`p-2 font-semibold ${isTransfer ? "text-amber-500" : (isIn ? "text-emerald-500" : "text-destructive")}`}>{isIn ? "+" : "-"}{fmt(Number(r.amount))}</td>
                       <td className="p-2">{r.courier_id ? couriersMap.get(r.courier_id) ?? "—" : "—"}</td>
                       <td className="p-2">{r.brand_id ? brandsMap.get(r.brand_id) ?? "—" : "—"}</td>
                       <td className="p-2">{r.for_user_id ? (actorNameById.get(r.for_user_id) ?? r.for_user_id.slice(0, 6)) : "—"}</td>
                       <td className="p-2 text-muted-foreground">{r.note ?? "—"}{isSupplierPay && <span className="ms-1 text-[10px] text-amber-500">(دفعة مورد — تُدار من صفحة دفعات الموردين)</span>}</td>
                       <td className="p-2">
-                        {canWrite && !isSupplierPay && r.type !== "other_out" && (
+                        {canWrite && !isSupplierPay && r.type !== "other_out" && !isTransfer && (
                           <div className="flex gap-1">
                             <Button size="sm" variant="ghost" onClick={() => setForm({
                               id: r.id, type: r.type, amount: Number(r.amount),
@@ -604,8 +605,11 @@ function TreasuryPage() {
                             </AlertDialog>
                           </div>
                         )}
-                        {r.type === "other_out" && (
+                        {r.type === "other_out" && !isTransfer && (
                           <span className="text-[10px] text-muted-foreground">تُدار من صفحة المصروفات</span>
+                        )}
+                        {isTransfer && (
+                          <span className="text-[10px] text-muted-foreground">تُدار من لوحة المحافظ</span>
                         )}
                       </td>
                     </tr>
