@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.cash_txn_default_wallet() FROM PUBLIC, anon, authenticated;
