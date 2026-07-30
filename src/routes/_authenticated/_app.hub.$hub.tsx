@@ -8,7 +8,7 @@ import { getMyRole } from "@/lib/admin.functions";
 import { getMyAccess } from "@/lib/permissions.functions";
 
 const HUB_KEYS: HubKey[] = [
-  "overview", "missions", "sales", "invoicing", "catalog", "offline", "services",
+  "overview", "missions", "sales", "invoicing", "catalog", "offline", "inventory", "services",
   "investors", "hr", "settings",
 ];
 

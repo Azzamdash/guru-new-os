@@ -87,8 +87,8 @@ export const listBranchStockMovements = createServerFn({ method: "POST" })
       .order("occurred_at", { ascending: false })
       .limit(data.limit ?? 200);
     if (error) throw error;
-    return (rows ?? []).map((r: { id: string; product_id: string; type: string; qty: number; occurred_at: string; note: string | null }) => ({
+    return (rows ?? []).map((r: { id: string; product_id: string | null; type: string; qty: number; occurred_at: string; note: string | null }) => ({
       ...r,
-      product_name: (nameOf.get(r.product_id) as string) ?? "—",
+      product_name: (r.product_id ? (nameOf.get(r.product_id) as string) : "") || "—",
     }));
   });

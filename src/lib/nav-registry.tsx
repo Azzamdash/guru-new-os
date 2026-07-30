@@ -13,6 +13,7 @@ export type HubKey =
   | "invoicing"
   | "catalog"
   | "offline"
+  | "inventory"
   | "services"
   | "investors"
   | "hr"
@@ -98,6 +99,12 @@ export const HUBS: Hub[] = [
     descEn: "POS, branch stock & offline reports",
   },
   {
+    key: "inventory", ar: "إدارة المخزون", en: "Inventory Management",
+    icon: Boxes, accent: "from-indigo-500/40 to-primary/20",
+    descAr: "الخامات والمنتجات، الحركات، التنبيهات وتقارير المخزون",
+    descEn: "Materials & products, movements, alerts & stock reports",
+  },
+  {
     key: "services", ar: "براندات الخدمات", en: "Services Brands",
     icon: Briefcase, accent: "from-primary/40 to-emerald-500/20",
     descAr: "لوحة براندات الخدمات: مشاريع، مهام، ملفات، تقويم",
@@ -163,8 +170,6 @@ export const NAV_PAGES: NavPage[] = [
   { to: "/reports/profits", ar: "تقرير الأرباح", en: "Profits Report", icon: HandCoins, hub: "overview", privilegedOnly: true, descAr: "صافي الأرباح حسب البراند", descEn: "Net profit / brand" , group: "executive"},
 
   // CRM
-  { to: "/materials", ar: "الخامات", en: "Materials", icon: Package, hub: "settings", requiresWrite: true, descAr: "خامات الإنتاج والتكلفة", descEn: "Raw materials" },
-  { to: "/products", ar: "المنتجات", en: "Products", icon: Boxes, hub: "settings", requiresWrite: true, descAr: "كتالوج المنتجات والأسعار", descEn: "Products catalog" },
   { to: "/brands", ar: "البراندات", en: "Brands", icon: Package, hub: "settings", privilegedOnly: true, descAr: "قائمة البراندات", descEn: "Brands list" },
   { to: "/categories", ar: "الفئات", en: "Categories", icon: Tags, hub: "settings", requiresWrite: true, descAr: "تصنيفات المنتجات", descEn: "Product categories" },
   { to: "/assets", ar: "الأصول", en: "Assets", icon: Building2, hub: "investors", requiresWrite: true, descAr: "أصول الشركة والإهلاك", descEn: "Company assets" },
@@ -211,6 +216,12 @@ export const NAV_PAGES: NavPage[] = [
   { to: "/hr/attendance", ar: "الحضور والانصراف", en: "Attendance & Check-in", icon: Clock, hub: "hr", section: "hr_attendance", extraRoles: ["hr"], descAr: "تسجيل مواعيد الحضور والانصراف وحساب التأخير والأوفر تايم", descEn: "Daily check-in/out with late & overtime reports" },
   { to: "/reports/attendance", ar: "تقارير الحضور", en: "Attendance Reports", icon: UserCheck, hub: "hr", section: "reports_attendance", extraRoles: ["hr"], descAr: "انتظام وحضور الموظفين", descEn: "Employees attendance" },
 
+
+  // INVENTORY
+  { to: "/inventory", ar: "إدارة المخزون", en: "Inventory Management", icon: Boxes, hub: "inventory", requiresWrite: true, extraRoles: ["production_manager", "operation_manager", "branch_manager", "fulfillment_manager"], descAr: "المخزون الحالي، الحركات والتنبيهات", descEn: "Stock levels, movements & alerts" },
+  { to: "/materials", ar: "الخامات", en: "Materials", icon: Package, hub: "inventory", requiresWrite: true, descAr: "بيانات الخامات وتكلفتها", descEn: "Raw materials & costs" },
+  { to: "/products", ar: "المنتجات", en: "Products", icon: Boxes, hub: "inventory", requiresWrite: true, descAr: "كتالوج المنتجات", descEn: "Products catalog" },
+  { to: "/reports/inventory-valuation", ar: "تقييم المخزون", en: "Inventory Valuation", icon: FileBarChart, hub: "inventory", privilegedOnly: true, descAr: "قيمة المخزون عبر البراندات والفروع", descEn: "Stock value across brands & branches" },
 
   // SETTINGS
   { to: "/integrations", ar: "التكاملات", en: "Integrations", icon: Plug, hub: "settings", adminOnly: true, descAr: "Shopify, Bosta والتكاملات", descEn: "Shopify, Bosta & more" },
