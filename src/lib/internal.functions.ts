@@ -1268,10 +1268,13 @@ export const getCashSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { from?: string | null; to?: string | null; forUserId?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    // Overall (all-time) balance
-    const allQ = context.supabase.from("cash_transactions").select("type, amount");
+    // Overall (all-time) balance: cash txns + wallet opening balances.
+    // Wallet-to-wallet transfers share a transfer_group and net to zero globally,
+    // so they are excluded from periodIn/periodOut KPIs.
+    const allQ = context.supabase.from("cash_transactions").select("type, amount, transfer_group");
+    const walletsQ = context.supabase.from("wallets").select("opening_balance");
     const perQ = (() => {
-      let q = context.supabase.from("cash_transactions").select("id, type, amount, for_user_id, occurred_at, expense_entry_id");
+      let q = context.supabase.from("cash_transactions").select("id, type, amount, for_user_id, occurred_at, expense_entry_id, transfer_group");
       if (data.from) q = q.gte("occurred_at", data.from);
       if (data.to) q = q.lte("occurred_at", data.to);
       return q;
@@ -1290,18 +1293,20 @@ export const getCashSummary = createServerFn({ method: "GET" })
     const collectionsQ = context.supabase.from("cash_transactions").select("courier_id, amount").eq("type","collection");
     const couriersQ = context.supabase.from("couriers").select("id, name, type, brand_id, active");
 
-    const [allR, perR, expenseR, unlinkedExpenseR, salesR, collR, coursR] = await Promise.all([allQ, perQ, expenseQ, unlinkedExpenseQ, salesQ, collectionsQ, couriersQ]);
-    for (const r of [allR, perR, expenseR, unlinkedExpenseR, salesR, collR, coursR]) if (r.error) throw r.error;
+    const [allR, walletsR, perR, expenseR, unlinkedExpenseR, salesR, collR, coursR] = await Promise.all([allQ, walletsQ, perQ, expenseQ, unlinkedExpenseQ, salesQ, collectionsQ, couriersQ]);
+    for (const r of [allR, walletsR, perR, expenseR, unlinkedExpenseR, salesR, collR, coursR]) if (r.error) throw r.error;
 
     const signed = (t: string, a: number) => (t === "collection" || t === "deposit") ? a : -a;
     let balance = 0;
+    for (const w of (walletsR.data ?? []) as Array<{ opening_balance: number }>) balance += Number(w.opening_balance) || 0;
     for (const r of (allR.data ?? []) as Array<{ type: string; amount: number }>) balance += signed(r.type, Number(r.amount)||0);
     for (const r of (unlinkedExpenseR.data ?? []) as Array<{ amount: number }>) balance -= Number(r.amount) || 0;
 
     let periodIn = 0, periodOut = 0, personalTotal = 0;
     const byUserMap = new Map<string, number>();
     const countedExpenseIds = new Set<string>();
-    for (const r of (perR.data ?? []) as Array<{ type: string; amount: number; for_user_id: string | null; expense_entry_id: string | null }>) {
+    for (const r of (perR.data ?? []) as Array<{ type: string; amount: number; for_user_id: string | null; expense_entry_id: string | null; transfer_group: string | null }>) {
+      if (r.transfer_group) continue; // internal wallet transfer
       const amt = Number(r.amount) || 0;
       if (r.type === "collection" || r.type === "deposit") periodIn += amt;
       else periodOut += amt;
