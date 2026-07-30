@@ -3,7 +3,7 @@ import {
   CheckSquare, Megaphone, BarChart3, ShoppingCart, PackageCheck, Wallet, UserCheck,
   Briefcase, ShoppingBag, HandCoins, Building2, GitCompareArrows, Users, Activity,
   FileBarChart, ShieldAlert, Gauge, CalendarDays, Store, ShieldCheck, Facebook, Music2, Clock,
-  Palette, BookOpen, Sparkles, LineChart,
+  Palette, Sparkles, LineChart,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
