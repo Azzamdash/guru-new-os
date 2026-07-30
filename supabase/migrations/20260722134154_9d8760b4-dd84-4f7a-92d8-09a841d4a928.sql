@@ -1,0 +1,1 @@
+ALTER TABLE public.user_sheet_config ADD COLUMN IF NOT EXISTS attendance_range text;

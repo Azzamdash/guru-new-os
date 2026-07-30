@@ -9,38 +9,1136 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as AuthenticatedAppTreasuryRouteImport } from './routes/_authenticated/_app.treasury'
+import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/_app.tasks'
+import { Route as AuthenticatedAppSuppliersRouteImport } from './routes/_authenticated/_app.suppliers'
+import { Route as AuthenticatedAppServicesDashboardRouteImport } from './routes/_authenticated/_app.services-dashboard'
+import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenticated/_app.services'
+import { Route as AuthenticatedAppPurchasesRouteImport } from './routes/_authenticated/_app.purchases'
+import { Route as AuthenticatedAppProductsRouteImport } from './routes/_authenticated/_app.products'
+import { Route as AuthenticatedAppProductionTasksRouteImport } from './routes/_authenticated/_app.production-tasks'
+import { Route as AuthenticatedAppProductionRouteImport } from './routes/_authenticated/_app.production'
+import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/_app.pos'
+import { Route as AuthenticatedAppOrdersRouteImport } from './routes/_authenticated/_app.orders'
+import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
+import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/_app.operations'
+import { Route as AuthenticatedAppMyPrepRouteImport } from './routes/_authenticated/_app.my-prep'
+import { Route as AuthenticatedAppMyInvestmentsRouteImport } from './routes/_authenticated/_app.my-investments'
+import { Route as AuthenticatedAppMaterialsRouteImport } from './routes/_authenticated/_app.materials'
+import { Route as AuthenticatedAppInvoicePrintRouteImport } from './routes/_authenticated/_app.invoice-print'
+import { Route as AuthenticatedAppInvestorsRouteImport } from './routes/_authenticated/_app.investors'
+import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/_app.integrations'
+import { Route as AuthenticatedAppIntegrationLogsRouteImport } from './routes/_authenticated/_app.integration-logs'
+import { Route as AuthenticatedAppFulfillmentRouteImport } from './routes/_authenticated/_app.fulfillment'
+import { Route as AuthenticatedAppExpensesRouteImport } from './routes/_authenticated/_app.expenses'
+import { Route as AuthenticatedAppDataEntryRouteImport } from './routes/_authenticated/_app.data-entry'
+import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app.dashboard'
+import { Route as AuthenticatedAppCouriersRouteImport } from './routes/_authenticated/_app.couriers'
+import { Route as AuthenticatedAppCategoriesRouteImport } from './routes/_authenticated/_app.categories'
+import { Route as AuthenticatedAppBrandsRouteImport } from './routes/_authenticated/_app.brands'
+import { Route as AuthenticatedAppBranchStockRouteImport } from './routes/_authenticated/_app.branch-stock'
+import { Route as AuthenticatedAppAssetsRouteImport } from './routes/_authenticated/_app.assets'
+import { Route as AuthenticatedAppAdminRouteImport } from './routes/_authenticated/_app.admin'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as AuthenticatedAppSuppliersIndexRouteImport } from './routes/_authenticated/_app.suppliers.index'
+import { Route as AuthenticatedAppServicesDashboardIndexRouteImport } from './routes/_authenticated/_app.services-dashboard.index'
+import { Route as AuthenticatedAppCustomersIndexRouteImport } from './routes/_authenticated/_app.customers.index'
+import { Route as ApiPublicOauthShopifyDotcallbackRouteImport } from './routes/api/public/oauth/shopify[.]callback'
+import { Route as ApiPublicHooksShopifySyncRouteImport } from './routes/api/public/hooks/shopify-sync'
+import { Route as ApiPublicHooksBostaRecallRouteImport } from './routes/api/public/hooks/bosta-recall'
+import { Route as AuthenticatedAppSuppliersPaymentsRouteImport } from './routes/_authenticated/_app.suppliers.payments'
+import { Route as AuthenticatedAppServicesDashboardReportsRouteImport } from './routes/_authenticated/_app.services-dashboard.reports'
+import { Route as AuthenticatedAppServicesDashboardProjectsRouteImport } from './routes/_authenticated/_app.services-dashboard.projects'
+import { Route as AuthenticatedAppServicesDashboardCalendarRouteImport } from './routes/_authenticated/_app.services-dashboard.calendar'
+import { Route as AuthenticatedAppReportsValuationRouteImport } from './routes/_authenticated/_app.reports.valuation'
+import { Route as AuthenticatedAppReportsTiktokAdsRouteImport } from './routes/_authenticated/_app.reports.tiktok-ads'
+import { Route as AuthenticatedAppReportsShopifyRouteImport } from './routes/_authenticated/_app.reports.shopify'
+import { Route as AuthenticatedAppReportsSalesRouteImport } from './routes/_authenticated/_app.reports.sales'
+import { Route as AuthenticatedAppReportsRevenueComparisonRouteImport } from './routes/_authenticated/_app.reports.revenue-comparison'
+import { Route as AuthenticatedAppReportsReconciliationRouteImport } from './routes/_authenticated/_app.reports.reconciliation'
+import { Route as AuthenticatedAppReportsReceivablesAgingRouteImport } from './routes/_authenticated/_app.reports.receivables-aging'
+import { Route as AuthenticatedAppReportsProfitsRouteImport } from './routes/_authenticated/_app.reports.profits'
+import { Route as AuthenticatedAppReportsProductionRouteImport } from './routes/_authenticated/_app.reports.production'
+import { Route as AuthenticatedAppReportsOfflineInvoicesRouteImport } from './routes/_authenticated/_app.reports.offline-invoices'
+import { Route as AuthenticatedAppReportsMetaAdsRouteImport } from './routes/_authenticated/_app.reports.meta-ads'
+import { Route as AuthenticatedAppReportsMarketingRouteImport } from './routes/_authenticated/_app.reports.marketing'
+import { Route as AuthenticatedAppReportsInvestorsAuditRouteImport } from './routes/_authenticated/_app.reports.investors-audit'
+import { Route as AuthenticatedAppReportsInventoryValuationRouteImport } from './routes/_authenticated/_app.reports.inventory-valuation'
+import { Route as AuthenticatedAppReportsIncomeStatementRouteImport } from './routes/_authenticated/_app.reports.income-statement'
+import { Route as AuthenticatedAppReportsFulfillmentRouteImport } from './routes/_authenticated/_app.reports.fulfillment'
+import { Route as AuthenticatedAppReportsExecutiveRouteImport } from './routes/_authenticated/_app.reports.executive'
+import { Route as AuthenticatedAppReportsDataHealthRouteImport } from './routes/_authenticated/_app.reports.data-health'
+import { Route as AuthenticatedAppReportsCouriersRouteImport } from './routes/_authenticated/_app.reports.couriers'
+import { Route as AuthenticatedAppReportsCashFlowRouteImport } from './routes/_authenticated/_app.reports.cash-flow'
+import { Route as AuthenticatedAppReportsBrandsComparisonRouteImport } from './routes/_authenticated/_app.reports.brands-comparison'
+import { Route as AuthenticatedAppReportsBranchesRouteImport } from './routes/_authenticated/_app.reports.branches'
+import { Route as AuthenticatedAppReportsAuditRouteImport } from './routes/_authenticated/_app.reports.audit'
+import { Route as AuthenticatedAppReportsAttendanceRouteImport } from './routes/_authenticated/_app.reports.attendance'
+import { Route as AuthenticatedAppInvestorsIdRouteImport } from './routes/_authenticated/_app.investors.$id'
+import { Route as AuthenticatedAppHubHubRouteImport } from './routes/_authenticated/_app.hub.$hub'
+import { Route as AuthenticatedAppHrRequestsRouteImport } from './routes/_authenticated/_app.hr.requests'
+import { Route as AuthenticatedAppHrAttendanceRouteImport } from './routes/_authenticated/_app.hr.attendance'
+import { Route as AuthenticatedAppCustomersIdRouteImport } from './routes/_authenticated/_app.customers.$id'
+import { Route as ApiPublicWebhooksShopifyOrdersRouteImport } from './routes/api/public/webhooks/shopify.orders'
+import { Route as ApiPublicWebhooksShopifyBrandIdRouteImport } from './routes/api/public/webhooks/shopify.$brandId'
+import { Route as ApiPublicWebhooksBostaBrandIdRouteImport } from './routes/api/public/webhooks/bosta.$brandId'
+import { Route as ApiPublicOauthShopifyCallbackRouteImport } from './routes/api/public/oauth/shopify.callback'
+import { Route as AuthenticatedAppServicesDashboardProjectsIdRouteImport } from './routes/_authenticated/_app.services-dashboard.projects.$id'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAppTreasuryRoute =
+  AuthenticatedAppTreasuryRouteImport.update({
+    id: '/treasury',
+    path: '/treasury',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppSuppliersRoute =
+  AuthenticatedAppSuppliersRouteImport.update({
+    id: '/suppliers',
+    path: '/suppliers',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppServicesDashboardRoute =
+  AuthenticatedAppServicesDashboardRouteImport.update({
+    id: '/services-dashboard',
+    path: '/services-dashboard',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppServicesRoute =
+  AuthenticatedAppServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppPurchasesRoute =
+  AuthenticatedAppPurchasesRouteImport.update({
+    id: '/purchases',
+    path: '/purchases',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProductsRoute =
+  AuthenticatedAppProductsRouteImport.update({
+    id: '/products',
+    path: '/products',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProductionTasksRoute =
+  AuthenticatedAppProductionTasksRouteImport.update({
+    id: '/production-tasks',
+    path: '/production-tasks',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppProductionRoute =
+  AuthenticatedAppProductionRouteImport.update({
+    id: '/production',
+    path: '/production',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppPosRoute = AuthenticatedAppPosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppOrdersRoute = AuthenticatedAppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppOrderPipelineRoute =
+  AuthenticatedAppOrderPipelineRouteImport.update({
+    id: '/order-pipeline',
+    path: '/order-pipeline',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOperationsRoute =
+  AuthenticatedAppOperationsRouteImport.update({
+    id: '/operations',
+    path: '/operations',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppMyPrepRoute = AuthenticatedAppMyPrepRouteImport.update({
+  id: '/my-prep',
+  path: '/my-prep',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppMyInvestmentsRoute =
+  AuthenticatedAppMyInvestmentsRouteImport.update({
+    id: '/my-investments',
+    path: '/my-investments',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppMaterialsRoute =
+  AuthenticatedAppMaterialsRouteImport.update({
+    id: '/materials',
+    path: '/materials',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppInvoicePrintRoute =
+  AuthenticatedAppInvoicePrintRouteImport.update({
+    id: '/invoice-print',
+    path: '/invoice-print',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppInvestorsRoute =
+  AuthenticatedAppInvestorsRouteImport.update({
+    id: '/investors',
+    path: '/investors',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppIntegrationsRoute =
+  AuthenticatedAppIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppIntegrationLogsRoute =
+  AuthenticatedAppIntegrationLogsRouteImport.update({
+    id: '/integration-logs',
+    path: '/integration-logs',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppFulfillmentRoute =
+  AuthenticatedAppFulfillmentRouteImport.update({
+    id: '/fulfillment',
+    path: '/fulfillment',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppExpensesRoute =
+  AuthenticatedAppExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDataEntryRoute =
+  AuthenticatedAppDataEntryRouteImport.update({
+    id: '/data-entry',
+    path: '/data-entry',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDashboardRoute =
+  AuthenticatedAppDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCouriersRoute =
+  AuthenticatedAppCouriersRouteImport.update({
+    id: '/couriers',
+    path: '/couriers',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCategoriesRoute =
+  AuthenticatedAppCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppBrandsRoute = AuthenticatedAppBrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppBranchStockRoute =
+  AuthenticatedAppBranchStockRouteImport.update({
+    id: '/branch-stock',
+    path: '/branch-stock',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppAssetsRoute = AuthenticatedAppAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppAdminRoute = AuthenticatedAppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppSuppliersIndexRoute =
+  AuthenticatedAppSuppliersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAppSuppliersRoute,
+  } as any)
+const AuthenticatedAppServicesDashboardIndexRoute =
+  AuthenticatedAppServicesDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAppServicesDashboardRoute,
+  } as any)
+const AuthenticatedAppCustomersIndexRoute =
+  AuthenticatedAppCustomersIndexRouteImport.update({
+    id: '/customers/',
+    path: '/customers/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const ApiPublicOauthShopifyDotcallbackRoute =
+  ApiPublicOauthShopifyDotcallbackRouteImport.update({
+    id: '/api/public/oauth/shopify.callback',
+    path: '/api/public/oauth/shopify.callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksShopifySyncRoute =
+  ApiPublicHooksShopifySyncRouteImport.update({
+    id: '/api/public/hooks/shopify-sync',
+    path: '/api/public/hooks/shopify-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksBostaRecallRoute =
+  ApiPublicHooksBostaRecallRouteImport.update({
+    id: '/api/public/hooks/bosta-recall',
+    path: '/api/public/hooks/bosta-recall',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAppSuppliersPaymentsRoute =
+  AuthenticatedAppSuppliersPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedAppSuppliersRoute,
+  } as any)
+const AuthenticatedAppServicesDashboardReportsRoute =
+  AuthenticatedAppServicesDashboardReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedAppServicesDashboardRoute,
+  } as any)
+const AuthenticatedAppServicesDashboardProjectsRoute =
+  AuthenticatedAppServicesDashboardProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
+    getParentRoute: () => AuthenticatedAppServicesDashboardRoute,
+  } as any)
+const AuthenticatedAppServicesDashboardCalendarRoute =
+  AuthenticatedAppServicesDashboardCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthenticatedAppServicesDashboardRoute,
+  } as any)
+const AuthenticatedAppReportsValuationRoute =
+  AuthenticatedAppReportsValuationRouteImport.update({
+    id: '/reports/valuation',
+    path: '/reports/valuation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsTiktokAdsRoute =
+  AuthenticatedAppReportsTiktokAdsRouteImport.update({
+    id: '/reports/tiktok-ads',
+    path: '/reports/tiktok-ads',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsShopifyRoute =
+  AuthenticatedAppReportsShopifyRouteImport.update({
+    id: '/reports/shopify',
+    path: '/reports/shopify',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsSalesRoute =
+  AuthenticatedAppReportsSalesRouteImport.update({
+    id: '/reports/sales',
+    path: '/reports/sales',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsRevenueComparisonRoute =
+  AuthenticatedAppReportsRevenueComparisonRouteImport.update({
+    id: '/reports/revenue-comparison',
+    path: '/reports/revenue-comparison',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsReconciliationRoute =
+  AuthenticatedAppReportsReconciliationRouteImport.update({
+    id: '/reports/reconciliation',
+    path: '/reports/reconciliation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsReceivablesAgingRoute =
+  AuthenticatedAppReportsReceivablesAgingRouteImport.update({
+    id: '/reports/receivables-aging',
+    path: '/reports/receivables-aging',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsProfitsRoute =
+  AuthenticatedAppReportsProfitsRouteImport.update({
+    id: '/reports/profits',
+    path: '/reports/profits',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsProductionRoute =
+  AuthenticatedAppReportsProductionRouteImport.update({
+    id: '/reports/production',
+    path: '/reports/production',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsOfflineInvoicesRoute =
+  AuthenticatedAppReportsOfflineInvoicesRouteImport.update({
+    id: '/reports/offline-invoices',
+    path: '/reports/offline-invoices',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsMetaAdsRoute =
+  AuthenticatedAppReportsMetaAdsRouteImport.update({
+    id: '/reports/meta-ads',
+    path: '/reports/meta-ads',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsMarketingRoute =
+  AuthenticatedAppReportsMarketingRouteImport.update({
+    id: '/reports/marketing',
+    path: '/reports/marketing',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsInvestorsAuditRoute =
+  AuthenticatedAppReportsInvestorsAuditRouteImport.update({
+    id: '/reports/investors-audit',
+    path: '/reports/investors-audit',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsInventoryValuationRoute =
+  AuthenticatedAppReportsInventoryValuationRouteImport.update({
+    id: '/reports/inventory-valuation',
+    path: '/reports/inventory-valuation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsIncomeStatementRoute =
+  AuthenticatedAppReportsIncomeStatementRouteImport.update({
+    id: '/reports/income-statement',
+    path: '/reports/income-statement',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsFulfillmentRoute =
+  AuthenticatedAppReportsFulfillmentRouteImport.update({
+    id: '/reports/fulfillment',
+    path: '/reports/fulfillment',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsExecutiveRoute =
+  AuthenticatedAppReportsExecutiveRouteImport.update({
+    id: '/reports/executive',
+    path: '/reports/executive',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsDataHealthRoute =
+  AuthenticatedAppReportsDataHealthRouteImport.update({
+    id: '/reports/data-health',
+    path: '/reports/data-health',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsCouriersRoute =
+  AuthenticatedAppReportsCouriersRouteImport.update({
+    id: '/reports/couriers',
+    path: '/reports/couriers',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsCashFlowRoute =
+  AuthenticatedAppReportsCashFlowRouteImport.update({
+    id: '/reports/cash-flow',
+    path: '/reports/cash-flow',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsBrandsComparisonRoute =
+  AuthenticatedAppReportsBrandsComparisonRouteImport.update({
+    id: '/reports/brands-comparison',
+    path: '/reports/brands-comparison',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsBranchesRoute =
+  AuthenticatedAppReportsBranchesRouteImport.update({
+    id: '/reports/branches',
+    path: '/reports/branches',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsAuditRoute =
+  AuthenticatedAppReportsAuditRouteImport.update({
+    id: '/reports/audit',
+    path: '/reports/audit',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppReportsAttendanceRoute =
+  AuthenticatedAppReportsAttendanceRouteImport.update({
+    id: '/reports/attendance',
+    path: '/reports/attendance',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppInvestorsIdRoute =
+  AuthenticatedAppInvestorsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAppInvestorsRoute,
+  } as any)
+const AuthenticatedAppHubHubRoute = AuthenticatedAppHubHubRouteImport.update({
+  id: '/hub/$hub',
+  path: '/hub/$hub',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppHrRequestsRoute =
+  AuthenticatedAppHrRequestsRouteImport.update({
+    id: '/hr/requests',
+    path: '/hr/requests',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppHrAttendanceRoute =
+  AuthenticatedAppHrAttendanceRouteImport.update({
+    id: '/hr/attendance',
+    path: '/hr/attendance',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCustomersIdRoute =
+  AuthenticatedAppCustomersIdRouteImport.update({
+    id: '/customers/$id',
+    path: '/customers/$id',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const ApiPublicWebhooksShopifyOrdersRoute =
+  ApiPublicWebhooksShopifyOrdersRouteImport.update({
+    id: '/api/public/webhooks/shopify/orders',
+    path: '/api/public/webhooks/shopify/orders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksShopifyBrandIdRoute =
+  ApiPublicWebhooksShopifyBrandIdRouteImport.update({
+    id: '/api/public/webhooks/shopify/$brandId',
+    path: '/api/public/webhooks/shopify/$brandId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksBostaBrandIdRoute =
+  ApiPublicWebhooksBostaBrandIdRouteImport.update({
+    id: '/api/public/webhooks/bosta/$brandId',
+    path: '/api/public/webhooks/bosta/$brandId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicOauthShopifyCallbackRoute =
+  ApiPublicOauthShopifyCallbackRouteImport.update({
+    id: '/api/public/oauth/shopify/callback',
+    path: '/api/public/oauth/shopify/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAppServicesDashboardProjectsIdRoute =
+  AuthenticatedAppServicesDashboardProjectsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAppServicesDashboardProjectsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin': typeof AuthenticatedAppAdminRoute
+  '/assets': typeof AuthenticatedAppAssetsRoute
+  '/branch-stock': typeof AuthenticatedAppBranchStockRoute
+  '/brands': typeof AuthenticatedAppBrandsRoute
+  '/categories': typeof AuthenticatedAppCategoriesRoute
+  '/couriers': typeof AuthenticatedAppCouriersRoute
+  '/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/data-entry': typeof AuthenticatedAppDataEntryRoute
+  '/expenses': typeof AuthenticatedAppExpensesRoute
+  '/fulfillment': typeof AuthenticatedAppFulfillmentRoute
+  '/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
+  '/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/investors': typeof AuthenticatedAppInvestorsRouteWithChildren
+  '/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
+  '/materials': typeof AuthenticatedAppMaterialsRoute
+  '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
+  '/my-prep': typeof AuthenticatedAppMyPrepRoute
+  '/operations': typeof AuthenticatedAppOperationsRoute
+  '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
+  '/orders': typeof AuthenticatedAppOrdersRoute
+  '/pos': typeof AuthenticatedAppPosRoute
+  '/production': typeof AuthenticatedAppProductionRoute
+  '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
+  '/products': typeof AuthenticatedAppProductsRoute
+  '/purchases': typeof AuthenticatedAppPurchasesRoute
+  '/services': typeof AuthenticatedAppServicesRoute
+  '/services-dashboard': typeof AuthenticatedAppServicesDashboardRouteWithChildren
+  '/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
+  '/tasks': typeof AuthenticatedAppTasksRoute
+  '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
+  '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
+  '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
+  '/hub/$hub': typeof AuthenticatedAppHubHubRoute
+  '/investors/$id': typeof AuthenticatedAppInvestorsIdRoute
+  '/reports/attendance': typeof AuthenticatedAppReportsAttendanceRoute
+  '/reports/audit': typeof AuthenticatedAppReportsAuditRoute
+  '/reports/branches': typeof AuthenticatedAppReportsBranchesRoute
+  '/reports/brands-comparison': typeof AuthenticatedAppReportsBrandsComparisonRoute
+  '/reports/cash-flow': typeof AuthenticatedAppReportsCashFlowRoute
+  '/reports/couriers': typeof AuthenticatedAppReportsCouriersRoute
+  '/reports/data-health': typeof AuthenticatedAppReportsDataHealthRoute
+  '/reports/executive': typeof AuthenticatedAppReportsExecutiveRoute
+  '/reports/fulfillment': typeof AuthenticatedAppReportsFulfillmentRoute
+  '/reports/income-statement': typeof AuthenticatedAppReportsIncomeStatementRoute
+  '/reports/inventory-valuation': typeof AuthenticatedAppReportsInventoryValuationRoute
+  '/reports/investors-audit': typeof AuthenticatedAppReportsInvestorsAuditRoute
+  '/reports/marketing': typeof AuthenticatedAppReportsMarketingRoute
+  '/reports/meta-ads': typeof AuthenticatedAppReportsMetaAdsRoute
+  '/reports/offline-invoices': typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  '/reports/production': typeof AuthenticatedAppReportsProductionRoute
+  '/reports/profits': typeof AuthenticatedAppReportsProfitsRoute
+  '/reports/receivables-aging': typeof AuthenticatedAppReportsReceivablesAgingRoute
+  '/reports/reconciliation': typeof AuthenticatedAppReportsReconciliationRoute
+  '/reports/revenue-comparison': typeof AuthenticatedAppReportsRevenueComparisonRoute
+  '/reports/sales': typeof AuthenticatedAppReportsSalesRoute
+  '/reports/shopify': typeof AuthenticatedAppReportsShopifyRoute
+  '/reports/tiktok-ads': typeof AuthenticatedAppReportsTiktokAdsRoute
+  '/reports/valuation': typeof AuthenticatedAppReportsValuationRoute
+  '/services-dashboard/calendar': typeof AuthenticatedAppServicesDashboardCalendarRoute
+  '/services-dashboard/projects': typeof AuthenticatedAppServicesDashboardProjectsRouteWithChildren
+  '/services-dashboard/reports': typeof AuthenticatedAppServicesDashboardReportsRoute
+  '/suppliers/payments': typeof AuthenticatedAppSuppliersPaymentsRoute
+  '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
+  '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
+  '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
+  '/customers/': typeof AuthenticatedAppCustomersIndexRoute
+  '/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
+  '/suppliers/': typeof AuthenticatedAppSuppliersIndexRoute
+  '/services-dashboard/projects/$id': typeof AuthenticatedAppServicesDashboardProjectsIdRoute
+  '/api/public/oauth/shopify/callback': typeof ApiPublicOauthShopifyCallbackRoute
+  '/api/public/webhooks/bosta/$brandId': typeof ApiPublicWebhooksBostaBrandIdRoute
+  '/api/public/webhooks/shopify/$brandId': typeof ApiPublicWebhooksShopifyBrandIdRoute
+  '/api/public/webhooks/shopify/orders': typeof ApiPublicWebhooksShopifyOrdersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin': typeof AuthenticatedAppAdminRoute
+  '/assets': typeof AuthenticatedAppAssetsRoute
+  '/branch-stock': typeof AuthenticatedAppBranchStockRoute
+  '/brands': typeof AuthenticatedAppBrandsRoute
+  '/categories': typeof AuthenticatedAppCategoriesRoute
+  '/couriers': typeof AuthenticatedAppCouriersRoute
+  '/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/data-entry': typeof AuthenticatedAppDataEntryRoute
+  '/expenses': typeof AuthenticatedAppExpensesRoute
+  '/fulfillment': typeof AuthenticatedAppFulfillmentRoute
+  '/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
+  '/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/investors': typeof AuthenticatedAppInvestorsRouteWithChildren
+  '/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
+  '/materials': typeof AuthenticatedAppMaterialsRoute
+  '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
+  '/my-prep': typeof AuthenticatedAppMyPrepRoute
+  '/operations': typeof AuthenticatedAppOperationsRoute
+  '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
+  '/orders': typeof AuthenticatedAppOrdersRoute
+  '/pos': typeof AuthenticatedAppPosRoute
+  '/production': typeof AuthenticatedAppProductionRoute
+  '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
+  '/products': typeof AuthenticatedAppProductsRoute
+  '/purchases': typeof AuthenticatedAppPurchasesRoute
+  '/services': typeof AuthenticatedAppServicesRoute
+  '/tasks': typeof AuthenticatedAppTasksRoute
+  '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
+  '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
+  '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
+  '/hub/$hub': typeof AuthenticatedAppHubHubRoute
+  '/investors/$id': typeof AuthenticatedAppInvestorsIdRoute
+  '/reports/attendance': typeof AuthenticatedAppReportsAttendanceRoute
+  '/reports/audit': typeof AuthenticatedAppReportsAuditRoute
+  '/reports/branches': typeof AuthenticatedAppReportsBranchesRoute
+  '/reports/brands-comparison': typeof AuthenticatedAppReportsBrandsComparisonRoute
+  '/reports/cash-flow': typeof AuthenticatedAppReportsCashFlowRoute
+  '/reports/couriers': typeof AuthenticatedAppReportsCouriersRoute
+  '/reports/data-health': typeof AuthenticatedAppReportsDataHealthRoute
+  '/reports/executive': typeof AuthenticatedAppReportsExecutiveRoute
+  '/reports/fulfillment': typeof AuthenticatedAppReportsFulfillmentRoute
+  '/reports/income-statement': typeof AuthenticatedAppReportsIncomeStatementRoute
+  '/reports/inventory-valuation': typeof AuthenticatedAppReportsInventoryValuationRoute
+  '/reports/investors-audit': typeof AuthenticatedAppReportsInvestorsAuditRoute
+  '/reports/marketing': typeof AuthenticatedAppReportsMarketingRoute
+  '/reports/meta-ads': typeof AuthenticatedAppReportsMetaAdsRoute
+  '/reports/offline-invoices': typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  '/reports/production': typeof AuthenticatedAppReportsProductionRoute
+  '/reports/profits': typeof AuthenticatedAppReportsProfitsRoute
+  '/reports/receivables-aging': typeof AuthenticatedAppReportsReceivablesAgingRoute
+  '/reports/reconciliation': typeof AuthenticatedAppReportsReconciliationRoute
+  '/reports/revenue-comparison': typeof AuthenticatedAppReportsRevenueComparisonRoute
+  '/reports/sales': typeof AuthenticatedAppReportsSalesRoute
+  '/reports/shopify': typeof AuthenticatedAppReportsShopifyRoute
+  '/reports/tiktok-ads': typeof AuthenticatedAppReportsTiktokAdsRoute
+  '/reports/valuation': typeof AuthenticatedAppReportsValuationRoute
+  '/services-dashboard/calendar': typeof AuthenticatedAppServicesDashboardCalendarRoute
+  '/services-dashboard/projects': typeof AuthenticatedAppServicesDashboardProjectsRouteWithChildren
+  '/services-dashboard/reports': typeof AuthenticatedAppServicesDashboardReportsRoute
+  '/suppliers/payments': typeof AuthenticatedAppSuppliersPaymentsRoute
+  '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
+  '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
+  '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
+  '/customers': typeof AuthenticatedAppCustomersIndexRoute
+  '/services-dashboard': typeof AuthenticatedAppServicesDashboardIndexRoute
+  '/suppliers': typeof AuthenticatedAppSuppliersIndexRoute
+  '/services-dashboard/projects/$id': typeof AuthenticatedAppServicesDashboardProjectsIdRoute
+  '/api/public/oauth/shopify/callback': typeof ApiPublicOauthShopifyCallbackRoute
+  '/api/public/webhooks/bosta/$brandId': typeof ApiPublicWebhooksBostaBrandIdRoute
+  '/api/public/webhooks/shopify/$brandId': typeof ApiPublicWebhooksShopifyBrandIdRoute
+  '/api/public/webhooks/shopify/orders': typeof ApiPublicWebhooksShopifyOrdersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/_authenticated/_app/admin': typeof AuthenticatedAppAdminRoute
+  '/_authenticated/_app/assets': typeof AuthenticatedAppAssetsRoute
+  '/_authenticated/_app/branch-stock': typeof AuthenticatedAppBranchStockRoute
+  '/_authenticated/_app/brands': typeof AuthenticatedAppBrandsRoute
+  '/_authenticated/_app/categories': typeof AuthenticatedAppCategoriesRoute
+  '/_authenticated/_app/couriers': typeof AuthenticatedAppCouriersRoute
+  '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/_authenticated/_app/data-entry': typeof AuthenticatedAppDataEntryRoute
+  '/_authenticated/_app/expenses': typeof AuthenticatedAppExpensesRoute
+  '/_authenticated/_app/fulfillment': typeof AuthenticatedAppFulfillmentRoute
+  '/_authenticated/_app/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
+  '/_authenticated/_app/integrations': typeof AuthenticatedAppIntegrationsRoute
+  '/_authenticated/_app/investors': typeof AuthenticatedAppInvestorsRouteWithChildren
+  '/_authenticated/_app/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
+  '/_authenticated/_app/materials': typeof AuthenticatedAppMaterialsRoute
+  '/_authenticated/_app/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
+  '/_authenticated/_app/my-prep': typeof AuthenticatedAppMyPrepRoute
+  '/_authenticated/_app/operations': typeof AuthenticatedAppOperationsRoute
+  '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
+  '/_authenticated/_app/orders': typeof AuthenticatedAppOrdersRoute
+  '/_authenticated/_app/pos': typeof AuthenticatedAppPosRoute
+  '/_authenticated/_app/production': typeof AuthenticatedAppProductionRoute
+  '/_authenticated/_app/production-tasks': typeof AuthenticatedAppProductionTasksRoute
+  '/_authenticated/_app/products': typeof AuthenticatedAppProductsRoute
+  '/_authenticated/_app/purchases': typeof AuthenticatedAppPurchasesRoute
+  '/_authenticated/_app/services': typeof AuthenticatedAppServicesRoute
+  '/_authenticated/_app/services-dashboard': typeof AuthenticatedAppServicesDashboardRouteWithChildren
+  '/_authenticated/_app/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
+  '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
+  '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/_authenticated/_app/customers/$id': typeof AuthenticatedAppCustomersIdRoute
+  '/_authenticated/_app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
+  '/_authenticated/_app/hr/requests': typeof AuthenticatedAppHrRequestsRoute
+  '/_authenticated/_app/hub/$hub': typeof AuthenticatedAppHubHubRoute
+  '/_authenticated/_app/investors/$id': typeof AuthenticatedAppInvestorsIdRoute
+  '/_authenticated/_app/reports/attendance': typeof AuthenticatedAppReportsAttendanceRoute
+  '/_authenticated/_app/reports/audit': typeof AuthenticatedAppReportsAuditRoute
+  '/_authenticated/_app/reports/branches': typeof AuthenticatedAppReportsBranchesRoute
+  '/_authenticated/_app/reports/brands-comparison': typeof AuthenticatedAppReportsBrandsComparisonRoute
+  '/_authenticated/_app/reports/cash-flow': typeof AuthenticatedAppReportsCashFlowRoute
+  '/_authenticated/_app/reports/couriers': typeof AuthenticatedAppReportsCouriersRoute
+  '/_authenticated/_app/reports/data-health': typeof AuthenticatedAppReportsDataHealthRoute
+  '/_authenticated/_app/reports/executive': typeof AuthenticatedAppReportsExecutiveRoute
+  '/_authenticated/_app/reports/fulfillment': typeof AuthenticatedAppReportsFulfillmentRoute
+  '/_authenticated/_app/reports/income-statement': typeof AuthenticatedAppReportsIncomeStatementRoute
+  '/_authenticated/_app/reports/inventory-valuation': typeof AuthenticatedAppReportsInventoryValuationRoute
+  '/_authenticated/_app/reports/investors-audit': typeof AuthenticatedAppReportsInvestorsAuditRoute
+  '/_authenticated/_app/reports/marketing': typeof AuthenticatedAppReportsMarketingRoute
+  '/_authenticated/_app/reports/meta-ads': typeof AuthenticatedAppReportsMetaAdsRoute
+  '/_authenticated/_app/reports/offline-invoices': typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  '/_authenticated/_app/reports/production': typeof AuthenticatedAppReportsProductionRoute
+  '/_authenticated/_app/reports/profits': typeof AuthenticatedAppReportsProfitsRoute
+  '/_authenticated/_app/reports/receivables-aging': typeof AuthenticatedAppReportsReceivablesAgingRoute
+  '/_authenticated/_app/reports/reconciliation': typeof AuthenticatedAppReportsReconciliationRoute
+  '/_authenticated/_app/reports/revenue-comparison': typeof AuthenticatedAppReportsRevenueComparisonRoute
+  '/_authenticated/_app/reports/sales': typeof AuthenticatedAppReportsSalesRoute
+  '/_authenticated/_app/reports/shopify': typeof AuthenticatedAppReportsShopifyRoute
+  '/_authenticated/_app/reports/tiktok-ads': typeof AuthenticatedAppReportsTiktokAdsRoute
+  '/_authenticated/_app/reports/valuation': typeof AuthenticatedAppReportsValuationRoute
+  '/_authenticated/_app/services-dashboard/calendar': typeof AuthenticatedAppServicesDashboardCalendarRoute
+  '/_authenticated/_app/services-dashboard/projects': typeof AuthenticatedAppServicesDashboardProjectsRouteWithChildren
+  '/_authenticated/_app/services-dashboard/reports': typeof AuthenticatedAppServicesDashboardReportsRoute
+  '/_authenticated/_app/suppliers/payments': typeof AuthenticatedAppSuppliersPaymentsRoute
+  '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
+  '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
+  '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
+  '/_authenticated/_app/customers/': typeof AuthenticatedAppCustomersIndexRoute
+  '/_authenticated/_app/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
+  '/_authenticated/_app/suppliers/': typeof AuthenticatedAppSuppliersIndexRoute
+  '/_authenticated/_app/services-dashboard/projects/$id': typeof AuthenticatedAppServicesDashboardProjectsIdRoute
+  '/api/public/oauth/shopify/callback': typeof ApiPublicOauthShopifyCallbackRoute
+  '/api/public/webhooks/bosta/$brandId': typeof ApiPublicWebhooksBostaBrandIdRoute
+  '/api/public/webhooks/shopify/$brandId': typeof ApiPublicWebhooksShopifyBrandIdRoute
+  '/api/public/webhooks/shopify/orders': typeof ApiPublicWebhooksShopifyOrdersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/mcp'
+    | '/sitemap.xml'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
+    | '/admin'
+    | '/assets'
+    | '/branch-stock'
+    | '/brands'
+    | '/categories'
+    | '/couriers'
+    | '/dashboard'
+    | '/data-entry'
+    | '/expenses'
+    | '/fulfillment'
+    | '/integration-logs'
+    | '/integrations'
+    | '/investors'
+    | '/invoice-print'
+    | '/materials'
+    | '/my-investments'
+    | '/my-prep'
+    | '/operations'
+    | '/order-pipeline'
+    | '/orders'
+    | '/pos'
+    | '/production'
+    | '/production-tasks'
+    | '/products'
+    | '/purchases'
+    | '/services'
+    | '/services-dashboard'
+    | '/suppliers'
+    | '/tasks'
+    | '/treasury'
+    | '/customers/$id'
+    | '/hr/attendance'
+    | '/hr/requests'
+    | '/hub/$hub'
+    | '/investors/$id'
+    | '/reports/attendance'
+    | '/reports/audit'
+    | '/reports/branches'
+    | '/reports/brands-comparison'
+    | '/reports/cash-flow'
+    | '/reports/couriers'
+    | '/reports/data-health'
+    | '/reports/executive'
+    | '/reports/fulfillment'
+    | '/reports/income-statement'
+    | '/reports/inventory-valuation'
+    | '/reports/investors-audit'
+    | '/reports/marketing'
+    | '/reports/meta-ads'
+    | '/reports/offline-invoices'
+    | '/reports/production'
+    | '/reports/profits'
+    | '/reports/receivables-aging'
+    | '/reports/reconciliation'
+    | '/reports/revenue-comparison'
+    | '/reports/sales'
+    | '/reports/shopify'
+    | '/reports/tiktok-ads'
+    | '/reports/valuation'
+    | '/services-dashboard/calendar'
+    | '/services-dashboard/projects'
+    | '/services-dashboard/reports'
+    | '/suppliers/payments'
+    | '/api/public/hooks/bosta-recall'
+    | '/api/public/hooks/shopify-sync'
+    | '/api/public/oauth/shopify.callback'
+    | '/customers/'
+    | '/services-dashboard/'
+    | '/suppliers/'
+    | '/services-dashboard/projects/$id'
+    | '/api/public/oauth/shopify/callback'
+    | '/api/public/webhooks/bosta/$brandId'
+    | '/api/public/webhooks/shopify/$brandId'
+    | '/api/public/webhooks/shopify/orders'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/mcp'
+    | '/sitemap.xml'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
+    | '/admin'
+    | '/assets'
+    | '/branch-stock'
+    | '/brands'
+    | '/categories'
+    | '/couriers'
+    | '/dashboard'
+    | '/data-entry'
+    | '/expenses'
+    | '/fulfillment'
+    | '/integration-logs'
+    | '/integrations'
+    | '/investors'
+    | '/invoice-print'
+    | '/materials'
+    | '/my-investments'
+    | '/my-prep'
+    | '/operations'
+    | '/order-pipeline'
+    | '/orders'
+    | '/pos'
+    | '/production'
+    | '/production-tasks'
+    | '/products'
+    | '/purchases'
+    | '/services'
+    | '/tasks'
+    | '/treasury'
+    | '/customers/$id'
+    | '/hr/attendance'
+    | '/hr/requests'
+    | '/hub/$hub'
+    | '/investors/$id'
+    | '/reports/attendance'
+    | '/reports/audit'
+    | '/reports/branches'
+    | '/reports/brands-comparison'
+    | '/reports/cash-flow'
+    | '/reports/couriers'
+    | '/reports/data-health'
+    | '/reports/executive'
+    | '/reports/fulfillment'
+    | '/reports/income-statement'
+    | '/reports/inventory-valuation'
+    | '/reports/investors-audit'
+    | '/reports/marketing'
+    | '/reports/meta-ads'
+    | '/reports/offline-invoices'
+    | '/reports/production'
+    | '/reports/profits'
+    | '/reports/receivables-aging'
+    | '/reports/reconciliation'
+    | '/reports/revenue-comparison'
+    | '/reports/sales'
+    | '/reports/shopify'
+    | '/reports/tiktok-ads'
+    | '/reports/valuation'
+    | '/services-dashboard/calendar'
+    | '/services-dashboard/projects'
+    | '/services-dashboard/reports'
+    | '/suppliers/payments'
+    | '/api/public/hooks/bosta-recall'
+    | '/api/public/hooks/shopify-sync'
+    | '/api/public/oauth/shopify.callback'
+    | '/customers'
+    | '/services-dashboard'
+    | '/suppliers'
+    | '/services-dashboard/projects/$id'
+    | '/api/public/oauth/shopify/callback'
+    | '/api/public/webhooks/bosta/$brandId'
+    | '/api/public/webhooks/shopify/$brandId'
+    | '/api/public/webhooks/shopify/orders'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/mcp'
+    | '/sitemap.xml'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/_app'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
+    | '/_authenticated/_app/admin'
+    | '/_authenticated/_app/assets'
+    | '/_authenticated/_app/branch-stock'
+    | '/_authenticated/_app/brands'
+    | '/_authenticated/_app/categories'
+    | '/_authenticated/_app/couriers'
+    | '/_authenticated/_app/dashboard'
+    | '/_authenticated/_app/data-entry'
+    | '/_authenticated/_app/expenses'
+    | '/_authenticated/_app/fulfillment'
+    | '/_authenticated/_app/integration-logs'
+    | '/_authenticated/_app/integrations'
+    | '/_authenticated/_app/investors'
+    | '/_authenticated/_app/invoice-print'
+    | '/_authenticated/_app/materials'
+    | '/_authenticated/_app/my-investments'
+    | '/_authenticated/_app/my-prep'
+    | '/_authenticated/_app/operations'
+    | '/_authenticated/_app/order-pipeline'
+    | '/_authenticated/_app/orders'
+    | '/_authenticated/_app/pos'
+    | '/_authenticated/_app/production'
+    | '/_authenticated/_app/production-tasks'
+    | '/_authenticated/_app/products'
+    | '/_authenticated/_app/purchases'
+    | '/_authenticated/_app/services'
+    | '/_authenticated/_app/services-dashboard'
+    | '/_authenticated/_app/suppliers'
+    | '/_authenticated/_app/tasks'
+    | '/_authenticated/_app/treasury'
+    | '/_authenticated/_app/customers/$id'
+    | '/_authenticated/_app/hr/attendance'
+    | '/_authenticated/_app/hr/requests'
+    | '/_authenticated/_app/hub/$hub'
+    | '/_authenticated/_app/investors/$id'
+    | '/_authenticated/_app/reports/attendance'
+    | '/_authenticated/_app/reports/audit'
+    | '/_authenticated/_app/reports/branches'
+    | '/_authenticated/_app/reports/brands-comparison'
+    | '/_authenticated/_app/reports/cash-flow'
+    | '/_authenticated/_app/reports/couriers'
+    | '/_authenticated/_app/reports/data-health'
+    | '/_authenticated/_app/reports/executive'
+    | '/_authenticated/_app/reports/fulfillment'
+    | '/_authenticated/_app/reports/income-statement'
+    | '/_authenticated/_app/reports/inventory-valuation'
+    | '/_authenticated/_app/reports/investors-audit'
+    | '/_authenticated/_app/reports/marketing'
+    | '/_authenticated/_app/reports/meta-ads'
+    | '/_authenticated/_app/reports/offline-invoices'
+    | '/_authenticated/_app/reports/production'
+    | '/_authenticated/_app/reports/profits'
+    | '/_authenticated/_app/reports/receivables-aging'
+    | '/_authenticated/_app/reports/reconciliation'
+    | '/_authenticated/_app/reports/revenue-comparison'
+    | '/_authenticated/_app/reports/sales'
+    | '/_authenticated/_app/reports/shopify'
+    | '/_authenticated/_app/reports/tiktok-ads'
+    | '/_authenticated/_app/reports/valuation'
+    | '/_authenticated/_app/services-dashboard/calendar'
+    | '/_authenticated/_app/services-dashboard/projects'
+    | '/_authenticated/_app/services-dashboard/reports'
+    | '/_authenticated/_app/suppliers/payments'
+    | '/api/public/hooks/bosta-recall'
+    | '/api/public/hooks/shopify-sync'
+    | '/api/public/oauth/shopify.callback'
+    | '/_authenticated/_app/customers/'
+    | '/_authenticated/_app/services-dashboard/'
+    | '/_authenticated/_app/suppliers/'
+    | '/_authenticated/_app/services-dashboard/projects/$id'
+    | '/api/public/oauth/shopify/callback'
+    | '/api/public/webhooks/bosta/$brandId'
+    | '/api/public/webhooks/shopify/$brandId'
+    | '/api/public/webhooks/shopify/orders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicHooksBostaRecallRoute: typeof ApiPublicHooksBostaRecallRoute
+  ApiPublicHooksShopifySyncRoute: typeof ApiPublicHooksShopifySyncRoute
+  ApiPublicOauthShopifyDotcallbackRoute: typeof ApiPublicOauthShopifyDotcallbackRoute
+  ApiPublicOauthShopifyCallbackRoute: typeof ApiPublicOauthShopifyCallbackRoute
+  ApiPublicWebhooksBostaBrandIdRoute: typeof ApiPublicWebhooksBostaBrandIdRoute
+  ApiPublicWebhooksShopifyBrandIdRoute: typeof ApiPublicWebhooksShopifyBrandIdRoute
+  ApiPublicWebhooksShopifyOrdersRoute: typeof ApiPublicWebhooksShopifyOrdersRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +1146,801 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/_app': {
+      id: '/_authenticated/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app/treasury': {
+      id: '/_authenticated/_app/treasury'
+      path: '/treasury'
+      fullPath: '/treasury'
+      preLoaderRoute: typeof AuthenticatedAppTreasuryRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/tasks': {
+      id: '/_authenticated/_app/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/suppliers': {
+      id: '/_authenticated/_app/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AuthenticatedAppSuppliersRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/services-dashboard': {
+      id: '/_authenticated/_app/services-dashboard'
+      path: '/services-dashboard'
+      fullPath: '/services-dashboard'
+      preLoaderRoute: typeof AuthenticatedAppServicesDashboardRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/services': {
+      id: '/_authenticated/_app/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof AuthenticatedAppServicesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/purchases': {
+      id: '/_authenticated/_app/purchases'
+      path: '/purchases'
+      fullPath: '/purchases'
+      preLoaderRoute: typeof AuthenticatedAppPurchasesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/products': {
+      id: '/_authenticated/_app/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedAppProductsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/production-tasks': {
+      id: '/_authenticated/_app/production-tasks'
+      path: '/production-tasks'
+      fullPath: '/production-tasks'
+      preLoaderRoute: typeof AuthenticatedAppProductionTasksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/production': {
+      id: '/_authenticated/_app/production'
+      path: '/production'
+      fullPath: '/production'
+      preLoaderRoute: typeof AuthenticatedAppProductionRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/pos': {
+      id: '/_authenticated/_app/pos'
+      path: '/pos'
+      fullPath: '/pos'
+      preLoaderRoute: typeof AuthenticatedAppPosRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/orders': {
+      id: '/_authenticated/_app/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AuthenticatedAppOrdersRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/order-pipeline': {
+      id: '/_authenticated/_app/order-pipeline'
+      path: '/order-pipeline'
+      fullPath: '/order-pipeline'
+      preLoaderRoute: typeof AuthenticatedAppOrderPipelineRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/operations': {
+      id: '/_authenticated/_app/operations'
+      path: '/operations'
+      fullPath: '/operations'
+      preLoaderRoute: typeof AuthenticatedAppOperationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/my-prep': {
+      id: '/_authenticated/_app/my-prep'
+      path: '/my-prep'
+      fullPath: '/my-prep'
+      preLoaderRoute: typeof AuthenticatedAppMyPrepRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/my-investments': {
+      id: '/_authenticated/_app/my-investments'
+      path: '/my-investments'
+      fullPath: '/my-investments'
+      preLoaderRoute: typeof AuthenticatedAppMyInvestmentsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/materials': {
+      id: '/_authenticated/_app/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof AuthenticatedAppMaterialsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/invoice-print': {
+      id: '/_authenticated/_app/invoice-print'
+      path: '/invoice-print'
+      fullPath: '/invoice-print'
+      preLoaderRoute: typeof AuthenticatedAppInvoicePrintRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/investors': {
+      id: '/_authenticated/_app/investors'
+      path: '/investors'
+      fullPath: '/investors'
+      preLoaderRoute: typeof AuthenticatedAppInvestorsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/integrations': {
+      id: '/_authenticated/_app/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/integration-logs': {
+      id: '/_authenticated/_app/integration-logs'
+      path: '/integration-logs'
+      fullPath: '/integration-logs'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationLogsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/fulfillment': {
+      id: '/_authenticated/_app/fulfillment'
+      path: '/fulfillment'
+      fullPath: '/fulfillment'
+      preLoaderRoute: typeof AuthenticatedAppFulfillmentRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/expenses': {
+      id: '/_authenticated/_app/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof AuthenticatedAppExpensesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/data-entry': {
+      id: '/_authenticated/_app/data-entry'
+      path: '/data-entry'
+      fullPath: '/data-entry'
+      preLoaderRoute: typeof AuthenticatedAppDataEntryRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/dashboard': {
+      id: '/_authenticated/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedAppDashboardRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/couriers': {
+      id: '/_authenticated/_app/couriers'
+      path: '/couriers'
+      fullPath: '/couriers'
+      preLoaderRoute: typeof AuthenticatedAppCouriersRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/categories': {
+      id: '/_authenticated/_app/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof AuthenticatedAppCategoriesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/brands': {
+      id: '/_authenticated/_app/brands'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof AuthenticatedAppBrandsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/branch-stock': {
+      id: '/_authenticated/_app/branch-stock'
+      path: '/branch-stock'
+      fullPath: '/branch-stock'
+      preLoaderRoute: typeof AuthenticatedAppBranchStockRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/assets': {
+      id: '/_authenticated/_app/assets'
+      path: '/assets'
+      fullPath: '/assets'
+      preLoaderRoute: typeof AuthenticatedAppAssetsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/admin': {
+      id: '/_authenticated/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAppAdminRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app/suppliers/': {
+      id: '/_authenticated/_app/suppliers/'
+      path: '/'
+      fullPath: '/suppliers/'
+      preLoaderRoute: typeof AuthenticatedAppSuppliersIndexRouteImport
+      parentRoute: typeof AuthenticatedAppSuppliersRoute
+    }
+    '/_authenticated/_app/services-dashboard/': {
+      id: '/_authenticated/_app/services-dashboard/'
+      path: '/'
+      fullPath: '/services-dashboard/'
+      preLoaderRoute: typeof AuthenticatedAppServicesDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedAppServicesDashboardRoute
+    }
+    '/_authenticated/_app/customers/': {
+      id: '/_authenticated/_app/customers/'
+      path: '/customers'
+      fullPath: '/customers/'
+      preLoaderRoute: typeof AuthenticatedAppCustomersIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/public/oauth/shopify.callback': {
+      id: '/api/public/oauth/shopify.callback'
+      path: '/api/public/oauth/shopify.callback'
+      fullPath: '/api/public/oauth/shopify.callback'
+      preLoaderRoute: typeof ApiPublicOauthShopifyDotcallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/shopify-sync': {
+      id: '/api/public/hooks/shopify-sync'
+      path: '/api/public/hooks/shopify-sync'
+      fullPath: '/api/public/hooks/shopify-sync'
+      preLoaderRoute: typeof ApiPublicHooksShopifySyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/bosta-recall': {
+      id: '/api/public/hooks/bosta-recall'
+      path: '/api/public/hooks/bosta-recall'
+      fullPath: '/api/public/hooks/bosta-recall'
+      preLoaderRoute: typeof ApiPublicHooksBostaRecallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app/suppliers/payments': {
+      id: '/_authenticated/_app/suppliers/payments'
+      path: '/payments'
+      fullPath: '/suppliers/payments'
+      preLoaderRoute: typeof AuthenticatedAppSuppliersPaymentsRouteImport
+      parentRoute: typeof AuthenticatedAppSuppliersRoute
+    }
+    '/_authenticated/_app/services-dashboard/reports': {
+      id: '/_authenticated/_app/services-dashboard/reports'
+      path: '/reports'
+      fullPath: '/services-dashboard/reports'
+      preLoaderRoute: typeof AuthenticatedAppServicesDashboardReportsRouteImport
+      parentRoute: typeof AuthenticatedAppServicesDashboardRoute
+    }
+    '/_authenticated/_app/services-dashboard/projects': {
+      id: '/_authenticated/_app/services-dashboard/projects'
+      path: '/projects'
+      fullPath: '/services-dashboard/projects'
+      preLoaderRoute: typeof AuthenticatedAppServicesDashboardProjectsRouteImport
+      parentRoute: typeof AuthenticatedAppServicesDashboardRoute
+    }
+    '/_authenticated/_app/services-dashboard/calendar': {
+      id: '/_authenticated/_app/services-dashboard/calendar'
+      path: '/calendar'
+      fullPath: '/services-dashboard/calendar'
+      preLoaderRoute: typeof AuthenticatedAppServicesDashboardCalendarRouteImport
+      parentRoute: typeof AuthenticatedAppServicesDashboardRoute
+    }
+    '/_authenticated/_app/reports/valuation': {
+      id: '/_authenticated/_app/reports/valuation'
+      path: '/reports/valuation'
+      fullPath: '/reports/valuation'
+      preLoaderRoute: typeof AuthenticatedAppReportsValuationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/tiktok-ads': {
+      id: '/_authenticated/_app/reports/tiktok-ads'
+      path: '/reports/tiktok-ads'
+      fullPath: '/reports/tiktok-ads'
+      preLoaderRoute: typeof AuthenticatedAppReportsTiktokAdsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/shopify': {
+      id: '/_authenticated/_app/reports/shopify'
+      path: '/reports/shopify'
+      fullPath: '/reports/shopify'
+      preLoaderRoute: typeof AuthenticatedAppReportsShopifyRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/sales': {
+      id: '/_authenticated/_app/reports/sales'
+      path: '/reports/sales'
+      fullPath: '/reports/sales'
+      preLoaderRoute: typeof AuthenticatedAppReportsSalesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/revenue-comparison': {
+      id: '/_authenticated/_app/reports/revenue-comparison'
+      path: '/reports/revenue-comparison'
+      fullPath: '/reports/revenue-comparison'
+      preLoaderRoute: typeof AuthenticatedAppReportsRevenueComparisonRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/reconciliation': {
+      id: '/_authenticated/_app/reports/reconciliation'
+      path: '/reports/reconciliation'
+      fullPath: '/reports/reconciliation'
+      preLoaderRoute: typeof AuthenticatedAppReportsReconciliationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/receivables-aging': {
+      id: '/_authenticated/_app/reports/receivables-aging'
+      path: '/reports/receivables-aging'
+      fullPath: '/reports/receivables-aging'
+      preLoaderRoute: typeof AuthenticatedAppReportsReceivablesAgingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/profits': {
+      id: '/_authenticated/_app/reports/profits'
+      path: '/reports/profits'
+      fullPath: '/reports/profits'
+      preLoaderRoute: typeof AuthenticatedAppReportsProfitsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/production': {
+      id: '/_authenticated/_app/reports/production'
+      path: '/reports/production'
+      fullPath: '/reports/production'
+      preLoaderRoute: typeof AuthenticatedAppReportsProductionRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/offline-invoices': {
+      id: '/_authenticated/_app/reports/offline-invoices'
+      path: '/reports/offline-invoices'
+      fullPath: '/reports/offline-invoices'
+      preLoaderRoute: typeof AuthenticatedAppReportsOfflineInvoicesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/meta-ads': {
+      id: '/_authenticated/_app/reports/meta-ads'
+      path: '/reports/meta-ads'
+      fullPath: '/reports/meta-ads'
+      preLoaderRoute: typeof AuthenticatedAppReportsMetaAdsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/marketing': {
+      id: '/_authenticated/_app/reports/marketing'
+      path: '/reports/marketing'
+      fullPath: '/reports/marketing'
+      preLoaderRoute: typeof AuthenticatedAppReportsMarketingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/investors-audit': {
+      id: '/_authenticated/_app/reports/investors-audit'
+      path: '/reports/investors-audit'
+      fullPath: '/reports/investors-audit'
+      preLoaderRoute: typeof AuthenticatedAppReportsInvestorsAuditRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/inventory-valuation': {
+      id: '/_authenticated/_app/reports/inventory-valuation'
+      path: '/reports/inventory-valuation'
+      fullPath: '/reports/inventory-valuation'
+      preLoaderRoute: typeof AuthenticatedAppReportsInventoryValuationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/income-statement': {
+      id: '/_authenticated/_app/reports/income-statement'
+      path: '/reports/income-statement'
+      fullPath: '/reports/income-statement'
+      preLoaderRoute: typeof AuthenticatedAppReportsIncomeStatementRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/fulfillment': {
+      id: '/_authenticated/_app/reports/fulfillment'
+      path: '/reports/fulfillment'
+      fullPath: '/reports/fulfillment'
+      preLoaderRoute: typeof AuthenticatedAppReportsFulfillmentRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/executive': {
+      id: '/_authenticated/_app/reports/executive'
+      path: '/reports/executive'
+      fullPath: '/reports/executive'
+      preLoaderRoute: typeof AuthenticatedAppReportsExecutiveRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/data-health': {
+      id: '/_authenticated/_app/reports/data-health'
+      path: '/reports/data-health'
+      fullPath: '/reports/data-health'
+      preLoaderRoute: typeof AuthenticatedAppReportsDataHealthRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/couriers': {
+      id: '/_authenticated/_app/reports/couriers'
+      path: '/reports/couriers'
+      fullPath: '/reports/couriers'
+      preLoaderRoute: typeof AuthenticatedAppReportsCouriersRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/cash-flow': {
+      id: '/_authenticated/_app/reports/cash-flow'
+      path: '/reports/cash-flow'
+      fullPath: '/reports/cash-flow'
+      preLoaderRoute: typeof AuthenticatedAppReportsCashFlowRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/brands-comparison': {
+      id: '/_authenticated/_app/reports/brands-comparison'
+      path: '/reports/brands-comparison'
+      fullPath: '/reports/brands-comparison'
+      preLoaderRoute: typeof AuthenticatedAppReportsBrandsComparisonRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/branches': {
+      id: '/_authenticated/_app/reports/branches'
+      path: '/reports/branches'
+      fullPath: '/reports/branches'
+      preLoaderRoute: typeof AuthenticatedAppReportsBranchesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/audit': {
+      id: '/_authenticated/_app/reports/audit'
+      path: '/reports/audit'
+      fullPath: '/reports/audit'
+      preLoaderRoute: typeof AuthenticatedAppReportsAuditRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/reports/attendance': {
+      id: '/_authenticated/_app/reports/attendance'
+      path: '/reports/attendance'
+      fullPath: '/reports/attendance'
+      preLoaderRoute: typeof AuthenticatedAppReportsAttendanceRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/investors/$id': {
+      id: '/_authenticated/_app/investors/$id'
+      path: '/$id'
+      fullPath: '/investors/$id'
+      preLoaderRoute: typeof AuthenticatedAppInvestorsIdRouteImport
+      parentRoute: typeof AuthenticatedAppInvestorsRoute
+    }
+    '/_authenticated/_app/hub/$hub': {
+      id: '/_authenticated/_app/hub/$hub'
+      path: '/hub/$hub'
+      fullPath: '/hub/$hub'
+      preLoaderRoute: typeof AuthenticatedAppHubHubRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/hr/requests': {
+      id: '/_authenticated/_app/hr/requests'
+      path: '/hr/requests'
+      fullPath: '/hr/requests'
+      preLoaderRoute: typeof AuthenticatedAppHrRequestsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/hr/attendance': {
+      id: '/_authenticated/_app/hr/attendance'
+      path: '/hr/attendance'
+      fullPath: '/hr/attendance'
+      preLoaderRoute: typeof AuthenticatedAppHrAttendanceRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/customers/$id': {
+      id: '/_authenticated/_app/customers/$id'
+      path: '/customers/$id'
+      fullPath: '/customers/$id'
+      preLoaderRoute: typeof AuthenticatedAppCustomersIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/api/public/webhooks/shopify/orders': {
+      id: '/api/public/webhooks/shopify/orders'
+      path: '/api/public/webhooks/shopify/orders'
+      fullPath: '/api/public/webhooks/shopify/orders'
+      preLoaderRoute: typeof ApiPublicWebhooksShopifyOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/shopify/$brandId': {
+      id: '/api/public/webhooks/shopify/$brandId'
+      path: '/api/public/webhooks/shopify/$brandId'
+      fullPath: '/api/public/webhooks/shopify/$brandId'
+      preLoaderRoute: typeof ApiPublicWebhooksShopifyBrandIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/bosta/$brandId': {
+      id: '/api/public/webhooks/bosta/$brandId'
+      path: '/api/public/webhooks/bosta/$brandId'
+      fullPath: '/api/public/webhooks/bosta/$brandId'
+      preLoaderRoute: typeof ApiPublicWebhooksBostaBrandIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/oauth/shopify/callback': {
+      id: '/api/public/oauth/shopify/callback'
+      path: '/api/public/oauth/shopify/callback'
+      fullPath: '/api/public/oauth/shopify/callback'
+      preLoaderRoute: typeof ApiPublicOauthShopifyCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app/services-dashboard/projects/$id': {
+      id: '/_authenticated/_app/services-dashboard/projects/$id'
+      path: '/$id'
+      fullPath: '/services-dashboard/projects/$id'
+      preLoaderRoute: typeof AuthenticatedAppServicesDashboardProjectsIdRouteImport
+      parentRoute: typeof AuthenticatedAppServicesDashboardProjectsRoute
+    }
   }
 }
 
+interface AuthenticatedAppInvestorsRouteChildren {
+  AuthenticatedAppInvestorsIdRoute: typeof AuthenticatedAppInvestorsIdRoute
+}
+
+const AuthenticatedAppInvestorsRouteChildren: AuthenticatedAppInvestorsRouteChildren =
+  {
+    AuthenticatedAppInvestorsIdRoute: AuthenticatedAppInvestorsIdRoute,
+  }
+
+const AuthenticatedAppInvestorsRouteWithChildren =
+  AuthenticatedAppInvestorsRoute._addFileChildren(
+    AuthenticatedAppInvestorsRouteChildren,
+  )
+
+interface AuthenticatedAppServicesDashboardProjectsRouteChildren {
+  AuthenticatedAppServicesDashboardProjectsIdRoute: typeof AuthenticatedAppServicesDashboardProjectsIdRoute
+}
+
+const AuthenticatedAppServicesDashboardProjectsRouteChildren: AuthenticatedAppServicesDashboardProjectsRouteChildren =
+  {
+    AuthenticatedAppServicesDashboardProjectsIdRoute:
+      AuthenticatedAppServicesDashboardProjectsIdRoute,
+  }
+
+const AuthenticatedAppServicesDashboardProjectsRouteWithChildren =
+  AuthenticatedAppServicesDashboardProjectsRoute._addFileChildren(
+    AuthenticatedAppServicesDashboardProjectsRouteChildren,
+  )
+
+interface AuthenticatedAppServicesDashboardRouteChildren {
+  AuthenticatedAppServicesDashboardCalendarRoute: typeof AuthenticatedAppServicesDashboardCalendarRoute
+  AuthenticatedAppServicesDashboardProjectsRoute: typeof AuthenticatedAppServicesDashboardProjectsRouteWithChildren
+  AuthenticatedAppServicesDashboardReportsRoute: typeof AuthenticatedAppServicesDashboardReportsRoute
+  AuthenticatedAppServicesDashboardIndexRoute: typeof AuthenticatedAppServicesDashboardIndexRoute
+}
+
+const AuthenticatedAppServicesDashboardRouteChildren: AuthenticatedAppServicesDashboardRouteChildren =
+  {
+    AuthenticatedAppServicesDashboardCalendarRoute:
+      AuthenticatedAppServicesDashboardCalendarRoute,
+    AuthenticatedAppServicesDashboardProjectsRoute:
+      AuthenticatedAppServicesDashboardProjectsRouteWithChildren,
+    AuthenticatedAppServicesDashboardReportsRoute:
+      AuthenticatedAppServicesDashboardReportsRoute,
+    AuthenticatedAppServicesDashboardIndexRoute:
+      AuthenticatedAppServicesDashboardIndexRoute,
+  }
+
+const AuthenticatedAppServicesDashboardRouteWithChildren =
+  AuthenticatedAppServicesDashboardRoute._addFileChildren(
+    AuthenticatedAppServicesDashboardRouteChildren,
+  )
+
+interface AuthenticatedAppSuppliersRouteChildren {
+  AuthenticatedAppSuppliersPaymentsRoute: typeof AuthenticatedAppSuppliersPaymentsRoute
+  AuthenticatedAppSuppliersIndexRoute: typeof AuthenticatedAppSuppliersIndexRoute
+}
+
+const AuthenticatedAppSuppliersRouteChildren: AuthenticatedAppSuppliersRouteChildren =
+  {
+    AuthenticatedAppSuppliersPaymentsRoute:
+      AuthenticatedAppSuppliersPaymentsRoute,
+    AuthenticatedAppSuppliersIndexRoute: AuthenticatedAppSuppliersIndexRoute,
+  }
+
+const AuthenticatedAppSuppliersRouteWithChildren =
+  AuthenticatedAppSuppliersRoute._addFileChildren(
+    AuthenticatedAppSuppliersRouteChildren,
+  )
+
+interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppAdminRoute: typeof AuthenticatedAppAdminRoute
+  AuthenticatedAppAssetsRoute: typeof AuthenticatedAppAssetsRoute
+  AuthenticatedAppBranchStockRoute: typeof AuthenticatedAppBranchStockRoute
+  AuthenticatedAppBrandsRoute: typeof AuthenticatedAppBrandsRoute
+  AuthenticatedAppCategoriesRoute: typeof AuthenticatedAppCategoriesRoute
+  AuthenticatedAppCouriersRoute: typeof AuthenticatedAppCouriersRoute
+  AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
+  AuthenticatedAppDataEntryRoute: typeof AuthenticatedAppDataEntryRoute
+  AuthenticatedAppExpensesRoute: typeof AuthenticatedAppExpensesRoute
+  AuthenticatedAppFulfillmentRoute: typeof AuthenticatedAppFulfillmentRoute
+  AuthenticatedAppIntegrationLogsRoute: typeof AuthenticatedAppIntegrationLogsRoute
+  AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
+  AuthenticatedAppInvestorsRoute: typeof AuthenticatedAppInvestorsRouteWithChildren
+  AuthenticatedAppInvoicePrintRoute: typeof AuthenticatedAppInvoicePrintRoute
+  AuthenticatedAppMaterialsRoute: typeof AuthenticatedAppMaterialsRoute
+  AuthenticatedAppMyInvestmentsRoute: typeof AuthenticatedAppMyInvestmentsRoute
+  AuthenticatedAppMyPrepRoute: typeof AuthenticatedAppMyPrepRoute
+  AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
+  AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
+  AuthenticatedAppOrdersRoute: typeof AuthenticatedAppOrdersRoute
+  AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
+  AuthenticatedAppProductionRoute: typeof AuthenticatedAppProductionRoute
+  AuthenticatedAppProductionTasksRoute: typeof AuthenticatedAppProductionTasksRoute
+  AuthenticatedAppProductsRoute: typeof AuthenticatedAppProductsRoute
+  AuthenticatedAppPurchasesRoute: typeof AuthenticatedAppPurchasesRoute
+  AuthenticatedAppServicesRoute: typeof AuthenticatedAppServicesRoute
+  AuthenticatedAppServicesDashboardRoute: typeof AuthenticatedAppServicesDashboardRouteWithChildren
+  AuthenticatedAppSuppliersRoute: typeof AuthenticatedAppSuppliersRouteWithChildren
+  AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
+  AuthenticatedAppTreasuryRoute: typeof AuthenticatedAppTreasuryRoute
+  AuthenticatedAppCustomersIdRoute: typeof AuthenticatedAppCustomersIdRoute
+  AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
+  AuthenticatedAppHrRequestsRoute: typeof AuthenticatedAppHrRequestsRoute
+  AuthenticatedAppHubHubRoute: typeof AuthenticatedAppHubHubRoute
+  AuthenticatedAppReportsAttendanceRoute: typeof AuthenticatedAppReportsAttendanceRoute
+  AuthenticatedAppReportsAuditRoute: typeof AuthenticatedAppReportsAuditRoute
+  AuthenticatedAppReportsBranchesRoute: typeof AuthenticatedAppReportsBranchesRoute
+  AuthenticatedAppReportsBrandsComparisonRoute: typeof AuthenticatedAppReportsBrandsComparisonRoute
+  AuthenticatedAppReportsCashFlowRoute: typeof AuthenticatedAppReportsCashFlowRoute
+  AuthenticatedAppReportsCouriersRoute: typeof AuthenticatedAppReportsCouriersRoute
+  AuthenticatedAppReportsDataHealthRoute: typeof AuthenticatedAppReportsDataHealthRoute
+  AuthenticatedAppReportsExecutiveRoute: typeof AuthenticatedAppReportsExecutiveRoute
+  AuthenticatedAppReportsFulfillmentRoute: typeof AuthenticatedAppReportsFulfillmentRoute
+  AuthenticatedAppReportsIncomeStatementRoute: typeof AuthenticatedAppReportsIncomeStatementRoute
+  AuthenticatedAppReportsInventoryValuationRoute: typeof AuthenticatedAppReportsInventoryValuationRoute
+  AuthenticatedAppReportsInvestorsAuditRoute: typeof AuthenticatedAppReportsInvestorsAuditRoute
+  AuthenticatedAppReportsMarketingRoute: typeof AuthenticatedAppReportsMarketingRoute
+  AuthenticatedAppReportsMetaAdsRoute: typeof AuthenticatedAppReportsMetaAdsRoute
+  AuthenticatedAppReportsOfflineInvoicesRoute: typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  AuthenticatedAppReportsProductionRoute: typeof AuthenticatedAppReportsProductionRoute
+  AuthenticatedAppReportsProfitsRoute: typeof AuthenticatedAppReportsProfitsRoute
+  AuthenticatedAppReportsReceivablesAgingRoute: typeof AuthenticatedAppReportsReceivablesAgingRoute
+  AuthenticatedAppReportsReconciliationRoute: typeof AuthenticatedAppReportsReconciliationRoute
+  AuthenticatedAppReportsRevenueComparisonRoute: typeof AuthenticatedAppReportsRevenueComparisonRoute
+  AuthenticatedAppReportsSalesRoute: typeof AuthenticatedAppReportsSalesRoute
+  AuthenticatedAppReportsShopifyRoute: typeof AuthenticatedAppReportsShopifyRoute
+  AuthenticatedAppReportsTiktokAdsRoute: typeof AuthenticatedAppReportsTiktokAdsRoute
+  AuthenticatedAppReportsValuationRoute: typeof AuthenticatedAppReportsValuationRoute
+  AuthenticatedAppCustomersIndexRoute: typeof AuthenticatedAppCustomersIndexRoute
+}
+
+const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppAdminRoute: AuthenticatedAppAdminRoute,
+  AuthenticatedAppAssetsRoute: AuthenticatedAppAssetsRoute,
+  AuthenticatedAppBranchStockRoute: AuthenticatedAppBranchStockRoute,
+  AuthenticatedAppBrandsRoute: AuthenticatedAppBrandsRoute,
+  AuthenticatedAppCategoriesRoute: AuthenticatedAppCategoriesRoute,
+  AuthenticatedAppCouriersRoute: AuthenticatedAppCouriersRoute,
+  AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
+  AuthenticatedAppDataEntryRoute: AuthenticatedAppDataEntryRoute,
+  AuthenticatedAppExpensesRoute: AuthenticatedAppExpensesRoute,
+  AuthenticatedAppFulfillmentRoute: AuthenticatedAppFulfillmentRoute,
+  AuthenticatedAppIntegrationLogsRoute: AuthenticatedAppIntegrationLogsRoute,
+  AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
+  AuthenticatedAppInvestorsRoute: AuthenticatedAppInvestorsRouteWithChildren,
+  AuthenticatedAppInvoicePrintRoute: AuthenticatedAppInvoicePrintRoute,
+  AuthenticatedAppMaterialsRoute: AuthenticatedAppMaterialsRoute,
+  AuthenticatedAppMyInvestmentsRoute: AuthenticatedAppMyInvestmentsRoute,
+  AuthenticatedAppMyPrepRoute: AuthenticatedAppMyPrepRoute,
+  AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
+  AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,
+  AuthenticatedAppOrdersRoute: AuthenticatedAppOrdersRoute,
+  AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
+  AuthenticatedAppProductionRoute: AuthenticatedAppProductionRoute,
+  AuthenticatedAppProductionTasksRoute: AuthenticatedAppProductionTasksRoute,
+  AuthenticatedAppProductsRoute: AuthenticatedAppProductsRoute,
+  AuthenticatedAppPurchasesRoute: AuthenticatedAppPurchasesRoute,
+  AuthenticatedAppServicesRoute: AuthenticatedAppServicesRoute,
+  AuthenticatedAppServicesDashboardRoute:
+    AuthenticatedAppServicesDashboardRouteWithChildren,
+  AuthenticatedAppSuppliersRoute: AuthenticatedAppSuppliersRouteWithChildren,
+  AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
+  AuthenticatedAppTreasuryRoute: AuthenticatedAppTreasuryRoute,
+  AuthenticatedAppCustomersIdRoute: AuthenticatedAppCustomersIdRoute,
+  AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
+  AuthenticatedAppHrRequestsRoute: AuthenticatedAppHrRequestsRoute,
+  AuthenticatedAppHubHubRoute: AuthenticatedAppHubHubRoute,
+  AuthenticatedAppReportsAttendanceRoute:
+    AuthenticatedAppReportsAttendanceRoute,
+  AuthenticatedAppReportsAuditRoute: AuthenticatedAppReportsAuditRoute,
+  AuthenticatedAppReportsBranchesRoute: AuthenticatedAppReportsBranchesRoute,
+  AuthenticatedAppReportsBrandsComparisonRoute:
+    AuthenticatedAppReportsBrandsComparisonRoute,
+  AuthenticatedAppReportsCashFlowRoute: AuthenticatedAppReportsCashFlowRoute,
+  AuthenticatedAppReportsCouriersRoute: AuthenticatedAppReportsCouriersRoute,
+  AuthenticatedAppReportsDataHealthRoute:
+    AuthenticatedAppReportsDataHealthRoute,
+  AuthenticatedAppReportsExecutiveRoute: AuthenticatedAppReportsExecutiveRoute,
+  AuthenticatedAppReportsFulfillmentRoute:
+    AuthenticatedAppReportsFulfillmentRoute,
+  AuthenticatedAppReportsIncomeStatementRoute:
+    AuthenticatedAppReportsIncomeStatementRoute,
+  AuthenticatedAppReportsInventoryValuationRoute:
+    AuthenticatedAppReportsInventoryValuationRoute,
+  AuthenticatedAppReportsInvestorsAuditRoute:
+    AuthenticatedAppReportsInvestorsAuditRoute,
+  AuthenticatedAppReportsMarketingRoute: AuthenticatedAppReportsMarketingRoute,
+  AuthenticatedAppReportsMetaAdsRoute: AuthenticatedAppReportsMetaAdsRoute,
+  AuthenticatedAppReportsOfflineInvoicesRoute:
+    AuthenticatedAppReportsOfflineInvoicesRoute,
+  AuthenticatedAppReportsProductionRoute:
+    AuthenticatedAppReportsProductionRoute,
+  AuthenticatedAppReportsProfitsRoute: AuthenticatedAppReportsProfitsRoute,
+  AuthenticatedAppReportsReceivablesAgingRoute:
+    AuthenticatedAppReportsReceivablesAgingRoute,
+  AuthenticatedAppReportsReconciliationRoute:
+    AuthenticatedAppReportsReconciliationRoute,
+  AuthenticatedAppReportsRevenueComparisonRoute:
+    AuthenticatedAppReportsRevenueComparisonRoute,
+  AuthenticatedAppReportsSalesRoute: AuthenticatedAppReportsSalesRoute,
+  AuthenticatedAppReportsShopifyRoute: AuthenticatedAppReportsShopifyRoute,
+  AuthenticatedAppReportsTiktokAdsRoute: AuthenticatedAppReportsTiktokAdsRoute,
+  AuthenticatedAppReportsValuationRoute: AuthenticatedAppReportsValuationRoute,
+  AuthenticatedAppCustomersIndexRoute: AuthenticatedAppCustomersIndexRoute,
+}
+
+const AuthenticatedAppRouteWithChildren =
+  AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicHooksBostaRecallRoute: ApiPublicHooksBostaRecallRoute,
+  ApiPublicHooksShopifySyncRoute: ApiPublicHooksShopifySyncRoute,
+  ApiPublicOauthShopifyDotcallbackRoute: ApiPublicOauthShopifyDotcallbackRoute,
+  ApiPublicOauthShopifyCallbackRoute: ApiPublicOauthShopifyCallbackRoute,
+  ApiPublicWebhooksBostaBrandIdRoute: ApiPublicWebhooksBostaBrandIdRoute,
+  ApiPublicWebhooksShopifyBrandIdRoute: ApiPublicWebhooksShopifyBrandIdRoute,
+  ApiPublicWebhooksShopifyOrdersRoute: ApiPublicWebhooksShopifyOrdersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

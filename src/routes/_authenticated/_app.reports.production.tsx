@@ -1,0 +1,195 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { BarChart3, Factory, Users, Package } from "lucide-react";
+import { getInternalDashboard, listBrands } from "@/lib/internal.functions";
+import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
+import { useGlobalPeriod } from "@/lib/global-period";
+import { ReportActions } from "@/components/ReportActions";
+import { pctDelta } from "@/lib/export-utils";
+import { ChartFrame } from "@/components/EmptyState";
+
+export const Route = createFileRoute("/_authenticated/_app/reports/production")({
+  head: () => ({ meta: [
+    { title: "تقارير الإنتاج — e-GURUS" },
+    { name: "description", content: "أداء العمال والمنتجات الأكثر إنتاجًا." },
+    { name: "robots", content: "noindex, nofollow" },
+  ]}),
+  component: ProductionReports,
+});
+
+function fmt(n: number) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n); }
+
+function ProductionReports() {
+  const listBrandsFn = useServerFn(listBrands);
+  const getDash = useServerFn(getInternalDashboard);
+  const [brandId, setBrandId] = useState<string>("all");
+  const __gp = useGlobalPeriod();
+  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
+  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const resolved = resolvePeriod(period);
+
+  const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => listBrandsFn() });
+  const dashQ = useQuery({
+    queryKey: ["reports-prod", resolved.year, brandId, period.preset, resolved.dateFrom, resolved.dateTo],
+    queryFn: () => getDash({ data: { year: resolved.year, brandId: brandId === "all" ? null : brandId, periodType: resolved.periodType, dateFrom: resolved.dateFrom, dateTo: resolved.dateTo } }),
+  });
+
+  const d = dashQ.data;
+  const topProduced = (d?.inventory.allProducts ?? [])
+    .filter((p) => p.produced > 0)
+    .sort((a, b) => b.produced - a.produced)
+    .slice(0, 10);
+  const workers = d?.workers ?? [];
+  const totalProduced = d?.inventory.totalProduced ?? 0;
+
+  return (
+    <div className="p-6 md:p-8 space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><BarChart3 className="w-7 h-7 text-primary" /> تقارير الإنتاج</h1>
+          <p className="text-muted-foreground text-sm mt-1">أداء العمال والموظفين والمنتجات الأكثر إنتاجًا.</p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <Select value={brandId} onValueChange={setBrandId}>
+            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل البراندات</SelectItem>
+              {(brandsQ.data ?? []).filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <PeriodFilter value={period} onChange={setPeriod} />
+          <ReportActions
+            filename={`production-report-${resolved.year}.csv`}
+            summaryTitle="تقرير الإنتاج"
+            summaryText={`الفترة: ${resolved.dateFrom ?? resolved.year}${resolved.dateTo ? ` → ${resolved.dateTo}` : ""}`}
+            rows={workers.map((w) => ({ ...w, share: totalProduced > 0 ? (w.produced / totalProduced) : 0 })) as unknown as Array<Record<string, unknown>>}
+            columns={[
+              { key: "name", label: "العامل" },
+              { key: "produced", label: "إجمالي الإنتاج" },
+              { key: "productCount", label: "عدد المنتجات" },
+              { key: "share", label: "نصيبه %", fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="card-gradient p-5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1"><Factory className="w-3.5 h-3.5" /> إجمالي الإنتاج</div>
+          <div className="text-2xl font-bold mt-1">{fmt(totalProduced)}</div>
+        </Card>
+        <Card className="card-gradient p-5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1"><Users className="w-3.5 h-3.5" /> عدد العمال النشطين</div>
+          <div className="text-2xl font-bold mt-1">{workers.length}</div>
+        </Card>
+        <Card className="card-gradient p-5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1"><Package className="w-3.5 h-3.5" /> منتجات مُنتجة</div>
+          <div className="text-2xl font-bold mt-1">{topProduced.length}</div>
+        </Card>
+        <Card className="card-gradient p-5">
+          <div className="text-xs text-muted-foreground">متوسط إنتاج العامل</div>
+          <div className="text-2xl font-bold mt-1">{workers.length > 0 ? fmt(totalProduced / workers.length) : 0}</div>
+        </Card>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Card className="card-gradient p-5">
+          <h3 className="font-semibold mb-4">أفضل العمال إنتاجًا</h3>
+          <ChartFrame
+            isLoading={dashQ.isLoading}
+            isError={dashQ.isError}
+            error={dashQ.error}
+            isEmpty={!dashQ.isLoading && workers.length === 0}
+            emptyTitle="لا بيانات عمال بعد"
+            emptyDescription="سجّل حركات الإنتاج لتظهر أسماء العمال وأداؤهم."
+            onRetry={() => dashQ.refetch()}
+            height={280}
+          >
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={workers} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Bar dataKey="produced" name="إنتاج" fill="hsl(var(--primary))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartFrame>
+        </Card>
+
+        <Card className="card-gradient p-5">
+          <h3 className="font-semibold mb-4">أكثر المنتجات إنتاجًا</h3>
+          <ChartFrame
+            isLoading={dashQ.isLoading}
+            isError={dashQ.isError}
+            error={dashQ.error}
+            isEmpty={!dashQ.isLoading && topProduced.length === 0}
+            emptyTitle="لا حركات إنتاج بعد"
+            emptyDescription="سجّل إنتاج المنتجات من صفحة الإنتاج."
+            onRetry={() => dashQ.refetch()}
+            height={280}
+          >
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={topProduced} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Bar dataKey="produced" name="إنتاج" fill="hsl(var(--chart-2, 175 60% 55%))" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartFrame>
+        </Card>
+      </div>
+
+
+      <Card className="card-gradient overflow-hidden">
+        <div className="p-4 border-b border-border font-semibold">تفاصيل العمال</div>
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-border text-right text-muted-foreground">
+            <th className="p-3">العامل</th><th className="p-3">إجمالي الإنتاج</th><th className="p-3">عدد المنتجات</th><th className="p-3">نصيبه %</th>
+          </tr></thead>
+          <tbody>
+            {workers.map((w) => (
+              <tr key={w.name} className="border-b border-border/50">
+                <td className="p-3 font-medium">{w.name}</td>
+                <td className="p-3">{fmt(w.produced)}</td>
+                <td className="p-3">{w.productCount}</td>
+                <td className="p-3">{totalProduced > 0 ? ((w.produced / totalProduced) * 100).toFixed(1) : 0}%</td>
+              </tr>
+            ))}
+            {workers.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا بيانات.</td></tr>}
+          </tbody>
+        </table>
+      </Card>
+
+      <Card className="card-gradient overflow-hidden">
+        <div className="p-4 border-b border-border font-semibold">أكثر المنتجات إنتاجًا</div>
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-border text-right text-muted-foreground">
+            <th className="p-3">المنتج</th><th className="p-3">إنتاج</th><th className="p-3">مباع</th><th className="p-3">مرتجع</th><th className="p-3">المخزون</th>
+          </tr></thead>
+          <tbody>
+            {topProduced.map((p) => (
+              <tr key={p.id} className="border-b border-border/50">
+                <td className="p-3 font-medium">{p.name}</td>
+                <td className="p-3"><Badge>{fmt(p.produced)}</Badge></td>
+                <td className="p-3">{fmt(p.sold)}</td>
+                <td className="p-3 text-amber-500">{fmt(p.returned)}</td>
+                <td className="p-3">{fmt(p.stock)}</td>
+              </tr>
+            ))}
+            {topProduced.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا منتجات مُنتجة بعد.</td></tr>}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}
