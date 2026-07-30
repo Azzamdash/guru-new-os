@@ -53,6 +53,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as AuthenticatedAppSuppliersIndexRouteImport } from './routes/_authenticated/_app.suppliers.index'
 import { Route as AuthenticatedAppServicesDashboardIndexRouteImport } from './routes/_authenticated/_app.services-dashboard.index'
 import { Route as AuthenticatedAppCustomersIndexRouteImport } from './routes/_authenticated/_app.customers.index'
+import { Route as AuthenticatedAppBrandsHubIndexRouteImport } from './routes/_authenticated/_app.brands-hub.index'
 import { Route as ApiPublicOauthShopifyDotcallbackRouteImport } from './routes/api/public/oauth/shopify[.]callback'
 import { Route as ApiPublicHooksShopifySyncRouteImport } from './routes/api/public/hooks/shopify-sync'
 import { Route as ApiPublicHooksBostaRecallRouteImport } from './routes/api/public/hooks/bosta-recall'
@@ -89,6 +90,7 @@ import { Route as AuthenticatedAppHubHubRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppHrRequestsRouteImport } from './routes/_authenticated/_app.hr.requests'
 import { Route as AuthenticatedAppHrAttendanceRouteImport } from './routes/_authenticated/_app.hr.attendance'
 import { Route as AuthenticatedAppCustomersIdRouteImport } from './routes/_authenticated/_app.customers.$id'
+import { Route as AuthenticatedAppBrandsHubSlugRouteImport } from './routes/_authenticated/_app.brands-hub.$slug'
 import { Route as ApiPublicWebhooksShopifyOrdersRouteImport } from './routes/api/public/webhooks/shopify.orders'
 import { Route as ApiPublicWebhooksShopifyBrandIdRouteImport } from './routes/api/public/webhooks/shopify.$brandId'
 import { Route as ApiPublicWebhooksBostaBrandIdRouteImport } from './routes/api/public/webhooks/bosta.$brandId'
@@ -343,6 +345,12 @@ const AuthenticatedAppCustomersIndexRoute =
     path: '/customers/',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppBrandsHubIndexRoute =
+  AuthenticatedAppBrandsHubIndexRouteImport.update({
+    id: '/brands-hub/',
+    path: '/brands-hub/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicOauthShopifyDotcallbackRoute =
   ApiPublicOauthShopifyDotcallbackRouteImport.update({
     id: '/api/public/oauth/shopify.callback',
@@ -558,6 +566,12 @@ const AuthenticatedAppCustomersIdRoute =
     path: '/customers/$id',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppBrandsHubSlugRoute =
+  AuthenticatedAppBrandsHubSlugRouteImport.update({
+    id: '/brands-hub/$slug',
+    path: '/brands-hub/$slug',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const ApiPublicWebhooksShopifyOrdersRoute =
   ApiPublicWebhooksShopifyOrdersRouteImport.update({
     id: '/api/public/webhooks/shopify/orders',
@@ -629,6 +643,7 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/brands-hub/$slug': typeof AuthenticatedAppBrandsHubSlugRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -665,6 +680,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
   '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
   '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
+  '/brands-hub/': typeof AuthenticatedAppBrandsHubIndexRoute
   '/customers/': typeof AuthenticatedAppCustomersIndexRoute
   '/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
   '/suppliers/': typeof AuthenticatedAppSuppliersIndexRoute
@@ -712,6 +728,7 @@ export interface FileRoutesByTo {
   '/services': typeof AuthenticatedAppServicesRoute
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/brands-hub/$slug': typeof AuthenticatedAppBrandsHubSlugRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -748,6 +765,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
   '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
   '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
+  '/brands-hub': typeof AuthenticatedAppBrandsHubIndexRoute
   '/customers': typeof AuthenticatedAppCustomersIndexRoute
   '/services-dashboard': typeof AuthenticatedAppServicesDashboardIndexRoute
   '/suppliers': typeof AuthenticatedAppSuppliersIndexRoute
@@ -800,6 +818,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/_authenticated/_app/brands-hub/$slug': typeof AuthenticatedAppBrandsHubSlugRoute
   '/_authenticated/_app/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/_authenticated/_app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/_authenticated/_app/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -836,6 +855,7 @@ export interface FileRoutesById {
   '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
   '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
   '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
+  '/_authenticated/_app/brands-hub/': typeof AuthenticatedAppBrandsHubIndexRoute
   '/_authenticated/_app/customers/': typeof AuthenticatedAppCustomersIndexRoute
   '/_authenticated/_app/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
   '/_authenticated/_app/suppliers/': typeof AuthenticatedAppSuppliersIndexRoute
@@ -887,6 +907,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tasks'
     | '/treasury'
+    | '/brands-hub/$slug'
     | '/customers/$id'
     | '/hr/attendance'
     | '/hr/requests'
@@ -923,6 +944,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bosta-recall'
     | '/api/public/hooks/shopify-sync'
     | '/api/public/oauth/shopify.callback'
+    | '/brands-hub/'
     | '/customers/'
     | '/services-dashboard/'
     | '/suppliers/'
@@ -970,6 +992,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tasks'
     | '/treasury'
+    | '/brands-hub/$slug'
     | '/customers/$id'
     | '/hr/attendance'
     | '/hr/requests'
@@ -1006,6 +1029,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bosta-recall'
     | '/api/public/hooks/shopify-sync'
     | '/api/public/oauth/shopify.callback'
+    | '/brands-hub'
     | '/customers'
     | '/services-dashboard'
     | '/suppliers'
@@ -1057,6 +1081,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/suppliers'
     | '/_authenticated/_app/tasks'
     | '/_authenticated/_app/treasury'
+    | '/_authenticated/_app/brands-hub/$slug'
     | '/_authenticated/_app/customers/$id'
     | '/_authenticated/_app/hr/attendance'
     | '/_authenticated/_app/hr/requests'
@@ -1093,6 +1118,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/bosta-recall'
     | '/api/public/hooks/shopify-sync'
     | '/api/public/oauth/shopify.callback'
+    | '/_authenticated/_app/brands-hub/'
     | '/_authenticated/_app/customers/'
     | '/_authenticated/_app/services-dashboard/'
     | '/_authenticated/_app/suppliers/'
@@ -1432,6 +1458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCustomersIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/brands-hub/': {
+      id: '/_authenticated/_app/brands-hub/'
+      path: '/brands-hub'
+      fullPath: '/brands-hub/'
+      preLoaderRoute: typeof AuthenticatedAppBrandsHubIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/oauth/shopify.callback': {
       id: '/api/public/oauth/shopify.callback'
       path: '/api/public/oauth/shopify.callback'
@@ -1684,6 +1717,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCustomersIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/brands-hub/$slug': {
+      id: '/_authenticated/_app/brands-hub/$slug'
+      path: '/brands-hub/$slug'
+      fullPath: '/brands-hub/$slug'
+      preLoaderRoute: typeof AuthenticatedAppBrandsHubSlugRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/api/public/webhooks/shopify/orders': {
       id: '/api/public/webhooks/shopify/orders'
       path: '/api/public/webhooks/shopify/orders'
@@ -1824,6 +1864,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSuppliersRoute: typeof AuthenticatedAppSuppliersRouteWithChildren
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppTreasuryRoute: typeof AuthenticatedAppTreasuryRoute
+  AuthenticatedAppBrandsHubSlugRoute: typeof AuthenticatedAppBrandsHubSlugRoute
   AuthenticatedAppCustomersIdRoute: typeof AuthenticatedAppCustomersIdRoute
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrRequestsRoute: typeof AuthenticatedAppHrRequestsRoute
@@ -1852,6 +1893,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppReportsShopifyRoute: typeof AuthenticatedAppReportsShopifyRoute
   AuthenticatedAppReportsTiktokAdsRoute: typeof AuthenticatedAppReportsTiktokAdsRoute
   AuthenticatedAppReportsValuationRoute: typeof AuthenticatedAppReportsValuationRoute
+  AuthenticatedAppBrandsHubIndexRoute: typeof AuthenticatedAppBrandsHubIndexRoute
   AuthenticatedAppCustomersIndexRoute: typeof AuthenticatedAppCustomersIndexRoute
 }
 
@@ -1888,6 +1930,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSuppliersRoute: AuthenticatedAppSuppliersRouteWithChildren,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppTreasuryRoute: AuthenticatedAppTreasuryRoute,
+  AuthenticatedAppBrandsHubSlugRoute: AuthenticatedAppBrandsHubSlugRoute,
   AuthenticatedAppCustomersIdRoute: AuthenticatedAppCustomersIdRoute,
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrRequestsRoute: AuthenticatedAppHrRequestsRoute,
@@ -1928,6 +1971,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppReportsShopifyRoute: AuthenticatedAppReportsShopifyRoute,
   AuthenticatedAppReportsTiktokAdsRoute: AuthenticatedAppReportsTiktokAdsRoute,
   AuthenticatedAppReportsValuationRoute: AuthenticatedAppReportsValuationRoute,
+  AuthenticatedAppBrandsHubIndexRoute: AuthenticatedAppBrandsHubIndexRoute,
   AuthenticatedAppCustomersIndexRoute: AuthenticatedAppCustomersIndexRoute,
 }
 
@@ -1967,13 +2011,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
