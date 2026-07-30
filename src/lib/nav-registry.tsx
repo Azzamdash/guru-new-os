@@ -221,6 +221,7 @@ export const NAV_PAGES: NavPage[] = [
   { to: "/inventory", ar: "إدارة المخزون", en: "Inventory Management", icon: Boxes, hub: "inventory", requiresWrite: true, extraRoles: ["production_manager", "operation_manager", "branch_manager", "fulfillment_manager"], descAr: "المخزون الحالي، الحركات والتنبيهات", descEn: "Stock levels, movements & alerts" },
   { to: "/materials", ar: "الخامات", en: "Materials", icon: Package, hub: "inventory", requiresWrite: true, descAr: "بيانات الخامات وتكلفتها", descEn: "Raw materials & costs" },
   { to: "/products", ar: "المنتجات", en: "Products", icon: Boxes, hub: "inventory", requiresWrite: true, descAr: "كتالوج المنتجات", descEn: "Products catalog" },
+  { to: "/production", ar: "أوامر الإنتاج", en: "Production Orders", icon: Factory, hub: "inventory", section: "production", requiresWrite: true, extraRoles: ["production_manager", "team_leader", "production_worker", "operation_manager"], descAr: "أوامر الإنتاج وخصم الخامات مباشرة", descEn: "Production orders & direct material consumption" },
   { to: "/reports/inventory-valuation", ar: "تقييم المخزون", en: "Inventory Valuation", icon: FileBarChart, hub: "inventory", privilegedOnly: true, descAr: "قيمة المخزون عبر البراندات والفروع", descEn: "Stock value across brands & branches" },
 
   // SETTINGS
