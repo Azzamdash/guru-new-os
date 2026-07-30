@@ -81,26 +81,27 @@ export const getWalletBalances = createServerFn({ method: "GET" })
     if (walletsR.error) throw walletsR.error;
     const wallets = (walletsR.data ?? []) as Wallet[];
 
-    const allR = await context.supabase.from("cash_transactions").select("wallet_id, type, amount");
+    const allR = await context.supabase.from("cash_transactions").select("wallet_id, type, amount, transfer_group");
     if (allR.error) throw allR.error;
     const balMap = new Map<string, number>();
     for (const w of wallets) balMap.set(w.id, Number(w.opening_balance) || 0);
-    for (const r of (allR.data ?? []) as Array<{ wallet_id: string | null; type: string; amount: number }>) {
+    for (const r of (allR.data ?? []) as Array<{ wallet_id: string | null; type: string; amount: number; transfer_group: string | null }>) {
       if (!r.wallet_id) continue;
       const amt = Number(r.amount) || 0;
+      // Transfers use other_out/deposit today; they cancel globally and are excluded from period KPIs below.
       const signed = (r.type === "collection" || r.type === "deposit") ? amt : -amt;
       balMap.set(r.wallet_id, (balMap.get(r.wallet_id) ?? 0) + signed);
     }
 
     const periodMap = new Map<string, { periodIn: number; periodOut: number }>();
     if (data.from || data.to) {
-      let pQ = context.supabase.from("cash_transactions").select("wallet_id, type, amount, occurred_at");
+      let pQ = context.supabase.from("cash_transactions").select("wallet_id, type, amount, occurred_at, transfer_group");
       if (data.from) pQ = pQ.gte("occurred_at", data.from);
       if (data.to) pQ = pQ.lte("occurred_at", data.to);
       const pR = await pQ;
       if (pR.error) throw pR.error;
-      for (const r of (pR.data ?? []) as Array<{ wallet_id: string | null; type: string; amount: number }>) {
-        if (!r.wallet_id) continue;
+      for (const r of (pR.data ?? []) as Array<{ wallet_id: string | null; type: string; amount: number; transfer_group: string | null }>) {
+        if (!r.wallet_id || r.transfer_group) continue;
         const cur = periodMap.get(r.wallet_id) ?? { periodIn: 0, periodOut: 0 };
         const amt = Number(r.amount) || 0;
         if (r.type === "collection" || r.type === "deposit") cur.periodIn += amt; else cur.periodOut += amt;
