@@ -91,7 +91,7 @@ function AuthPage() {
               <img
                 src={logoAsset.url}
                 alt="e-Gurus"
-                className="relative w-16 h-16 rounded-2xl object-cover shadow-lg ring-1 ring-primary/30"
+                className="relative w-16 h-16 rounded-2xl object-contain p-1 shadow-lg ring-1 ring-primary/30"
               />
             </div>
             <div className="flex flex-col">
@@ -131,7 +131,7 @@ function AuthPage() {
             <img
               src={logoAsset.url}
               alt="e-Gurus"
-              className="w-14 h-14 rounded-2xl object-cover ring-1 ring-primary/30 shadow-lg"
+              className="w-14 h-14 rounded-2xl object-contain p-1 ring-1 ring-primary/30 shadow-lg"
             />
           </div>
 
