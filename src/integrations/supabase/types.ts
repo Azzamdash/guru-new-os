@@ -20,7 +20,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      __tmp_apply_migration: { Args: { sql: string }; Returns: undefined }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
