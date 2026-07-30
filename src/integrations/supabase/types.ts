@@ -946,12 +946,17 @@ export type Database = {
       inventory_movements: {
         Row: {
           created_at: string
+          created_by: string | null
           employee_id: string | null
           id: string
+          material_id: string | null
           note: string | null
           occurred_at: string
-          product_id: string
+          product_id: string | null
           qty: number
+          reason: string | null
+          source: string
+          source_id: string | null
           type: Database["public"]["Enums"]["inventory_movement_type"]
           unit_cost: number | null
           updated_at: string
@@ -959,12 +964,17 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           employee_id?: string | null
           id?: string
+          material_id?: string | null
           note?: string | null
           occurred_at?: string
-          product_id: string
+          product_id?: string | null
           qty: number
+          reason?: string | null
+          source?: string
+          source_id?: string | null
           type: Database["public"]["Enums"]["inventory_movement_type"]
           unit_cost?: number | null
           updated_at?: string
@@ -972,12 +982,17 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           employee_id?: string | null
           id?: string
+          material_id?: string | null
           note?: string | null
           occurred_at?: string
-          product_id?: string
+          product_id?: string | null
           qty?: number
+          reason?: string | null
+          source?: string
+          source_id?: string | null
           type?: Database["public"]["Enums"]["inventory_movement_type"]
           unit_cost?: number | null
           updated_at?: string
@@ -989,6 +1004,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
             referencedColumns: ["id"]
           },
           {
@@ -1114,6 +1136,9 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          on_hand_qty: number
+          reorder_point: number
+          sku: string | null
           unit: string
           unit_cost: number
           updated_at: string
@@ -1123,6 +1148,9 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          on_hand_qty?: number
+          reorder_point?: number
+          sku?: string | null
           unit?: string
           unit_cost?: number
           updated_at?: string
@@ -1132,6 +1160,9 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          on_hand_qty?: number
+          reorder_point?: number
+          sku?: string | null
           unit?: string
           unit_cost?: number
           updated_at?: string

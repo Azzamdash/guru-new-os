@@ -13,6 +13,7 @@ export type HubKey =
   | "invoicing"
   | "catalog"
   | "offline"
+  | "inventory"
   | "services"
   | "investors"
   | "hr"
@@ -96,6 +97,12 @@ export const HUBS: Hub[] = [
     icon: Store, accent: "from-sky-500/40 to-cyan-500/20",
     descAr: "نقطة البيع، مخزون الفروع وتقارير الأوفلاين",
     descEn: "POS, branch stock & offline reports",
+  },
+  {
+    key: "inventory", ar: "إدارة المخزون", en: "Inventory Management",
+    icon: Boxes, accent: "from-indigo-500/40 to-primary/20",
+    descAr: "الخامات والمنتجات، الحركات، التنبيهات وتقارير المخزون",
+    descEn: "Materials & products, movements, alerts & stock reports",
   },
   {
     key: "services", ar: "براندات الخدمات", en: "Services Brands",
@@ -211,6 +218,12 @@ export const NAV_PAGES: NavPage[] = [
   { to: "/hr/attendance", ar: "الحضور والانصراف", en: "Attendance & Check-in", icon: Clock, hub: "hr", section: "hr_attendance", extraRoles: ["hr"], descAr: "تسجيل مواعيد الحضور والانصراف وحساب التأخير والأوفر تايم", descEn: "Daily check-in/out with late & overtime reports" },
   { to: "/reports/attendance", ar: "تقارير الحضور", en: "Attendance Reports", icon: UserCheck, hub: "hr", section: "reports_attendance", extraRoles: ["hr"], descAr: "انتظام وحضور الموظفين", descEn: "Employees attendance" },
 
+
+  // INVENTORY
+  { to: "/inventory", ar: "إدارة المخزون", en: "Inventory Management", icon: Boxes, hub: "inventory", requiresWrite: true, extraRoles: ["production_manager", "operation_manager", "branch_manager", "fulfillment_manager"], descAr: "المخزون الحالي، الحركات والتنبيهات", descEn: "Stock levels, movements & alerts" },
+  { to: "/materials", ar: "الخامات", en: "Materials", icon: Package, hub: "inventory", requiresWrite: true, descAr: "بيانات الخامات وتكلفتها", descEn: "Raw materials & costs" },
+  { to: "/products", ar: "المنتجات", en: "Products", icon: Boxes, hub: "inventory", requiresWrite: true, descAr: "كتالوج المنتجات", descEn: "Products catalog" },
+  { to: "/reports/inventory-valuation", ar: "تقييم المخزون", en: "Inventory Valuation", icon: FileBarChart, hub: "inventory", privilegedOnly: true, descAr: "قيمة المخزون عبر البراندات والفروع", descEn: "Stock value across brands & branches" },
 
   // SETTINGS
   { to: "/integrations", ar: "التكاملات", en: "Integrations", icon: Plug, hub: "settings", adminOnly: true, descAr: "Shopify, Bosta والتكاملات", descEn: "Shopify, Bosta & more" },
