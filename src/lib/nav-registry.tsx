@@ -170,8 +170,6 @@ export const NAV_PAGES: NavPage[] = [
   { to: "/reports/profits", ar: "تقرير الأرباح", en: "Profits Report", icon: HandCoins, hub: "overview", privilegedOnly: true, descAr: "صافي الأرباح حسب البراند", descEn: "Net profit / brand" , group: "executive"},
 
   // CRM
-  { to: "/materials", ar: "الخامات", en: "Materials", icon: Package, hub: "settings", requiresWrite: true, descAr: "خامات الإنتاج والتكلفة", descEn: "Raw materials" },
-  { to: "/products", ar: "المنتجات", en: "Products", icon: Boxes, hub: "settings", requiresWrite: true, descAr: "كتالوج المنتجات والأسعار", descEn: "Products catalog" },
   { to: "/brands", ar: "البراندات", en: "Brands", icon: Package, hub: "settings", privilegedOnly: true, descAr: "قائمة البراندات", descEn: "Brands list" },
   { to: "/categories", ar: "الفئات", en: "Categories", icon: Tags, hub: "settings", requiresWrite: true, descAr: "تصنيفات المنتجات", descEn: "Product categories" },
   { to: "/assets", ar: "الأصول", en: "Assets", icon: Building2, hub: "investors", requiresWrite: true, descAr: "أصول الشركة والإهلاك", descEn: "Company assets" },
