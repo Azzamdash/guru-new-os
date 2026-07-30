@@ -4,7 +4,7 @@
   "path": "/mcp",
   "auth": {
     "type": "oauth",
-    "issuer": "https://ueeroqpyyadhpgfjqnyc.supabase.co/auth/v1",
+    "issuer": "https://moxhzeyrqbcmoswqrxdy.supabase.co/auth/v1",
     "accepted_audiences": [
       "authenticated"
     ]
