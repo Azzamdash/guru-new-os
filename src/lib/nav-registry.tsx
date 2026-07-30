@@ -3,6 +3,7 @@ import {
   CheckSquare, Megaphone, BarChart3, ShoppingCart, PackageCheck, Wallet, UserCheck,
   Briefcase, ShoppingBag, HandCoins, Building2, GitCompareArrows, Users, Activity,
   FileBarChart, ShieldAlert, Gauge, CalendarDays, Store, ShieldCheck, Facebook, Music2, Clock,
+  Palette, BookOpen, Sparkles, LineChart,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -14,6 +15,7 @@ export type HubKey =
   | "catalog"
   | "offline"
   | "inventory"
+  | "brands_hub"
   | "services"
   | "investors"
   | "hr"
@@ -103,6 +105,12 @@ export const HUBS: Hub[] = [
     icon: Boxes, accent: "from-indigo-500/40 to-primary/20",
     descAr: "الخامات والمنتجات، الحركات، التنبيهات وتقارير المخزون",
     descEn: "Materials & products, movements, alerts & stock reports",
+  },
+  {
+    key: "brands_hub", ar: "Brands Hub", en: "Brands Hub",
+    icon: Palette, accent: "from-teal-500/40 to-emerald-500/20",
+    descAr: "هوية البراندات، الـ Playbooks، الويكي، المهام والفيد الإبداعي",
+    descEn: "Brand identity, playbooks, wiki, tasks & creative feed",
   },
   {
     key: "services", ar: "براندات الخدمات", en: "Services Brands",
@@ -219,6 +227,10 @@ export const NAV_PAGES: NavPage[] = [
 
   // INVENTORY
   { to: "/inventory", ar: "إدارة المخزون", en: "Inventory Management", icon: Boxes, hub: "inventory", requiresWrite: true, extraRoles: ["production_manager", "operation_manager", "branch_manager", "fulfillment_manager"], descAr: "المخزون الحالي، الحركات والتنبيهات", descEn: "Stock levels, movements & alerts" },
+  { to: "/brands-hub", ar: "البراندات", en: "Brands", icon: Palette, hub: "brands_hub", descAr: "هوية كل براند، الـ Design System والملفات", descEn: "Brand identity, design system & files" },
+  { to: "/brands-hub/tasks", ar: "مهام البراندات", en: "Brand Tasks", icon: CheckSquare, hub: "brands_hub", descAr: "لوحة مهام البراندات والتكليفات", descEn: "Brand task board & assignments" },
+  { to: "/brands-hub/creative", ar: "Creative Feed", en: "Creative Feed", icon: Sparkles, hub: "brands_hub", descAr: "مشاركة الأعمال الإبداعية والتفاعل", descEn: "Share creative work & engage" },
+  { to: "/brands-hub/insights", ar: "إحصائيات البراندات", en: "Brand Insights", icon: LineChart, hub: "brands_hub", privilegedOnly: true, descAr: "أرقام المحتوى والمهام والبلاغات", descEn: "Content, tasks & reports analytics" },
   { to: "/materials", ar: "الخامات", en: "Materials", icon: Package, hub: "inventory", requiresWrite: true, descAr: "بيانات الخامات وتكلفتها", descEn: "Raw materials & costs" },
   { to: "/products", ar: "المنتجات", en: "Products", icon: Boxes, hub: "inventory", requiresWrite: true, descAr: "كتالوج المنتجات", descEn: "Products catalog" },
   { to: "/production", ar: "أوامر الإنتاج", en: "Production Orders", icon: Factory, hub: "inventory", section: "production", requiresWrite: true, extraRoles: ["production_manager", "team_leader", "production_worker", "operation_manager"], descAr: "أوامر الإنتاج وخصم الخامات مباشرة", descEn: "Production orders & direct material consumption" },
