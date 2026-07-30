@@ -24,7 +24,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Wallet, HandCoins, ArrowDownToLine, ArrowUpFromLine, Plus, Trash2, Lock, User, Truck } from "lucide-react";
+import { Wallet, HandCoins, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, Plus, Trash2, Lock, User, Truck } from "lucide-react";
 import { WalletsPanel } from "@/components/WalletsPanel";
 import { listWallets } from "@/lib/wallets.functions";
 import { useEffect } from "react";
