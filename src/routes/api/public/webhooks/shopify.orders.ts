@@ -29,12 +29,16 @@ export const Route = createFileRoute("/api/public/webhooks/shopify/orders")({
         }
 
         try {
-          const { verifyShopifyHmac, ingestShopifyOrderWebhook } = await import("@/server/shopifySync.server");
+          const { verifyShopifyHmac, ingestShopifyOrderWebhook } =
+            await import("@/server/shopifySync.server");
           const ok = await verifyShopifyHmac(integ.brand_id, rawBody, hmac);
           if (!ok) {
             await supabaseAdmin.from("integration_logs").insert({
-              provider: "shopify", direction: "inbound", operation: topic,
-              status: "error", reason: "HMAC verification failed",
+              provider: "shopify",
+              direction: "webhook",
+              operation: topic,
+              status: "error",
+              reason: "HMAC verification failed",
               brand_id: integ.brand_id,
             });
             return new Response("Invalid HMAC", { status: 401 });
@@ -43,16 +47,23 @@ export const Route = createFileRoute("/api/public/webhooks/shopify/orders")({
           const order = JSON.parse(rawBody);
           await ingestShopifyOrderWebhook(integ.brand_id, order);
           await supabaseAdmin.from("integration_logs").insert({
-            provider: "shopify", direction: "inbound", operation: topic,
-            status: "ok", order_number: String(order.name ?? order.order_number ?? ""),
+            provider: "shopify",
+            direction: "webhook",
+            operation: topic,
+            status: "success",
+            order_number: String(order.name ?? order.order_number ?? ""),
             brand_id: integ.brand_id,
           });
           return new Response("ok", { status: 200 });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           await supabaseAdmin.from("integration_logs").insert({
-            provider: "shopify", direction: "inbound", operation: topic,
-            status: "error", reason: msg.slice(0, 500), brand_id: integ.brand_id,
+            provider: "shopify",
+            direction: "webhook",
+            operation: topic,
+            status: "error",
+            reason: msg.slice(0, 500),
+            brand_id: integ.brand_id,
           });
           return new Response(`Error: ${msg}`, { status: 500 });
         }

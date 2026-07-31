@@ -16,6 +16,11 @@ dist-ssr
 .nitro
 *.local
 
+# Environment files (secrets and deployment configuration)
+.env
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
@@ -30,3 +35,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# env files
+.env
+.env.*
+!.env.example
+
+# Supabase CLI local project metadata
+supabase/.temp/

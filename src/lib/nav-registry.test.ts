@@ -1,6 +1,16 @@
 // @ts-nocheck
 import { describe, it, expect } from "bun:test";
-import { NAV_PAGES, canSeePage, type RoleCtx, type NavPage } from "./nav-registry";
+import {
+  HUBS,
+  MAIN_NAV_GROUPS,
+  NAV_PAGES,
+  canEditPage,
+  canSeePage,
+  pageAccessLevel,
+  pagesForHub,
+  type RoleCtx,
+  type NavPage,
+} from "./nav-registry";
 
 /**
  * Role-access test suite.
@@ -47,12 +57,7 @@ const ROLE_ALLOWED: Record<string, string[]> = {
     "/operations",
     "/reports/production",
   ],
-  fulfillment_manager: [
-    "/order-pipeline",
-    "/my-prep",
-    "/orders",
-    "/fulfillment",
-  ],
+  fulfillment_manager: ["/order-pipeline", "/my-prep", "/orders", "/fulfillment"],
   sales_man: ["/pos", "/invoice-print", "/customers"],
   customer_service: ["/orders", "/invoice-print", "/customers", "/pos"],
   production_manager: ["/production-tasks", "/production", "/reports/production"],
@@ -141,10 +146,56 @@ describe("canSeePage: per-page manual grants", () => {
     expect(canSeePage(pageByRoute("/admin"), ctx)).toBe(false);
     expect(canSeePage(pageByRoute("/reports/audit"), ctx)).toBe(false);
   });
+
+  it("uses page grants for visibility and roles for write access", () => {
+    const page = pageByRoute("/orders");
+    const hidden = mkCtx({ sections: new Set(["deny:/orders"]) });
+    const read = mkCtx({ sections: new Set(["page:/orders"]) });
+    const legacyWriteGrant = mkCtx({ sections: new Set(["write:/orders"]) });
+    const roleWriter = mkCtx({ canWrite: true, sections: new Set(["page:/orders"]) });
+
+    expect(pageAccessLevel(page, hidden)).toBe("hidden");
+    expect(pageAccessLevel(page, read)).toBe("read");
+    expect(pageAccessLevel(page, legacyWriteGrant)).toBe("read");
+    expect(pageAccessLevel(page, roleWriter)).toBe("write");
+    expect(canSeePage(page, read)).toBe(true);
+    expect(canEditPage(page, read)).toBe(false);
+    expect(canEditPage(page, roleWriter)).toBe(true);
+  });
+
+  it("lets an explicit deny override a role grant", () => {
+    const ctx = mkCtx({
+      canWrite: true,
+      roles: ["operation_manager"],
+      sections: new Set(["deny:/orders"]),
+    });
+    expect(pageAccessLevel(pageByRoute("/orders"), ctx)).toBe("hidden");
+  });
 });
 
 describe("nav-registry: invoice-print lives under Offline Stores hub", () => {
   it("/invoice-print hub === 'offline'", () => {
     expect(pageByRoute("/invoice-print").hub).toBe("offline");
+  });
+});
+
+describe("nav-registry: main sections", () => {
+  it("groups every hub into executive, operations, management, or system", () => {
+    const groups = new Set(MAIN_NAV_GROUPS.map((group) => group.key));
+    expect(HUBS.every((hub) => groups.has(hub.group))).toBe(true);
+    expect(HUBS.find((hub) => hub.key === "overview")?.group).toBe("executive");
+    expect(HUBS.find((hub) => hub.key === "settings")?.group).toBe("system");
+  });
+});
+
+describe("nav-registry: orders and tasks placement", () => {
+  it("shows the couriers dashboard in both CEO Dashboard and Orders", () => {
+    expect(pagesForHub("overview").some((page) => page.to === "/reports/couriers")).toBe(true);
+    expect(pagesForHub("sales").some((page) => page.to === "/reports/couriers")).toBe(true);
+  });
+
+  it("moves fulfillment from Orders to Tasks & Missions", () => {
+    expect(pagesForHub("missions").some((page) => page.to === "/fulfillment")).toBe(true);
+    expect(pagesForHub("sales").some((page) => page.to === "/fulfillment")).toBe(false);
   });
 });

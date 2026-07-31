@@ -12,7 +12,16 @@ import { getMyAccess } from "@/lib/permissions.functions";
 import { useLang } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import logoAsset from "@/assets/egurus-logo.asset.json";
-import { HUBS, pagesForHub, canSeePage, type Hub, type RoleCtx } from "@/lib/nav-registry";
+import {
+  HUBS,
+  MAIN_NAV_GROUPS,
+  NAV_PAGES,
+  pagesForHub,
+  canSeePage,
+  pageAccessLevel,
+  type Hub,
+  type RoleCtx,
+} from "@/lib/nav-registry";
 import { GlobalPeriodProvider, useGlobalPeriod } from "@/lib/global-period";
 import { PeriodFilter } from "@/components/PeriodFilter";
 
@@ -64,9 +73,25 @@ function AppLayout() {
   const isProjectManager = roles.includes("project_manager");
   const isPrivileged = isAdmin || isManager;
   // If the admin granted any explicit per-page access, don't force the single-purpose lockdown.
-  const hasExplicitPageGrants = Array.from(sections).some((s) => s.startsWith("page:"));
+  const hasExplicitPageGrants = Array.from(sections).some(
+    (section) =>
+      section.startsWith("page:") || section.startsWith("write:") || section.startsWith("deny:"),
+  );
   // Other roles that should be free to browse the hubs they have access to (not locked to one screen).
-  const OPEN_ROLES = ["branch_manager", "operation_manager", "fulfillment_manager", "team_leader", "production_worker", "moderator", "customer_service", "production_manager", "hr", "accountant", "data_entry", "viewer"];
+  const OPEN_ROLES = [
+    "branch_manager",
+    "operation_manager",
+    "fulfillment_manager",
+    "team_leader",
+    "production_worker",
+    "moderator",
+    "customer_service",
+    "production_manager",
+    "hr",
+    "accountant",
+    "data_entry",
+    "viewer",
+  ];
   const hasOpenRole = roles.some((r) => OPEN_ROLES.includes(r));
   const locksAllowed = !hasExplicitPageGrants && !hasOpenRole && !isPrivileged && !role?.canWrite;
   const investorOnly = locksAllowed && isInvestor;
@@ -74,14 +99,17 @@ function AppLayout() {
   const salesManOnly = locksAllowed && !isInvestor && !isOrderPrep && isSalesMan;
   const pmOnly = locksAllowed && !isInvestor && !isOrderPrep && !isSalesMan && isProjectManager;
 
-  const ctx: RoleCtx = useMemo(() => ({
-    isAdmin,
-    isPrivileged,
-    canWrite: !!role?.canWrite,
-    isInvestor,
-    roles,
-    sections,
-  }), [isAdmin, isPrivileged, role?.canWrite, isInvestor, roles, sections]);
+  const ctx: RoleCtx = useMemo(
+    () => ({
+      isAdmin,
+      isPrivileged,
+      canWrite: !!role?.canWrite,
+      isInvestor,
+      roles,
+      sections,
+    }),
+    [isAdmin, isPrivileged, role?.canWrite, isInvestor, roles, sections],
+  );
 
   // Only show hubs that have at least one visible page for this user.
   const visibleHubs: Hub[] = useMemo(() => {
@@ -99,30 +127,79 @@ function AppLayout() {
           ? "/my-investments"
           : isPrivileged
             ? "/hub/overview"
-            : (visibleHubs[0] ? `/hub/${visibleHubs[0].key}` : "/dashboard");
+            : visibleHubs[0]
+              ? `/hub/${visibleHubs[0].key}`
+              : "/dashboard";
+
+  const currentPage = useMemo(
+    () =>
+      NAV_PAGES.filter(
+        (page) => location.pathname === page.to || location.pathname.startsWith(`${page.to}/`),
+      ).sort((a, b) => b.to.length - a.to.length)[0],
+    [location.pathname],
+  );
+  const currentPageAccess = currentPage ? pageAccessLevel(currentPage, ctx) : "write";
+  const isReadOnlyPage = currentPageAccess === "read";
 
   useEffect(() => {
     if (!role || !accessQuery.data) return;
-    if (pmOnly && !location.pathname.startsWith("/services-dashboard") && !location.pathname.startsWith("/hr/requests")) {
+    if (currentPage && !canSeePage(currentPage, ctx) && location.pathname !== homeTo) {
+      navigate({ to: homeTo, replace: true });
+      return;
+    }
+    if (
+      pmOnly &&
+      !location.pathname.startsWith("/services-dashboard") &&
+      !location.pathname.startsWith("/hr/requests")
+    ) {
       navigate({ to: "/services-dashboard", replace: true });
       return;
     }
-    if (salesManOnly && !location.pathname.startsWith("/pos") && !location.pathname.startsWith("/invoice-print") && !location.pathname.startsWith("/hr/requests")) {
+    if (
+      salesManOnly &&
+      !location.pathname.startsWith("/pos") &&
+      !location.pathname.startsWith("/invoice-print") &&
+      !location.pathname.startsWith("/hr/requests")
+    ) {
       navigate({ to: "/pos", replace: true });
       return;
     }
-    if (prepOnly && !location.pathname.startsWith("/order-pipeline") && !location.pathname.startsWith("/my-prep") && !location.pathname.startsWith("/hr/requests")) {
+    if (
+      prepOnly &&
+      !location.pathname.startsWith("/order-pipeline") &&
+      !location.pathname.startsWith("/my-prep") &&
+      !location.pathname.startsWith("/hr/requests")
+    ) {
       navigate({ to: "/order-pipeline", replace: true });
       return;
     }
-    if (investorOnly && !location.pathname.startsWith("/my-investments") && !location.pathname.startsWith("/reports/investors-audit") && !location.pathname.startsWith("/hr/requests")) {
+    if (
+      investorOnly &&
+      !location.pathname.startsWith("/my-investments") &&
+      !location.pathname.startsWith("/reports/investors-audit") &&
+      !location.pathname.startsWith("/hr/requests")
+    ) {
       navigate({ to: "/my-investments", replace: true });
       return;
     }
     if (!isPrivileged && location.pathname.startsWith("/dashboard") && visibleHubs.length > 0) {
       navigate({ to: homeTo, replace: true });
     }
-  }, [role, accessQuery.data, location.pathname, navigate, isPrivileged, homeTo, investorOnly, prepOnly, salesManOnly, pmOnly, visibleHubs.length]);
+  }, [
+    role,
+    accessQuery.data,
+    location.pathname,
+    navigate,
+    isPrivileged,
+    homeTo,
+    investorOnly,
+    prepOnly,
+    salesManOnly,
+    pmOnly,
+    visibleHubs.length,
+    ctx,
+    currentPage,
+  ]);
 
   const signOut = async () => {
     await qc.cancelQueries();
@@ -135,13 +212,22 @@ function AppLayout() {
     <div className="flex h-full flex-col">
       <div className="p-6 border-b border-sidebar-border">
         <Link to={homeTo} className="flex items-center gap-3">
-          <img src={logoAsset.url} alt="e-Gurus" className="w-10 h-10 rounded-xl object-contain p-1 ring-1 ring-primary/30 shadow" />
+          <img
+            src={logoAsset.url}
+            alt="e-Gurus"
+            className="w-10 h-10 rounded-xl object-contain p-1 ring-1 ring-primary/30 shadow"
+          />
           <div className="flex flex-col">
             <span className="text-xl font-bold text-gradient-primary leading-none">e-Gurus</span>
             <span className="text-xs text-muted-foreground mt-1">{t("brand_tagline")}</span>
           </div>
         </Link>
-        <Button variant="outline" size="sm" className="mt-3 w-full justify-center gap-2" onClick={toggle}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full justify-center gap-2"
+          onClick={toggle}
+        >
           <Languages className="w-4 h-4" />
           {t("lang_toggle")}
         </Button>
@@ -156,26 +242,35 @@ function AppLayout() {
         </div>
       </div>
       <NavSearchContext.Provider value={navSearch.trim().toLowerCase()}>
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <div className="pt-1 pb-1 px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
-            Main Sections
-          </div>
-          {visibleHubs.map((h) => (
-            <HubNavItem
-              key={h.key}
-              to={h.key === "services" ? "/services-dashboard" : `/hub/${h.key}`}
-              icon={h.icon}
-              label={h.en}
-            />
-          ))}
+        <nav className="flex-1 p-4 space-y-4 overflow-y-auto">
+          {MAIN_NAV_GROUPS.map((group) => {
+            const groupHubs = visibleHubs.filter((hub) => hub.group === group.key);
+            if (groupHubs.length === 0) return null;
+            return (
+              <div key={group.key} className="space-y-1">
+                <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {lang === "ar" ? group.ar : group.en}
+                </div>
+                {groupHubs.map((hub) => (
+                  <HubNavItem
+                    key={hub.key}
+                    to={hub.key === "services" ? "/services-dashboard" : `/hub/${hub.key}`}
+                    icon={hub.icon}
+                    label={lang === "ar" ? hub.ar : hub.en}
+                  />
+                ))}
+              </div>
+            );
+          })}
 
           {/* No Personal section — all pages are accessible through their hubs */}
-
         </nav>
       </NavSearchContext.Provider>
       <div className="p-4 border-t border-sidebar-border">
         {email && (
-          <div className="text-xs text-muted-foreground mb-2 truncate" dir="ltr">{email}</div>
+          <div className="text-xs text-muted-foreground mb-2 truncate" dir="ltr">
+            {email}
+          </div>
         )}
         <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={signOut}>
           <LogOut className="w-4 h-4" />
@@ -187,36 +282,64 @@ function AppLayout() {
 
   return (
     <GlobalPeriodProvider>
-    <div className="min-h-screen flex">
-      <aside className="w-64 border-border ltr:border-r rtl:border-l bg-sidebar flex-col hidden md:flex">
-        {sidebarInner}
-      </aside>
-      <main className="flex-1 min-w-0 flex flex-col">
-        <header className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-border bg-background/95 backdrop-blur px-3 py-2">
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={t("open_menu")}>
-                <Menu className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side={lang === "ar" ? "right" : "left"} className="p-0 w-72 bg-sidebar border-border">
-              {sidebarInner}
-            </SheetContent>
-          </Sheet>
-          <Link to={homeTo} className="flex items-center gap-2 font-bold text-gradient-primary">
-            <img src={logoAsset.url} alt="e-Gurus" className="w-6 h-6 rounded-md object-contain p-1" />
-            e-Gurus
-          </Link>
-          <Button variant="ghost" size="icon" onClick={toggle} aria-label="Language">
-            <Languages className="w-4 h-4" />
-          </Button>
-        </header>
-        {isPrivileged && <GlobalPeriodBar />}
-        <div className="flex-1 min-w-0">
-          <Outlet />
-        </div>
-      </main>
-    </div>
+      <div className="min-h-screen flex">
+        <aside className="w-64 border-border ltr:border-r rtl:border-l bg-sidebar flex-col hidden md:flex">
+          {sidebarInner}
+        </aside>
+        <main className="flex-1 min-w-0 flex flex-col">
+          <header className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-2 border-b border-border bg-background/95 backdrop-blur px-3 py-2">
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label={t("open_menu")}>
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                side={lang === "ar" ? "right" : "left"}
+                className="p-0 w-72 bg-sidebar border-border"
+              >
+                {sidebarInner}
+              </SheetContent>
+            </Sheet>
+            <Link to={homeTo} className="flex items-center gap-2 font-bold text-gradient-primary">
+              <img
+                src={logoAsset.url}
+                alt="e-Gurus"
+                className="w-6 h-6 rounded-md object-contain p-1"
+              />
+              e-Gurus
+            </Link>
+            <Button variant="ghost" size="icon" onClick={toggle} aria-label="Language">
+              <Languages className="w-4 h-4" />
+            </Button>
+          </header>
+          {isPrivileged && <GlobalPeriodBar />}
+          <div
+            className="flex-1 min-w-0"
+            data-page-access={currentPageAccess}
+            onClickCapture={(event) => {
+              if (!isReadOnlyPage) return;
+              const target = event.target as Element;
+              if (target.closest("button:not([data-readonly-safe])")) {
+                event.preventDefault();
+                event.stopPropagation();
+              }
+            }}
+            onSubmitCapture={(event) => {
+              if (!isReadOnlyPage) return;
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+          >
+            {isReadOnlyPage && (
+              <div className="sticky top-0 z-30 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-xs font-medium text-amber-700 dark:text-amber-300">
+                صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة
+              </div>
+            )}
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </GlobalPeriodProvider>
   );
 }

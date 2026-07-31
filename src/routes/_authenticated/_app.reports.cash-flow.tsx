@@ -71,9 +71,9 @@ function Page() {
               <YAxis fontSize={11} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="operating" name={L("تشغيلي", "Operating")} fill="hsl(var(--primary))" />
-              <Bar dataKey="financing" name={L("تمويلي", "Financing")} fill="hsl(var(--muted-foreground))" />
-              <Bar dataKey="net" name={L("الصافي", "Net")} fill="hsl(var(--chart-3, 200 90% 60%))" />
+              <Bar dataKey="operating" name={L("تشغيلي", "Operating")} fill="var(--chart-1)" />
+              <Bar dataKey="financing" name={L("تمويلي", "Financing")} fill="var(--chart-2)" />
+              <Bar dataKey="net" name={L("الصافي", "Net")} fill="var(--chart-3)" />
             </BarChart>
           </ResponsiveContainer>
         </div>

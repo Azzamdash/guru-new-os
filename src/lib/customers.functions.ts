@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { fetchAllRows } from "./paginate";
+import { normalizePageRequest } from "./scalable-pagination.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -14,15 +14,6 @@ async function assertWriter(ctx: Ctx) {
   if (d) return;
   throw new Error("Forbidden");
 }
-
-type InvoiceRow = {
-  id: string;
-  brand_id: string;
-  type: "sale" | "return";
-  total_amount: number | string;
-  occurred_at: string;
-  customer_id: string | null;
-};
 
 export type CustomerListRow = {
   id: string;
@@ -42,70 +33,80 @@ export type CustomerListRow = {
   segment: "vip" | "active" | "at_risk" | "new";
 };
 
-function segmentOf(orders: number, ltv: number, lastOrderAt: string | null, firstOrderAt: string | null): CustomerListRow["segment"] {
+function segmentOf(
+  orders: number,
+  ltv: number,
+  lastOrderAt: string | null,
+  firstOrderAt: string | null,
+): CustomerListRow["segment"] {
   const now = Date.now();
-  const daysSinceLast = lastOrderAt ? (now - new Date(lastOrderAt).getTime()) / 86400000 : Infinity;
-  const daysSinceFirst = firstOrderAt ? (now - new Date(firstOrderAt).getTime()) / 86400000 : 0;
+  const daysSinceLast = lastOrderAt
+    ? (now - new Date(lastOrderAt).getTime()) / 86400000
+    : Infinity;
+  const daysSinceFirst = firstOrderAt
+    ? (now - new Date(firstOrderAt).getTime()) / 86400000
+    : 0;
   if (ltv >= 10000 || orders >= 5) return daysSinceLast > 120 ? "at_risk" : "vip";
   if (daysSinceLast > 90) return "at_risk";
   if (daysSinceFirst <= 30 && orders <= 1) return "new";
   return "active";
 }
 
+export type CustomerPageResult = {
+  rows: CustomerListRow[];
+  hasMore: boolean;
+  nextCursor: { lastOrderAt: string | null; id: string } | null;
+};
+
 export const listCustomers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const [customers, invoices, assignments] = await Promise.all([
-      fetchAllRows<{ id: string; name: string; phone: string | null; email: string | null; governorate: string | null; is_general: boolean; first_seen_at: string; last_seen_at: string | null }>(() =>
-        context.supabase.from("customers").select("id, name, phone, email, governorate, is_general, first_seen_at, last_seen_at").order("last_seen_at", { ascending: false, nullsFirst: false })),
-      fetchAllRows<InvoiceRow>(() =>
-        context.supabase.from("sales_invoices").select("id, brand_id, type, total_amount, occurred_at, customer_id").not("customer_id", "is", null)),
-      fetchAllRows<{ customer_id: string; brand_id: string }>(() =>
-        context.supabase.from("customer_brands").select("customer_id, brand_id")),
-    ]);
-    const invByCustomer = new Map<string, InvoiceRow[]>();
-    for (const inv of invoices) {
-      if (!inv.customer_id) continue;
-      const list = invByCustomer.get(inv.customer_id) ?? [];
-      list.push(inv);
-      invByCustomer.set(inv.customer_id, list);
-    }
-    const assignByCustomer = new Map<string, string[]>();
-    for (const a of assignments) {
-      const list = assignByCustomer.get(a.customer_id) ?? [];
-      list.push(a.brand_id);
-      assignByCustomer.set(a.customer_id, list);
-    }
-    const rows: CustomerListRow[] = customers.map((c) => {
-      const invs = invByCustomer.get(c.id) ?? [];
-      let ltv = 0, orders = 0;
-      const brandIds = new Set<string>();
-      let last: string | null = null; let first: string | null = null;
-      for (const inv of invs) {
-        const amt = Number(inv.total_amount) || 0;
-        if (inv.type === "sale") { ltv += amt; orders += 1; }
-        else ltv -= amt;
-        brandIds.add(inv.brand_id);
-        if (!last || inv.occurred_at > last) last = inv.occurred_at;
-        if (!first || inv.occurred_at < first) first = inv.occurred_at;
-      }
-      const lastOrderAt = last ?? c.last_seen_at;
-      const firstOrderAt = first ?? c.first_seen_at;
-      const assigned = assignByCustomer.get(c.id) ?? [];
-      for (const bid of assigned) brandIds.add(bid);
-      return {
-        id: c.id, name: c.name, phone: c.phone, email: c.email,
-        governorate: c.governorate, isGeneral: c.is_general,
-        assignedBrandIds: assigned,
-        ltv, orders,
-        avgOrder: orders > 0 ? ltv / orders : 0,
-        lastOrderAt, firstOrderAt,
-        brandCount: brandIds.size,
-        brandIds: Array.from(brandIds),
-        segment: segmentOf(orders, ltv, lastOrderAt, firstOrderAt),
-      };
+  .inputValidator(
+    (
+      d: {
+        search?: string | null;
+        segment?: string | null;
+        brandId?: string | null;
+        pageSize?: number | null;
+        cursorAt?: string | null;
+        cursorId?: string | null;
+      } = {},
+    ) => d,
+  )
+  .handler(async ({ data, context }): Promise<CustomerPageResult> => {
+    const normalized = normalizePageRequest({ pageSize: data.pageSize, search: data.search });
+    const { data: result, error } = await (context.supabase as any).rpc("customers_page", {
+      _search: normalized.search,
+      _segment: data.segment && data.segment !== "all" ? data.segment : null,
+      _brand_id: data.brandId || null,
+      _cursor_at: data.cursorAt || null,
+      _cursor_id: data.cursorId || null,
+      _limit: normalized.pageSize,
     });
-    return rows;
+    if (error) throw error;
+    const payload = (result ?? {}) as {
+      rows?: CustomerListRow[];
+      hasMore?: boolean;
+      nextCursor?: { lastOrderAt: string | null; id: string } | null;
+    };
+    return {
+      rows: payload.rows ?? [],
+      hasMore: payload.hasMore === true,
+      nextCursor: payload.nextCursor ?? null,
+    };
+  });
+
+export const getCustomersFilterSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { search?: string | null; segment?: string | null; brandId?: string | null } = {}) => d)
+  .handler(async ({ data, context }) => {
+    const normalized = normalizePageRequest({ search: data.search });
+    const { data: result, error } = await (context.supabase as any).rpc("customers_filter_summary", {
+      _search: normalized.search,
+      _segment: data.segment && data.segment !== "all" ? data.segment : null,
+      _brand_id: data.brandId || null,
+    });
+    if (error) throw error;
+    return { total: Number((result as { total?: number | string } | null)?.total ?? 0) };
   });
 
 export const createCustomer = createServerFn({ method: "POST" })
@@ -168,39 +169,14 @@ export const createCustomer = createServerFn({ method: "POST" })
 export const getCustomersSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [customers, invoices] = await Promise.all([
-      fetchAllRows<{ id: string; name: string; first_seen_at: string; last_seen_at: string | null }>(() =>
-        context.supabase.from("customers").select("id, name, first_seen_at, last_seen_at")),
-      fetchAllRows<{ customer_id: string; type: "sale"|"return"; total_amount: number; occurred_at: string }>(() =>
-        context.supabase.from("sales_invoices").select("customer_id, type, total_amount, occurred_at").not("customer_id", "is", null)),
-    ]);
-    type Agg = { id: string; name: string; ltv: number; orders: number; lastOrderAt: string | null; firstOrderAt: string | null };
-    const map = new Map<string, Agg>();
-    for (const c of customers) {
-      map.set(c.id, { id: c.id, name: c.name, ltv: 0, orders: 0, lastOrderAt: c.last_seen_at, firstOrderAt: c.first_seen_at });
-    }
-    for (const inv of invoices) {
-      const a = map.get(inv.customer_id);
-      if (!a) continue;
-      const amt = Number(inv.total_amount) || 0;
-      if (inv.type === "sale") { a.ltv += amt; a.orders += 1; }
-      else a.ltv -= amt;
-      if (!a.lastOrderAt || inv.occurred_at > a.lastOrderAt) a.lastOrderAt = inv.occurred_at;
-      if (!a.firstOrderAt || inv.occurred_at < a.firstOrderAt) a.firstOrderAt = inv.occurred_at;
-    }
-    const rows = Array.from(map.values());
-    const total = rows.length;
-    const ltvSum = rows.reduce((s, r) => s + r.ltv, 0);
-    const repeat = rows.filter((r) => r.orders >= 2).length;
-    const now = Date.now();
-    const atRisk = rows.filter((r) => r.lastOrderAt && (now - new Date(r.lastOrderAt).getTime()) / 86400000 > 90).length;
-    const top = rows.sort((a, b) => b.ltv - a.ltv).slice(0, 5).map((r) => ({ id: r.id, name: r.name, ltv: r.ltv, orders: r.orders }));
-    return {
-      total,
-      avgLtv: total > 0 ? ltvSum / total : 0,
-      repeatRate: total > 0 ? repeat / total : 0,
-      atRisk,
-      top,
+    const { data, error } = await (context.supabase as any).rpc("customers_summary");
+    if (error) throw error;
+    return data as {
+      total: number;
+      avgLtv: number;
+      repeatRate: number;
+      atRisk: number;
+      top: Array<{ id: string; name: string; ltv: number; orders: number }>;
     };
   });
 

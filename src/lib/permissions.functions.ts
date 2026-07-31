@@ -71,7 +71,11 @@ export const setUserAccess = createServerFn({ method: "POST" })
     await supabaseAdmin.from("user_brand_access").delete().eq("user_id", data.userId);
 
     const validSections = data.sections.filter(
-      (s) => (ALL_SECTIONS as readonly string[]).includes(s) || s.startsWith("page:/"),
+      (s) =>
+        (ALL_SECTIONS as readonly string[]).includes(s) ||
+        s.startsWith("deny:/") ||
+        s.startsWith("page:/") ||
+        s.startsWith("write:/"),
     );
     if (validSections.length > 0) {
       const { error } = await supabaseAdmin

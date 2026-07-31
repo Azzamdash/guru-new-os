@@ -10,8 +10,6 @@ import {
   setUserRole,
   deleteUser,
   getMyRole,
-  getUserWriteAccess,
-  setUserWriteAccess,
 } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,9 +78,7 @@ function AdminPage() {
   });
 
   if (roleQuery.isLoading || !roleQuery.data?.isAdmin) {
-    return (
-      <div className="p-8 text-muted-foreground">جاري التحقق من الصلاحيات...</div>
-    );
+    return <div className="p-8 text-muted-foreground">جاري التحقق من الصلاحيات...</div>;
   }
 
   return (
@@ -134,7 +130,8 @@ const ROLE_OPTIONS: { v: Role; l: string }[] = [
   { v: "admin", l: "مشرف (Admin)" },
   { v: "member", l: "مستخدم (User)" },
 ];
-const roleLabel = (v: string) => ROLE_OPTIONS.find((r) => r.v === v)?.l ?? (v === "admin" ? "مشرف" : "مستخدم");
+const roleLabel = (v: string) =>
+  ROLE_OPTIONS.find((r) => r.v === v)?.l ?? (v === "admin" ? "مشرف" : "مستخدم");
 
 type UserRow = {
   id: string;
@@ -158,30 +155,47 @@ function UserRow({ user }: { user: UserRow }) {
 
   const roleMut = useMutation({
     mutationFn: (role: Role) => setRoleFn({ data: { userId: user.id, role } }),
-    onSuccess: () => { toast.success("تم تحديث الدور"); invalidate(); },
+    onSuccess: () => {
+      toast.success("تم تحديث الدور");
+      invalidate();
+    },
     onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
   });
 
   const banMut = useMutation({
     mutationFn: () => setBannedFn({ data: { userId: user.id, banned: !isBanned } }),
-    onSuccess: () => { toast.success(isBanned ? "تم تفعيل الحساب" : "تم إيقاف الحساب"); invalidate(); },
+    onSuccess: () => {
+      toast.success(isBanned ? "تم تفعيل الحساب" : "تم إيقاف الحساب");
+      invalidate();
+    },
     onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
   });
 
   const delMut = useMutation({
     mutationFn: () => deleteFn({ data: { userId: user.id } }),
-    onSuccess: () => { toast.success("تم حذف المستخدم"); invalidate(); },
+    onSuccess: () => {
+      toast.success("تم حذف المستخدم");
+      invalidate();
+    },
     onError: (e: any) => toast.error(e.message ?? "فشل الحذف"),
   });
 
   return (
     <TableRow>
-      <TableCell className="font-mono text-sm" dir="ltr">{user.email}</TableCell>
+      <TableCell className="font-mono text-sm" dir="ltr">
+        {user.email}
+      </TableCell>
       <TableCell>
         <Select value={currentRole} onValueChange={(v) => roleMut.mutate(v as Role)}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            {ROLE_OPTIONS.map((r) => <SelectItem key={r.v} value={r.v}>{r.l}</SelectItem>)}
+            {ROLE_OPTIONS.map((r) => (
+              <SelectItem key={r.v} value={r.v}>
+                {r.l}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </TableCell>
@@ -189,7 +203,9 @@ function UserRow({ user }: { user: UserRow }) {
         {isBanned ? (
           <Badge variant="destructive">موقوف</Badge>
         ) : (
-          <Badge variant="secondary" className="bg-green-500/15 text-green-500">نشط</Badge>
+          <Badge variant="secondary" className="bg-green-500/15 text-green-500">
+            نشط
+          </Badge>
         )}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
@@ -199,10 +215,22 @@ function UserRow({ user }: { user: UserRow }) {
         <div className="flex gap-2 flex-wrap">
           <PermissionsDialog userId={user.id} email={user.email} />
           <ResetPasswordDialog userId={user.id} email={user.email} />
-          <Button size="sm" variant={isBanned ? "outline" : "secondary"} onClick={() => banMut.mutate()} disabled={banMut.isPending}>
+          <Button
+            size="sm"
+            variant={isBanned ? "outline" : "secondary"}
+            onClick={() => banMut.mutate()}
+            disabled={banMut.isPending}
+          >
             {isBanned ? <CheckCircle2 className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => { if (confirm(`حذف المستخدم ${user.email}؟`)) delMut.mutate(); }} disabled={delMut.isPending}>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => {
+              if (confirm(`حذف المستخدم ${user.email}؟`)) delMut.mutate();
+            }}
+            disabled={delMut.isPending}
+          >
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
@@ -217,24 +245,45 @@ function ResetPasswordDialog({ userId, email }: { userId: string; email: string 
   const updateFn = useServerFn(updateUserPassword);
   const mut = useMutation({
     mutationFn: () => updateFn({ data: { userId, password } }),
-    onSuccess: () => { toast.success("تم تحديث كلمة المرور"); setOpen(false); setPassword(""); },
+    onSuccess: () => {
+      toast.success("تم تحديث كلمة المرور");
+      setOpen(false);
+      setPassword("");
+    },
     onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
   });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button size="sm" variant="outline"><KeyRound className="w-4 h-4" /></Button></DialogTrigger>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <KeyRound className="w-4 h-4" />
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>تغيير كلمة المرور</DialogTitle>
-          <DialogDescription dir="ltr" className="text-right">{email}</DialogDescription>
+          <DialogDescription dir="ltr" className="text-right">
+            {email}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           <Label htmlFor="pw">كلمة المرور الجديدة</Label>
-          <Input id="pw" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="6 أحرف على الأقل" dir="ltr" />
+          <Input
+            id="pw"
+            type="text"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="6 أحرف على الأقل"
+            dir="ltr"
+          />
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending || password.length < 6}>حفظ</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            إلغاء
+          </Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending || password.length < 6}>
+            حفظ
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -252,7 +301,10 @@ function CreateUserDialog() {
     mutationFn: () => createFn({ data: { email, password, role } }),
     onSuccess: () => {
       toast.success("تم إنشاء المستخدم");
-      setOpen(false); setEmail(""); setPassword(""); setRole("member");
+      setOpen(false);
+      setEmail("");
+      setPassword("");
+      setRole("member");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: (e: any) => toast.error(e.message ?? "فشل الإنشاء"),
@@ -260,35 +312,67 @@ function CreateUserDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button><UserPlus className="w-4 h-4 ml-2" />مستخدم جديد</Button>
+        <Button>
+          <UserPlus className="w-4 h-4 ml-2" />
+          مستخدم جديد
+        </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>إنشاء مستخدم جديد</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>إنشاء مستخدم جديد</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">البريد الإلكتروني</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              dir="ltr"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="npw">كلمة المرور</Label>
-            <Input id="npw" type="text" value={password} onChange={(e) => setPassword(e.target.value)} dir="ltr" placeholder="6 أحرف على الأقل" />
+            <Input
+              id="npw"
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              dir="ltr"
+              placeholder="6 أحرف على الأقل"
+            />
           </div>
           <div className="space-y-2">
             <Label>الدور</Label>
             <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {ROLE_OPTIONS.map((r) => <SelectItem key={r.v} value={r.v}>{r.l}</SelectItem>)}
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem key={r.v} value={r.v}>
+                    {r.l}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              مشرف: صلاحيات كاملة على كل شيء · مستخدم: يفتح فقط الصفحات التي تسمح له بها، وأنت تحدد إن كان يستطيع إدخال بيانات أم مشاهدة فقط.
+              مشرف: صلاحيات كاملة على كل شيء · مستخدم: يفتح فقط الصفحات التي تسمح له بها، وأنت تحدد
+              إن كان يستطيع إدخال بيانات أم مشاهدة فقط.
             </p>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending || !email || password.length < 6}>إنشاء</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            إلغاء
+          </Button>
+          <Button
+            onClick={() => mut.mutate()}
+            disabled={mut.isPending || !email || password.length < 6}
+          >
+            إنشاء
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -321,8 +405,6 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
   const [open, setOpen] = useState(false);
   const getAccessFn = useServerFn(getUserAccess);
   const setAccessFn = useServerFn(setUserAccess);
-  const getWriteFn = useServerFn(getUserWriteAccess);
-  const setWriteFn = useServerFn(setUserWriteAccess);
   const brandsFn = useServerFn(listBrands);
   const qc = useQueryClient();
   const accessQ = useQuery({
@@ -330,33 +412,25 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
     queryFn: () => getAccessFn({ data: { userId } }),
     enabled: open,
   });
-  const writeQ = useQuery({
-    queryKey: ["user-write", userId],
-    queryFn: () => getWriteFn({ data: { userId } }),
-    enabled: open,
-  });
+
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn(), enabled: open });
   const [sections, setSections] = useState<string[]>([]);
   const [brandIds, setBrandIds] = useState<string[]>([]);
-  const [canWrite, setCanWrite] = useState<boolean>(false);
+
   useEffect(() => {
     if (accessQ.data) {
       setSections(accessQ.data.sections);
       setBrandIds(accessQ.data.brandIds);
     }
   }, [accessQ.data]);
-  useEffect(() => {
-    if (writeQ.data) setCanWrite(writeQ.data.canWrite);
-  }, [writeQ.data]);
   const mut = useMutation({
     mutationFn: async () => {
       await setAccessFn({ data: { userId, sections, brandIds } });
-      await setWriteFn({ data: { userId, canWrite } });
     },
     onSuccess: () => {
       toast.success("تم حفظ الصلاحيات");
       qc.invalidateQueries({ queryKey: ["user-access", userId] });
-      qc.invalidateQueries({ queryKey: ["user-write", userId] });
+
       setOpen(false);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -366,46 +440,74 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
 
   // Group nav pages by hub for a full view of every screen the user can be granted.
   const pagesByHub = HUBS.map((h) => ({ hub: h, pages: pagesForHub(h.key) }));
+  const allPages = pagesByHub.flatMap(({ pages }) => pages);
+  const isPageVisible = (page: (typeof allPages)[number]): boolean => {
+    if (sections.includes(`deny:${page.to}`)) return false;
+    if (sections.includes(`write:${page.to}`) || sections.includes(`page:${page.to}`)) return true;
+    return !!(page.section && sections.includes(page.section));
+  };
+  const setPageVisible = (page: (typeof allPages)[number], visible: boolean) => {
+    let next = sections.filter(
+      (key) => key !== `deny:${page.to}` && key !== `page:${page.to}` && key !== `write:${page.to}`,
+    );
+
+    // Expand a legacy shared-section grant into explicit per-page grants before
+    // changing one page, otherwise the shared key would silently override Hidden.
+    if (page.section && next.includes(page.section)) {
+      next = next.filter((key) => key !== page.section);
+      for (const linked of allPages.filter((candidate) => candidate.section === page.section)) {
+        next.push(`page:${linked.to}`);
+      }
+      next = next.filter(
+        (key) =>
+          key !== `deny:${page.to}` && key !== `page:${page.to}` && key !== `write:${page.to}`,
+      );
+    }
+
+    next.push(`${visible ? "page" : "deny"}:${page.to}`);
+    setSections(Array.from(new Set(next)));
+  };
+  const setPagesVisible = (pages: typeof allPages, visible: boolean) => {
+    const routes = new Set(pages.map((page) => page.to));
+    const legacySections = new Set(pages.map((page) => page.section).filter(Boolean));
+    const next = sections.filter((key) => {
+      if (legacySections.has(key)) return false;
+      if (key.startsWith("deny:") || key.startsWith("page:") || key.startsWith("write:")) {
+        return !routes.has(key.slice(key.indexOf(":") + 1));
+      }
+      return true;
+    });
+    const prefix = visible ? "page" : "deny";
+    next.push(...pages.map((page) => `${prefix}:${page.to}`));
+    setSections(Array.from(new Set(next)));
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" title="صلاحيات"><Lock className="w-4 h-4" /></Button>
+        <Button size="sm" variant="outline" title="صلاحيات">
+          <Lock className="w-4 h-4" />
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>الصلاحيات — <span dir="ltr">{email}</span></DialogTitle>
+          <DialogTitle>
+            الصلاحيات — <span dir="ltr">{email}</span>
+          </DialogTitle>
           <DialogDescription>
-            حدّد الصفحات والأقسام والبراندات المسموحة لهذا المستخدم. الصفحات التي تشترك في نفس القسم تُفعَّل معًا.
+            حدّد الصفحات الظاهرة للمستخدم، ثم اختر البراندات المسموحة له. صلاحية التعديل تأتي من
+            الدور الوظيفي.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold">صلاحية إدخال البيانات</div>
-              <div className="text-xs text-muted-foreground">
-                فعّل لو تريد أن يستطيع هذا المستخدم إضافة/تعديل البيانات على الصفحات المسموح له بها. إذا كان معطلاً فهو مشاهد فقط.
-              </div>
-            </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={canWrite} onCheckedChange={(v) => setCanWrite(!!v)} />
-              <span className="text-sm">{canWrite ? "يستطيع الإدخال" : "مشاهد فقط"}</span>
-            </label>
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
+            صلاحيات الصفحات هنا تتحكم في الظهور فقط. التعديل محمي في السيرفر حسب الدور الوظيفي.
           </div>
 
           <div className="space-y-4">
-            <div className="text-sm font-semibold">الصفحات والأقسام المسموحة</div>
+            <div className="text-sm font-semibold">صلاحيات الصفحات</div>
             {pagesByHub.map(({ hub, pages }) => {
-              const pageKeys = pages.map((p) => p.section ?? `page:${p.to}`);
-              const allHubOn = pageKeys.length > 0 && pageKeys.every((k) => sections.includes(k));
-              const toggleAllHub = () => {
-                if (allHubOn) {
-                  setSections(sections.filter((s) => !pageKeys.includes(s)));
-                } else {
-                  setSections(Array.from(new Set([...sections, ...pageKeys])));
-                }
-              };
               return (
                 <div key={hub.key} className="rounded-xl border border-border/60 bg-card/40 p-3">
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -413,32 +515,32 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                       <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                         <hub.icon className="w-4 h-4 text-primary" />
                       </div>
-                      <div className="text-sm font-semibold" dir="ltr">{hub.en}</div>
+                      <div className="text-sm font-semibold">{hub.ar}</div>
                     </div>
-                    {pageKeys.length > 0 && (
-                      <Button size="sm" variant="ghost" className="text-xs h-7" onClick={toggleAllHub}>
-                        {allHubOn ? "إلغاء الكل" : "تفعيل الكل"}
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-xs h-7"
+                      onClick={() => setPagesVisible(pages, true)}
+                    >
+                      إظهار الكل
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                     {pages.map((p) => {
-                      const key = p.section ?? `page:${p.to}`;
-                      const enabled = sections.includes(key);
                       return (
-                        <label
+                        <div
                           key={p.to}
-                          className="flex items-center gap-2 text-xs px-2 py-1.5 rounded-md border border-border/40 bg-background/40 cursor-pointer hover:bg-muted/40"
+                          className="flex items-center gap-2 rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-xs"
                         >
-                          <Checkbox
-                            checked={enabled}
-                            onCheckedChange={() => toggle(sections, setSections, key)}
-                          />
                           <p.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span className="truncate flex-1">{p.ar}</span>
-                          <span className="text-[10px] text-muted-foreground font-mono" dir="ltr">{p.to}</span>
-                        </label>
+                          <Checkbox
+                            checked={isPageVisible(p)}
+                            onCheckedChange={(checked) => setPageVisible(p, checked === true)}
+                          />
+                        </div>
                       );
                     })}
                   </div>
@@ -449,7 +551,12 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
             {/* Extra generic sections not covered by any page */}
             {(() => {
               const usedSecs = new Set(
-                HUBS.flatMap((h) => pagesForHub(h.key).map((p) => p.section).filter(Boolean) as string[])
+                HUBS.flatMap(
+                  (h) =>
+                    pagesForHub(h.key)
+                      .map((p) => p.section)
+                      .filter(Boolean) as string[],
+                ),
               );
               const extra = (ALL_SECTIONS as readonly string[]).filter((s) => !usedSecs.has(s));
               if (extra.length === 0) return null;
@@ -458,8 +565,14 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                   <div className="text-sm font-semibold mb-2">أقسام عامة إضافية</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {extra.map((s) => (
-                      <label key={s} className="flex items-center gap-2 text-sm cursor-pointer bg-background/40 rounded-md px-2 py-1.5 border border-border/40">
-                        <Checkbox checked={sections.includes(s)} onCheckedChange={() => toggle(sections, setSections, s)} />
+                      <label
+                        key={s}
+                        className="flex items-center gap-2 text-sm cursor-pointer bg-background/40 rounded-md px-2 py-1.5 border border-border/40"
+                      >
+                        <Checkbox
+                          checked={sections.includes(s)}
+                          onCheckedChange={() => toggle(sections, setSections, s)}
+                        />
                         <span>{SECTION_LABELS[s] ?? s}</span>
                       </label>
                     ))}
@@ -469,16 +582,19 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
             })()}
           </div>
 
-
-
           {/* Brand access */}
           <div>
             <div className="font-semibold text-sm mb-2">البراندات المسموحة</div>
-            <p className="text-xs text-muted-foreground mb-2">لا تحدد أي براند = وصول لكل البراندات.</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              لا تحدد أي براند = وصول لكل البراندات.
+            </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
               {(brandsQ.data ?? []).map((b) => (
                 <label key={b.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <Checkbox checked={brandIds.includes(b.id)} onCheckedChange={() => toggle(brandIds, setBrandIds, b.id)} />
+                  <Checkbox
+                    checked={brandIds.includes(b.id)}
+                    onCheckedChange={() => toggle(brandIds, setBrandIds, b.id)}
+                  />
                   {b.name}
                 </label>
               ))}
@@ -487,11 +603,14 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>حفظ</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            إلغاء
+          </Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
+            حفظ
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getCogsMap } from "@/lib/cogs.server";
 import { fetchAllRows } from "@/lib/paginate";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -468,47 +467,46 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     const payQb = () => context.supabase.from("supplier_payments").select("invoice_id, supplier_id, amount");
     const supQb = () => context.supabase.from("suppliers").select("id, name, brand_id, opening_balance");
     const prodQb = () => context.supabase.from("products").select("id, name, brand_id, sell_price, cogs_override, unit, reorder_point").eq("active", true);
-    const couriersQb = () => context.supabase.from("couriers").select("id, name, type, brand_id").eq("active", true);
-    const itemsQb = () => context.supabase.from("sales_invoice_items").select("invoice_id, product_id, qty, unit_price, subtotal");
-    const salesQb = () => {
-      let q = context.supabase.from("sales_invoices").select("id, brand_id, courier_id, product_id, type, qty, total_amount, collected_amount, occurred_at")
-        .gte("occurred_at", fromISO).lte("occurred_at", toISO);
-      if (brandId) q = q.eq("brand_id", brandId);
-      return q;
-    };
-    const ordersQb = () => {
-      let q = context.supabase.from("orders").select("id, brand_id, courier_id, fulfillment_status, confirmation_status, total_amount, occurred_at")
-        .gte("occurred_at", fromISO).lte("occurred_at", toISO);
-      if (brandId) q = q.eq("brand_id", brandId);
-      return q;
-    };
-    const invMoveQb = () => context.supabase.from("inventory_movements").select("product_id, type, qty, occurred_at, worker_name")
-      .gte("occurred_at", fromISO).lte("occurred_at", toISO);
-    const fulfillQb = () => {
-      let q = context.supabase.from("fulfillment_entries").select("id, brand_id, employee_name, orders_prepared, occurred_at")
-        .gte("occurred_at", fromDay).lte("occurred_at", toDay);
-      if (brandId) q = q.eq("brand_id", brandId);
-      return q;
+    const operationsQ = (context.supabase as any).rpc("dashboard_operational_report", {
+      _from: fromISO,
+      _to: toISO,
+      _brand_id: brandId || null,
+    });
+
+    const timed = async <T>(label: string, promise: PromiseLike<T>): Promise<T> => {
+      const startedAt = Date.now();
+      try {
+        return await promise;
+      } finally {
+        console.info(`[dashboard-timing] ${label} ${Date.now() - startedAt}ms`);
+      }
     };
 
-    const [brandsR, catsR, meR, eeR, invRowsA, payRowsA, supRowsA, prodRowsA, salesRowsA, ordersRowsA, invMoveRowsA, couriersRowsA, itemsRowsA, fulfillRowsA] =
+    const [brandsR, catsR, meR, eeR, invRowsA, payRowsA, supRowsA, prodRowsA, operationsR] =
       await Promise.all([
-        brandsQ, catsQ, meQ, eeQ,
-        fetchAllRows(invQb), fetchAllRows(payQb), fetchAllRows(supQb), fetchAllRows(prodQb),
-        fetchAllRows(salesQb), fetchAllRows(ordersQb), fetchAllRows(invMoveQb),
-        fetchAllRows(couriersQb), fetchAllRows(itemsQb), fetchAllRows(fulfillQb),
+        timed("brands", brandsQ), timed("categories", catsQ),
+        timed("monthly_entries", meQ), timed("expense_entries", eeQ),
+        timed("supplier_invoices", fetchAllRows(invQb)),
+        timed("supplier_payments", fetchAllRows(payQb)),
+        timed("suppliers", fetchAllRows(supQb)),
+        timed("products", fetchAllRows(prodQb)),
+        timed<{ data: unknown; error: unknown }>("operations_rpc", operationsQ),
       ]);
     for (const r of [brandsR, catsR, meR, eeR]) if (r.error) throw r.error;
+    if (operationsR.error) throw operationsR.error;
     const invR = { data: invRowsA, error: null };
     const payR = { data: payRowsA, error: null };
     const supR = { data: supRowsA, error: null };
     const prodR = { data: prodRowsA, error: null };
-    const salesR = { data: salesRowsA, error: null };
-    const ordersR = { data: ordersRowsA, error: null };
-    const invMoveR = { data: invMoveRowsA, error: null };
-    const couriersR = { data: couriersRowsA, error: null };
-    const itemsR = { data: itemsRowsA, error: null };
-    const fulfillR = { data: fulfillRowsA, error: null };
+    const operations = (operationsR.data ?? {}) as {
+      monthlySales: Array<{ month: number; brandId: string; revenue: number; cogs: number }>;
+      productSales: Array<{ productId: string; sold: number; returned: number }>;
+      monthlyOrders: Array<{ month: number; total: number; confirmed: number; delivered: number; returned: number }>;
+      couriers: Array<{ id: string; name: string; type: string; delivered: number; returned: number; collected: number }>;
+      inventoryProducts: Array<{ productId: string; stock: number; produced: number }>;
+      workers: Array<{ name: string; produced: number; productCount: number }>;
+      fulfillment: Array<{ name: string; prepared: number; days: number }>;
+    };
 
     const brands = (brandsR.data ?? []) as Array<{ id: string; name: string; type: "product" | "service" }>;
     const cats = (catsR.data ?? []) as Array<{ id: string; name: string }>;
@@ -546,33 +544,22 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     // Add yearly rows as month=12 revenue overlay? Skip to avoid double-count; expose via totals only.
     for (const r of eeRows) monthly[r.month - 1].expenses += Number(r.amount) || 0;
 
-    // ==== Real revenue from sales_invoices (net of returns), bucketed by occurred_at month ====
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const salesRowsAll = ((salesR.data ?? []) as any[]);
     const salesRevByBrand = new Map<string, number>();
-    for (const s of salesRowsAll) {
-      if (!s.occurred_at) continue;
-      const monthIdx = new Date(s.occurred_at).getMonth();
-      const amt = Number(s.total_amount) || 0;
-      const signed = s.type === "return" ? -amt : amt;
-      salesRevByBrand.set(s.brand_id, (salesRevByBrand.get(s.brand_id) ?? 0) + signed);
-      // Merge into monthly buckets (all brands or the filtered brand)
-      monthly[monthIdx].revenue += signed;
+    for (const sale of operations.monthlySales ?? []) {
+      const monthIdx = Number(sale.month) - 1;
+      const revenue = Number(sale.revenue) || 0;
+      salesRevByBrand.set(sale.brandId, (salesRevByBrand.get(sale.brandId) ?? 0) + revenue);
+      if (monthly[monthIdx]) monthly[monthIdx].revenue += revenue;
     }
 
-    // Operational order statuses come from orders.fulfillment_status, not from
-    // financial invoices. A sale invoice is revenue; it is not necessarily delivered.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const orderRows = ((ordersR.data ?? []) as any[]);
-    for (const o of orderRows) {
-      if (!o.occurred_at) continue;
-      const monthIdx = new Date(o.occurred_at).getMonth();
+    for (const order of operations.monthlyOrders ?? []) {
+      const monthIdx = Number(order.month) - 1;
       const m = monthly[monthIdx];
       if (!m) continue;
-      m.ordersTotal += 1;
-      if (o.confirmation_status === "confirmed") m.ordersConfirmed += 1;
-      if (o.fulfillment_status === "delivered") m.ordersDelivered += 1;
-      else if (o.fulfillment_status === "returned") m.ordersReturned += 1;
+      m.ordersTotal += Number(order.total) || 0;
+      m.ordersConfirmed += Number(order.confirmed) || 0;
+      m.ordersDelivered += Number(order.delivered) || 0;
+      m.ordersReturned += Number(order.returned) || 0;
     }
 
     for (const m of monthly) m.netProfit = m.revenue - m.expenses;
@@ -694,42 +681,10 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     // Products & inventory
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const products = ((prodR.data ?? []) as any[]).filter((p) => !brandId || p.brand_id === brandId);
-    const productIds = new Set(products.map((p) => p.id));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const salesRows = ((salesR.data ?? []) as any[]);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const itemRows = ((itemsR.data ?? []) as any[]);
-    const salesById = new Map(salesRows.map((s) => [s.id, s]));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const moveRows = ((invMoveR.data ?? []) as any[]).filter((m) => productIds.size === 0 || productIds.has(m.product_id));
-
-    const stockByProduct = new Map<string, number>();
-    const producedByProduct = new Map<string, number>();
-    for (const m of moveRows) {
-      const q = Number(m.qty) || 0;
-      const sign = m.type === "production" || m.type === "return" || m.type === "adjustment" ? 1 : -1;
-      stockByProduct.set(m.product_id, (stockByProduct.get(m.product_id) ?? 0) + sign * q);
-      if (m.type === "production") producedByProduct.set(m.product_id, (producedByProduct.get(m.product_id) ?? 0) + q);
-    }
-
-    const soldByProduct = new Map<string, number>();
-    const returnedByProduct = new Map<string, number>();
-    // Prefer items when present
-    for (const it of itemRows) {
-      const s = salesById.get(it.invoice_id);
-      if (!s) continue;
-      const q = Number(it.qty) || 0;
-      if (s.type === "sale") soldByProduct.set(it.product_id, (soldByProduct.get(it.product_id) ?? 0) + q);
-      else returnedByProduct.set(it.product_id, (returnedByProduct.get(it.product_id) ?? 0) + q);
-    }
-    // Fallback for legacy single-product invoices with no items
-    const invoicesWithItems = new Set(itemRows.map((it) => it.invoice_id));
-    for (const s of salesRows) {
-      if (!s.product_id || invoicesWithItems.has(s.id)) continue;
-      const q = Number(s.qty) || 0;
-      if (s.type === "sale") soldByProduct.set(s.product_id, (soldByProduct.get(s.product_id) ?? 0) + q);
-      else returnedByProduct.set(s.product_id, (returnedByProduct.get(s.product_id) ?? 0) + q);
-    }
+    const stockByProduct = new Map((operations.inventoryProducts ?? []).map((row) => [row.productId, Number(row.stock) || 0]));
+    const producedByProduct = new Map((operations.inventoryProducts ?? []).map((row) => [row.productId, Number(row.produced) || 0]));
+    const soldByProduct = new Map((operations.productSales ?? []).map((row) => [row.productId, Number(row.sold) || 0]));
+    const returnedByProduct = new Map((operations.productSales ?? []).map((row) => [row.productId, Number(row.returned) || 0]));
 
     const productStats = products.map((p) => ({
       id: p.id, name: p.name, brand_id: p.brand_id, unit: p.unit ?? "piece",
@@ -748,97 +703,38 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       .filter((p) => p.reorderPoint > 0 && p.stock <= p.reorderPoint)
       .sort((a, b) => (a.stock - a.reorderPoint) - (b.stock - b.reorderPoint));
 
-    // Workers production aggregation
-    const workerAgg = new Map<string, { produced: number; byProduct: Map<string, number> }>();
-    for (const m of moveRows) {
-      if (m.type !== "production" || !m.worker_name) continue;
-      const q = Number(m.qty) || 0;
-      const cur = workerAgg.get(m.worker_name) ?? { produced: 0, byProduct: new Map() };
-      cur.produced += q;
-      cur.byProduct.set(m.product_id, (cur.byProduct.get(m.product_id) ?? 0) + q);
-      workerAgg.set(m.worker_name, cur);
-    }
-    const topWorkers = Array.from(workerAgg.entries())
-      .map(([name, v]) => ({ name, produced: v.produced, productCount: v.byProduct.size }))
-      .sort((a, b) => b.produced - a.produced).slice(0, 5);
+    const topWorkers = (operations.workers ?? []).slice(0, 5).map((row) => ({
+      name: row.name,
+      produced: Number(row.produced) || 0,
+      productCount: Number(row.productCount) || 0,
+    }));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const couriers = ((couriersR.data ?? []) as any[]);
-    const courierPerf = couriers.map((c) => {
-      let delivered = 0, returned = 0, collected = 0;
-      for (const o of orderRows) {
-        if (o.courier_id !== c.id) continue;
-        if (o.fulfillment_status === "delivered") { delivered += 1; collected += Number(o.total_amount) || 0; }
-        else if (o.fulfillment_status === "returned") returned += 1;
-      }
+    const courierPerf = (operations.couriers ?? []).map((c) => {
+      const delivered = Number(c.delivered) || 0;
+      const returned = Number(c.returned) || 0;
       const total = delivered + returned;
       return {
-        id: c.id, name: c.name, type: c.type, delivered, returned, collected,
+        id: c.id, name: c.name, type: c.type, delivered, returned,
+        collected: Number(c.collected) || 0,
         deliveryRate: total > 0 ? delivered / total : 0,
         returnRate: total > 0 ? returned / total : 0,
       };
     }).sort((a, b) => b.delivered - a.delivered);
 
-    // Fulfillment employees aggregation
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fulfillRows = ((fulfillR.data ?? []) as any[]);
-    const fulfillAgg = new Map<string, { prepared: number; days: Set<string> }>();
-    for (const f of fulfillRows) {
-      const name = (f.employee_name || "").trim();
-      if (!name) continue;
-      const cur = fulfillAgg.get(name) ?? { prepared: 0, days: new Set<string>() };
-      cur.prepared += Number(f.orders_prepared) || 0;
-      cur.days.add(String(f.occurred_at));
-      fulfillAgg.set(name, cur);
-    }
-    const fulfillment = Array.from(fulfillAgg.entries())
-      .map(([name, v]) => ({ name, prepared: v.prepared, days: v.days.size, avgPerDay: v.days.size > 0 ? v.prepared / v.days.size : 0 }))
-      .sort((a, b) => b.prepared - a.prepared);
+    const fulfillment = (operations.fulfillment ?? []).map((row) => {
+      const prepared = Number(row.prepared) || 0;
+      const days = Number(row.days) || 0;
+      return { name: row.name, prepared, days, avgPerDay: days > 0 ? prepared / days : 0 };
+    });
     const totalPrepared = fulfillment.reduce((a, f) => a + f.prepared, 0);
 
-    // ==== COGS enrichment (cost of goods sold from sales_invoices items) ====
-    // Priority per line:
-    //   1) product-level COGS × qty (cogs_override / moving_avg / cogs_percent / brand default / BOM)
-    //   2) fallback: brand.cogs_percent_default × line revenue when the line
-    //      has no product link (POS custom items, bulk/aggregate invoices) or
-    //      product COGS resolves to zero.
-    const cogsProductIds = Array.from(new Set<string>([
-      ...(itemRows.map((it) => it.product_id as string).filter(Boolean)),
-      ...(salesRows.filter((s) => s.product_id && !invoicesWithItems.has(s.id)).map((s) => s.product_id as string)),
-    ]));
-    const cogsByProduct = await getCogsMap(context.supabase, cogsProductIds);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const brandDefaultPct = new Map<string, number>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    for (const b of ((brandsR.data ?? []) as any[])) {
-      brandDefaultPct.set(b.id, Number(b.cogs_percent_default) || 0);
-    }
     const cogsByBrand = new Map<string, number>();
     const monthlyCogs = Array.from({ length: 12 }, () => 0);
-    const addCogsLine = (pid: string | null, qty: number, lineRevenue: number, brand: string, occurredAt: string, type: string) => {
-      const q = Number(qty) || 0;
-      const rev = Number(lineRevenue) || 0;
-      let c = pid ? (cogsByProduct.get(pid) ?? 0) * q : 0;
-      if (c <= 0 && rev > 0) {
-        const pct = brandDefaultPct.get(brand) ?? 0;
-        if (pct > 0) c = (pct / 100) * rev;
-      }
-      if (c <= 0) return;
-      const signed = type === "return" ? -c : c;
-      const mi = new Date(occurredAt).getMonth();
-      if (mi >= 0 && mi < 12) monthlyCogs[mi] += signed;
-      cogsByBrand.set(brand, (cogsByBrand.get(brand) ?? 0) + signed);
-    };
-    for (const it of itemRows) {
-      const s = salesById.get(it.invoice_id);
-      if (!s || !s.occurred_at) continue;
-      const lineRev = Number(it.subtotal) || (Number(it.unit_price) || 0) * (Number(it.qty) || 0);
-      addCogsLine(it.product_id, it.qty, lineRev, s.brand_id, s.occurred_at, s.type);
-    }
-    for (const s of salesRows) {
-      if (invoicesWithItems.has(s.id) || !s.occurred_at) continue;
-      const lineRev = Number(s.total_amount) || 0;
-      addCogsLine(s.product_id, s.qty, lineRev, s.brand_id, s.occurred_at, s.type);
+    for (const sale of operations.monthlySales ?? []) {
+      const monthIdx = Number(sale.month) - 1;
+      const cogs = Number(sale.cogs) || 0;
+      if (monthlyCogs[monthIdx] !== undefined) monthlyCogs[monthIdx] += cogs;
+      cogsByBrand.set(sale.brandId, (cogsByBrand.get(sale.brandId) ?? 0) + cogs);
     }
     let totalCogs = 0;
     monthly.forEach((m, i) => {
@@ -1033,17 +929,36 @@ export const deleteInventoryMovement = createServerFn({ method: "POST" })
 export const listCouriers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("couriers").select("*").order("name");
+    const { data, error } = await context.supabase
+      .from("couriers")
+      .select("*, courier_brands(brand_id)")
+      .order("name");
     if (error) throw error;
-    return data as Array<{ id: string; name: string; type: "courier_company"|"rep"|"offline_branch"; contact: string | null; brand_id: string | null; active: boolean; opening_balance: number }>;
+    return (data ?? []).map((row) => ({
+      ...row,
+      brand_ids: (row.courier_brands ?? []).map((item: { brand_id: string }) => item.brand_id),
+      courier_brands: undefined,
+    })) as Array<{ id: string; name: string; type: "courier_company"|"rep"|"offline_branch"; contact: string | null; brand_id: string | null; brand_ids: string[]; serves_all_brands: boolean; active: boolean; opening_balance: number }>;
   });
 
 export const upsertCourier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id?: string; name: string; type: "courier_company"|"rep"|"offline_branch"; contact?: string | null; brand_id?: string | null; active: boolean; opening_balance?: number }) => d)
+  .inputValidator((d: { id?: string; name: string; type: "courier_company"|"rep"|"offline_branch"; contact?: string | null; brand_id?: string | null; brand_ids?: string[]; serves_all_brands?: boolean; active: boolean; opening_balance?: number }) => d)
   .handler(async ({ data, context }) => {
     await assertManager(context);
-    const { error } = await context.supabase.from("couriers").upsert(data);
+    const brandIds = data.brand_ids ?? (data.brand_id ? [data.brand_id] : []);
+    const servesAllBrands = data.serves_all_brands ?? !data.brand_id;
+    const { error } = await context.supabase.rpc("upsert_courier_with_brands", {
+      // PostgreSQL accepts NULL for creates; generated types do not express argument nullability.
+      _courier_id: (data.id ?? null) as unknown as string,
+      _name: data.name,
+      _type: data.type,
+      _contact: data.contact ?? "",
+      _active: data.active,
+      _opening_balance: data.opening_balance ?? 0,
+      _serves_all_brands: servesAllBrands,
+      _brand_ids: servesAllBrands ? [] : brandIds,
+    });
     if (error) throw error;
     return { ok: true };
   });
@@ -1268,118 +1183,30 @@ export const getCashSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { from?: string | null; to?: string | null; forUserId?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    // Overall (all-time) balance: cash txns + wallet opening balances.
-    // Wallet-to-wallet transfers share a transfer_group and net to zero globally,
-    // so they are excluded from periodIn/periodOut KPIs.
-    const allQ = context.supabase.from("cash_transactions").select("type, amount, transfer_group");
-    const walletsQ = context.supabase.from("wallets").select("opening_balance");
-    const perQ = (() => {
-      let q = context.supabase.from("cash_transactions").select("id, type, amount, for_user_id, occurred_at, expense_entry_id, transfer_group");
-      if (data.from) q = q.gte("occurred_at", data.from);
-      if (data.to) q = q.lte("occurred_at", data.to);
-      return q;
-    })();
-    const expenseQ = (() => {
-      let q = context.supabase.from("expense_entries")
-        .select("id, amount, year, month, period_type, period_date, period_end_date, cash_transaction_id");
-      const fromYear = data.from ? new Date(data.from).getFullYear() - 1 : null;
-      const toYear = data.to ? new Date(data.to).getFullYear() + 1 : null;
-      if (fromYear != null) q = q.gte("year", fromYear);
-      if (toYear != null) q = q.lte("year", toYear);
-      return q;
-    })();
-    const unlinkedExpenseQ = context.supabase.from("expense_entries").select("amount").is("cash_transaction_id", null);
-    const salesQ = context.supabase.from("sales_invoices").select("courier_id, type, total_amount, collected_amount");
-    const collectionsQ = context.supabase.from("cash_transactions").select("courier_id, amount").eq("type","collection");
-    const couriersQ = context.supabase.from("couriers").select("id, name, type, brand_id, active");
-
-    const [allR, walletsR, perR, expenseR, unlinkedExpenseR, salesR, collR, coursR] = await Promise.all([allQ, walletsQ, perQ, expenseQ, unlinkedExpenseQ, salesQ, collectionsQ, couriersQ]);
-    for (const r of [allR, walletsR, perR, expenseR, unlinkedExpenseR, salesR, collR, coursR]) if (r.error) throw r.error;
-
-    const signed = (t: string, a: number) => (t === "collection" || t === "deposit") ? a : -a;
-    let balance = 0;
-    for (const w of (walletsR.data ?? []) as Array<{ opening_balance: number }>) balance += Number(w.opening_balance) || 0;
-    for (const r of (allR.data ?? []) as Array<{ type: string; amount: number }>) balance += signed(r.type, Number(r.amount)||0);
-    for (const r of (unlinkedExpenseR.data ?? []) as Array<{ amount: number }>) balance -= Number(r.amount) || 0;
-
-    let periodIn = 0, periodOut = 0, personalTotal = 0;
-    const byUserMap = new Map<string, number>();
-    const countedExpenseIds = new Set<string>();
-    for (const r of (perR.data ?? []) as Array<{ type: string; amount: number; for_user_id: string | null; expense_entry_id: string | null; transfer_group: string | null }>) {
-      if (r.transfer_group) continue; // internal wallet transfer
-      const amt = Number(r.amount) || 0;
-      if (r.type === "collection" || r.type === "deposit") periodIn += amt;
-      else periodOut += amt;
-      if (r.expense_entry_id) countedExpenseIds.add(r.expense_entry_id);
-      if (r.type === "personal_withdrawal") {
-        if (!data.forUserId || r.for_user_id === data.forUserId) personalTotal += amt;
-        if (r.for_user_id) byUserMap.set(r.for_user_id, (byUserMap.get(r.for_user_id) ?? 0) + amt);
-      }
-    }
-    const parseDate = (value: string | null) => value ? new Date(`${value}T00:00:00`) : null;
-    const fromBoundary = parseDate(data.from ?? null);
-    const toBoundary = parseDate(data.to ?? null);
-    const overlapsSelectedPeriod = (row: { year: number; month: number; period_type: string | null; period_date: string | null; period_end_date: string | null }) => {
-      let start = parseDate(row.period_date);
-      let end = parseDate(row.period_end_date);
-      if (!start) {
-        if (row.period_type === "yearly") {
-          start = new Date(row.year, 0, 1);
-          end = new Date(row.year, 11, 31);
-        } else {
-          const month = Math.max(1, Math.min(12, Number(row.month) || 1));
-          start = new Date(row.year, month - 1, 1);
-          end = new Date(row.year, month, 0);
-        }
-      } else if (!end) {
-        if (row.period_type === "weekly") {
-          end = new Date(start);
-          end.setDate(end.getDate() + 6);
-        } else if (row.period_type === "yearly") {
-          start = new Date(row.year, 0, 1);
-          end = new Date(row.year, 11, 31);
-        } else {
-          end = start;
-        }
-      }
-      if (fromBoundary && end < fromBoundary) return false;
-      if (toBoundary && start > toBoundary) return false;
-      return true;
-    };
-    for (const e of (expenseR.data ?? []) as Array<{ id: string; amount: number; year: number; month: number; period_type: string | null; period_date: string | null; period_end_date: string | null }>) {
-      if (countedExpenseIds.has(e.id)) continue;
-      if (!overlapsSelectedPeriod(e)) continue;
-      periodOut += Number(e.amount) || 0;
-    }
-    const byUser = Array.from(byUserMap.entries()).map(([userId, total]) => ({ userId, total })).sort((a,b) => b.total - a.total);
-
-    // Courier debts — sales_invoices are the source of truth for what's OWED,
-    // cash_transactions (type='collection') are the source of truth for what's COLLECTED.
-    // Do NOT subtract sales_invoices.collected_amount here (that legacy field would
-    // double-count collections and freeze "remaining" at the original total).
-    const owed = new Map<string, number>();
-    for (const s of (salesR.data ?? []) as Array<{ courier_id: string | null; type: string; total_amount: number; collected_amount: number }>) {
-      if (!s.courier_id) continue;
-      const amt = Number(s.total_amount) || 0;
-      const signedAmt = s.type === "return" ? -amt : amt;
-      owed.set(s.courier_id, (owed.get(s.courier_id) ?? 0) + signedAmt);
-    }
-    const collected = new Map<string, number>();
-    for (const c of (collR.data ?? []) as Array<{ courier_id: string | null; amount: number }>) {
-      if (!c.courier_id) continue;
-      collected.set(c.courier_id, (collected.get(c.courier_id) ?? 0) + (Number(c.amount)||0));
-    }
-    const courierDebts = ((coursR.data ?? []) as Array<{ id: string; name: string; type: string; brand_id: string | null; active: boolean }>).map((c) => {
-      const totalOwed = owed.get(c.id) ?? 0;
-      const totalCollected = collected.get(c.id) ?? 0;
-      return {
-        id: c.id, name: c.name, type: c.type, brand_id: c.brand_id, active: c.active,
-        totalOwed, totalCollected, remaining: totalOwed - totalCollected,
-      };
+    const { data: result, error } = await (context.supabase as any).rpc("cash_summary_report", {
+      _from: data.from || null,
+      _to: data.to || null,
+      _for_user_id: data.forUserId || null,
     });
-    courierDebts.sort((a, b) => b.remaining - a.remaining);
-
-    return { balance, periodIn, periodOut, periodNet: periodIn - periodOut, personalTotal, courierDebts, byUser };
+    if (error) throw error;
+    return result as {
+      balance: number;
+      periodIn: number;
+      periodOut: number;
+      periodNet: number;
+      personalTotal: number;
+      courierDebts: Array<{
+        id: string;
+        name: string;
+        type: string;
+        brand_id: string | null;
+        active: boolean;
+        totalOwed: number;
+        totalCollected: number;
+        remaining: number;
+      }>;
+      byUser: Array<{ userId: string; total: number }>;
+    };
   });
 
 // Users that can appear as the recipient of a personal withdrawal (owners + investors).
@@ -1419,48 +1246,22 @@ export const getRevenueComparison = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { year: number; brandId?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    let meQ = context.supabase.from("monthly_entries")
-      .select("brand_id, year, month, revenue, period_type").eq("year", data.year);
-    let siQ = context.supabase.from("sales_invoices")
-      .select("brand_id, type, total_amount, occurred_at")
-      .gte("occurred_at", `${data.year}-01-01`).lte("occurred_at", `${data.year}-12-31`);
-    const brandsQ = context.supabase.from("brands").select("id, name").order("name");
-    if (data.brandId) {
-      meQ = meQ.eq("brand_id", data.brandId);
-      siQ = siQ.eq("brand_id", data.brandId);
-    }
-    const [meR, siR, brR] = await Promise.all([meQ, siQ, brandsQ]);
-    for (const r of [meR, siR, brR]) if (r.error) throw r.error;
-
-    const brandsMap = new Map<string, string>();
-    for (const b of (brR.data ?? []) as Array<{ id: string; name: string }>) brandsMap.set(b.id, b.name);
-
-    // key = brand_id + month
-    type Cell = { brandId: string; brandName: string; month: number; manual: number; invoices: number };
-    const cells = new Map<string, Cell>();
-    const keyOf = (bid: string, m: number) => `${bid}|${m}`;
-    const ensure = (bid: string, m: number): Cell => {
-      const k = keyOf(bid, m);
-      let c = cells.get(k);
-      if (!c) { c = { brandId: bid, brandName: brandsMap.get(bid) ?? "—", month: m, manual: 0, invoices: 0 }; cells.set(k, c); }
-      return c;
+    const { data: result, error } = await (context.supabase as any).rpc(
+      "revenue_comparison_report",
+      { _year: data.year, _brand_id: data.brandId || null },
+    );
+    if (error) throw error;
+    return result as {
+      rows: Array<{
+        brandId: string;
+        brandName: string;
+        month: number;
+        manual: number;
+        invoices: number;
+        diff: number;
+        absDiff: number;
+      }>;
+      totals: { manual: number; invoices: number; diff: number };
+      year: number;
     };
-
-    for (const r of (meR.data ?? []) as Array<{ brand_id: string; month: number; revenue: number; period_type: string }>) {
-      if (r.period_type === "yearly") continue;
-      ensure(r.brand_id, r.month).manual += Number(r.revenue) || 0;
-    }
-    for (const s of (siR.data ?? []) as Array<{ brand_id: string; type: string; total_amount: number; occurred_at: string }>) {
-      const m = new Date(s.occurred_at).getMonth() + 1;
-      const amt = Number(s.total_amount) || 0;
-      const signed = s.type === "return" ? -amt : amt;
-      ensure(s.brand_id, m).invoices += signed;
-    }
-
-    const rows = Array.from(cells.values())
-      .map((c) => ({ ...c, diff: c.manual - c.invoices, absDiff: Math.abs(c.manual - c.invoices) }))
-      .sort((a, b) => a.brandName.localeCompare(b.brandName) || a.month - b.month);
-
-    const totals = rows.reduce((acc, r) => ({ manual: acc.manual + r.manual, invoices: acc.invoices + r.invoices }), { manual: 0, invoices: 0 });
-    return { rows, totals: { ...totals, diff: totals.manual - totals.invoices }, year: data.year };
   });

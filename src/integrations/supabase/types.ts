@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       app_user_connections: {
@@ -79,503 +104,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      bh_brand_access: {
-        Row: {
-          brand_id: string
-          created_at: string
-          hidden_resource_ids: string[]
-          hidden_wiki_ids: string[]
-          id: string
-          sections: string[] | null
-          user_id: string
-        }
-        Insert: {
-          brand_id: string
-          created_at?: string
-          hidden_resource_ids?: string[]
-          hidden_wiki_ids?: string[]
-          id?: string
-          sections?: string[] | null
-          user_id: string
-        }
-        Update: {
-          brand_id?: string
-          created_at?: string
-          hidden_resource_ids?: string[]
-          hidden_wiki_ids?: string[]
-          id?: string
-          sections?: string[] | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_brand_access_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "bh_brands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_brands: {
-        Row: {
-          accent: string
-          bg: string
-          created_at: string
-          id: string
-          logo_path: string | null
-          name: string
-          slug: string
-          sort_order: number
-          tagline: string
-          updated_at: string
-        }
-        Insert: {
-          accent?: string
-          bg?: string
-          created_at?: string
-          id?: string
-          logo_path?: string | null
-          name: string
-          slug: string
-          sort_order?: number
-          tagline?: string
-          updated_at?: string
-        }
-        Update: {
-          accent?: string
-          bg?: string
-          created_at?: string
-          id?: string
-          logo_path?: string | null
-          name?: string
-          slug?: string
-          sort_order?: number
-          tagline?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      bh_creative_likes: {
-        Row: {
-          comment_id: string | null
-          created_at: string
-          id: string
-          post_id: string | null
-          user_id: string
-        }
-        Insert: {
-          comment_id?: string | null
-          created_at?: string
-          id?: string
-          post_id?: string | null
-          user_id: string
-        }
-        Update: {
-          comment_id?: string | null
-          created_at?: string
-          id?: string
-          post_id?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_creative_likes_comment_id_fkey"
-            columns: ["comment_id"]
-            isOneToOne: false
-            referencedRelation: "bh_creative_post_comments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bh_creative_likes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "bh_creative_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_creative_post_comments: {
-        Row: {
-          author_id: string | null
-          body: string
-          created_at: string
-          hidden: boolean
-          id: string
-          parent_id: string | null
-          post_id: string
-          updated_at: string
-        }
-        Insert: {
-          author_id?: string | null
-          body: string
-          created_at?: string
-          hidden?: boolean
-          id?: string
-          parent_id?: string | null
-          post_id: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string | null
-          body?: string
-          created_at?: string
-          hidden?: boolean
-          id?: string
-          parent_id?: string | null
-          post_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_creative_post_comments_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "bh_creative_post_comments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bh_creative_post_comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "bh_creative_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_creative_posts: {
-        Row: {
-          author_id: string | null
-          body: string
-          brand_id: string | null
-          created_at: string
-          file_name: string | null
-          file_path: string | null
-          hidden: boolean
-          id: string
-          image_path: string | null
-          kind: string
-          link_url: string | null
-          mime_type: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          author_id?: string | null
-          body?: string
-          brand_id?: string | null
-          created_at?: string
-          file_name?: string | null
-          file_path?: string | null
-          hidden?: boolean
-          id?: string
-          image_path?: string | null
-          kind?: string
-          link_url?: string | null
-          mime_type?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string | null
-          body?: string
-          brand_id?: string | null
-          created_at?: string
-          file_name?: string | null
-          file_path?: string | null
-          hidden?: boolean
-          id?: string
-          image_path?: string | null
-          kind?: string
-          link_url?: string | null
-          mime_type?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_creative_posts_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "bh_brands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_creative_reports: {
-        Row: {
-          comment_id: string | null
-          created_at: string
-          id: string
-          post_id: string | null
-          reason: string
-          reporter_id: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          comment_id?: string | null
-          created_at?: string
-          id?: string
-          post_id?: string | null
-          reason?: string
-          reporter_id?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          comment_id?: string | null
-          created_at?: string
-          id?: string
-          post_id?: string | null
-          reason?: string
-          reporter_id?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_creative_reports_comment_id_fkey"
-            columns: ["comment_id"]
-            isOneToOne: false
-            referencedRelation: "bh_creative_post_comments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bh_creative_reports_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "bh_creative_posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_resources: {
-        Row: {
-          brand_id: string
-          created_at: string
-          file_type: string
-          html_content: string | null
-          id: string
-          kind: string
-          mime_type: string | null
-          sort_order: number
-          storage_path: string | null
-          title: string
-          updated_at: string
-          url: string | null
-        }
-        Insert: {
-          brand_id: string
-          created_at?: string
-          file_type?: string
-          html_content?: string | null
-          id?: string
-          kind: string
-          mime_type?: string | null
-          sort_order?: number
-          storage_path?: string | null
-          title: string
-          updated_at?: string
-          url?: string | null
-        }
-        Update: {
-          brand_id?: string
-          created_at?: string
-          file_type?: string
-          html_content?: string | null
-          id?: string
-          kind?: string
-          mime_type?: string | null
-          sort_order?: number
-          storage_path?: string | null
-          title?: string
-          updated_at?: string
-          url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_resources_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "bh_brands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_task_attachments: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          mime_type: string | null
-          storage_path: string | null
-          task_id: string
-          title: string
-          url: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          mime_type?: string | null
-          storage_path?: string | null
-          task_id: string
-          title: string
-          url?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          mime_type?: string | null
-          storage_path?: string | null
-          task_id?: string
-          title?: string
-          url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_task_attachments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "bh_tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_task_comments: {
-        Row: {
-          author_id: string | null
-          body: string
-          created_at: string
-          id: string
-          task_id: string
-          updated_at: string
-        }
-        Insert: {
-          author_id?: string | null
-          body: string
-          created_at?: string
-          id?: string
-          task_id: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string | null
-          body?: string
-          created_at?: string
-          id?: string
-          task_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_task_comments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "bh_tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_tasks: {
-        Row: {
-          assignee_id: string | null
-          brand_id: string | null
-          cadence: string
-          completed_at: string | null
-          created_at: string
-          created_by: string | null
-          description: string
-          due_date: string | null
-          id: string
-          position: number
-          priority: string
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          assignee_id?: string | null
-          brand_id?: string | null
-          cadence?: string
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string
-          due_date?: string | null
-          id?: string
-          position?: number
-          priority?: string
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          assignee_id?: string | null
-          brand_id?: string | null
-          cadence?: string
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string
-          due_date?: string | null
-          id?: string
-          position?: number
-          priority?: string
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_tasks_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "bh_brands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bh_wiki_entries: {
-        Row: {
-          brand_id: string
-          content: string
-          created_at: string
-          id: string
-          sort_order: number
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          brand_id: string
-          content?: string
-          created_at?: string
-          id?: string
-          sort_order?: number
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          brand_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          sort_order?: number
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bh_wiki_entries_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "bh_brands"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       brand_integrations: {
         Row: {
@@ -797,6 +325,219 @@ export type Database = {
           },
         ]
       }
+      courier_brands: {
+        Row: {
+          brand_id: string
+          courier_id: string
+          created_at: string
+        }
+        Insert: {
+          brand_id: string
+          courier_id: string
+          created_at?: string
+        }
+        Update: {
+          brand_id?: string
+          courier_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_brands_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_brands_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_charges: {
+        Row: {
+          accrued_at: string
+          amount: number
+          brand_id: string
+          charge_type: string
+          courier_id: string
+          created_at: string
+          id: string
+          note: string | null
+          order_id: string
+          rate_id: string | null
+          rate_missing: boolean
+          settled_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          accrued_at?: string
+          amount: number
+          brand_id: string
+          charge_type: string
+          courier_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id: string
+          rate_id?: string | null
+          rate_missing?: boolean
+          settled_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accrued_at?: string
+          amount?: number
+          brand_id?: string
+          charge_type?: string
+          courier_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          rate_id?: string | null
+          rate_missing?: boolean
+          settled_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_charges_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_charges_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_charges_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_charges_rate_id_fkey"
+            columns: ["rate_id"]
+            isOneToOne: false
+            referencedRelation: "courier_governorate_rates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_governorate_rates: {
+        Row: {
+          active: boolean
+          courier_id: string
+          created_at: string
+          customer_return_fee: number
+          delivery_fee: number
+          effective_from: string
+          effective_to: string | null
+          exchange_fee: number
+          failed_delivery_fee: number
+          governorate: string
+          id: string
+          return_fee: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          courier_id: string
+          created_at?: string
+          customer_return_fee?: number
+          delivery_fee: number
+          effective_from?: string
+          effective_to?: string | null
+          exchange_fee?: number
+          failed_delivery_fee?: number
+          governorate: string
+          id?: string
+          return_fee: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          courier_id?: string
+          created_at?: string
+          customer_return_fee?: number
+          delivery_fee?: number
+          effective_from?: string
+          effective_to?: string | null
+          exchange_fee?: number
+          failed_delivery_fee?: number
+          governorate?: string
+          id?: string
+          return_fee?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_governorate_rates_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_status_mappings: {
+        Row: {
+          active: boolean
+          collection_status: string
+          courier_id: string
+          created_at: string
+          id: string
+          order_status: string
+          raw_collection_status: string
+          raw_status: string
+          shipment_outcome: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          collection_status: string
+          courier_id: string
+          created_at?: string
+          id?: string
+          order_status: string
+          raw_collection_status?: string
+          raw_status: string
+          shipment_outcome: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          collection_status?: string
+          courier_id?: string
+          created_at?: string
+          id?: string
+          order_status?: string
+          raw_collection_status?: string
+          raw_status?: string
+          shipment_outcome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_status_mappings_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       couriers: {
         Row: {
           active: boolean
@@ -806,6 +547,7 @@ export type Database = {
           id: string
           name: string
           opening_balance: number
+          serves_all_brands: boolean
           type: Database["public"]["Enums"]["courier_type"]
           updated_at: string
         }
@@ -817,6 +559,7 @@ export type Database = {
           id?: string
           name: string
           opening_balance?: number
+          serves_all_brands?: boolean
           type?: Database["public"]["Enums"]["courier_type"]
           updated_at?: string
         }
@@ -828,6 +571,7 @@ export type Database = {
           id?: string
           name?: string
           opening_balance?: number
+          serves_all_brands?: boolean
           type?: Database["public"]["Enums"]["courier_type"]
           updated_at?: string
         }
@@ -1214,6 +958,8 @@ export type Database = {
           cash_transaction_id: string | null
           category_id: string
           created_at: string
+          effective_from: string
+          effective_to: string
           id: string
           month: number
           note: string | null
@@ -1221,6 +967,7 @@ export type Database = {
           period_end_date: string | null
           period_type: string
           platform: Database["public"]["Enums"]["marketing_platform"] | null
+          posting_date: string
           updated_at: string
           year: number
         }
@@ -1232,6 +979,8 @@ export type Database = {
           cash_transaction_id?: string | null
           category_id: string
           created_at?: string
+          effective_from?: never
+          effective_to?: never
           id?: string
           month: number
           note?: string | null
@@ -1239,6 +988,7 @@ export type Database = {
           period_end_date?: string | null
           period_type?: string
           platform?: Database["public"]["Enums"]["marketing_platform"] | null
+          posting_date?: never
           updated_at?: string
           year: number
         }
@@ -1250,6 +1000,8 @@ export type Database = {
           cash_transaction_id?: string | null
           category_id?: string
           created_at?: string
+          effective_from?: never
+          effective_to?: never
           id?: string
           month?: number
           note?: string | null
@@ -1257,6 +1009,7 @@ export type Database = {
           period_end_date?: string | null
           period_type?: string
           platform?: Database["public"]["Enums"]["marketing_platform"] | null
+          posting_date?: never
           updated_at?: string
           year?: number
         }
@@ -1824,14 +1577,89 @@ export type Database = {
           },
         ]
       }
+      order_lifecycle_events: {
+        Row: {
+          actor_id: string | null
+          brand_id: string
+          created_at: string
+          from_collection_status: string | null
+          from_order_status: string | null
+          from_shipment_outcome: string | null
+          id: string
+          note: string | null
+          order_id: string
+          raw_status: string | null
+          source: string
+          to_collection_status: string
+          to_order_status: string
+          to_shipment_outcome: string
+        }
+        Insert: {
+          actor_id?: string | null
+          brand_id: string
+          created_at?: string
+          from_collection_status?: string | null
+          from_order_status?: string | null
+          from_shipment_outcome?: string | null
+          id?: string
+          note?: string | null
+          order_id: string
+          raw_status?: string | null
+          source: string
+          to_collection_status: string
+          to_order_status: string
+          to_shipment_outcome: string
+        }
+        Update: {
+          actor_id?: string | null
+          brand_id?: string
+          created_at?: string
+          from_collection_status?: string | null
+          from_order_status?: string | null
+          from_shipment_outcome?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          raw_status?: string | null
+          source?: string
+          to_collection_status?: string
+          to_order_status?: string
+          to_shipment_outcome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_lifecycle_events_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_lifecycle_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           apartment_number: string | null
+          bosta_delivery_id: string | null
+          bosta_event_at: string | null
+          bosta_manual_attached_at: string | null
+          bosta_sent_at: string | null
+          bosta_tracking: string | null
           brand_id: string
           building_number: string | null
+          collection_status: string
           confirmation_status: string
           cost_total: number
+          courier_collection_status_raw: string | null
+          courier_expense: number
           courier_id: string | null
+          courier_status_raw: string | null
           created_at: string
           currency: string
           customer_email: string | null
@@ -1839,6 +1667,10 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           discount_amount: number
+          dispatch_claim_token: string | null
+          dispatch_claimed_at: string | null
+          dispatch_claimed_by: string | null
+          dispatch_tracking: string | null
           employee_id: string | null
           external_id: string | null
           external_order_number: string | null
@@ -1847,12 +1679,19 @@ export type Database = {
           fulfillment_status: string
           id: string
           invoice_id: string | null
+          lifecycle_source: string
+          lifecycle_updated_at: string
+          lifecycle_updated_by: string | null
           note: string | null
           occurred_at: string
+          order_status: string
           raw: Json | null
+          shipment_outcome: string
           shipping_address: string | null
           shipping_amount: number
           shipping_governorate: string | null
+          shopify_sync_error: string | null
+          shopify_sync_status: string
           source: string
           subtotal_amount: number
           total_amount: number
@@ -1860,11 +1699,20 @@ export type Database = {
         }
         Insert: {
           apartment_number?: string | null
+          bosta_delivery_id?: string | null
+          bosta_event_at?: string | null
+          bosta_manual_attached_at?: string | null
+          bosta_sent_at?: string | null
+          bosta_tracking?: string | null
           brand_id: string
           building_number?: string | null
+          collection_status?: string
           confirmation_status?: string
           cost_total?: number
+          courier_collection_status_raw?: string | null
+          courier_expense?: number
           courier_id?: string | null
+          courier_status_raw?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -1872,6 +1720,10 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           discount_amount?: number
+          dispatch_claim_token?: string | null
+          dispatch_claimed_at?: string | null
+          dispatch_claimed_by?: string | null
+          dispatch_tracking?: string | null
           employee_id?: string | null
           external_id?: string | null
           external_order_number?: string | null
@@ -1880,12 +1732,19 @@ export type Database = {
           fulfillment_status?: string
           id?: string
           invoice_id?: string | null
+          lifecycle_source?: string
+          lifecycle_updated_at?: string
+          lifecycle_updated_by?: string | null
           note?: string | null
           occurred_at?: string
+          order_status?: string
           raw?: Json | null
+          shipment_outcome?: string
           shipping_address?: string | null
           shipping_amount?: number
           shipping_governorate?: string | null
+          shopify_sync_error?: string | null
+          shopify_sync_status?: string
           source?: string
           subtotal_amount?: number
           total_amount?: number
@@ -1893,11 +1752,20 @@ export type Database = {
         }
         Update: {
           apartment_number?: string | null
+          bosta_delivery_id?: string | null
+          bosta_event_at?: string | null
+          bosta_manual_attached_at?: string | null
+          bosta_sent_at?: string | null
+          bosta_tracking?: string | null
           brand_id?: string
           building_number?: string | null
+          collection_status?: string
           confirmation_status?: string
           cost_total?: number
+          courier_collection_status_raw?: string | null
+          courier_expense?: number
           courier_id?: string | null
+          courier_status_raw?: string | null
           created_at?: string
           currency?: string
           customer_email?: string | null
@@ -1905,6 +1773,10 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           discount_amount?: number
+          dispatch_claim_token?: string | null
+          dispatch_claimed_at?: string | null
+          dispatch_claimed_by?: string | null
+          dispatch_tracking?: string | null
           employee_id?: string | null
           external_id?: string | null
           external_order_number?: string | null
@@ -1913,12 +1785,19 @@ export type Database = {
           fulfillment_status?: string
           id?: string
           invoice_id?: string | null
+          lifecycle_source?: string
+          lifecycle_updated_at?: string
+          lifecycle_updated_by?: string | null
           note?: string | null
           occurred_at?: string
+          order_status?: string
           raw?: Json | null
+          shipment_outcome?: string
           shipping_address?: string | null
           shipping_amount?: number
           shipping_governorate?: string | null
+          shopify_sync_error?: string | null
+          shopify_sync_status?: string
           source?: string
           subtotal_amount?: number
           total_amount?: number
@@ -3090,6 +2969,152 @@ export type Database = {
         }
         Relationships: []
       }
+      cash_daily_metrics: {
+        Row: { amount: number; brand_key: string; day: string; type: string; user_key: string }
+        Insert: { amount?: number; brand_key: string; day: string; type: string; user_key: string }
+        Update: { amount?: number; brand_key?: string; day?: string; type?: string; user_key?: string }
+        Relationships: []
+      }
+      courier_financial_metrics: {
+        Row: { brand_key: string; collected: number; courier_id: string; owed: number }
+        Insert: { brand_key: string; collected?: number; courier_id: string; owed?: number }
+        Update: { brand_key?: string; collected?: number; courier_id?: string; owed?: number }
+        Relationships: [
+          {
+            foreignKeyName: "courier_financial_metrics_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_metrics: {
+        Row: {
+          brand_id: string
+          customer_id: string
+          first_order_at: string | null
+          last_order_at: string | null
+          ltv: number
+          orders_count: number
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          customer_id: string
+          first_order_at?: string | null
+          last_order_at?: string | null
+          ltv?: number
+          orders_count?: number
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          customer_id?: string
+          first_order_at?: string | null
+          last_order_at?: string | null
+          ltv?: number
+          orders_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_metrics_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_metrics_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_audit_log_archive: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string | null
+          table_name: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id?: string | null
+          table_name: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
+      order_source_payloads: {
+        Row: {
+          archived_at: string
+          brand_id: string
+          id: number
+          order_id: string
+          payload: Json
+          payload_bytes: number
+          payload_hash: string
+          source: string
+        }
+        Insert: {
+          archived_at?: string
+          brand_id: string
+          id?: never
+          order_id: string
+          payload: Json
+          payload_bytes: number
+          payload_hash: string
+          source: string
+        }
+        Update: {
+          archived_at?: string
+          brand_id?: string
+          id?: never
+          order_id?: string
+          payload?: Json
+          payload_bytes?: number
+          payload_hash?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_source_payloads_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_source_payloads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallets: {
         Row: {
           active: boolean
@@ -3131,17 +3156,114 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      bh_can_access_brand: {
-        Args: { _brand_id: string; _user_id: string }
+      archive_order_source_payload: {
+        Args: { _order_id: string; _payload: Json; _source: string }
+        Returns: undefined
+      }
+      apply_bosta_lifecycle: {
+        Args: {
+          _collection_state: string
+          _collection_status: string
+          _fulfillment_status: string
+          _order_id: string
+          _order_status: string
+          _payload: Json
+          _provider_event_at: string | null
+          _shipment_outcome: string
+          _shopify_sync_error: string | null
+          _shopify_sync_status: string
+          _state: string
+          _tracking: string
+        }
         Returns: boolean
       }
-      bh_is_manager: { Args: { _user_id: string }; Returns: boolean }
+      accounting_profit_report: {
+        Args: {
+          _brand_id?: string | null
+          _exclude_brand_ids?: string[]
+          _from: string
+          _to: string
+        }
+        Returns: Json
+      }
       can_access_customer: {
         Args: { _customer_id: string; _user_id: string }
         Returns: boolean
       }
       can_access_service_project: {
         Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_read_page: {
+        Args: { _route: string; _user_id: string }
+        Returns: boolean
+      }
+      can_write_page: {
+        Args: { _route: string; _user_id: string }
+        Returns: boolean
+      }
+      claim_order_dispatch: {
+        Args: { _claim_token: string; _order_id: string }
+        Returns: boolean
+      }
+      cash_flow_grouped: {
+        Args: { _brand_id?: string | null; _from: string; _to: string }
+        Returns: Json
+      }
+      cash_summary_report: {
+        Args: { _for_user_id?: string | null; _from?: string | null; _to?: string | null }
+        Returns: Json
+      }
+      customers_filter_summary: {
+        Args: { _brand_id?: string | null; _search?: string | null; _segment?: string | null }
+        Returns: Json
+      }
+      customers_page: {
+        Args: {
+          _brand_id?: string | null
+          _cursor_at?: string | null
+          _cursor_id?: string | null
+          _limit?: number
+          _search?: string | null
+          _segment?: string | null
+        }
+        Returns: Json
+      }
+      customers_summary: { Args: Record<PropertyKey, never>; Returns: Json }
+      dashboard_operational_report: {
+        Args: { _brand_id?: string | null; _from: string; _to: string }
+        Returns: Json
+      }
+      finalize_order_dispatch: {
+        Args: {
+          _claim_token: string
+          _delivery_id: string
+          _order_id: string
+          _tracking: string
+        }
+        Returns: boolean
+      }
+      finalize_generic_order_dispatch: {
+        Args: {
+          _claim_token: string
+          _courier_id: string
+          _note: string
+          _order_id: string
+          _provider_tracking: boolean
+          _tracking: string
+        }
+        Returns: boolean
+      }
+      courier_accessible_to_user: {
+        Args: { _courier_id: string; _user_id: string }
+        Returns: boolean
+      }
+      courier_manageable_by_user: {
+        Args: { _courier_id: string; _user_id: string }
+        Returns: boolean
+      }
+      courier_serves_brand: {
+        Args: { _brand_id: string; _courier_id: string }
         Returns: boolean
       }
       has_brand_access: {
@@ -3166,6 +3288,10 @@ export type Database = {
       is_project_manager: { Args: { _user_id: string }; Returns: boolean }
       is_writer: { Args: { _user_id: string }; Returns: boolean }
       map_order_to_invoice_stage: { Args: { _ff: string }; Returns: string }
+      page_access_level: {
+        Args: { _route: string; _user_id: string }
+        Returns: string
+      }
       product_cogs: { Args: { _product_id: string }; Returns: number }
       products_cogs_map: {
         Args: { _ids: string[] }
@@ -3177,6 +3303,82 @@ export type Database = {
       recompute_supplier_invoice_status: {
         Args: { _invoice_id: string }
         Returns: undefined
+      }
+      release_order_dispatch_claim: {
+        Args: { _claim_token: string; _order_id: string }
+        Returns: boolean
+      }
+      reconcile_release_order_dispatch_claim: {
+        Args: { _confirmed_absent_on_bosta: boolean; _order_id: string }
+        Returns: boolean
+      }
+      orders_filter_summary: {
+        Args: {
+          _brand_id?: string | null
+          _from: string
+          _order_status?: string | null
+          _search?: string | null
+          _to: string
+        }
+        Returns: Json
+      }
+      orders_page: {
+        Args: {
+          _brand_id?: string | null
+          _cursor_at?: string | null
+          _cursor_id?: string | null
+          _from: string
+          _limit?: number
+          _order_status?: string | null
+          _search?: string | null
+          _to: string
+        }
+        Returns: Json
+      }
+      orders_summary: {
+        Args: { _brand_id?: string | null; _from: string; _to: string }
+        Returns: Json
+      }
+      require_page_read: { Args: { _route: string }; Returns: boolean }
+      revenue_comparison_report: {
+        Args: { _brand_id?: string | null; _year: number }
+        Returns: Json
+      }
+      update_order_lifecycle_manually: {
+        Args: {
+          _collection_status: string
+          _confirmation_status: string
+          _financial_status: string
+          _fulfillment_status: string
+          _order_id: string
+          _order_status: string
+          _raw: Json
+          _shipment_outcome: string
+          _shopify_sync_error: string
+          _shopify_sync_status: string
+        }
+        Returns: string
+      }
+      upsert_courier_with_brands: {
+        Args: {
+          _active: boolean
+          _brand_ids: string[]
+          _contact: string
+          _courier_id: string
+          _name: string
+          _opening_balance: number
+          _serves_all_brands: boolean
+          _type: string
+        }
+        Returns: string
+      }
+      upsert_order_with_items: {
+        Args: { _items: Json; _order_id: string; _order_patch: Json }
+        Returns: string
+      }
+      upsert_shopify_order_with_archive: {
+        Args: { _items: Json; _order_id: string | null; _order_patch: Json; _payload: Json }
+        Returns: string
       }
     }
     Enums: {
@@ -3357,6 +3559,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: [

@@ -1,5 +1,13 @@
 // Server-only Bosta status recall. Used by cron via /api/public/hooks/bosta-recall.
 import { decryptConnectionKey } from "@/server/connectionKeyCrypto";
+import {
+  bostaProviderEventAt,
+  isConfirmedBostaNotFound,
+  isRecognizedBostaDeliveryStatus,
+  mapBostaLifecycle,
+  resolveBostaShipmentOutcome,
+  shopifyActionForOrderStatus,
+} from "@/lib/order-lifecycle.shared";
 
 function mapBostaStateToFulfillment(stateValue: string | null | undefined): string | null {
   const s = String(stateValue ?? "").toLowerCase();
@@ -16,8 +24,11 @@ type OrderRow = {
   brand_id: string;
   external_order_number: string | null;
   fulfillment_status: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  raw: any;
+  shipment_outcome: string | null;
+  source: string;
+  external_id: string | null;
+  bosta_tracking: string | null;
+  bosta_delivery_id: string | null;
 };
 
 export async function recallAllOpenBostaShipments(limit = 100) {
@@ -26,8 +37,8 @@ export async function recallAllOpenBostaShipments(limit = 100) {
 
   const { data: rows, error } = await supabaseAdmin
     .from("orders")
-    .select("id, brand_id, external_order_number, fulfillment_status, raw")
-    .not("raw->>bosta_tracking", "is", null)
+    .select("id, brand_id, external_order_number, fulfillment_status, shipment_outcome, source, external_id, bosta_tracking, bosta_delivery_id")
+    .not("bosta_tracking", "is", null)
     .not("fulfillment_status", "in", "(delivered,returned,cancelled)")
     .limit(limit);
   if (error) throw new Error(error.message);
@@ -56,9 +67,8 @@ export async function recallAllOpenBostaShipments(limit = 100) {
     try {
       const creds = await getCreds(order.brand_id);
       if (!creds) { failed += 1; continue; }
-      const raw = order.raw ?? {};
-      const tracking = raw.bosta_tracking as string | undefined;
-      const deliveryId = raw.bosta_delivery_id as string | undefined;
+      const tracking = order.bosta_tracking ?? undefined;
+      const deliveryId = order.bosta_delivery_id ?? undefined;
       if (!tracking && !deliveryId) { failed += 1; continue; }
 
       const endpoints = [
@@ -68,32 +78,90 @@ export async function recallAllOpenBostaShipments(limit = 100) {
       ].filter(Boolean) as string[];
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let parsed: any = null; let httpStatus = 0;
+      let parsed: any = null; let httpStatus = 0; let successfulResponse = false;
+      const attemptedStatuses: number[] = [];
       for (const url of endpoints) {
         const res = await fetch(url, { headers: { Authorization: creds.api_key, Accept: "application/json" } });
         httpStatus = res.status;
+        attemptedStatuses.push(res.status);
         const text = await res.text();
         try { parsed = text ? JSON.parse(text) : null; } catch { parsed = { _raw: text.slice(0, 500) }; }
-        if (res.ok && parsed) break;
+        if (res.ok && parsed) { successfulResponse = true; break; }
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const d = (parsed?.data ?? parsed ?? {}) as any;
       const stateValue: string = d?.state?.value ?? d?.state ?? d?.status ?? d?.currentStatus?.state ?? "unknown";
       const stateCode = d?.state?.code ?? d?.masterState ?? null;
+      const collectionValue: string =
+        d?.collectionStatus?.value ?? d?.collectionStatus ?? d?.codStatus?.value ?? d?.codStatus ?? "pending";
       let newStatus = mapBostaStateToFulfillment(stateValue);
-      const notFoundOnBosta = httpStatus === 404 || /not\s*found|deleted|does\s*not\s*exist/i.test(String(parsed?.message ?? parsed?.error ?? ""));
+      const responseReason = String(parsed?.message ?? parsed?.error ?? "");
+      const notFoundOnBosta = isConfirmedBostaNotFound(
+        successfulResponse,
+        attemptedStatuses,
+        httpStatus,
+        responseReason,
+      );
+      if (!successfulResponse && !notFoundOnBosta) {
+        throw new Error(`Bosta status pull failed (HTTP ${httpStatus || "network"})`);
+      }
       if (!newStatus && notFoundOnBosta && order.fulfillment_status !== "delivered" && order.fulfillment_status !== "returned") {
         newStatus = "cancelled";
       }
 
-      const changed = !!(newStatus && newStatus !== order.fulfillment_status);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const patch: { raw: any; fulfillment_status?: string } = {
-        raw: { ...raw, bosta_last_state: stateValue, bosta_last_state_code: stateCode, bosta_last_pull_at: new Date().toISOString(), ...(notFoundOnBosta ? { bosta_deleted: true } : {}) },
+      if (!notFoundOnBosta && !isRecognizedBostaDeliveryStatus(stateValue)) {
+        throw new Error(`unmapped Bosta state: ${stateValue}`);
+      }
+
+      const effectiveState = notFoundOnBosta ? "cancelled" : stateValue;
+      const mapped = mapBostaLifecycle(effectiveState, collectionValue);
+      const lifecycle = {
+        ...mapped,
+        shipmentOutcome: resolveBostaShipmentOutcome(order.shipment_outcome, mapped.shipmentOutcome),
       };
-      if (changed) patch.fulfillment_status = newStatus!;
-      await supabaseAdmin.from("orders").update(patch).eq("id", order.id);
+      const shopifyAction = shopifyActionForOrderStatus(lifecycle.orderStatus, lifecycle.shipmentOutcome);
+      const shouldSyncShopify =
+        order.source === "shopify" && (shopifyAction === "fulfill" || shopifyAction === "cancel");
+      const bostaPayload = {
+          response: parsed,
+          last_state: stateValue,
+          last_state_code: stateCode,
+          collection_status: collectionValue,
+          pulled_at: new Date().toISOString(),
+          provider_event_at: bostaProviderEventAt(parsed),
+          deleted: notFoundOnBosta,
+        };
+      const { data: applied, error: updateError } = await supabaseAdmin.rpc("apply_bosta_lifecycle", {
+        _order_id: order.id,
+        _provider_event_at: bostaProviderEventAt(parsed),
+        _tracking: tracking ?? "",
+        _state: effectiveState,
+        _collection_state: collectionValue,
+        _order_status: lifecycle.orderStatus,
+        _collection_status: lifecycle.collectionStatus,
+        _shipment_outcome: lifecycle.shipmentOutcome,
+        _fulfillment_status: newStatus ?? "",
+        _shopify_sync_status: shouldSyncShopify || shopifyAction === "review_return" ? "pending" : "not_applicable",
+        _shopify_sync_error: shopifyAction === "review_return" ? "Returned order requires return/refund review" : null,
+        _payload: bostaPayload,
+      });
+      if (updateError) throw updateError;
+      const changed = Boolean(applied && newStatus && newStatus !== order.fulfillment_status);
       if (changed) updated += 1;
+
+      if (applied && shouldSyncShopify && order.external_id) {
+        const { applyShopifyOrderAction } = await import("@/server/shopifySync.server");
+        await applyShopifyOrderAction({
+          brandId: order.brand_id,
+          externalOrderId: order.external_id,
+          action: shopifyAction,
+        });
+        const syncStatusUpdate = await supabaseAdmin
+          .from("orders")
+          .update({ shopify_sync_status: "synced", shopify_sync_error: null })
+          .eq("id", order.id);
+        if (syncStatusUpdate.error) throw syncStatusUpdate.error;
+      }
 
       await logIntegrationEvent(supabaseAdmin, {
         provider: "bosta", brand_id: order.brand_id, direction: "incoming",

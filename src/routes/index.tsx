@@ -2,6 +2,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   beforeLoad: () => {
-    throw redirect({ to: "/auth", search: { next: "" } });
+    throw redirect({ to: "/hub/$hub", params: { hub: "overview" } });
   },
 });

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,18 +10,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { RefreshCw, ShoppingBag, Search, Plus, Trash2, Pencil, Send, Truck, RotateCw, Hash } from "lucide-react";
-import { listOrders, getOrdersSummary, runShopifySyncNow, runShopifySyncAll, runShopifyBackfillWindow, updateOrderStatus, upsertManualOrder, getOrder } from "@/lib/orders.functions";
+import { listOrders, getOrdersFilterSummary, getOrdersSummary, runShopifySyncNow, runShopifySyncAll, runShopifyBackfillWindow, updateOrderStatus, upsertManualOrder, getOrder, transitionOrderLifecycle } from "@/lib/orders.functions";
 import { dispatchOrderToBestCourier, recommendCourierForOrder } from "@/lib/couriers.functions";
 import { sendBostaShipment, pullBostaShipmentStatus, syncAllBostaShipments, attachBostaTracking } from "@/lib/integrations.functions";
 import { listBrands, listProducts, listCouriers } from "@/lib/internal.functions";
 import { useLang } from "@/lib/i18n";
 import { toast } from "sonner";
-import { PaginationBar, usePagination } from "@/components/PaginationBar";
+import { PaginationBar } from "@/components/PaginationBar";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
 import { useGlobalPeriod } from "@/lib/global-period";
 import { registerReportOrderCount, orderScopeKey } from "@/lib/salesUnify";
-import { useEffect } from "react";
+import {
+  COLLECTION_STATUS_LABELS_AR,
+  COLLECTION_STATUSES,
+  isCourierAvailableForBrand,
+  lifecycleForManualShipmentOutcome,
+  ORDER_STATUS_LABELS_AR,
+  ORDER_WORKFLOW_STATUSES,
+  SHIPMENT_OUTCOMES,
+  type CollectionStatus,
+  type OrderWorkflowStatus,
+  type ShipmentOutcome,
+} from "@/lib/order-lifecycle.shared";
 
 export const Route = createFileRoute("/_authenticated/_app/orders")({
   head: () => ({ meta: [
@@ -49,6 +60,46 @@ const CONFIRM: Array<{ v: string; labelAr: string; labelEn: string; tone: "muted
   { v: "confirmed", labelAr: "مؤكد", labelEn: "Confirmed", tone: "success" },
   { v: "cancelled", labelAr: "ملغي", labelEn: "Cancelled", tone: "destructive" },
 ];
+const ORDER_STATUS_LABELS_EN: Record<OrderWorkflowStatus, string> = {
+  new: "New",
+  processing: "Processing",
+  postponed: "Postponed",
+  awaiting_response: "Awaiting your response",
+  succeeded: "Succeeded",
+  cancelled: "Cancelled",
+};
+const COLLECTION_STATUS_LABELS_EN: Record<CollectionStatus, string> = {
+  processing: "Processing",
+  unavailable: "Unavailable",
+  paid: "Paid",
+  unpaid: "Unpaid",
+};
+const SHIPMENT_OUTCOME_LABELS_AR: Record<ShipmentOutcome, string> = {
+  open: "قيد التنفيذ",
+  delivered: "تم التوصيل",
+  customer_returned: "إرجاع بعد الاستلام",
+  returned: "فشل التوصيل والرجوع",
+  exchanged: "تم الاستبدال",
+  cancelled_before_dispatch: "إلغاء قبل الشحن",
+};
+const SHIPMENT_OUTCOME_LABELS_EN: Record<ShipmentOutcome, string> = {
+  open: "In progress",
+  delivered: "Delivered",
+  customer_returned: "Returned after delivery",
+  returned: "Failed delivery / returned",
+  exchanged: "Exchanged",
+  cancelled_before_dispatch: "Cancelled before dispatch",
+};
+const LIFECYCLE_SOURCE_AR = {
+  system: "النظام",
+  manual: "يدوي",
+  bosta: "بوسطة",
+  shopify: "Shopify",
+} as const;
+const OPEN_WORKFLOW_STATUSES = ORDER_WORKFLOW_STATUSES.filter(
+  (status): status is Exclude<OrderWorkflowStatus, "succeeded" | "cancelled"> =>
+    status !== "succeeded" && status !== "cancelled",
+);
 const EG_GOVERNORATES: Array<{ ar: string; en: string }> = [
   { ar: "القاهرة", en: "Cairo" }, { ar: "الجيزة", en: "Giza" }, { ar: "الإسكندرية", en: "Alexandria" },
   { ar: "القليوبية", en: "Qalyubia" }, { ar: "الشرقية", en: "Sharqia" }, { ar: "الدقهلية", en: "Dakahlia" },
@@ -65,6 +116,7 @@ function OrdersPage() {
   const { t, lang } = useLang();
   const qc = useQueryClient();
   const listFn = useServerFn(listOrders);
+  const filterSummaryFn = useServerFn(getOrdersFilterSummary);
   const sumFn = useServerFn(getOrdersSummary);
   const brandsFn = useServerFn(listBrands);
   const syncFn = useServerFn(runShopifySyncNow);
@@ -73,9 +125,16 @@ function OrdersPage() {
   const getOrderFn = useServerFn(getOrder);
   const listProductsFn = useServerFn(listProducts);
   const listCouriersFn = useServerFn(listCouriers);
+  const transitionLifecycleFn = useServerFn(transitionOrderLifecycle);
   const [brandId, setBrandId] = useState<string>("all");
   const [ff, setFf] = useState<string>("all");
   const [q, setQ] = useState("");
+  const deferredQuery = useDeferredValue(q);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [pageCursors, setPageCursors] = useState<
+    Array<{ occurredAt: string; id: string } | null>
+  >([null]);
   const __gp = useGlobalPeriod();
   const [period, setPeriod] = useState<PeriodValue>(__gp.period);
   useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
@@ -96,19 +155,59 @@ function OrdersPage() {
     items: [emptyItem()] as Array<{ product_id: string; title: string; qty: number; unit_price: number }>,
   });
   const [form, setForm] = useState(emptyForm());
+  const [lifecycleDlg, setLifecycleDlg] = useState<{
+    open: boolean;
+    orderId: string;
+    orderStatus: OrderWorkflowStatus;
+    outcome: ShipmentOutcome;
+    collectionStatus: CollectionStatus;
+  }>({
+    open: false,
+    orderId: "",
+    orderStatus: "processing",
+    outcome: "open",
+    collectionStatus: "processing",
+  });
 
   const productsQ = useQuery({ queryKey: ["products"], queryFn: () => listProductsFn(), enabled: newOpen });
   const brandProducts = (productsQ.data ?? []).filter((p) => !form.brand_id || p.brand_id === form.brand_id);
   const couriersQ = useQuery({ queryKey: ["couriers"], queryFn: () => listCouriersFn() });
 
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
+  useEffect(() => {
+    setPage(0);
+    setPageCursors([null]);
+  }, [brandId, from, to, ff, deferredQuery, pageSize]);
+  const cursor = pageCursors[page] ?? null;
   const ordersQ = useQuery({
-    queryKey: ["orders", brandId, from, to],
-    queryFn: () => listFn({ data: { brandId: brandId === "all" ? null : brandId, from, to } }),
+    queryKey: ["orders", brandId, from, to, ff, deferredQuery, pageSize, cursor],
+    queryFn: () =>
+      listFn({
+        data: {
+          brandId: brandId === "all" ? null : brandId,
+          from,
+          to,
+          orderStatus: ff === "all" ? null : ff,
+          search: deferredQuery,
+          pageSize,
+          cursorAt: cursor?.occurredAt ?? null,
+          cursorId: cursor?.id ?? null,
+        },
+      }),
   });
   const sumQ = useQuery({
     queryKey: ["orders-summary", brandId, from, to],
     queryFn: () => sumFn({ data: { brandId: brandId === "all" ? null : brandId, from, to } }),
+  });
+  const filterSummaryQ = useQuery({
+    queryKey: ["orders", "filter-summary", brandId, from, to, ff, deferredQuery],
+    queryFn: () => filterSummaryFn({ data: {
+      brandId: brandId === "all" ? null : brandId,
+      from,
+      to,
+      orderStatus: ff === "all" ? null : ff,
+      search: deferredQuery,
+    } }),
   });
 
 
@@ -157,6 +256,29 @@ function OrdersPage() {
     mutationFn: (v: { id: string; fulfillment_status?: string; financial_status?: string; confirmation_status?: string }) => updFn({ data: v }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["orders"] }); qc.invalidateQueries({ queryKey: ["orders-summary"] }); },
     onError: (e: Error) => toast.error(e.message),
+  });
+  const manualLifecycle = useMutation({
+    mutationFn: () => {
+      const lifecycle = lifecycleForManualShipmentOutcome(
+        lifecycleDlg.outcome,
+        lifecycleDlg.collectionStatus,
+      );
+      return transitionLifecycleFn({
+        data: {
+          id: lifecycleDlg.orderId,
+          orderStatus: lifecycleDlg.orderStatus,
+          collectionStatus: lifecycle.collectionStatus,
+          shipmentOutcome: lifecycle.shipmentOutcome,
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success(lang === "ar" ? "تم تعديل حالة الأوردر يدويًا" : "Order status updated manually");
+      setLifecycleDlg((current) => ({ ...current, open: false }));
+      qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: ["orders-summary"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
   const create = useMutation({
     mutationFn: () => {
@@ -284,28 +406,39 @@ function OrdersPage() {
     setNewOpen(true);
   }
 
-  const rows = ordersQ.data ?? [];
+  const rows = ordersQ.data?.rows ?? [];
+  const totalRows = filterSummaryQ.data?.total ?? 0;
   // Runtime audit: publish this page's "orders in scope" count so other
   // reports over the same (brand, period) can be cross-checked.
   useEffect(() => {
-    if (!ordersQ.data) return;
-    registerReportOrderCount("orders_page", orderScopeKey({ brandId: brandId === "all" ? null : brandId, from, to }), rows.length);
-  }, [ordersQ.data, brandId, from, to, rows.length]);
-  const filtered = useMemo(() => rows.filter((r) => {
-    if (ff !== "all" && r.fulfillment_status !== ff) return false;
-    if (q.trim()) {
-      const needle = q.trim().toLowerCase();
-      return (r.external_order_number || "").toLowerCase().includes(needle)
-          || (r.customer_name || "").toLowerCase().includes(needle)
-          || (r.customer_phone || "").includes(needle);
-    }
-    return true;
-  }), [rows, ff, q]);
+    if (!sumQ.data) return;
+    registerReportOrderCount("orders_page", orderScopeKey({ brandId: brandId === "all" ? null : brandId, from, to }), Number(sumQ.data.totalOrders) || 0);
+  }, [sumQ.data, brandId, from, to]);
 
   const nf = (n: number) => Number(n || 0).toLocaleString("en-US");
-  const total = filtered.reduce((s, r) => s + Number(r.total_amount), 0);
-  
-  const pg = usePagination(filtered, 25);
+  const pageCount = Math.max(1, Math.ceil(totalRows / pageSize));
+  const changePage = (value: number | ((previous: number) => number)) => {
+    const requested = typeof value === "function" ? value(page) : value;
+    const next = Math.max(0, Math.min(requested, pageCount - 1));
+    if (next > page && ordersQ.data?.nextCursor) {
+      setPageCursors((current) => {
+        const copy = current.slice();
+        copy[next] = ordersQ.data?.nextCursor ?? null;
+        return copy;
+      });
+    }
+    setPage(next);
+  };
+  const pg = {
+    slice: rows,
+    total: totalRows,
+    page,
+    setPage: changePage,
+    pageSize,
+    setPageSize,
+    pageCount,
+    start: page * pageSize,
+  };
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -556,11 +689,15 @@ function OrdersPage() {
           <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{lang === "ar" ? "كل الحالات" : "All statuses"}</SelectItem>
-            {FF.map((f) => <SelectItem key={f.v} value={f.v}>{t(f.k)}</SelectItem>)}
+            {ORDER_WORKFLOW_STATUSES.map((status) => (
+              <SelectItem key={status} value={status}>
+                {lang === "ar" ? ORDER_STATUS_LABELS_AR[status] : ORDER_STATUS_LABELS_EN[status]}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <div className="text-sm text-muted-foreground num" dir="ltr">
-          {filtered.length} · {nf(Math.round(total))}
+          {nf(totalRows)} · {nf(Math.round(filterSummaryQ.data?.amount ?? 0))}
         </div>
       </Card>
 
@@ -580,9 +717,9 @@ function OrdersPage() {
               <th className="p-3 text-start">{lang === "ar" ? "عدد القطع" : "Qty"}</th>
               <th className="p-3 text-start">{t("order_total")}</th>
               <th className="p-3 text-start">{lang === "ar" ? "رقم التتبع" : "Tracking"}</th>
-              <th className="p-3 text-start">{t("order_status_fulfillment")}</th>
-              <th className="p-3 text-start">{t("order_status_financial")}</th>
-              <th className="p-3 text-start">{lang === "ar" ? "حالة الأوردر" : "Order status"}</th>
+              <th className="p-3 text-start">{lang === "ar" ? "حالة الشحنة" : "Shipment status"}</th>
+              <th className="p-3 text-start">{lang === "ar" ? "حالة التحصيل" : "Collection status"}</th>
+              <th className="p-3 text-start">Shopify</th>
               <th className="p-3"></th>
             </tr></thead>
             <tbody>
@@ -590,7 +727,6 @@ function OrdersPage() {
                 <tr><td colSpan={14} className="p-4"><TableSkeleton rows={8} cols={14} /></td></tr>
               )}
               {!ordersQ.isLoading && pg.slice.map((r) => {
-                const ffMeta = FF.find((x) => x.v === r.fulfillment_status);
                 const products = r.items_summary ?? [];
                 const productsText = products.map((p) => `${p.title} ×${p.qty}`).join(" · ");
                 return (
@@ -630,24 +766,40 @@ function OrdersPage() {
                       ) : "—"}
                     </td>
                     <td className="p-3">
-                      <Select value={r.fulfillment_status} onValueChange={(v) => upd.mutate({ id: r.id, fulfillment_status: v })}>
-                        <SelectTrigger className="w-32 h-8">
-                          <Badge variant={ffMeta?.tone === "success" ? "default" : ffMeta?.tone === "destructive" ? "destructive" : "secondary"}>
-                            {t(ffMeta?.k ?? "ff_unfulfilled")}
-                          </Badge>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FF.map((f) => <SelectItem key={f.v} value={f.v}>{t(f.k)}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <button
+                        type="button"
+                        className="text-start"
+                        onClick={() =>
+                          setLifecycleDlg({
+                            open: true,
+                            orderId: r.id,
+                            orderStatus: r.order_status,
+                            outcome: r.shipment_outcome,
+                            collectionStatus: r.collection_status,
+                          })
+                        }
+                        title={lang === "ar" ? "تعديل الحالة يدويًا" : "Edit status manually"}
+                      >
+                        <Badge variant={r.order_status === "succeeded" ? "default" : r.order_status === "cancelled" ? "destructive" : "secondary"}>
+                          {r.shipment_outcome === "open"
+                            ? lang === "ar"
+                              ? ORDER_STATUS_LABELS_AR[r.order_status]
+                              : ORDER_STATUS_LABELS_EN[r.order_status]
+                            : lang === "ar"
+                              ? SHIPMENT_OUTCOME_LABELS_AR[r.shipment_outcome]
+                              : SHIPMENT_OUTCOME_LABELS_EN[r.shipment_outcome]}
+                        </Badge>
+                        <div className="mt-1 text-[10px] text-muted-foreground">
+                          {lang === "ar"
+                            ? `آخر تحديث: ${LIFECYCLE_SOURCE_AR[r.lifecycle_source]}`
+                            : `Source: ${r.lifecycle_source}`}
+                        </div>
+                      </button>
                     </td>
                     <td className="p-3">
-                      <Select value={r.financial_status} onValueChange={(v) => upd.mutate({ id: r.id, financial_status: v })}>
-                        <SelectTrigger className="w-28 h-8"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {FIN.map((f) => <SelectItem key={f.v} value={f.v}>{t(f.k)}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <Badge variant={r.collection_status === "paid" ? "default" : r.collection_status === "unpaid" ? "destructive" : "secondary"}>
+                        {lang === "ar" ? COLLECTION_STATUS_LABELS_AR[r.collection_status] : COLLECTION_STATUS_LABELS_EN[r.collection_status]}
+                      </Badge>
                     </td>
                     <td className="p-3">
                       <Select value={r.confirmation_status ?? "pending"} onValueChange={(v) => upd.mutate({ id: r.id, confirmation_status: v })}>
@@ -700,7 +852,7 @@ function OrdersPage() {
                   </tr>
                 );
               })}
-              {!ordersQ.isLoading && filtered.length === 0 && (
+              {!ordersQ.isLoading && rows.length === 0 && (
                 <tr><td colSpan={13} className="p-8 text-center text-muted-foreground">{lang === "ar" ? "لا يوجد أوردرات في هذا الفلتر." : "No orders match this filter."}</td></tr>
               )}
             </tbody>
@@ -708,6 +860,106 @@ function OrdersPage() {
         </div>
         <PaginationBar {...pg} />
       </Card>
+
+      <Dialog
+        open={lifecycleDlg.open}
+        onOpenChange={(open) => setLifecycleDlg((current) => ({ ...current, open }))}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {lang === "ar" ? "تعديل حالة الأوردر يدويًا" : "Edit order status manually"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{lang === "ar" ? "حالة الأوردر" : "Order status"}</Label>
+              <Select
+                value={
+                  lifecycleDlg.outcome === "open"
+                    ? lifecycleDlg.orderStatus
+                    : lifecycleDlg.outcome
+                }
+                onValueChange={(value) => {
+                  if (OPEN_WORKFLOW_STATUSES.includes(value as (typeof OPEN_WORKFLOW_STATUSES)[number])) {
+                    setLifecycleDlg((current) => ({
+                      ...current,
+                      orderStatus: value as OrderWorkflowStatus,
+                      outcome: "open",
+                    }));
+                    return;
+                  }
+                  const outcome = value as ShipmentOutcome;
+                  const lifecycle = lifecycleForManualShipmentOutcome(
+                    outcome,
+                    lifecycleDlg.collectionStatus,
+                  );
+                  setLifecycleDlg((current) => ({
+                    ...current,
+                    orderStatus: lifecycle.orderStatus,
+                    outcome,
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {OPEN_WORKFLOW_STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {lang === "ar" ? ORDER_STATUS_LABELS_AR[status] : ORDER_STATUS_LABELS_EN[status]}
+                    </SelectItem>
+                  ))}
+                  {SHIPMENT_OUTCOMES.filter((outcome) => outcome !== "open").map((outcome) => (
+                    <SelectItem key={outcome} value={outcome}>
+                      {lang === "ar"
+                        ? SHIPMENT_OUTCOME_LABELS_AR[outcome]
+                        : SHIPMENT_OUTCOME_LABELS_EN[outcome]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>{lang === "ar" ? "حالة التحصيل" : "Collection status"}</Label>
+              <Select
+                value={lifecycleDlg.collectionStatus}
+                onValueChange={(value) =>
+                  setLifecycleDlg((current) => ({
+                    ...current,
+                    collectionStatus: value as CollectionStatus,
+                  }))
+                }
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {COLLECTION_STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {lang === "ar"
+                        ? COLLECTION_STATUS_LABELS_AR[status]
+                        : COLLECTION_STATUS_LABELS_EN[status]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {lang === "ar"
+                ? "التعديل اليدوي مسموح، وتحديثات بوسطة الجديدة ستستمر تلقائيًا. الأحداث القديمة لن تخفّض حالة نهائية."
+                : "Manual edits are allowed. New Bosta events keep syncing; stale events cannot downgrade a terminal outcome."}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setLifecycleDlg((current) => ({ ...current, open: false }))}
+            >
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button onClick={() => manualLifecycle.mutate()} disabled={manualLifecycle.isPending}>
+              {lang === "ar" ? "حفظ الحالة" : "Save status"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Bosta tracking dialog */}
       <Dialog open={trackDlg.open} onOpenChange={(v) => setTrackDlg((s) => ({ ...s, open: v }))}>
@@ -818,7 +1070,7 @@ function Kpi({ label, value, tone = "default" }: { label: string; value: string;
   );
 }
 
-type CourierRow = { id: string; name: string; type: "courier_company"|"rep"|"offline_branch"; contact: string | null; brand_id: string | null; active: boolean };
+type CourierRow = { id: string; name: string; type: "courier_company"|"rep"|"offline_branch"; contact: string | null; brand_id: string | null; brand_ids: string[]; serves_all_brands: boolean; active: boolean };
 type DispatchOrder = { id: string; brand_id: string; governorate: string | null; total_amount: number };
 
 function DispatchDialog(props: {
@@ -841,7 +1093,19 @@ function DispatchDialog(props: {
     enabled: open && !!order,
   });
   const brandId = order?.brand_id ?? "";
-  const list = (couriers ?? []).filter((c) => c.active && c.type !== "offline_branch" && (!c.brand_id || c.brand_id === brandId));
+  const list = (couriers ?? []).filter(
+    (courier) =>
+      courier.active &&
+      courier.type !== "offline_branch" &&
+      isCourierAvailableForBrand(
+        {
+          brandId: courier.brand_id,
+          servesAllBrands: courier.serves_all_brands,
+          brandIds: courier.brand_ids ?? [],
+        },
+        brandId,
+      ),
+  );
   const recId = recQ.data?.courier?.id ?? null;
   const cod = Math.round(order?.total_amount ?? 0);
   return (

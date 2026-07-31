@@ -121,13 +121,12 @@ export const deleteUser = createServerFn({ method: "POST" })
 export const getMyRole = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [rolesRes, settingsRes] = await Promise.all([
-      context.supabase.from("user_roles").select("role").eq("user_id", context.userId),
-      context.supabase.from("user_settings").select("can_write").eq("user_id", context.userId).maybeSingle(),
-    ]);
+    const rolesRes = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
     const roles = (rolesRes.data ?? []).map((r: any) => r.role as string);
     const isAdmin = roles.includes("admin");
-    const settingsWrite = !!settingsRes.data?.can_write;
     return {
       roles,
       isAdmin,
@@ -138,7 +137,7 @@ export const getMyRole = createServerFn({ method: "GET" })
       isHR: roles.includes("hr"),
       isSalesMan: roles.includes("sales_man"),
       isProjectManager: roles.includes("project_manager"),
-      canWrite: isAdmin || settingsWrite || roles.some((r) => ["manager","data_entry","accountant"].includes(r)),
+      canWrite: isAdmin || roles.some((r) => ["manager","data_entry","accountant"].includes(r)),
       canViewDashboard: true,
     };
   });

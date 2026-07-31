@@ -1,1 +1,20 @@
-project_id = "moxhzeyrqbcmoswqrxdy"
+project_id = "etxtjhgoabemqjlsgrsx"
+
+[auth]
+site_url = "https://egurus.info"
+additional_redirect_urls = [
+  "https://egurus.info/**",
+  "http://localhost:3000/**",
+  "http://127.0.0.1:8080/**",
+]
+enable_signup = false
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+max_frequency = "1m"
+otp_length = 8
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

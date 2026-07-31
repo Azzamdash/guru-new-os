@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Repeat, AlertTriangle, TrendingUp, Plus } from "lucide-react";
-import { listCustomers, createCustomer, type CustomerListRow } from "@/lib/customers.functions";
+import { listCustomers, getCustomersFilterSummary, getCustomersSummary, createCustomer, type CustomerListRow } from "@/lib/customers.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { useLang } from "@/lib/i18n";
 import { toast } from "sonner";
-import { PaginationBar, usePagination } from "@/components/PaginationBar";
+import { PaginationBar } from "@/components/PaginationBar";
 import { TableSkeleton } from "@/components/TableSkeleton";
 
 export const Route = createFileRoute("/_authenticated/_app/customers/")({
@@ -35,18 +35,53 @@ function CustomersPage() {
   const { t, lang } = useLang();
   const qc = useQueryClient();
   const listCustFn = useServerFn(listCustomers);
+  const filterSummaryFn = useServerFn(getCustomersFilterSummary);
+  const summaryFn = useServerFn(getCustomersSummary);
   const listBrandsFn = useServerFn(listBrands);
   const createFn = useServerFn(createCustomer);
-  const custQ = useQuery({ queryKey: ["customers-list"], queryFn: () => listCustFn() });
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => listBrandsFn() });
   const brands = brandsQ.data ?? [];
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? "—";
 
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [segFilter, setSegFilter] = useState<string>("all");
   const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [pageCursors, setPageCursors] = useState<
+    Array<{ lastOrderAt: string | null; id: string } | null>
+  >([null]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "", governorate: "", isGeneral: false, brandIds: [] as string[] });
+  useEffect(() => {
+    setPage(0);
+    setPageCursors([null]);
+  }, [deferredSearch, segFilter, brandFilter, pageSize]);
+  const cursor = pageCursors[page] ?? null;
+  const custQ = useQuery({
+    queryKey: ["customers-list", deferredSearch, segFilter, brandFilter, pageSize, cursor],
+    queryFn: () =>
+      listCustFn({
+        data: {
+          search: deferredSearch,
+          segment: segFilter === "all" ? null : segFilter,
+          brandId: brandFilter === "all" ? null : brandFilter,
+          pageSize,
+          cursorAt: cursor?.lastOrderAt ?? null,
+          cursorId: cursor?.id ?? null,
+        },
+      }),
+  });
+  const summaryQ = useQuery({ queryKey: ["customers-summary"], queryFn: () => summaryFn() });
+  const filterSummaryQ = useQuery({
+    queryKey: ["customers-list", "filter-summary", deferredSearch, segFilter, brandFilter],
+    queryFn: () => filterSummaryFn({ data: {
+      search: deferredSearch,
+      segment: segFilter === "all" ? null : segFilter,
+      brandId: brandFilter === "all" ? null : brandFilter,
+    } }),
+  });
 
   const createMut = useMutation({
     mutationFn: () => createFn({ data: {
@@ -58,6 +93,7 @@ function CustomersPage() {
       setDialogOpen(false);
       setForm({ name: "", phone: "", email: "", governorate: "", isGeneral: false, brandIds: [] });
       qc.invalidateQueries({ queryKey: ["customers-list"] });
+      qc.invalidateQueries({ queryKey: ["customers-summary"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -66,33 +102,32 @@ function CustomersPage() {
     setForm((f) => ({ ...f, brandIds: f.brandIds.includes(id) ? f.brandIds.filter((x) => x !== id) : [...f.brandIds, id] }));
   };
 
-  const rows = custQ.data ?? [];
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (segFilter !== "all" && r.segment !== segFilter) return false;
-      if (brandFilter !== "all" && !r.brandIds.includes(brandFilter)) return false;
-      if (!q) return true;
-      if (r.name.toLowerCase().includes(q)) return true;
-      if (r.phone?.toLowerCase().includes(q)) return true;
-      if (r.email?.toLowerCase().includes(q)) return true;
-      if (r.brandIds.some((id) => brandName(id).toLowerCase().includes(q))) return true;
-      return false;
-    });
-  }, [rows, search, segFilter, brandFilter, brands]);
-
-  const pg = usePagination(filtered, 25);
-
-  const kpis = useMemo(() => {
-    const total = rows.length;
-    const ltvSum = rows.reduce((a, r) => a + r.ltv, 0);
-    const avgLtv = total > 0 ? ltvSum / total : 0;
-    const repeatCount = rows.filter((r) => r.orders >= 2).length;
-    const repeatRate = total > 0 ? repeatCount / total : 0;
-    const atRisk = rows.filter((r) => r.segment === "at_risk").length;
-    return { total, avgLtv, repeatRate, atRisk };
-  }, [rows]);
+  const rows = custQ.data?.rows ?? [];
+  const totalRows = filterSummaryQ.data?.total ?? 0;
+  const kpis = summaryQ.data ?? { total: 0, avgLtv: 0, repeatRate: 0, atRisk: 0, top: [] };
+  const pageCount = Math.max(1, Math.ceil(totalRows / pageSize));
+  const changePage = (value: number | ((previous: number) => number)) => {
+    const requested = typeof value === "function" ? value(page) : value;
+    const next = Math.max(0, Math.min(requested, pageCount - 1));
+    if (next > page && custQ.data?.nextCursor) {
+      setPageCursors((current) => {
+        const copy = current.slice();
+        copy[next] = custQ.data?.nextCursor ?? null;
+        return copy;
+      });
+    }
+    setPage(next);
+  };
+  const pg = {
+    slice: rows,
+    total: totalRows,
+    page,
+    setPage: changePage,
+    pageSize,
+    setPageSize,
+    pageCount,
+    start: page * pageSize,
+  };
 
   const nf = (n: number) => Number(n || 0).toLocaleString("en-US");
 
@@ -178,7 +213,7 @@ function CustomersPage() {
           </SelectContent>
         </Select>
         <div className="text-xs text-muted-foreground ms-auto">
-          {filtered.length} / {rows.length}
+          {nf(totalRows)}
         </div>
       </Card>
 
@@ -223,7 +258,7 @@ function CustomersPage() {
                   <td className="p-3"><Badge variant={segmentColor(r.segment)}>{segLabel[r.segment]}</Badge></td>
                 </tr>
               ))}
-              {!custQ.isLoading && filtered.length === 0 && (
+              {!custQ.isLoading && rows.length === 0 && (
                 <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">
                   {lang === "ar" ? "لا يوجد عملاء بعد. اضف بيانات العميل عند إنشاء فاتورة بيع ليظهر هنا." : "No customers yet. Add customer info on a sales invoice to see them here."}
                 </td></tr>
