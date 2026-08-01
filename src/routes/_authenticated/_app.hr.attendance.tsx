@@ -88,7 +88,7 @@ function AttendancePage() {
 
   // Period
   const today = new Date();
-  const [period, setPeriod] = useState<"day" | "week" | "month" | "year">("month");
+  const [period, setPeriod] = useState<"day" | "week" | "month" | "year">("day");
   const [anchor, setAnchor] = useState<string>(today.toISOString().slice(0, 10));
   const [empFilter, setEmpFilter] = useState<string>("all");
 
