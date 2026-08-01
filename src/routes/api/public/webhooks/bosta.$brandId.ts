@@ -197,13 +197,13 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
                   _order_status: lifecycle.orderStatus,
                   _collection_status: lifecycle.collectionStatus,
                   _shipment_outcome: lifecycle.shipmentOutcome,
-                  _fulfillment_status: legacyFulfillment,
+                  _fulfillment_status: legacyFulfillment as unknown as string,
                   _shopify_sync_status: shouldSyncShopify
                     ? "pending"
                     : shopifyAction === "review_return"
                       ? "pending"
                       : "not_applicable",
-                  _shopify_sync_error: null,
+                  _shopify_sync_error: null as unknown as string,
                   _payload: payload,
                 },
               );

@@ -135,14 +135,14 @@ export async function recallAllOpenBostaShipments(limit = 100) {
         _order_id: order.id,
         _provider_event_at: bostaProviderEventAt(parsed),
         _tracking: tracking ?? "",
-        _state: effectiveState,
+        _state: effectiveState as unknown as string,
         _collection_state: collectionValue,
         _order_status: lifecycle.orderStatus,
         _collection_status: lifecycle.collectionStatus,
         _shipment_outcome: lifecycle.shipmentOutcome,
         _fulfillment_status: newStatus ?? "",
         _shopify_sync_status: shouldSyncShopify || shopifyAction === "review_return" ? "pending" : "not_applicable",
-        _shopify_sync_error: shopifyAction === "review_return" ? "Returned order requires return/refund review" : null,
+        _shopify_sync_error: (shopifyAction === "review_return" ? "Returned order requires return/refund review" : null) as unknown as string,
         _payload: bostaPayload,
       });
       if (updateError) throw updateError;
