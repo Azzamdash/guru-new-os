@@ -74,3 +74,66 @@ export function balanceAssignments(
   }
   return out;
 }
+
+export type AssignmentMethod = "manual" | "auto" | "unassign";
+
+/**
+ * Writes the distribution audit trail and pushes an in-app notification to the
+ * employee that received each order.
+ */
+export async function recordAssignments(opts: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any;
+  userId: string;
+  /** orderId -> employeeId (null = unassigned) */
+  assignments: Array<{ orderId: string; employeeId: string | null }>;
+  method: AssignmentMethod;
+  reason?: string | null;
+}): Promise<void> {
+  const list = opts.assignments.filter((a) => a.orderId).slice(0, 500);
+  if (!list.length) return;
+  const orderIds = list.map((a) => a.orderId);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const [{ data: orders }, { data: employees }] = await Promise.all([
+    supabaseAdmin.from("orders").select("id, order_number, employee_id, total").in("id", orderIds),
+    supabaseAdmin.from("employees").select("id, name, user_id"),
+  ]);
+
+  const orderMap = new Map(
+    ((orders ?? []) as Array<{ id: string; order_number: string | null; employee_id: string | null }>).map(
+      (o) => [o.id, o],
+    ),
+  );
+  const empUser = new Map(
+    ((employees ?? []) as Array<{ id: string; user_id: string | null }>).map((e) => [e.id, e.user_id]),
+  );
+
+  const logRows = list.map((a) => ({
+    order_id: a.orderId,
+    previous_employee_id: orderMap.get(a.orderId)?.employee_id ?? null,
+    employee_id: a.employeeId,
+    method: opts.method,
+    reason: opts.reason ?? (opts.method === "auto" ? "توزيع تلقائي متوازن" : null),
+    performed_by: opts.userId,
+  }));
+  await opts.supabase.from("order_assignment_log").insert(logRows);
+
+  const notifs = list
+    .filter((a) => a.employeeId && a.employeeId !== orderMap.get(a.orderId)?.employee_id)
+    .map((a) => {
+      const userId = empUser.get(a.employeeId as string);
+      if (!userId) return null;
+      const num = orderMap.get(a.orderId)?.order_number ?? a.orderId.slice(0, 8);
+      return {
+        user_id: userId,
+        kind: "order_assigned",
+        title: `أوردر جديد لك: #${num}`,
+        body: opts.method === "auto" ? "تم إسناده تلقائيًا" : "تم إسناده يدويًا",
+        link: `/order-view/${a.orderId}`,
+      };
+    })
+    .filter(Boolean);
+
+  if (notifs.length) await supabaseAdmin.from("notifications").insert(notifs);
+}
