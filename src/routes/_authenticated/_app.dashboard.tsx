@@ -120,10 +120,8 @@ function DashboardPage() {
   const getDash = useServerFn(getInternalDashboard);
   const global = useGlobalPeriod();
   const [brandId, setBrandId] = useState<string>("all");
-  const [period, setPeriod] = useState<PeriodValue>(global.period);
-  useEffect(() => {
-    setPeriod(global.period);
-  }, [global.period]);
+  const period = global.period;
+  const setPeriod = global.setPeriod;
   const resolved = resolvePeriod(period);
   const year = resolved.year;
 
