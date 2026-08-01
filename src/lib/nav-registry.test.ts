@@ -37,70 +37,34 @@ function pageByRoute(to: string): NavPage {
   return p;
 }
 
-// ---------- Expected allow-lists ----------
-// Each role should be able to open at least these routes.
-const ROLE_ALLOWED: Record<string, string[]> = {
-  branch_manager: [
-    "/pos",
-    "/branch-stock",
-    "/reports/branches",
-    "/reports/offline-invoices",
-    "/invoice-print",
-    "/customers",
-  ],
-  operation_manager: [
-    "/order-pipeline",
-    "/fulfillment",
-    "/orders",
-    "/branch-stock",
-    "/production",
-    "/operations",
-    "/reports/production",
-  ],
-  fulfillment_manager: ["/order-pipeline", "/my-prep", "/orders", "/fulfillment"],
-  sales_man: ["/pos", "/invoice-print", "/customers"],
-  customer_service: ["/orders", "/invoice-print", "/customers", "/pos"],
-  production_manager: ["/production-tasks", "/production", "/reports/production"],
-  team_leader: ["/production"],
-  production_worker: ["/production"],
-  order_prep: ["/order-pipeline", "/my-prep"],
-  project_manager: ["/services-dashboard"],
-  hr: ["/hr/attendance", "/reports/attendance"],
-};
-
-describe("canSeePage: role → allowed pages", () => {
-  for (const [role, routes] of Object.entries(ROLE_ALLOWED)) {
-    describe(role, () => {
+describe("canSeePage: nothing is implied by job roles", () => {
+  const roles = [
+    "branch_manager",
+    "operation_manager",
+    "fulfillment_manager",
+    "sales_man",
+    "customer_service",
+    "production_manager",
+    "team_leader",
+    "production_worker",
+    "order_prep",
+    "project_manager",
+    "hr",
+  ];
+  for (const role of roles) {
+    it(`${role} sees nothing without explicit page grants`, () => {
       const ctx = mkCtx({ roles: [role] });
-      for (const to of routes) {
-        it(`can open ${to}`, () => {
-          expect(canSeePage(pageByRoute(to), ctx)).toBe(true);
-        });
+      for (const p of NAV_PAGES) {
+        expect(canSeePage(p, ctx)).toBe(false);
       }
     });
   }
-});
 
-describe("canSeePage: role-restricted pages block unrelated roles", () => {
-  const unrelated = mkCtx({ roles: ["team_leader"] }); // narrow, no admin/write/sections
-  const restrictedRoutes = [
-    "/branch-stock",
-    "/reports/branches",
-    "/reports/offline-invoices",
-    "/order-pipeline",
-    "/my-prep",
-    "/production-tasks",
-    "/hr/attendance",
-    "/reports/attendance",
-    "/services-dashboard",
-    "/pos",
-    "/invoice-print",
-  ];
-  for (const to of restrictedRoutes) {
-    it(`team_leader cannot open ${to}`, () => {
-      expect(canSeePage(pageByRoute(to), unrelated)).toBe(false);
-    });
-  }
+  it("an explicit grant opens exactly that page", () => {
+    const ctx = mkCtx({ roles: ["team_leader"], sections: new Set(["page:/production"]) });
+    expect(canSeePage(pageByRoute("/production"), ctx)).toBe(true);
+    expect(canSeePage(pageByRoute("/orders"), ctx)).toBe(false);
+  });
 });
 
 describe("canSeePage: privileged & admin", () => {
@@ -124,9 +88,10 @@ describe("canSeePage: privileged & admin", () => {
     }
   });
 
-  it("investor sees investor-flagged pages", () => {
-    expect(canSeePage(pageByRoute("/my-investments"), investor)).toBe(true);
-    expect(canSeePage(pageByRoute("/reports/investors-audit"), investor)).toBe(true);
+  it("investor sees investor-flagged pages only when granted", () => {
+    expect(canSeePage(pageByRoute("/my-investments"), investor)).toBe(false);
+    const granted = mkCtx({ isInvestor: true, roles: ["investor"], sections: new Set(["page:/my-investments"]) });
+    expect(canSeePage(pageByRoute("/my-investments"), granted)).toBe(true);
   });
 
   it("investor cannot see admin-only pages", () => {
@@ -151,16 +116,16 @@ describe("canSeePage: per-page manual grants", () => {
     const page = pageByRoute("/orders");
     const hidden = mkCtx({ sections: new Set(["deny:/orders"]) });
     const read = mkCtx({ sections: new Set(["page:/orders"]) });
-    const legacyWriteGrant = mkCtx({ sections: new Set(["write:/orders"]) });
+    const writeGrant = mkCtx({ sections: new Set(["write:/orders"]) });
     const roleWriter = mkCtx({ canWrite: true, sections: new Set(["page:/orders"]) });
 
     expect(pageAccessLevel(page, hidden)).toBe("hidden");
     expect(pageAccessLevel(page, read)).toBe("read");
-    expect(pageAccessLevel(page, legacyWriteGrant)).toBe("read");
-    expect(pageAccessLevel(page, roleWriter)).toBe("write");
+    expect(pageAccessLevel(page, writeGrant)).toBe("write");
+    expect(pageAccessLevel(page, roleWriter)).toBe("read");
     expect(canSeePage(page, read)).toBe(true);
     expect(canEditPage(page, read)).toBe(false);
-    expect(canEditPage(page, roleWriter)).toBe(true);
+    expect(canEditPage(page, writeGrant)).toBe(true);
   });
 
   it("lets an explicit deny override a role grant", () => {

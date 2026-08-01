@@ -1013,40 +1013,22 @@ export type PageAccessLevel = "hidden" | "read" | "write";
 /**
  * Resolve the effective access for one screen.
  *
- * Per-page grants control visibility. Write access remains role-based unless a
- * specific server function explicitly supports a write:/route grant.
- *
- * Role and legacy section grants remain supported as a fallback so existing
- * users do not lose access while permissions are migrated gradually.
+ * Strictly explicit: nothing is assumed from job roles. A user only sees a page
+ * when an administrator granted it, and only edits when the grant is `write:`.
+ * `page:` = view only, `deny:` / missing = hidden.
+ * Admin and manager remain break-glass full-access roles.
  */
 export function pageAccessLevel(p: NavPage, ctx: RoleCtx): PageAccessLevel {
   if (p.adminOnly) return ctx.isAdmin ? "write" : "hidden";
   if (ctx.isPrivileged) return "write";
 
   if (ctx.sections.has(`deny:${p.to}`)) return "hidden";
-  if (ctx.sections.has(`write:${p.to}`) || ctx.sections.has(`page:${p.to}`)) {
-    return ctx.canWrite ? "write" : "read";
-  }
-
-  const roleGranted =
-    (p.investor && ctx.isInvestor) || !!p.extraRoles?.some((role) => ctx.roles.includes(role));
-  if (roleGranted) return ctx.canWrite ? "write" : "read";
-
-  if (p.privilegedOnly) return "hidden";
-
-  if (p.section && ctx.sections.has(p.section)) {
-    return ctx.canWrite ? "write" : "read";
-  }
-
-  if (p.requiresWrite) return ctx.canWrite ? "write" : "hidden";
-
-  const isUngated = !p.section && !p.extraRoles && !p.investor && !p.adminOnly;
-  if (isUngated && (ctx.canWrite || ctx.sections.size > 0 || ctx.isInvestor)) {
-    return ctx.canWrite ? "write" : "read";
-  }
+  if (ctx.sections.has(`write:${p.to}`)) return "write";
+  if (ctx.sections.has(`page:${p.to}`)) return "read";
 
   return "hidden";
 }
+
 
 export function canSeePage(p: NavPage, ctx: RoleCtx): boolean {
   return pageAccessLevel(p, ctx) !== "hidden";

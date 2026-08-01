@@ -441,46 +441,36 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
   // Group nav pages by hub for a full view of every screen the user can be granted.
   const pagesByHub = HUBS.map((h) => ({ hub: h, pages: pagesForHub(h.key) }));
   const allPages = pagesByHub.flatMap(({ pages }) => pages);
-  const isPageVisible = (page: (typeof allPages)[number]): boolean => {
-    if (sections.includes(`deny:${page.to}`)) return false;
-    if (sections.includes(`write:${page.to}`) || sections.includes(`page:${page.to}`)) return true;
-    return !!(page.section && sections.includes(page.section));
+  type PageLevel = "none" | "read" | "write";
+  const pageLevel = (page: (typeof allPages)[number]): PageLevel => {
+    if (sections.includes(`write:${page.to}`)) return "write";
+    if (sections.includes(`page:${page.to}`)) return "read";
+    return "none";
   };
-  const setPageVisible = (page: (typeof allPages)[number], visible: boolean) => {
-    let next = sections.filter(
-      (key) => key !== `deny:${page.to}` && key !== `page:${page.to}` && key !== `write:${page.to}`,
+  const clearPageKeys = (keys: string[], route: string) =>
+    keys.filter(
+      (key) => key !== `deny:${route}` && key !== `page:${route}` && key !== `write:${route}`,
     );
-
-    // Expand a legacy shared-section grant into explicit per-page grants before
-    // changing one page, otherwise the shared key would silently override Hidden.
-    if (page.section && next.includes(page.section)) {
-      next = next.filter((key) => key !== page.section);
-      for (const linked of allPages.filter((candidate) => candidate.section === page.section)) {
-        next.push(`page:${linked.to}`);
-      }
-      next = next.filter(
-        (key) =>
-          key !== `deny:${page.to}` && key !== `page:${page.to}` && key !== `write:${page.to}`,
-      );
-    }
-
-    next.push(`${visible ? "page" : "deny"}:${page.to}`);
+  const setPageLevel = (page: (typeof allPages)[number], level: PageLevel) => {
+    let next = clearPageKeys(sections, page.to);
+    if (level === "read") next.push(`page:${page.to}`);
+    else if (level === "write") next.push(`write:${page.to}`);
+    else next.push(`deny:${page.to}`);
     setSections(Array.from(new Set(next)));
   };
-  const setPagesVisible = (pages: typeof allPages, visible: boolean) => {
+  const setPagesLevel = (pages: typeof allPages, level: PageLevel) => {
     const routes = new Set(pages.map((page) => page.to));
-    const legacySections = new Set(pages.map((page) => page.section).filter(Boolean));
-    const next = sections.filter((key) => {
-      if (legacySections.has(key)) return false;
+    let next = sections.filter((key) => {
       if (key.startsWith("deny:") || key.startsWith("page:") || key.startsWith("write:")) {
         return !routes.has(key.slice(key.indexOf(":") + 1));
       }
       return true;
     });
-    const prefix = visible ? "page" : "deny";
+    const prefix = level === "write" ? "write" : level === "read" ? "page" : "deny";
     next.push(...pages.map((page) => `${prefix}:${page.to}`));
     setSections(Array.from(new Set(next)));
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -495,14 +485,15 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
             الصلاحيات — <span dir="ltr">{email}</span>
           </DialogTitle>
           <DialogDescription>
-            حدّد الصفحات الظاهرة للمستخدم، ثم اختر البراندات المسموحة له. صلاحية التعديل تأتي من
-            الدور الوظيفي.
+            المستخدم لا يرى أي صفحة إلا ما تحدده هنا صراحةً، ولكل صفحة تختار: مخفي / مشاهدة فقط /
+            تعديل.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
-            صلاحيات الصفحات هنا تتحكم في الظهور فقط. التعديل محمي في السيرفر حسب الدور الوظيفي.
+            لا توجد صلاحيات افتراضية: أي صفحة غير محددة تكون مخفية. «مشاهدة فقط» تمنع الإضافة
+            والتعديل والحذف على مستوى السيرفر.
           </div>
 
           <div className="space-y-4">
@@ -517,18 +508,42 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                       </div>
                       <div className="text-sm font-semibold">{hub.ar}</div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-xs h-7"
-                      onClick={() => setPagesVisible(pages, true)}
-                    >
-                      إظهار الكل
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7"
+                        onClick={() => setPagesLevel(pages, "none")}
+                      >
+                        إخفاء الكل
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7"
+                        onClick={() => setPagesLevel(pages, "read")}
+                      >
+                        مشاهدة الكل
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7"
+                        onClick={() => setPagesLevel(pages, "write")}
+                      >
+                        تعديل الكل
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                     {pages.map((p) => {
+                      const level = pageLevel(p);
+                      const opts: { key: "none" | "read" | "write"; label: string }[] = [
+                        { key: "none", label: "مخفي" },
+                        { key: "read", label: "مشاهدة" },
+                        { key: "write", label: "تعديل" },
+                      ];
                       return (
                         <div
                           key={p.to}
@@ -536,14 +551,28 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         >
                           <p.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span className="truncate flex-1">{p.ar}</span>
-                          <Checkbox
-                            checked={isPageVisible(p)}
-                            onCheckedChange={(checked) => setPageVisible(p, checked === true)}
-                          />
+                          <div className="flex rounded-md border border-border/60 overflow-hidden shrink-0">
+                            {opts.map((o) => (
+                              <button
+                                key={o.key}
+                                type="button"
+                                onClick={() => setPageLevel(p, o.key)}
+                                className={
+                                  "px-2 py-0.5 text-[11px] transition-colors " +
+                                  (level === o.key
+                                    ? "bg-primary text-primary-foreground"
+                                    : "hover:bg-muted text-muted-foreground")
+                                }
+                              >
+                                {o.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
+
                 </div>
               );
             })}
