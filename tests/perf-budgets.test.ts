@@ -21,12 +21,12 @@ const MEASURED_RUNS = 3;
 
 /** Milliseconds. Budgets include network round-trip from the test runner. */
 export const PERF_BUDGETS_MS = {
-  orders_page: 2000,
-  orders_summary: 2000,
-  orders_filter_summary: 2000,
-  dashboard_operational_report: 4000,
-  customers_page: 2000,
-  cash_summary_report: 2500,
+  orders_page: 600,
+  orders_summary: 600,
+  orders_filter_summary: 600,
+  dashboard_operational_report: 2500,
+  customers_page: 600,
+  cash_summary_report: 800,
 } as const;
 
 const now = new Date();
