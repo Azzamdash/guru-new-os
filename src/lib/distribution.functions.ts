@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
-import { balanceAssignments, getEligibleStaff } from "./distribution.server";
+import { balanceAssignments, getEligibleStaff, recordAssignments } from "./distribution.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -264,12 +264,20 @@ export const assignOrdersCourier = createServerFn({ method: "POST" })
 
 export const assignOrdersEmployee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { orderIds: string[]; employeeId: string | null }) => input)
+  .inputValidator((input: { orderIds: string[]; employeeId: string | null; reason?: string }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     await assertPageWrite(ctx, DISTRIBUTION_PAGE);
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
+
+    await recordAssignments({
+      supabase: ctx.supabase,
+      userId: ctx.userId,
+      assignments: ids.map((orderId) => ({ orderId, employeeId: data.employeeId })),
+      method: data.employeeId ? "manual" : "unassign",
+      reason: data.reason ?? null,
+    });
 
     const { error } = await ctx.supabase
       .from("orders")
@@ -339,6 +347,14 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
       byEmployee.set(p.employeeId, arr);
     }
 
+    await recordAssignments({
+      supabase: ctx.supabase,
+      userId: ctx.userId,
+      assignments: plan.map((p) => ({ orderId: p.orderId, employeeId: p.employeeId })),
+      method: "auto",
+      reason: "توزيع تلقائي بالتساوي حسب الحمل الحالي",
+    });
+
     let updated = 0;
     let failed = 0;
     for (const [employeeId, orderIds] of byEmployee) {
@@ -350,4 +366,72 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
       else updated += orderIds.length;
     }
     return { updated, failed, staffCount: staffIds.length };
+  });
+
+
+export type AssignmentLogRow = {
+  id: string;
+  createdAt: string;
+  orderId: string;
+  orderNumber: string | null;
+  fromName: string | null;
+  toName: string | null;
+  method: string;
+  reason: string | null;
+  byName: string | null;
+};
+
+/** Audit trail of who received which order, when, and why. */
+export const listAssignmentLog = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orderId?: string; employeeId?: string; limit?: number }) => input)
+  .handler(async ({ data, context }): Promise<AssignmentLogRow[]> => {
+    const ctx = context as unknown as Ctx;
+    let q = ctx.supabase
+      .from("order_assignment_log")
+      .select("id, created_at, order_id, previous_employee_id, employee_id, method, reason, performed_by")
+      .order("created_at", { ascending: false })
+      .limit(Math.min(Math.max(data.limit ?? 100, 1), 300));
+    if (data.orderId) q = q.eq("order_id", data.orderId);
+    if (data.employeeId) q = q.eq("employee_id", data.employeeId);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+
+    const list = (rows ?? []) as Array<{
+      id: string;
+      created_at: string;
+      order_id: string;
+      previous_employee_id: string | null;
+      employee_id: string | null;
+      method: string;
+      reason: string | null;
+      performed_by: string | null;
+    }>;
+    if (!list.length) return [];
+
+    const [{ data: orders }, { data: emps }] = await Promise.all([
+      ctx.supabase.from("orders").select("id, order_number").in("id", [...new Set(list.map((r) => r.order_id))]),
+      ctx.supabase.from("employees").select("id, name, user_id"),
+    ]);
+    const orderNum = new Map(
+      ((orders ?? []) as Array<{ id: string; order_number: string | null }>).map((o) => [o.id, o.order_number]),
+    );
+    const empName = new Map(((emps ?? []) as Array<{ id: string; name: string }>).map((e) => [e.id, e.name]));
+    const byUser = new Map(
+      ((emps ?? []) as Array<{ name: string; user_id: string | null }>)
+        .filter((e) => e.user_id)
+        .map((e) => [e.user_id as string, e.name]),
+    );
+
+    return list.map((r) => ({
+      id: r.id,
+      createdAt: r.created_at,
+      orderId: r.order_id,
+      orderNumber: orderNum.get(r.order_id) ?? null,
+      fromName: r.previous_employee_id ? empName.get(r.previous_employee_id) ?? null : null,
+      toName: r.employee_id ? empName.get(r.employee_id) ?? null : null,
+      method: r.method,
+      reason: r.reason,
+      byName: r.performed_by ? byUser.get(r.performed_by) ?? null : null,
+    }));
   });
