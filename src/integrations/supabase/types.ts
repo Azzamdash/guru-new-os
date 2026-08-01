@@ -3131,6 +3131,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      __tmp_apply_migration: { Args: { sql: string }; Returns: undefined }
       bh_can_access_brand: {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
@@ -3142,6 +3143,14 @@ export type Database = {
       }
       can_access_service_project: {
         Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_read_page: {
+        Args: { _route: string; _user_id: string }
+        Returns: boolean
+      }
+      can_write_page: {
+        Args: { _route: string; _user_id: string }
         Returns: boolean
       }
       has_brand_access: {
@@ -3166,6 +3175,10 @@ export type Database = {
       is_project_manager: { Args: { _user_id: string }; Returns: boolean }
       is_writer: { Args: { _user_id: string }; Returns: boolean }
       map_order_to_invoice_stage: { Args: { _ff: string }; Returns: string }
+      page_access_level: {
+        Args: { _route: string; _user_id: string }
+        Returns: string
+      }
       product_cogs: { Args: { _product_id: string }; Returns: number }
       products_cogs_map: {
         Args: { _ids: string[] }
