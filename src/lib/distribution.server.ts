@@ -120,21 +120,20 @@ export async function recordAssignments(opts: {
   await opts.supabase.from("order_assignment_log").insert(logRows);
 
   const notifs: Array<{ user_id: string; kind: string; title: string; body: string; link: string }> = [];
-  for (const a of list
-    .filter((a) => a.employeeId && a.employeeId !== orderMap.get(a.orderId)?.employee_id)
-    .map((a) => {
-      const userId = empUser.get(a.employeeId as string);
-      if (!userId) return null;
-      const num = orderMap.get(a.orderId)?.external_order_number ?? a.orderId.slice(0, 8);
-      return {
-        user_id: userId,
-        kind: "order_assigned",
-        title: `أوردر جديد لك: #${num}`,
-        body: opts.method === "auto" ? "تم إسناده تلقائيًا" : "تم إسناده يدويًا",
-        link: `/order-view/${a.orderId}`,
-      };
-    })
-    .filter(Boolean);
+  for (const a of list) {
+    if (!a.employeeId || a.employeeId === orderMap.get(a.orderId)?.employee_id) continue;
+    const userId = empUser.get(a.employeeId);
+    if (!userId) continue;
+    const num = orderMap.get(a.orderId)?.external_order_number ?? a.orderId.slice(0, 8);
+    notifs.push({
+      user_id: userId,
+      kind: "order_assigned",
+      title: `أوردر جديد لك: #${num}`,
+      body: opts.method === "auto" ? "تم إسناده تلقائيًا" : "تم إسناده يدويًا",
+      link: `/order-view/${a.orderId}`,
+    });
+  }
+
 
   if (notifs.length) await supabaseAdmin.from("notifications").insert(notifs);
 }
