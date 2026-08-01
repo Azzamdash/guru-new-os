@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { queryPresets } from "@/lib/query-presets";
 import {
   AreaChart,
   Area,
@@ -85,6 +86,8 @@ export function CeoDashboard() {
     "|",
   );
 
+  // Tier 1 — period KPIs. These block the first meaningful paint, so they run
+  // immediately and in parallel.
   const dashQ = useQuery({
     queryKey: ["ceo-dash", periodKey],
     queryFn: () =>
@@ -96,19 +99,51 @@ export function CeoDashboard() {
           dateTo: resolved.dateTo,
         },
       }),
+    placeholderData: keepPreviousData,
+    ...queryPresets.report,
   });
   const isQ = useQuery({
     queryKey: ["ceo-is", from, to],
     queryFn: () => getIS({ data: { from, to } }),
+    placeholderData: keepPreviousData,
+    ...queryPresets.report,
   });
-  const valQ = useQuery({ queryKey: ["ceo-valuation"], queryFn: () => getVal() });
-  const assetsQ = useQuery({ queryKey: ["ceo-assets"], queryFn: () => getAssets({ data: {} }) });
+
+  // Tier 2 — heavy, period-independent reports. Deferred until the KPI tier has
+  // settled so the dashboard is interactive instead of waiting on 7 parallel
+  // aggregate queries. Cached far longer since they barely change.
+  const tier1Settled = !dashQ.isLoading && !isQ.isLoading;
   const cashQ = useQuery({
     queryKey: ["ceo-cash", from, to],
     queryFn: () => getCash({ data: { from, to } }),
+    enabled: tier1Settled,
+    placeholderData: keepPreviousData,
+    ...queryPresets.report,
   });
-  const agingQ = useQuery({ queryKey: ["ceo-aging"], queryFn: () => getAging() });
-  const custQ = useQuery({ queryKey: ["ceo-cust"], queryFn: () => getCust() });
+  const valQ = useQuery({
+    queryKey: ["ceo-valuation"],
+    queryFn: () => getVal(),
+    enabled: tier1Settled,
+    ...queryPresets.reference,
+  });
+  const assetsQ = useQuery({
+    queryKey: ["ceo-assets"],
+    queryFn: () => getAssets({ data: {} }),
+    enabled: tier1Settled,
+    ...queryPresets.reference,
+  });
+  const agingQ = useQuery({
+    queryKey: ["ceo-aging"],
+    queryFn: () => getAging(),
+    enabled: tier1Settled,
+    ...queryPresets.reference,
+  });
+  const custQ = useQuery({
+    queryKey: ["ceo-cust"],
+    queryFn: () => getCust(),
+    enabled: tier1Settled,
+    ...queryPresets.reference,
+  });
 
   const dash = dashQ.data;
   const is = isQ.data;
