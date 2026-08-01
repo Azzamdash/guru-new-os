@@ -93,6 +93,7 @@ import { Route as AuthenticatedAppReportsBrandsComparisonRouteImport } from './r
 import { Route as AuthenticatedAppReportsBranchesRouteImport } from './routes/_authenticated/_app.reports.branches'
 import { Route as AuthenticatedAppReportsAuditRouteImport } from './routes/_authenticated/_app.reports.audit'
 import { Route as AuthenticatedAppReportsAttendanceRouteImport } from './routes/_authenticated/_app.reports.attendance'
+import { Route as AuthenticatedAppOrderViewIdRouteImport } from './routes/_authenticated/_app.order-view.$id'
 import { Route as AuthenticatedAppInvestorsIdRouteImport } from './routes/_authenticated/_app.investors.$id'
 import { Route as AuthenticatedAppHubHubRouteImport } from './routes/_authenticated/_app.hub.$hub'
 import { Route as AuthenticatedAppHrRequestsRouteImport } from './routes/_authenticated/_app.hr.requests'
@@ -591,6 +592,12 @@ const AuthenticatedAppReportsAttendanceRoute =
     path: '/reports/attendance',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppOrderViewIdRoute =
+  AuthenticatedAppOrderViewIdRouteImport.update({
+    id: '/order-view/$id',
+    path: '/order-view/$id',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppInvestorsIdRoute =
   AuthenticatedAppInvestorsIdRouteImport.update({
     id: '/$id',
@@ -705,6 +712,7 @@ export interface FileRoutesByFullPath {
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
   '/hub/$hub': typeof AuthenticatedAppHubHubRoute
   '/investors/$id': typeof AuthenticatedAppInvestorsIdRoute
+  '/order-view/$id': typeof AuthenticatedAppOrderViewIdRoute
   '/reports/attendance': typeof AuthenticatedAppReportsAttendanceRoute
   '/reports/audit': typeof AuthenticatedAppReportsAuditRoute
   '/reports/branches': typeof AuthenticatedAppReportsBranchesRoute
@@ -797,6 +805,7 @@ export interface FileRoutesByTo {
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
   '/hub/$hub': typeof AuthenticatedAppHubHubRoute
   '/investors/$id': typeof AuthenticatedAppInvestorsIdRoute
+  '/order-view/$id': typeof AuthenticatedAppOrderViewIdRoute
   '/reports/attendance': typeof AuthenticatedAppReportsAttendanceRoute
   '/reports/audit': typeof AuthenticatedAppReportsAuditRoute
   '/reports/branches': typeof AuthenticatedAppReportsBranchesRoute
@@ -894,6 +903,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/hr/requests': typeof AuthenticatedAppHrRequestsRoute
   '/_authenticated/_app/hub/$hub': typeof AuthenticatedAppHubHubRoute
   '/_authenticated/_app/investors/$id': typeof AuthenticatedAppInvestorsIdRoute
+  '/_authenticated/_app/order-view/$id': typeof AuthenticatedAppOrderViewIdRoute
   '/_authenticated/_app/reports/attendance': typeof AuthenticatedAppReportsAttendanceRoute
   '/_authenticated/_app/reports/audit': typeof AuthenticatedAppReportsAuditRoute
   '/_authenticated/_app/reports/branches': typeof AuthenticatedAppReportsBranchesRoute
@@ -990,6 +1000,7 @@ export interface FileRouteTypes {
     | '/hr/requests'
     | '/hub/$hub'
     | '/investors/$id'
+    | '/order-view/$id'
     | '/reports/attendance'
     | '/reports/audit'
     | '/reports/branches'
@@ -1082,6 +1093,7 @@ export interface FileRouteTypes {
     | '/hr/requests'
     | '/hub/$hub'
     | '/investors/$id'
+    | '/order-view/$id'
     | '/reports/attendance'
     | '/reports/audit'
     | '/reports/branches'
@@ -1178,6 +1190,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/hr/requests'
     | '/_authenticated/_app/hub/$hub'
     | '/_authenticated/_app/investors/$id'
+    | '/_authenticated/_app/order-view/$id'
     | '/_authenticated/_app/reports/attendance'
     | '/_authenticated/_app/reports/audit'
     | '/_authenticated/_app/reports/branches'
@@ -1829,6 +1842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppReportsAttendanceRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/order-view/$id': {
+      id: '/_authenticated/_app/order-view/$id'
+      path: '/order-view/$id'
+      fullPath: '/order-view/$id'
+      preLoaderRoute: typeof AuthenticatedAppOrderViewIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/investors/$id': {
       id: '/_authenticated/_app/investors/$id'
       path: '/$id'
@@ -2016,6 +2036,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrRequestsRoute: typeof AuthenticatedAppHrRequestsRoute
   AuthenticatedAppHubHubRoute: typeof AuthenticatedAppHubHubRoute
+  AuthenticatedAppOrderViewIdRoute: typeof AuthenticatedAppOrderViewIdRoute
   AuthenticatedAppReportsAttendanceRoute: typeof AuthenticatedAppReportsAttendanceRoute
   AuthenticatedAppReportsAuditRoute: typeof AuthenticatedAppReportsAuditRoute
   AuthenticatedAppReportsBranchesRoute: typeof AuthenticatedAppReportsBranchesRoute
@@ -2092,6 +2113,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrRequestsRoute: AuthenticatedAppHrRequestsRoute,
   AuthenticatedAppHubHubRoute: AuthenticatedAppHubHubRoute,
+  AuthenticatedAppOrderViewIdRoute: AuthenticatedAppOrderViewIdRoute,
   AuthenticatedAppReportsAttendanceRoute:
     AuthenticatedAppReportsAttendanceRoute,
   AuthenticatedAppReportsAuditRoute: AuthenticatedAppReportsAuditRoute,
