@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { defaultPeriod, resolvePeriod, type PeriodValue, type ResolvedPeriod } from "@/components/PeriodFilter";
+import { resolvePeriod, type PeriodValue, type ResolvedPeriod } from "@/components/PeriodFilter";
+import { defaultPeriod, readStoredPeriod, writeStoredPeriod } from "@/lib/period-storage";
 
 type Ctx = {
   period: PeriodValue;
@@ -9,22 +10,8 @@ type Ctx = {
 
 const GlobalPeriodContext = createContext<Ctx | null>(null);
 
-const STORAGE_PREFIX = "egurus:period:v2:";
-
-function readStored(key: string): PeriodValue | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<PeriodValue>;
-    if (!parsed || typeof parsed.preset !== "string") return null;
-    return { ...defaultPeriod(), ...parsed } as PeriodValue;
-  } catch {
-    return null;
-  }
-}
-
-function writeStored(key: string, v: PeriodValue) {
-  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(v)); } catch { /* ignore */ }
+function browserStore() {
+  return typeof window === "undefined" ? null : window.localStorage;
 }
 
 /**
@@ -34,15 +21,16 @@ function writeStored(key: string, v: PeriodValue) {
 export function usePersistedPeriod(key: string): [PeriodValue, (v: PeriodValue) => void] {
   const [period, setPeriodState] = useState<PeriodValue>(() => defaultPeriod());
   useEffect(() => {
-    const stored = readStored(key);
+    const stored = readStoredPeriod(browserStore(), key);
     if (stored) setPeriodState(stored);
   }, [key]);
   const setPeriod = useCallback((v: PeriodValue) => {
     setPeriodState(v);
-    writeStored(key, v);
+    writeStoredPeriod(browserStore(), key, v);
   }, [key]);
   return [period, setPeriod];
 }
+
 
 export function GlobalPeriodProvider({ children }: { children: ReactNode }) {
   const [period, setPeriod] = usePersistedPeriod("global");

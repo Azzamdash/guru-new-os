@@ -5,16 +5,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useLang } from "@/lib/i18n";
 
-export type PeriodPreset =
-  | "today" | "yesterday" | "this_week" | "this_month" | "this_year" | "last_12" | "custom";
+export { defaultPeriod } from "@/lib/period-storage";
+export type { PeriodPreset, PeriodValue } from "@/lib/period-storage";
+import type { PeriodPreset, PeriodValue } from "@/lib/period-storage";
 
-export type PeriodValue = {
-  preset: PeriodPreset;
-  year: number;
-  dateFrom: string;
-  dateTo: string;
-  compare?: boolean;
-};
 
 const PRESET_KEYS: Record<PeriodPreset, string> = {
   today: "period_today",
@@ -122,8 +116,4 @@ export function PeriodFilter({ value, onChange }: { value: PeriodValue; onChange
   );
 }
 
-export function defaultPeriod(): PeriodValue {
-  const today = new Date();
-  const iso = today.toISOString().slice(0, 10);
-  return { preset: "today", year: today.getFullYear(), dateFrom: iso, dateTo: iso, compare: false };
-}
+
