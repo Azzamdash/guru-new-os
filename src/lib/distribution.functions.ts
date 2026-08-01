@@ -87,7 +87,7 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       );
     }
 
-    const [{ data: rows, error }, brandsRes, couriersRes, courierBrandsRes, ratesRes, empRes] =
+    const [{ data: rows, error }, brandsRes, couriersRes, courierBrandsRes, ratesRes, staff] =
       await Promise.all([
         q,
         ctx.supabase.from("brands").select("id, name"),
@@ -97,7 +97,7 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
           .from("courier_governorate_rates")
           .select("courier_id, governorate, delivery_fee")
           .eq("active", true),
-        ctx.supabase.from("employees").select("id, name, brand_id").eq("active", true),
+        getEligibleStaff(ctx.supabase),
       ]);
     if (error) throw new Error(error.message);
 
@@ -107,9 +107,8 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
     const courierName = new Map<string, string>(
       (couriersRes.data ?? []).map((c: { id: string; name: string }) => [c.id, c.name]),
     );
-    const empName = new Map<string, string>(
-      (empRes.data ?? []).map((e: { id: string; name: string }) => [e.id, e.name]),
-    );
+    const empName = new Map<string, string>(staff.map((e) => [e.id, e.name]));
+
 
     const brandsOfCourier = new Map<string, string[]>();
     for (const cb of (courierBrandsRes.data ?? []) as Array<{ courier_id: string; brand_id: string }>) {
