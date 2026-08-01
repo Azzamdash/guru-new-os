@@ -27,6 +27,7 @@ import { Route as AuthenticatedAppProductsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppProductionTasksRouteImport } from './routes/_authenticated/_app.production-tasks'
 import { Route as AuthenticatedAppProductionRouteImport } from './routes/_authenticated/_app.production'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/_app.pos'
+import { Route as AuthenticatedAppOrdersCenterRouteImport } from './routes/_authenticated/_app.orders-center'
 import { Route as AuthenticatedAppOrdersRouteImport } from './routes/_authenticated/_app.orders'
 import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/_app.operations'
@@ -193,6 +194,12 @@ const AuthenticatedAppPosRoute = AuthenticatedAppPosRouteImport.update({
   path: '/pos',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppOrdersCenterRoute =
+  AuthenticatedAppOrdersCenterRouteImport.update({
+    id: '/orders-center',
+    path: '/orders-center',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppOrdersRoute = AuthenticatedAppOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -619,6 +626,7 @@ export interface FileRoutesByFullPath {
   '/operations': typeof AuthenticatedAppOperationsRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/orders': typeof AuthenticatedAppOrdersRoute
+  '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/pos': typeof AuthenticatedAppPosRoute
   '/production': typeof AuthenticatedAppProductionRoute
   '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
@@ -704,6 +712,7 @@ export interface FileRoutesByTo {
   '/operations': typeof AuthenticatedAppOperationsRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/orders': typeof AuthenticatedAppOrdersRoute
+  '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/pos': typeof AuthenticatedAppPosRoute
   '/production': typeof AuthenticatedAppProductionRoute
   '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
@@ -790,6 +799,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/operations': typeof AuthenticatedAppOperationsRoute
   '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/_authenticated/_app/orders': typeof AuthenticatedAppOrdersRoute
+  '/_authenticated/_app/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/_authenticated/_app/pos': typeof AuthenticatedAppPosRoute
   '/_authenticated/_app/production': typeof AuthenticatedAppProductionRoute
   '/_authenticated/_app/production-tasks': typeof AuthenticatedAppProductionTasksRoute
@@ -877,6 +887,7 @@ export interface FileRouteTypes {
     | '/operations'
     | '/order-pipeline'
     | '/orders'
+    | '/orders-center'
     | '/pos'
     | '/production'
     | '/production-tasks'
@@ -962,6 +973,7 @@ export interface FileRouteTypes {
     | '/operations'
     | '/order-pipeline'
     | '/orders'
+    | '/orders-center'
     | '/pos'
     | '/production'
     | '/production-tasks'
@@ -1047,6 +1059,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/operations'
     | '/_authenticated/_app/order-pipeline'
     | '/_authenticated/_app/orders'
+    | '/_authenticated/_app/orders-center'
     | '/_authenticated/_app/pos'
     | '/_authenticated/_app/production'
     | '/_authenticated/_app/production-tasks'
@@ -1248,6 +1261,13 @@ declare module '@tanstack/react-router' {
       path: '/pos'
       fullPath: '/pos'
       preLoaderRoute: typeof AuthenticatedAppPosRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/orders-center': {
+      id: '/_authenticated/_app/orders-center'
+      path: '/orders-center'
+      fullPath: '/orders-center'
+      preLoaderRoute: typeof AuthenticatedAppOrdersCenterRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/orders': {
@@ -1814,6 +1834,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
   AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
   AuthenticatedAppOrdersRoute: typeof AuthenticatedAppOrdersRoute
+  AuthenticatedAppOrdersCenterRoute: typeof AuthenticatedAppOrdersCenterRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
   AuthenticatedAppProductionRoute: typeof AuthenticatedAppProductionRoute
   AuthenticatedAppProductionTasksRoute: typeof AuthenticatedAppProductionTasksRoute
@@ -1877,6 +1898,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
   AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,
   AuthenticatedAppOrdersRoute: AuthenticatedAppOrdersRoute,
+  AuthenticatedAppOrdersCenterRoute: AuthenticatedAppOrdersCenterRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
   AuthenticatedAppProductionRoute: AuthenticatedAppProductionRoute,
   AuthenticatedAppProductionTasksRoute: AuthenticatedAppProductionTasksRoute,
