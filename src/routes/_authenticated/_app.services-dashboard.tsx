@@ -97,7 +97,7 @@ function SdLayout() {
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Period</div>
-            <Select value={s.period ?? "month"} onValueChange={(v) => update({ period: v })}>
+            <Select value={s.period ?? "today"} onValueChange={(v) => update({ period: v })}>
               <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="today">Today</SelectItem>
