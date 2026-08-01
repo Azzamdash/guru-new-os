@@ -116,8 +116,4 @@ export function PeriodFilter({ value, onChange }: { value: PeriodValue; onChange
   );
 }
 
-export function defaultPeriod(): PeriodValue {
-  const today = new Date();
-  const iso = today.toISOString().slice(0, 10);
-  return { preset: "today", year: today.getFullYear(), dateFrom: iso, dateTo: iso, compare: false };
-}
+
