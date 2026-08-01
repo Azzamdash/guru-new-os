@@ -90,6 +90,7 @@ function OrderDistributionPage() {
   const invalidate = () => {
     setSelected(new Set());
     qc.invalidateQueries({ queryKey: ["distribution-board"] });
+    qc.invalidateQueries({ queryKey: ["assignment-log"] });
   };
 
   const courierM = useMutation({
