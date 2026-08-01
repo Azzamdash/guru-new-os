@@ -23,6 +23,7 @@ import {
   assignOrdersCourier,
   assignOrdersEmployee,
   autoAssignOrders,
+  autoAssignOrdersToStaff,
 } from "@/lib/distribution.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/order-distribution")({
@@ -51,6 +52,7 @@ function OrderDistributionPage() {
   const assignCourierFn = useServerFn(assignOrdersCourier);
   const assignEmployeeFn = useServerFn(assignOrdersEmployee);
   const autoAssignFn = useServerFn(autoAssignOrders);
+  const autoStaffToFn = useServerFn(autoAssignOrdersToStaff);
 
   const [brandId, setBrandId] = useState<string>("all");
   const [governorate, setGovernorate] = useState<string>("all");
@@ -97,7 +99,7 @@ function OrderDistributionPage() {
     mutationFn: (employeeId: string | null) =>
       assignEmployeeFn({ data: { orderIds: [...selected], employeeId } }),
     onSuccess: (r) => {
-      toast.success(`تم إسناد ${r.updated} أوردر للمندوب`);
+      toast.success(`تم إسناد ${r.updated} أوردر للموظف`);
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -122,6 +124,26 @@ function OrderDistributionPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const autoStaffTargets = useMemo(
+    () =>
+      (selected.size ? queue.filter((o) => selected.has(o.id)) : queue.filter((o) => !o.employeeId)).map(
+        (o) => o.id,
+      ),
+    [queue, selected],
+  );
+  const autoTargetCount = autoStaffTargets.length;
+
+  const autoStaffM = useMutation({
+    mutationFn: () => autoStaffToFn({ data: { orderIds: autoStaffTargets } }),
+    onSuccess: (r) => {
+      toast.success(
+        `تم توزيع ${r.updated} أوردر بالتساوي على ${r.staffCount} موظف${r.failed ? ` — فشل ${r.failed}` : ""}`,
+      );
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const allChecked = queue.length > 0 && selected.size === queue.length;
   const toggleAll = () =>
     setSelected(allChecked ? new Set() : new Set(queue.map((o) => o.id)));
@@ -137,6 +159,7 @@ function OrderDistributionPage() {
     () => queue.filter((o) => !o.courierId && o.suggestedCourierId).length,
     [queue],
   );
+
 
   return (
     <div className="space-y-5 p-4 md:p-6" dir="rtl">
@@ -220,8 +243,11 @@ function OrderDistributionPage() {
           </Card>
 
           <Card className="flex flex-wrap items-end gap-3 p-4">
-            <Button onClick={() => autoM.mutate()} disabled={autoM.isPending || !suggestedCount}>
-              <Wand2 className="h-4 w-4" /> توزيع تلقائي ({suggestedCount})
+            <Button onClick={() => autoStaffM.mutate()} disabled={autoStaffM.isPending || !autoTargetCount}>
+              <Wand2 className="h-4 w-4" /> توزيع تلقائي على الموظفين ({autoTargetCount})
+            </Button>
+            <Button variant="outline" onClick={() => autoM.mutate()} disabled={autoM.isPending || !suggestedCount}>
+              <Wand2 className="h-4 w-4" /> توزيع تلقائي لشركات الشحن ({suggestedCount})
             </Button>
             <div className="min-w-44">
               <label className="mb-1 block text-xs text-muted-foreground">شركة الشحن</label>
@@ -242,16 +268,20 @@ function OrderDistributionPage() {
               تعيين للمحدد ({selected.size})
             </Button>
             <div className="min-w-44">
-              <label className="mb-1 block text-xs text-muted-foreground">المندوب</label>
+              <label className="mb-1 block text-xs text-muted-foreground">الموظف</label>
               <Select value={employeePick} onValueChange={setEmployeePick}>
-                <SelectTrigger><SelectValue placeholder="اختر مندوب" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر موظف" /></SelectTrigger>
                 <SelectContent>
                   {(board?.employees ?? []).map((e) => (
                     <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                   ))}
+                  {(board?.employees ?? []).length === 0 && (
+                    <div className="p-2 text-xs text-muted-foreground">لا يوجد موظفون بصلاحية على هذه الصفحة</div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
+
             <Button
               variant="secondary"
               disabled={!employeePick || !selected.size || employeeM.isPending}
@@ -279,7 +309,7 @@ function OrderDistributionPage() {
                   <th className="p-2 text-start">القيمة</th>
                   <th className="p-2 text-start">الحالة</th>
                   <th className="p-2 text-start">شركة الشحن</th>
-                  <th className="p-2 text-start">المندوب</th>
+                  <th className="p-2 text-start">الموظف</th>
                   <th className="p-2 text-start">الاقتراح</th>
                 </tr>
               </thead>
