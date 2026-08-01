@@ -137,14 +137,14 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       }
     }
 
-    const couriers = (couriersRes.data ?? []).map(
-      (c: { id: string; name: string; serves_all_brands: boolean }) => ({
-        id: c.id,
-        name: c.name,
-        serves_all_brands: c.serves_all_brands,
-        brandIds: brandsOfCourier.get(c.id) ?? [],
-      }),
-    );
+    const couriers: Array<{ id: string; name: string; serves_all_brands: boolean; brandIds: string[] }> = (
+      couriersRes.data ?? []
+    ).map((c: { id: string; name: string; serves_all_brands: boolean }) => ({
+      id: c.id,
+      name: c.name,
+      serves_all_brands: c.serves_all_brands,
+      brandIds: brandsOfCourier.get(c.id) ?? [],
+    }));
 
     const canServe = (courierId: string, brandId: string) => {
       const c = couriers.find((x) => x.id === courierId);
