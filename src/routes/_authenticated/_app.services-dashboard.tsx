@@ -11,7 +11,7 @@ import { z } from "zod";
 
 const searchSchema = z.object({
   brandId: z.string().optional(),
-  period: z.enum(["today", "week", "month", "year", "custom"]).optional().default("month"),
+  period: z.enum(["today", "week", "month", "year", "custom"]).optional().default("today"),
   from: z.string().optional(),
   to: z.string().optional(),
 });
