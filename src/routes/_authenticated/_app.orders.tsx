@@ -167,35 +167,67 @@ function OrdersPage() {
     collectionStatus: "processing",
   });
 
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => listProductsFn(), enabled: newOpen });
+  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => listProductsFn(), enabled: newOpen, ...queryPresets.reference });
   const brandProducts = (productsQ.data ?? []).filter((p) => !form.brand_id || p.brand_id === form.brand_id);
-  const couriersQ = useQuery({ queryKey: ["couriers"], queryFn: () => listCouriersFn() });
+  const couriersQ = useQuery({ queryKey: ["couriers"], queryFn: () => listCouriersFn(), ...queryPresets.reference });
 
-  const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
+  const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn(), ...queryPresets.reference });
   useEffect(() => {
     setPage(0);
     setPageCursors([null]);
   }, [brandId, from, to, ff, deferredQuery, pageSize]);
   const cursor = pageCursors[page] ?? null;
+  const ordersArgs = useMemo(
+    () => ({
+      brandId: brandId === "all" ? null : brandId,
+      from,
+      to,
+      orderStatus: ff === "all" ? null : ff,
+      search: deferredQuery,
+      pageSize,
+    }),
+    [brandId, from, to, ff, deferredQuery, pageSize],
+  );
   const ordersQ = useQuery({
     queryKey: ["orders", brandId, from, to, ff, deferredQuery, pageSize, cursor],
     queryFn: () =>
       listFn({
         data: {
-          brandId: brandId === "all" ? null : brandId,
-          from,
-          to,
-          orderStatus: ff === "all" ? null : ff,
-          search: deferredQuery,
-          pageSize,
+          ...ordersArgs,
           cursorAt: cursor?.occurredAt ?? null,
           cursorId: cursor?.id ?? null,
         },
       }),
+    // Keep the previous page visible while the next one loads instead of
+    // blanking the table (this is what made orders "disappear" on slow calls).
+    placeholderData: keepPreviousData,
+    ...queryPresets.listing,
   });
+
+  // Warm the next page in the background so pagination feels instant.
+  const nextCursor = ordersQ.data?.nextCursor ?? null;
+  useEffect(() => {
+    if (!nextCursor) return;
+    void qc.prefetchQuery({
+      queryKey: ["orders", brandId, from, to, ff, deferredQuery, pageSize, nextCursor],
+      queryFn: () =>
+        listFn({
+          data: {
+            ...ordersArgs,
+            cursorAt: nextCursor.occurredAt ?? null,
+            cursorId: nextCursor.id ?? null,
+          },
+        }),
+      staleTime: queryPresets.listing.staleTime,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nextCursor, brandId, from, to, ff, deferredQuery, pageSize]);
+
   const sumQ = useQuery({
     queryKey: ["orders-summary", brandId, from, to],
     queryFn: () => sumFn({ data: { brandId: brandId === "all" ? null : brandId, from, to } }),
+    placeholderData: keepPreviousData,
+    ...queryPresets.report,
   });
   const filterSummaryQ = useQuery({
     queryKey: ["orders", "filter-summary", brandId, from, to, ff, deferredQuery],
@@ -206,6 +238,8 @@ function OrdersPage() {
       orderStatus: ff === "all" ? null : ff,
       search: deferredQuery,
     } }),
+    placeholderData: keepPreviousData,
+    ...queryPresets.report,
   });
 
 
