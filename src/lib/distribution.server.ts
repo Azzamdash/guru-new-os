@@ -17,7 +17,7 @@ const STAFF_ROLES = [
   "fulfillment_manager",
   "admin",
   "manager",
-];
+] as const;
 
 /**
  * Staff that orders can be distributed to = application users (Users &

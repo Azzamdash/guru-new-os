@@ -26,8 +26,8 @@ export type QueueOrder = {
   status: string;
   courierId: string | null;
   courierName: string | null;
-  employeeId: string | null;
-  employeeName: string | null;
+  assignedUserId: string | null;
+  assignedUserName: string | null;
   occurredAt: string;
   suggestedCourierId: string | null;
   suggestedCourierName: string | null;
@@ -49,7 +49,7 @@ export type DistributionBoard = {
   queue: QueueOrder[];
   loads: CourierLoad[];
   couriers: Array<{ id: string; name: string; serves_all_brands: boolean; brandIds: string[] }>;
-  employees: Array<{ id: string; name: string; brandId: string | null }>;
+  employees: Array<{ id: string; name: string; email: string | null; brandId: string | null }>;
   governorates: string[];
   totals: { unassigned: number; assigned: number; openAmount: number };
 };
@@ -72,7 +72,7 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
     let q = ctx.supabase
       .from("orders")
       .select(
-        "id, brand_id, external_order_number, customer_name, customer_phone, shipping_governorate, total_amount, order_status, shipment_outcome, courier_id, employee_id, occurred_at",
+        "id, brand_id, external_order_number, customer_name, customer_phone, shipping_governorate, total_amount, order_status, shipment_outcome, courier_id, assigned_user_id, occurred_at",
       )
       .in("order_status", OPEN_STATUSES)
       .order("occurred_at", { ascending: false })
@@ -108,7 +108,7 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
     const courierName = new Map<string, string>(
       (couriersRes.data ?? []).map((c: { id: string; name: string }) => [c.id, c.name]),
     );
-    const empName = new Map<string, string>(staff.map((e) => [e.id, e.name]));
+    const staffName = new Map<string, string>(staff.map((e) => [e.id, e.name]));
 
 
     const brandsOfCourier = new Map<string, string[]>();
@@ -170,7 +170,7 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       const best = gov ? bestByGov.get(norm(gov)) : undefined;
       const suggestion = best && canServe(best.courierId, brandId) ? best : undefined;
 
-      const employeeId = (o["employee_id"] as string | null) ?? null;
+      const assignedUserId = (o["assigned_user_id"] as string | null) ?? null;
       return {
         id: o["id"] as string,
         brandId,
@@ -183,8 +183,8 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
         status: (o["order_status"] as string) ?? "new",
         courierId,
         courierName: courierId ? (courierName.get(courierId) ?? "—") : null,
-        employeeId,
-        employeeName: employeeId ? (empName.get(employeeId) ?? "—") : null,
+        assignedUserId,
+        assignedUserName: assignedUserId ? (staffName.get(assignedUserId) ?? "—") : null,
         occurredAt: o["occurred_at"] as string,
         suggestedCourierId: suggestion?.courierId ?? null,
         suggestedCourierName: suggestion ? (courierName.get(suggestion.courierId) ?? null) : null,
@@ -239,7 +239,7 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       queue,
       loads,
       couriers,
-      employees: staff.map((e) => ({ id: e.id, name: e.name, brandId: e.brandId })),
+      employees: staff.map((e) => ({ id: e.id, name: e.name, email: e.email, brandId: e.brandId })),
       governorates: [...govSet].sort((a, b) => a.localeCompare(b, "ar")),
       totals: { unassigned, assigned, openAmount },
     };
@@ -274,14 +274,14 @@ export const assignOrdersEmployee = createServerFn({ method: "POST" })
     await recordAssignments({
       supabase: ctx.supabase,
       userId: ctx.userId,
-      assignments: ids.map((orderId) => ({ orderId, employeeId: data.employeeId })),
+      assignments: ids.map((orderId) => ({ orderId, assignedUserId: data.employeeId })),
       method: data.employeeId ? "manual" : "unassign",
       reason: data.reason ?? null,
     });
 
     const { error } = await ctx.supabase
       .from("orders")
-      .update({ employee_id: data.employeeId })
+      .update({ assigned_user_id: data.employeeId })
       .in("id", ids);
     if (error) throw new Error(error.message);
     return { updated: ids.length };
@@ -329,14 +329,13 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
 
     const { data: openRows } = await ctx.supabase
       .from("orders")
-      .select("employee_id")
+      .select("assigned_user_id")
       .in("order_status", OPEN_STATUSES)
-      .not("employee_id", "is", null);
+      .not("assigned_user_id", "is", null);
 
     const load = new Map<string, number>();
-    for (const r of (openRows ?? []) as Array<{ employee_id: string }>) {
-      if (ids.includes(r.employee_id)) continue;
-      load.set(r.employee_id, (load.get(r.employee_id) ?? 0) + 1);
+    for (const r of (openRows ?? []) as Array<{ assigned_user_id: string }>) {
+      load.set(r.assigned_user_id, (load.get(r.assigned_user_id) ?? 0) + 1);
     }
 
     const plan = balanceAssignments(ids, staffIds, load);
@@ -350,7 +349,7 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
     await recordAssignments({
       supabase: ctx.supabase,
       userId: ctx.userId,
-      assignments: plan.map((p) => ({ orderId: p.orderId, employeeId: p.employeeId })),
+      assignments: plan.map((p) => ({ orderId: p.orderId, assignedUserId: p.employeeId })),
       method: "auto",
       reason: "توزيع تلقائي بالتساوي حسب الحمل الحالي",
     });
@@ -360,7 +359,7 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
     for (const [employeeId, orderIds] of byEmployee) {
       const { error } = await ctx.supabase
         .from("orders")
-        .update({ employee_id: employeeId })
+        .update({ assigned_user_id: employeeId })
         .in("id", orderIds);
       if (error) failed += orderIds.length;
       else updated += orderIds.length;
@@ -389,11 +388,11 @@ export const listAssignmentLog = createServerFn({ method: "GET" })
     const ctx = context as unknown as Ctx;
     let q = ctx.supabase
       .from("order_assignment_log")
-      .select("id, created_at, order_id, previous_employee_id, employee_id, method, reason, performed_by")
+      .select("id, created_at, order_id, previous_assigned_user_id, assigned_user_id, method, reason, performed_by")
       .order("created_at", { ascending: false })
       .limit(Math.min(Math.max(data.limit ?? 100, 1), 300));
     if (data.orderId) q = q.eq("order_id", data.orderId);
-    if (data.employeeId) q = q.eq("employee_id", data.employeeId);
+    if (data.employeeId) q = q.eq("assigned_user_id", data.employeeId);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 
@@ -401,35 +400,30 @@ export const listAssignmentLog = createServerFn({ method: "GET" })
       id: string;
       created_at: string;
       order_id: string;
-      previous_employee_id: string | null;
-      employee_id: string | null;
+      previous_assigned_user_id: string | null;
+      assigned_user_id: string | null;
       method: string;
       reason: string | null;
       performed_by: string | null;
     }>;
     if (!list.length) return [];
 
-    const [{ data: orders }, { data: emps }] = await Promise.all([
+    const [{ data: orders }, staff] = await Promise.all([
       ctx.supabase.from("orders").select("id, external_order_number").in("id", [...new Set(list.map((r) => r.order_id))]),
-      ctx.supabase.from("employees").select("id, name, user_id"),
+      getEligibleStaff(),
     ]);
     const orderNum = new Map(
       ((orders ?? []) as Array<{ id: string; external_order_number: string | null }>).map((o) => [o.id, o.external_order_number]),
     );
-    const empName = new Map(((emps ?? []) as Array<{ id: string; name: string }>).map((e) => [e.id, e.name]));
-    const byUser = new Map(
-      ((emps ?? []) as Array<{ name: string; user_id: string | null }>)
-        .filter((e) => e.user_id)
-        .map((e) => [e.user_id as string, e.name]),
-    );
+    const byUser = new Map(staff.map((s) => [s.id, s.name]));
 
     return list.map((r) => ({
       id: r.id,
       createdAt: r.created_at,
       orderId: r.order_id,
       orderNumber: orderNum.get(r.order_id) ?? null,
-      fromName: r.previous_employee_id ? empName.get(r.previous_employee_id) ?? null : null,
-      toName: r.employee_id ? empName.get(r.employee_id) ?? null : null,
+      fromName: r.previous_assigned_user_id ? byUser.get(r.previous_assigned_user_id) ?? null : null,
+      toName: r.assigned_user_id ? byUser.get(r.assigned_user_id) ?? null : null,
       method: r.method,
       reason: r.reason,
       byName: r.performed_by ? byUser.get(r.performed_by) ?? null : null,
