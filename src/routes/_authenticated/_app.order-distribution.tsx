@@ -220,8 +220,11 @@ function OrderDistributionPage() {
           </Card>
 
           <Card className="flex flex-wrap items-end gap-3 p-4">
-            <Button onClick={() => autoM.mutate()} disabled={autoM.isPending || !suggestedCount}>
-              <Wand2 className="h-4 w-4" /> توزيع تلقائي ({suggestedCount})
+            <Button onClick={() => autoStaffM.mutate()} disabled={autoStaffM.isPending || !autoTargetCount}>
+              <Wand2 className="h-4 w-4" /> توزيع تلقائي على الموظفين ({autoTargetCount})
+            </Button>
+            <Button variant="outline" onClick={() => autoM.mutate()} disabled={autoM.isPending || !suggestedCount}>
+              <Wand2 className="h-4 w-4" /> توزيع تلقائي لشركات الشحن ({suggestedCount})
             </Button>
             <div className="min-w-44">
               <label className="mb-1 block text-xs text-muted-foreground">شركة الشحن</label>
@@ -242,16 +245,20 @@ function OrderDistributionPage() {
               تعيين للمحدد ({selected.size})
             </Button>
             <div className="min-w-44">
-              <label className="mb-1 block text-xs text-muted-foreground">المندوب</label>
+              <label className="mb-1 block text-xs text-muted-foreground">الموظف</label>
               <Select value={employeePick} onValueChange={setEmployeePick}>
-                <SelectTrigger><SelectValue placeholder="اختر مندوب" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر موظف" /></SelectTrigger>
                 <SelectContent>
                   {(board?.employees ?? []).map((e) => (
                     <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                   ))}
+                  {(board?.employees ?? []).length === 0 && (
+                    <div className="p-2 text-xs text-muted-foreground">لا يوجد موظفون بصلاحية على هذه الصفحة</div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
+
             <Button
               variant="secondary"
               disabled={!employeePick || !selected.size || employeeM.isPending}
