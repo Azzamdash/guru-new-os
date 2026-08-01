@@ -132,6 +132,43 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
     };
   });
 
+export type ShipmentRow = {
+  id: string;
+  order_id: string;
+  attempt_no: number;
+  courier_id: string | null;
+  tracking: string | null;
+  status: string;
+  expected_cod: number;
+  shipping_fee: number;
+  shipped_at: string | null;
+  delivered_at: string | null;
+  returned_at: string | null;
+  note: string | null;
+  created_at: string;
+};
+
+export type CollectionRow = {
+  id: string;
+  order_id: string;
+  shipment_id: string | null;
+  amount: number;
+  method: string;
+  collected_at: string;
+  note: string | null;
+};
+
+export type WhatsappMessageRow = {
+  id: string;
+  thread_id: string;
+  direction: string;
+  body: string | null;
+  media_url: string | null;
+  status: string;
+  error: string | null;
+  sent_at: string;
+};
+
 export type TimelineEntry = {
   id: string;
   kind: "lifecycle" | "shipment" | "collection";
@@ -192,8 +229,8 @@ export const getOrderTimeline = createServerFn({ method: "POST" })
 
     return {
       entries,
-      shipments: (shipments.data ?? []) as Array<Record<string, unknown>>,
-      collections: (collections.data ?? []) as Array<Record<string, unknown>>,
+      shipments: (shipments.data ?? []) as ShipmentRow[],
+      collections: (collections.data ?? []) as CollectionRow[],
     };
   });
 
@@ -205,7 +242,7 @@ export const addShipmentAttempt = createServerFn({ method: "POST" })
   }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx.supabase, ctx.userId, ORDERS_PAGE);
+    await assertPageWrite(ctx, ORDERS_PAGE);
     const { data: order, error: oErr } = await ctx.supabase
       .from("orders").select("id, brand_id, courier_id, total_amount").eq("id", data.orderId).maybeSingle();
     if (oErr) throw new Error(oErr.message);
@@ -241,7 +278,7 @@ export const recordCollection = createServerFn({ method: "POST" })
   }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx.supabase, ctx.userId, ORDERS_PAGE);
+    await assertPageWrite(ctx, ORDERS_PAGE);
     if (!(Number(data.amount) > 0)) throw new Error("Amount must be positive");
     const { data: order } = await ctx.supabase
       .from("orders").select("id, brand_id, courier_id").eq("id", data.orderId).maybeSingle();
@@ -299,7 +336,7 @@ export const getWhatsappThread = createServerFn({ method: "POST" })
       .order("sent_at", { ascending: true }).limit(300);
     if (error) throw new Error(error.message);
     await ctx.supabase.from("whatsapp_threads").update({ unread_count: 0 }).eq("id", data.threadId);
-    return { messages: (messages ?? []) as Array<Record<string, unknown>> };
+    return { messages: (messages ?? []) as WhatsappMessageRow[] };
   });
 
 export const startWhatsappThread = createServerFn({ method: "POST" })
@@ -307,7 +344,7 @@ export const startWhatsappThread = createServerFn({ method: "POST" })
   .inputValidator((input: { brandId: string; phone: string; displayName?: string | null; orderId?: string | null }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx.supabase, ctx.userId, ORDERS_PAGE);
+    await assertPageWrite(ctx, ORDERS_PAGE);
     const phone = data.phone.replace(/[^\d+]/g, "");
     if (phone.length < 8) throw new Error("Invalid phone");
     const { data: existing } = await ctx.supabase.from("whatsapp_threads")
@@ -325,7 +362,7 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
   .inputValidator((input: { threadId: string; body: string }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx.supabase, ctx.userId, ORDERS_PAGE);
+    await assertPageWrite(ctx, ORDERS_PAGE);
     const body = data.body.trim();
     if (!body) throw new Error("Empty message");
     const { data: thread, error: tErr } = await ctx.supabase
@@ -383,7 +420,7 @@ export const linkThreadToOrder = createServerFn({ method: "POST" })
   .inputValidator((input: { threadId: string; orderId: string | null }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx.supabase, ctx.userId, ORDERS_PAGE);
+    await assertPageWrite(ctx, ORDERS_PAGE);
     const { error } = await ctx.supabase.from("whatsapp_threads")
       .update({ order_id: data.orderId }).eq("id", data.threadId);
     if (error) throw new Error(error.message);
