@@ -258,22 +258,21 @@ export const advanceReturn = createServerFn({ method: "POST" })
       if (ret.restocked) throw new Error("تم إرجاع الأصناف للمخزون بالفعل");
       const { data: items } = await ctx.supabase
         .from("order_items")
-        .select("product_id, quantity")
+        .select("product_id, qty, unit_cost")
         .eq("order_id", ret.order_id);
       const moves = ((items ?? []) as Row[])
-        .filter((i) => i["product_id"])
+        .filter((i) => i["product_id"] && Number(i["qty"] ?? 0) > 0)
         .map((i) => ({
-          movement_type: "return_in",
-          target_type: "product",
+          type: "return",
           product_id: i["product_id"],
-          quantity: Number(i["quantity"] ?? 0),
-          brand_id: ret.brand_id,
-          note: `مرتجع أوردر`,
-          reference_type: "order_return",
-          reference_id: ret.id,
+          qty: Number(i["qty"] ?? 0),
+          unit_cost: Number(i["unit_cost"] ?? 0),
+          source: "order_return",
+          source_id: ret.id,
+          reason: "مرتجع أوردر",
           created_by: ctx.userId,
-        }))
-        .filter((m) => m.quantity > 0);
+        }));
+
       if (moves.length) {
         const { error: mErr } = await ctx.supabase.from("inventory_movements").insert(moves);
         if (mErr) throw new Error(mErr.message);
