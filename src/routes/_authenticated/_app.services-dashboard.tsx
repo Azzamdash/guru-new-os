@@ -40,8 +40,8 @@ function periodToRange(period: string, from?: string, to?: string) {
 
 export function useSdFilters() {
   const s = Route.useSearch();
-  const { from, to } = periodToRange(s.period ?? "month", s.from, s.to);
-  return { brandId: s.brandId ?? "", period: s.period ?? "month", from, to, rawFrom: s.from, rawTo: s.to };
+  const { from, to } = periodToRange(s.period ?? "today", s.from, s.to);
+  return { brandId: s.brandId ?? "", period: s.period ?? "today", from, to, rawFrom: s.from, rawTo: s.to };
 }
 
 function SdLayout() {
