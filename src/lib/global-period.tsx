@@ -11,24 +11,17 @@ const GlobalPeriodContext = createContext<Ctx | null>(null);
 
 const STORAGE_KEY = "egurus:global-period:v1";
 
-function load(): PeriodValue {
-  if (typeof window === "undefined") return defaultPeriod();
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultPeriod();
-    const p = JSON.parse(raw) as PeriodValue;
-    if (!p?.preset) return defaultPeriod();
-    return p;
-  } catch { return defaultPeriod(); }
-}
-
 export function GlobalPeriodProvider({ children }: { children: ReactNode }) {
+  // Always start from the default period ("today") on every fresh load.
+  // The choice is kept in memory while navigating, but never persisted.
   const [period, setPeriodState] = useState<PeriodValue>(() => defaultPeriod());
-  useEffect(() => { setPeriodState(load()); }, []);
+  useEffect(() => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  }, []);
   const setPeriod = useCallback((v: PeriodValue) => {
     setPeriodState(v);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); } catch { /* ignore */ }
   }, []);
+
   const resolved = useMemo(() => resolvePeriod(period), [period]);
   const value = useMemo(() => ({ period, resolved, setPeriod }), [period, resolved, setPeriod]);
   return <GlobalPeriodContext.Provider value={value}>{children}</GlobalPeriodContext.Provider>;
