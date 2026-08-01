@@ -1016,6 +1016,145 @@ export type Database = {
           },
         ]
       }
+      courier_settlement_lines: {
+        Row: {
+          brand_id: string
+          created_at: string
+          declared_amount: number
+          diff_reason: string | null
+          id: string
+          match_status: string
+          net_amount: number
+          order_id: string | null
+          order_number: string | null
+          posted: boolean
+          settlement_id: string
+          shipping_fee: number
+          system_amount: number
+          tracking: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          declared_amount?: number
+          diff_reason?: string | null
+          id?: string
+          match_status?: string
+          net_amount?: number
+          order_id?: string | null
+          order_number?: string | null
+          posted?: boolean
+          settlement_id: string
+          shipping_fee?: number
+          system_amount?: number
+          tracking?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          declared_amount?: number
+          diff_reason?: string | null
+          id?: string
+          match_status?: string
+          net_amount?: number
+          order_id?: string | null
+          order_number?: string | null
+          posted?: boolean
+          settlement_id?: string
+          shipping_fee?: number
+          system_amount?: number
+          tracking?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_settlement_lines_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_settlement_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_settlement_lines_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "courier_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courier_settlements: {
+        Row: {
+          brand_id: string
+          courier_id: string | null
+          created_at: string
+          created_by: string | null
+          declared_total: number
+          id: string
+          matched_total: number
+          note: string | null
+          period_from: string | null
+          period_to: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          declared_total?: number
+          id?: string
+          matched_total?: number
+          note?: string | null
+          period_from?: string | null
+          period_to?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          declared_total?: number
+          id?: string
+          matched_total?: number
+          note?: string | null
+          period_from?: string | null
+          period_to?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courier_settlements_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courier_settlements_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courier_status_mappings: {
         Row: {
           active: boolean
@@ -2200,6 +2339,60 @@ export type Database = {
           },
         ]
       }
+      order_confirmation_attempts: {
+        Row: {
+          attempted_at: string
+          brand_id: string
+          channel: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          order_id: string
+          outcome: string
+          reason: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          brand_id: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id: string
+          outcome: string
+          reason?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          brand_id?: string
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          outcome?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_confirmation_attempts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_confirmation_attempts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -2320,6 +2513,78 @@ export type Database = {
           },
         ]
       }
+      order_returns: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          note: string | null
+          order_id: string
+          reason: string | null
+          received_at: string | null
+          refund_amount: number
+          refunded_at: string | null
+          requested_at: string
+          restocked: boolean
+          restocked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          order_id: string
+          reason?: string | null
+          received_at?: string | null
+          refund_amount?: number
+          refunded_at?: string | null
+          requested_at?: string
+          restocked?: boolean
+          restocked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          order_id?: string
+          reason?: string | null
+          received_at?: string | null
+          refund_amount?: number
+          refunded_at?: string | null
+          requested_at?: string
+          restocked?: boolean
+          restocked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_returns_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_returns_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_shipments: {
         Row: {
           attempt_no: number
@@ -2401,6 +2666,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      order_sla_rules: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          max_hours: number
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          max_hours?: number
+          stage: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          max_hours?: number
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       order_source_payloads: {
         Row: {
@@ -3868,6 +4160,53 @@ export type Database = {
             columns: ["thread_id"]
             isOneToOne: false
             referencedRelation: "whatsapp_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_templates: {
+        Row: {
+          active: boolean
+          auto_send: boolean
+          body: string
+          brand_id: string | null
+          created_at: string
+          created_by: string | null
+          event_key: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          auto_send?: boolean
+          body: string
+          brand_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_key: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          auto_send?: boolean
+          body?: string
+          brand_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_key?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_templates_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
