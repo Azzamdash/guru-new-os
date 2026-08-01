@@ -8,7 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { GitCompareArrows } from "lucide-react";
 import { getInternalDashboard, listExpenseEntries, listBrands } from "@/lib/internal.functions";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/brands-comparison")({
@@ -31,9 +31,7 @@ function statusOf(margin: number, roas: number, netProfit: number): Status {
 
 function BrandsComparison() {
   const { lang } = useLang();
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.brands-comparison");
   const resolved = resolvePeriod(period);
   const getDash = useServerFn(getInternalDashboard);
   const listExpFn = useServerFn(listExpenseEntries);

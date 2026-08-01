@@ -6,7 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { getExecutiveSnapshot } from "@/lib/executive.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { useLang } from "@/lib/i18n";
@@ -33,9 +33,7 @@ function Page() {
   const brandsFn = useServerFn(listBrands);
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
   const [brandId, setBrandId] = useState("all");
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.executive");
   const r = resolvePeriod(period);
   const q = useQuery({
     queryKey: ["exec", brandId, r.dateFrom, r.dateTo, r.year],

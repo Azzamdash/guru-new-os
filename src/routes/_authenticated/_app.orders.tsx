@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { PaginationBar } from "@/components/PaginationBar";
 import { TableSkeleton } from "@/components/TableSkeleton";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { registerReportOrderCount, orderScopeKey } from "@/lib/salesUnify";
 import {
   COLLECTION_STATUS_LABELS_AR,
@@ -135,9 +135,7 @@ function OrdersPage() {
   const [pageCursors, setPageCursors] = useState<
     Array<{ occurredAt: string; id: string } | null>
   >([null]);
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("orders");
   const resolved = useMemo(() => resolvePeriod(period), [period]);
   const from = resolved.dateFrom ?? `${resolved.year}-01-01`;
   const to = resolved.dateTo ?? `${resolved.year}-12-31`;

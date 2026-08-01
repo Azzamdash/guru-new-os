@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Truck } from "lucide-react";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { getCouriersDashboard } from "@/lib/couriers.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { useLang } from "@/lib/i18n";
@@ -25,9 +25,7 @@ export const Route = createFileRoute("/_authenticated/_app/reports/couriers")({
 
 function CouriersReport() {
   const { t, lang } = useLang();
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.couriers");
   const [brandId, setBrandId] = useState<string>("all");
   const [courierId, setCourierId] = useState<string>("all");
   const resolved = useMemo(() => resolvePeriod(period), [period]);
