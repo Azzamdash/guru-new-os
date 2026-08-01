@@ -190,7 +190,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
                 "apply_bosta_lifecycle",
                 {
                   _order_id: order.id,
-                  _provider_event_at: bostaProviderEventAt(payload),
+                  _provider_event_at: bostaProviderEventAt(payload) as unknown as string,
                   _tracking: trackingNumber ? String(trackingNumber) : "",
                   _state: String(state),
                   _collection_state: String(collectionState ?? "pending"),

@@ -133,7 +133,7 @@ export async function recallAllOpenBostaShipments(limit = 100) {
         };
       const { data: applied, error: updateError } = await supabaseAdmin.rpc("apply_bosta_lifecycle", {
         _order_id: order.id,
-        _provider_event_at: bostaProviderEventAt(parsed),
+        _provider_event_at: bostaProviderEventAt(parsed) as unknown as string,
         _tracking: tracking ?? "",
         _state: effectiveState as unknown as string,
         _collection_state: collectionValue,
