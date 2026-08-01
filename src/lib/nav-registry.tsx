@@ -328,6 +328,16 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "All sales orders",
   },
   {
+    to: "/orders-center",
+    ar: "مركز إدارة الأوردرات",
+    en: "Orders Center",
+    icon: ShoppingBag,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "مؤشرات الأوردرات، الشحن والتحصيل، سجل الحالات وواتساب",
+    descEn: "Order KPIs, shipping & collections, timeline and WhatsApp",
+  },
+  {
     to: "/fulfillment",
     ar: "تحضير الأوردرات",
     en: "Order Prep",
