@@ -31,7 +31,8 @@ import {
   Gauge,
 } from "lucide-react";
 
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
+import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
 import { getInternalDashboard } from "@/lib/internal.functions";
 import { getIncomeStatement } from "@/lib/financials.functions";
 import { getValuationReport, getAssetsSummary } from "@/lib/assets.functions";
@@ -66,7 +67,8 @@ const MONTHS_AR = [
 ];
 
 export function CeoDashboard() {
-  const { resolved } = useGlobalPeriod();
+  const [period, setPeriod] = usePersistedPeriod("ceo-dashboard");
+  const resolved = useMemo(() => resolvePeriod(period), [period]);
   const year = resolved.year;
   const from = resolved.dateFrom ?? `${year}-01-01`;
   const to = resolved.dateTo ?? `${year}-12-31`;
@@ -191,6 +193,10 @@ export function CeoDashboard() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card/60 p-3">
+        <span className="text-xs text-muted-foreground me-1">فترة لوحة الـCEO</span>
+        <PeriodFilter value={period} onChange={setPeriod} />
+      </div>
       {/* A — Financial */}
       <SectionCard title="الملخّص المالي" subtitle={`${from} → ${to}`}>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
