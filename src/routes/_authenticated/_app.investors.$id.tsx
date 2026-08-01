@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { getInvestorSummary } from "@/lib/investors.functions";
 import { PeriodFilter, type PeriodValue, defaultPeriod, resolvePeriod } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -28,9 +28,7 @@ const fmt = (n: number) =>
 function InvestorDashboard() {
   const { id } = useParams({ from: "/_authenticated/_app/investors/$id" });
   const fn = useServerFn(getInvestorSummary);
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("investors.$id");
   const resolved = resolvePeriod(period);
 
   const q = useQuery({

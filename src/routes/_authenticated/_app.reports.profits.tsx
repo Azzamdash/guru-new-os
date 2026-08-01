@@ -7,7 +7,7 @@ import { listBrands } from "@/lib/internal.functions";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { ReportActions } from "@/components/ReportActions";
 import { EmptyState } from "@/components/EmptyState";
 import { PiggyBank, DollarSign, Receipt, TrendingUp } from "lucide-react";
@@ -32,9 +32,7 @@ function ProfitsPage() {
   const fn = useServerFn(getProfitsReport);
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
   const [brandId, setBrandId] = useState<string>("all");
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.profits");
   const resolved = resolvePeriod(period);
   const q = useQuery({
     queryKey: ["profits-report", brandId, resolved.dateFrom, resolved.dateTo, resolved.year],

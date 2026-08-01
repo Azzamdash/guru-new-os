@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Megaphone, TrendingUp, TrendingDown } from "lucide-react";
 import { getInternalDashboard, listBrands, listExpenseEntries } from "@/lib/internal.functions";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { ReportActions } from "@/components/ReportActions";
 import { pctDelta } from "@/lib/export-utils";
 import { ChartFrame } from "@/components/EmptyState";
@@ -45,9 +45,7 @@ function MarketingReports() {
   const getDash = useServerFn(getInternalDashboard);
   const listExpFn = useServerFn(listExpenseEntries);
   const [brandId, setBrandId] = useState<string>("all");
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.marketing");
   const resolved = resolvePeriod(period);
   const year = resolved.year;
 

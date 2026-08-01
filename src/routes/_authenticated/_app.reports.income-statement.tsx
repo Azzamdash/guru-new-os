@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { getIncomeStatement } from "@/lib/financials.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { useLang } from "@/lib/i18n";
@@ -26,9 +26,7 @@ function Page() {
   const fn = useServerFn(getIncomeStatement);
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
   const [brandId, setBrandId] = useState<string>("all");
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.income-statement");
   const r = resolvePeriod(period);
   const q = useQuery({
     queryKey: ["income-statement", brandId, r.dateFrom, r.dateTo, r.year],

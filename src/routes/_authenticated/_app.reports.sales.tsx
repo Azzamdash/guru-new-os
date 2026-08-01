@@ -11,7 +11,7 @@ import { ShoppingCart, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Minus, Truc
 import { Link } from "@tanstack/react-router";
 import { getInternalDashboard, listBrands } from "@/lib/internal.functions";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { ReportActions } from "@/components/ReportActions";
 import { registerReportOrderCount, orderScopeKey } from "@/lib/salesUnify";
 import { useEffect } from "react";
@@ -34,9 +34,7 @@ function SalesReports() {
   const listBrandsFn = useServerFn(listBrands);
   const getDash = useServerFn(getInternalDashboard);
   const [brandId, setBrandId] = useState<string>("all");
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.sales");
   const resolved = resolvePeriod(period);
 
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => listBrandsFn() });

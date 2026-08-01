@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HandCoins, Clock, TrendingUp, TrendingDown, Wallet, Trophy, Percent, Building2, Users, Landmark } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
-import { useGlobalPeriod } from "@/lib/global-period";
+import { usePersistedPeriod } from "@/lib/global-period";
 import { ReportActions } from "@/components/ReportActions";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell,
@@ -45,9 +45,7 @@ function InvestorsAuditPage() {
   const auditFn = useServerFn(listInvestorSharesAudit);
   const pnlFn = useServerFn(listInvestorsPnL);
   const valFn = useServerFn(listInvestorsValuation);
-  const __gp = useGlobalPeriod();
-  const [period, setPeriod] = useState<PeriodValue>(__gp.period);
-  useEffect(() => { setPeriod(__gp.period); }, [__gp.period]);
+  const [period, setPeriod] = usePersistedPeriod("reports.investors-audit");
   const resolved = resolvePeriod(period);
 
   const auditQ = useQuery({ queryKey: ["investors-shares-audit"], queryFn: () => auditFn() });
