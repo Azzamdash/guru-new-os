@@ -343,6 +343,7 @@ function AppLayout() {
                 صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة
               </div>
             )}
+            <OrderModuleNav />
             <Outlet />
           </div>
         </main>
