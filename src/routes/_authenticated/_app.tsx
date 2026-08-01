@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
+import { OrderModuleNav } from "@/components/orders/OrderModuleNav";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
