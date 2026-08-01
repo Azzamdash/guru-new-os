@@ -23,6 +23,7 @@ import {
   assignOrdersCourier,
   assignOrdersEmployee,
   autoAssignOrders,
+  autoAssignOrdersToStaff,
 } from "@/lib/distribution.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/order-distribution")({
@@ -51,6 +52,7 @@ function OrderDistributionPage() {
   const assignCourierFn = useServerFn(assignOrdersCourier);
   const assignEmployeeFn = useServerFn(assignOrdersEmployee);
   const autoAssignFn = useServerFn(autoAssignOrders);
+  const autoStaffToFn = useServerFn(autoAssignOrdersToStaff);
 
   const [brandId, setBrandId] = useState<string>("all");
   const [governorate, setGovernorate] = useState<string>("all");
@@ -97,7 +99,7 @@ function OrderDistributionPage() {
     mutationFn: (employeeId: string | null) =>
       assignEmployeeFn({ data: { orderIds: [...selected], employeeId } }),
     onSuccess: (r) => {
-      toast.success(`تم إسناد ${r.updated} أوردر للمندوب`);
+      toast.success(`تم إسناد ${r.updated} أوردر للموظف`);
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -307,7 +309,7 @@ function OrderDistributionPage() {
                   <th className="p-2 text-start">القيمة</th>
                   <th className="p-2 text-start">الحالة</th>
                   <th className="p-2 text-start">شركة الشحن</th>
-                  <th className="p-2 text-start">المندوب</th>
+                  <th className="p-2 text-start">الموظف</th>
                   <th className="p-2 text-start">الاقتراح</th>
                 </tr>
               </thead>
