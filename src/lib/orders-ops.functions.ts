@@ -554,14 +554,6 @@ export const postSettlement = createServerFn({ method: "POST" })
 
 /* ============================ 4) WhatsApp templates =========================== */
 
-export const WHATSAPP_EVENTS = [
-  { key: "order_confirmed", label: "تأكيد الأوردر" },
-  { key: "order_shipped", label: "تم الشحن" },
-  { key: "out_for_delivery", label: "خرج للتسليم" },
-  { key: "delivery_failed", label: "فشل التسليم" },
-  { key: "order_delivered", label: "تم التسليم" },
-  { key: "return_received", label: "استلام مرتجع" },
-] as const;
 
 export const listWhatsappTemplates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
