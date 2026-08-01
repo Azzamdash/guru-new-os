@@ -304,3 +304,50 @@ export const autoAssignOrders = createServerFn({ method: "POST" })
     }
     return { updated, failed };
   });
+
+/** Distributes orders evenly across eligible staff, continuing from current load. */
+export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orderIds: string[] }) => input)
+  .handler(async ({ data, context }) => {
+    const ctx = context as unknown as Ctx;
+    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
+    if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
+
+    const staff = await getEligibleStaff(ctx.supabase);
+    const staffIds = staff.map((s) => s.id);
+    if (!staffIds.length) throw new Error("لا يوجد موظفون لديهم صلاحية استلام الأوردرات");
+
+    const { data: openRows } = await ctx.supabase
+      .from("orders")
+      .select("employee_id")
+      .in("order_status", OPEN_STATUSES)
+      .not("employee_id", "is", null);
+
+    const load = new Map<string, number>();
+    for (const r of (openRows ?? []) as Array<{ employee_id: string }>) {
+      if (ids.includes(r.employee_id)) continue;
+      load.set(r.employee_id, (load.get(r.employee_id) ?? 0) + 1);
+    }
+
+    const plan = balanceAssignments(ids, staffIds, load);
+    const byEmployee = new Map<string, string[]>();
+    for (const p of plan) {
+      const arr = byEmployee.get(p.employeeId) ?? [];
+      arr.push(p.orderId);
+      byEmployee.set(p.employeeId, arr);
+    }
+
+    let updated = 0;
+    let failed = 0;
+    for (const [employeeId, orderIds] of byEmployee) {
+      const { error } = await ctx.supabase
+        .from("orders")
+        .update({ employee_id: employeeId })
+        .in("id", orderIds);
+      if (error) failed += orderIds.length;
+      else updated += orderIds.length;
+    }
+    return { updated, failed, staffCount: staffIds.length };
+  });
