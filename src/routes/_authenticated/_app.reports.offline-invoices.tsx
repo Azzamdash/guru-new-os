@@ -25,8 +25,8 @@ function todayISO() { return new Date().toISOString().slice(0, 10); }
 function daysAgo(n: number) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
 
 function OfflineInvoicesPage() {
-  const [range, setRange] = useState<Range>("month");
-  const [start, setStart] = useState(daysAgo(30));
+  const [range, setRange] = useState<Range>("day");
+  const [start, setStart] = useState(todayISO());
   const [end, setEnd] = useState(todayISO());
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<null | { id: string; brand_id: string; customer_name: string; customer_phone: string; customer_email: string; note: string; occurred_at: string }>(null);
