@@ -1,0 +1,1 @@
+ALTER FUNCTION public.__tmp_apply_migration(text) OWNER TO postgres;

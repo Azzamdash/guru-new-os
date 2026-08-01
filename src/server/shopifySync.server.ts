@@ -265,7 +265,7 @@ export async function syncShopifyOrdersForBrand(brandId: string, opts: ShopifySy
     const { data: orderId, error: upsertError } = await supabaseAdmin.rpc(
       "upsert_shopify_order_with_archive",
       {
-        _order_id: existing?.id ?? null,
+        _order_id: (existing?.id ?? null) as unknown as string,
         _order_patch: orderPatch,
         _items: items,
         _payload: shopifyRaw,
