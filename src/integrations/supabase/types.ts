@@ -3808,6 +3808,7 @@ export type Database = {
         Args: { _section: string; _user_id: string }
         Returns: boolean
       }
+      is_global_reader: { Args: { _user_id: string }; Returns: boolean }
       is_investor_of_brand: {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
