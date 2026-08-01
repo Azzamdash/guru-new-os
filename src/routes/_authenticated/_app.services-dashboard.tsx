@@ -11,7 +11,7 @@ import { z } from "zod";
 
 const searchSchema = z.object({
   brandId: z.string().optional(),
-  period: z.enum(["today", "week", "month", "year", "custom"]).optional().default("month"),
+  period: z.enum(["today", "week", "month", "year", "custom"]).optional().default("today"),
   from: z.string().optional(),
   to: z.string().optional(),
 });
@@ -40,8 +40,8 @@ function periodToRange(period: string, from?: string, to?: string) {
 
 export function useSdFilters() {
   const s = Route.useSearch();
-  const { from, to } = periodToRange(s.period ?? "month", s.from, s.to);
-  return { brandId: s.brandId ?? "", period: s.period ?? "month", from, to, rawFrom: s.from, rawTo: s.to };
+  const { from, to } = periodToRange(s.period ?? "today", s.from, s.to);
+  return { brandId: s.brandId ?? "", period: s.period ?? "today", from, to, rawFrom: s.from, rawTo: s.to };
 }
 
 function SdLayout() {
@@ -97,7 +97,7 @@ function SdLayout() {
           </div>
           <div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Period</div>
-            <Select value={s.period ?? "month"} onValueChange={(v) => update({ period: v })}>
+            <Select value={s.period ?? "today"} onValueChange={(v) => update({ period: v })}>
               <SelectTrigger className="h-9 w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="today">Today</SelectItem>
