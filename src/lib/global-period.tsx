@@ -9,28 +9,57 @@ type Ctx = {
 
 const GlobalPeriodContext = createContext<Ctx | null>(null);
 
-const STORAGE_KEY = "egurus:global-period:v1";
+const STORAGE_PREFIX = "egurus:period:v2:";
 
-export function GlobalPeriodProvider({ children }: { children: ReactNode }) {
-  // Always start from the default period ("today") on every fresh load.
-  // The choice is kept in memory while navigating, but never persisted.
+function readStored(key: string): PeriodValue | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PeriodValue>;
+    if (!parsed || typeof parsed.preset !== "string") return null;
+    return { ...defaultPeriod(), ...parsed } as PeriodValue;
+  } catch {
+    return null;
+  }
+}
+
+function writeStored(key: string, v: PeriodValue) {
+  try { localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(v)); } catch { /* ignore */ }
+}
+
+/**
+ * Period state persisted in the browser (per key), so the choice survives reloads.
+ * Starts from the stored value after hydration; defaults to "today".
+ */
+export function usePersistedPeriod(key: string): [PeriodValue, (v: PeriodValue) => void] {
   const [period, setPeriodState] = useState<PeriodValue>(() => defaultPeriod());
   useEffect(() => {
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
-  }, []);
+    const stored = readStored(key);
+    if (stored) setPeriodState(stored);
+  }, [key]);
   const setPeriod = useCallback((v: PeriodValue) => {
     setPeriodState(v);
-  }, []);
+    writeStored(key, v);
+  }, [key]);
+  return [period, setPeriod];
+}
 
+export function GlobalPeriodProvider({ children }: { children: ReactNode }) {
+  const [period, setPeriod] = usePersistedPeriod("global");
   const resolved = useMemo(() => resolvePeriod(period), [period]);
   const value = useMemo(() => ({ period, resolved, setPeriod }), [period, resolved, setPeriod]);
   return <GlobalPeriodContext.Provider value={value}>{children}</GlobalPeriodContext.Provider>;
 }
 
-/** Read-only access; safe to call outside provider (returns defaults). */
+const FALLBACK_PERIOD = defaultPeriod();
+
+/** Read-only access; safe to call outside provider (returns stable defaults). */
 export function useGlobalPeriod(): Ctx {
   const ctx = useContext(GlobalPeriodContext);
-  if (ctx) return ctx;
-  const period = defaultPeriod();
-  return { period, resolved: resolvePeriod(period), setPeriod: () => { /* noop */ } };
+  const fallback = useMemo<Ctx>(() => ({
+    period: FALLBACK_PERIOD,
+    resolved: resolvePeriod(FALLBACK_PERIOD),
+    setPeriod: () => { /* noop */ },
+  }), []);
+  return ctx ?? fallback;
 }
