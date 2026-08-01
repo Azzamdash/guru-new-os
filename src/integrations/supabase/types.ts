@@ -2267,6 +2267,7 @@ export type Database = {
       }
       order_assignment_log: {
         Row: {
+          assigned_user_id: string | null
           courier_id: string | null
           created_at: string
           employee_id: string | null
@@ -2274,10 +2275,12 @@ export type Database = {
           method: string
           order_id: string
           performed_by: string | null
+          previous_assigned_user_id: string | null
           previous_employee_id: string | null
           reason: string | null
         }
         Insert: {
+          assigned_user_id?: string | null
           courier_id?: string | null
           created_at?: string
           employee_id?: string | null
@@ -2285,10 +2288,12 @@ export type Database = {
           method?: string
           order_id: string
           performed_by?: string | null
+          previous_assigned_user_id?: string | null
           previous_employee_id?: string | null
           reason?: string | null
         }
         Update: {
+          assigned_user_id?: string | null
           courier_id?: string | null
           created_at?: string
           employee_id?: string | null
@@ -2296,6 +2301,7 @@ export type Database = {
           method?: string
           order_id?: string
           performed_by?: string | null
+          previous_assigned_user_id?: string | null
           previous_employee_id?: string | null
           reason?: string | null
         }
@@ -2810,6 +2816,7 @@ export type Database = {
       orders: {
         Row: {
           apartment_number: string | null
+          assigned_user_id: string | null
           bosta_delivery_id: string | null
           bosta_event_at: string | null
           bosta_manual_attached_at: string | null
@@ -2863,6 +2870,7 @@ export type Database = {
         }
         Insert: {
           apartment_number?: string | null
+          assigned_user_id?: string | null
           bosta_delivery_id?: string | null
           bosta_event_at?: string | null
           bosta_manual_attached_at?: string | null
@@ -2916,6 +2924,7 @@ export type Database = {
         }
         Update: {
           apartment_number?: string | null
+          assigned_user_id?: string | null
           bosta_delivery_id?: string | null
           bosta_event_at?: string | null
           bosta_manual_attached_at?: string | null

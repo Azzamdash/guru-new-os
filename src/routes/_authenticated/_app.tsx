@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
+import { OrderModuleNav } from "@/components/orders/OrderModuleNav";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -343,6 +344,7 @@ function AppLayout() {
                 صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة
               </div>
             )}
+            <OrderModuleNav />
             <Outlet />
           </div>
         </main>

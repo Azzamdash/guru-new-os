@@ -134,7 +134,7 @@ function OrderDistributionPage() {
 
   const autoStaffTargets = useMemo(
     () =>
-      (selected.size ? queue.filter((o) => selected.has(o.id)) : queue.filter((o) => !o.employeeId)).map(
+      (selected.size ? queue.filter((o) => selected.has(o.id)) : queue.filter((o) => !o.assignedUserId)).map(
         (o) => o.id,
       ),
     [queue, selected],
@@ -277,15 +277,18 @@ function OrderDistributionPage() {
               تعيين للمحدد ({selected.size})
             </Button>
             <div className="min-w-44">
-              <label className="mb-1 block text-xs text-muted-foreground">الموظف</label>
+              <label className="mb-1 block text-xs text-muted-foreground">الموظف (مستخدم النظام)</label>
               <Select value={employeePick} onValueChange={setEmployeePick}>
-                <SelectTrigger><SelectValue placeholder="اختر موظف" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر مستخدم" /></SelectTrigger>
                 <SelectContent>
                   {(board?.employees ?? []).map((e) => (
-                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.name}
+                      {e.email && e.email !== e.name ? ` — ${e.email}` : ""}
+                    </SelectItem>
                   ))}
                   {(board?.employees ?? []).length === 0 && (
-                    <div className="p-2 text-xs text-muted-foreground">لا يوجد موظفون بصلاحية على هذه الصفحة</div>
+                    <div className="p-2 text-xs text-muted-foreground">لا يوجد مستخدمون بصلاحية على هذه الصفحة</div>
                   )}
                 </SelectContent>
               </Select>
@@ -346,7 +349,7 @@ function OrderDistributionPage() {
                     <td className="p-2">{money(o.total)}</td>
                     <td className="p-2"><Badge variant="secondary">{o.status}</Badge></td>
                     <td className="p-2">{o.courierName ?? <span className="text-muted-foreground">—</span>}</td>
-                    <td className="p-2">{o.employeeName ?? <span className="text-muted-foreground">—</span>}</td>
+                    <td className="p-2">{o.assignedUserName ?? <span className="text-muted-foreground">—</span>}</td>
                     <td className="p-2">
                       {o.suggestedCourierName ? (
                         <span className="text-xs">
