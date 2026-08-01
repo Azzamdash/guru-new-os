@@ -2265,6 +2265,71 @@ export type Database = {
         }
         Relationships: []
       }
+      order_assignment_log: {
+        Row: {
+          courier_id: string | null
+          created_at: string
+          employee_id: string | null
+          id: string
+          method: string
+          order_id: string
+          performed_by: string | null
+          previous_employee_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          courier_id?: string | null
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          method?: string
+          order_id: string
+          performed_by?: string | null
+          previous_employee_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          courier_id?: string | null
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          method?: string
+          order_id?: string
+          performed_by?: string | null
+          previous_employee_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_assignment_log_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_assignment_log_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_assignment_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_assignment_log_previous_employee_id_fkey"
+            columns: ["previous_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_collections: {
         Row: {
           amount: number

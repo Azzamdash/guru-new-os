@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -24,6 +24,7 @@ import {
   assignOrdersEmployee,
   autoAssignOrders,
   autoAssignOrdersToStaff,
+  listAssignmentLog,
 } from "@/lib/distribution.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/order-distribution")({
@@ -53,6 +54,12 @@ function OrderDistributionPage() {
   const assignEmployeeFn = useServerFn(assignOrdersEmployee);
   const autoAssignFn = useServerFn(autoAssignOrders);
   const autoStaffToFn = useServerFn(autoAssignOrdersToStaff);
+  const logFn = useServerFn(listAssignmentLog);
+  const logQ = useQuery({
+    queryKey: ["assignment-log"],
+    queryFn: () => logFn({ data: { limit: 200 } }),
+    staleTime: 30_000,
+  });
 
   const [brandId, setBrandId] = useState<string>("all");
   const [governorate, setGovernorate] = useState<string>("all");
@@ -83,6 +90,7 @@ function OrderDistributionPage() {
   const invalidate = () => {
     setSelected(new Set());
     qc.invalidateQueries({ queryKey: ["distribution-board"] });
+    qc.invalidateQueries({ queryKey: ["assignment-log"] });
   };
 
   const courierM = useMutation({
@@ -196,6 +204,7 @@ function OrderDistributionPage() {
         <TabsList>
           <TabsTrigger value="queue">طابور التوزيع</TabsTrigger>
           <TabsTrigger value="loads">أحمال شركات الشحن</TabsTrigger>
+          <TabsTrigger value="log">سجل التوزيع</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4">
@@ -383,6 +392,52 @@ function OrderDistributionPage() {
                 ))}
                 {!board?.loads.length && (
                   <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">لا توجد بيانات</td></tr>
+                )}
+              </tbody>
+            </table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="log">
+          <Card className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs">
+                <tr>
+                  <th className="p-2 text-start">التاريخ</th>
+                  <th className="p-2 text-start">الأوردر</th>
+                  <th className="p-2 text-start">من</th>
+                  <th className="p-2 text-start">إلى</th>
+                  <th className="p-2 text-start">الطريقة</th>
+                  <th className="p-2 text-start">السبب</th>
+                  <th className="p-2 text-start">بواسطة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(logQ.data ?? []).map((r) => (
+                  <tr key={r.id} className="border-t">
+                    <td className="p-2 whitespace-nowrap text-xs">
+                      {new Date(r.createdAt).toLocaleString("ar-EG")}
+                    </td>
+                    <td className="p-2">
+                      <Link to="/order-view/$id" params={{ id: r.orderId }} className="text-primary hover:underline">
+                        #{r.orderNumber ?? r.orderId.slice(0, 8)}
+                      </Link>
+                    </td>
+                    <td className="p-2">{r.fromName ?? "—"}</td>
+                    <td className="p-2 font-medium">{r.toName ?? "إلغاء التوزيع"}</td>
+                    <td className="p-2 text-xs">
+                      {r.method === "auto" ? "تلقائي" : r.method === "unassign" ? "إلغاء" : "يدوي"}
+                    </td>
+                    <td className="p-2 text-xs text-muted-foreground">{r.reason ?? "—"}</td>
+                    <td className="p-2 text-xs">{r.byName ?? "—"}</td>
+                  </tr>
+                ))}
+                {(logQ.data ?? []).length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                      لا توجد عمليات توزيع مسجّلة بعد
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>

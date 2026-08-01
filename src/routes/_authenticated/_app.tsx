@@ -22,6 +22,7 @@ import {
   type Hub,
   type RoleCtx,
 } from "@/lib/nav-registry";
+import { NotificationsBell } from "@/components/notifications/NotificationsBell";
 import { GlobalPeriodProvider, useGlobalPeriod } from "@/lib/global-period";
 import { PeriodFilter } from "@/components/PeriodFilter";
 
@@ -309,10 +310,16 @@ function AppLayout() {
               />
               e-Gurus
             </Link>
-            <Button variant="ghost" size="icon" onClick={toggle} aria-label="Language">
-              <Languages className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <NotificationsBell />
+              <Button variant="ghost" size="icon" onClick={toggle} aria-label="Language">
+                <Languages className="w-4 h-4" />
+              </Button>
+            </div>
           </header>
+          <div className="hidden md:flex sticky top-0 z-30 items-center justify-end gap-1 border-b border-border bg-background/80 px-4 py-1.5 backdrop-blur">
+            <NotificationsBell />
+          </div>
           {isPrivileged && location.pathname === "/dashboard" && <GlobalPeriodBar />}
           <div
             className="flex-1 min-w-0"
