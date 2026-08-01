@@ -122,6 +122,26 @@ function OrderDistributionPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const autoStaffTargets = useMemo(
+    () =>
+      (selected.size ? queue.filter((o) => selected.has(o.id)) : queue.filter((o) => !o.employeeId)).map(
+        (o) => o.id,
+      ),
+    [queue, selected],
+  );
+  const autoTargetCount = autoStaffTargets.length;
+
+  const autoStaffM = useMutation({
+    mutationFn: () => autoStaffToFn({ data: { orderIds: autoStaffTargets } }),
+    onSuccess: (r) => {
+      toast.success(
+        `تم توزيع ${r.updated} أوردر بالتساوي على ${r.staffCount} موظف${r.failed ? ` — فشل ${r.failed}` : ""}`,
+      );
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const allChecked = queue.length > 0 && selected.size === queue.length;
   const toggleAll = () =>
     setSelected(allChecked ? new Set() : new Set(queue.map((o) => o.id)));
@@ -137,6 +157,7 @@ function OrderDistributionPage() {
     () => queue.filter((o) => !o.courierId && o.suggestedCourierId).length,
     [queue],
   );
+
 
   return (
     <div className="space-y-5 p-4 md:p-6" dir="rtl">
