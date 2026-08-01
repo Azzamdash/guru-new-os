@@ -96,12 +96,12 @@ export async function recordAssignments(opts: {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const [{ data: orders }, { data: employees }] = await Promise.all([
-    supabaseAdmin.from("orders").select("id, order_number, employee_id, total").in("id", orderIds),
+    supabaseAdmin.from("orders").select("id, external_order_number, employee_id").in("id", orderIds),
     supabaseAdmin.from("employees").select("id, name, user_id"),
   ]);
 
   const orderMap = new Map(
-    ((orders ?? []) as Array<{ id: string; order_number: string | null; employee_id: string | null }>).map(
+    ((orders ?? []) as Array<{ id: string; external_order_number: string | null; employee_id: string | null }>).map(
       (o) => [o.id, o],
     ),
   );
@@ -119,12 +119,13 @@ export async function recordAssignments(opts: {
   }));
   await opts.supabase.from("order_assignment_log").insert(logRows);
 
-  const notifs = list
+  const notifs: Array<{ user_id: string; kind: string; title: string; body: string; link: string }> = [];
+  for (const a of list
     .filter((a) => a.employeeId && a.employeeId !== orderMap.get(a.orderId)?.employee_id)
     .map((a) => {
       const userId = empUser.get(a.employeeId as string);
       if (!userId) return null;
-      const num = orderMap.get(a.orderId)?.order_number ?? a.orderId.slice(0, 8);
+      const num = orderMap.get(a.orderId)?.external_order_number ?? a.orderId.slice(0, 8);
       return {
         user_id: userId,
         kind: "order_assigned",

@@ -410,11 +410,11 @@ export const listAssignmentLog = createServerFn({ method: "GET" })
     if (!list.length) return [];
 
     const [{ data: orders }, { data: emps }] = await Promise.all([
-      ctx.supabase.from("orders").select("id, order_number").in("id", [...new Set(list.map((r) => r.order_id))]),
+      ctx.supabase.from("orders").select("id, external_order_number").in("id", [...new Set(list.map((r) => r.order_id))]),
       ctx.supabase.from("employees").select("id, name, user_id"),
     ]);
     const orderNum = new Map(
-      ((orders ?? []) as Array<{ id: string; order_number: string | null }>).map((o) => [o.id, o.order_number]),
+      ((orders ?? []) as Array<{ id: string; external_order_number: string | null }>).map((o) => [o.id, o.external_order_number]),
     );
     const empName = new Map(((emps ?? []) as Array<{ id: string; name: string }>).map((e) => [e.id, e.name]));
     const byUser = new Map(
