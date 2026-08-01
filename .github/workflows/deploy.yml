@@ -13,9 +13,11 @@ permissions:
   contents: read
 
 jobs:
-  build-and-deploy:
+  # 1) Build + smoke test. Nothing touches the server unless this passes.
+  verify:
+    name: Build and smoke test
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     env:
       VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -34,8 +36,57 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Lint
+        run: npm run lint --if-present
+
       - name: Build Node production bundle
         run: NITRO_PRESET=node-server npm run build
+
+      - name: Assert server bundle exists
+        run: test -f .output/server/index.mjs
+
+      - name: Smoke test the built server
+        env:
+          PORT: 3000
+        run: |
+          node .output/server/index.mjs &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null "http://127.0.0.1:3000/"; then
+              echo "server responded on attempt $i"
+              kill "$SERVER_PID" || true
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "server did not become healthy in time" >&2
+          kill "$SERVER_PID" || true
+          exit 1
+
+  # 2) Deploy only after verify succeeds.
+  deploy:
+    name: Deploy over SSH
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+
+    steps:
+      - name: Ensure deployment secrets are present
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          missing=0
+          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS; do
+            if [ -z "${!name}" ]; then
+              echo "missing required secret: $name" >&2
+              missing=1
+            fi
+          done
+          exit "$missing"
 
       - name: Configure deployment SSH
         env:
@@ -48,8 +99,33 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
+      - name: Verify SSH connectivity (no changes made)
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            'test -x /usr/local/bin/deploy-guru-recall || { echo "deploy script missing on server"; exit 1; }'
+
       - name: Pull and deploy exact commit
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: ssh "$DEPLOY_USER@$DEPLOY_HOST" "/usr/local/bin/deploy-guru-recall '$GITHUB_SHA'"
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "/usr/local/bin/deploy-guru-recall '$GITHUB_SHA'"
+
+      - name: Post-deploy health check
+        env:
+          HEALTH_URL: ${{ secrets.DEPLOY_HEALTH_URL || 'https://egurus.info/' }}
+        run: |
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$HEALTH_URL" || true)
+            echo "attempt $i -> $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 5
+          done
+          echo "site did not return 200 after deploy" >&2
+          exit 1
