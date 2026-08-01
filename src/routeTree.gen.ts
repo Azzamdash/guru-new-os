@@ -18,6 +18,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_a
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ApiPublicWhatsappRouteImport } from './routes/api/public/whatsapp'
+import { Route as AuthenticatedAppWhatsappSettingsRouteImport } from './routes/_authenticated/_app.whatsapp-settings'
 import { Route as AuthenticatedAppTreasuryRouteImport } from './routes/_authenticated/_app.treasury'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/_app.tasks'
 import { Route as AuthenticatedAppSuppliersRouteImport } from './routes/_authenticated/_app.suppliers'
@@ -142,6 +143,12 @@ const ApiPublicWhatsappRoute = ApiPublicWhatsappRouteImport.update({
   path: '/api/public/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppWhatsappSettingsRoute =
+  AuthenticatedAppWhatsappSettingsRouteImport.update({
+    id: '/whatsapp-settings',
+    path: '/whatsapp-settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppTreasuryRoute =
   AuthenticatedAppTreasuryRouteImport.update({
     id: '/treasury',
@@ -643,6 +650,7 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
@@ -728,6 +736,7 @@ export interface FileRoutesByTo {
   '/services': typeof AuthenticatedAppServicesRoute
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
@@ -818,6 +827,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/_authenticated/_app/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/_authenticated/_app/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/_authenticated/_app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
@@ -907,6 +917,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tasks'
     | '/treasury'
+    | '/whatsapp-settings'
     | '/api/public/whatsapp'
     | '/customers/$id'
     | '/hr/attendance'
@@ -992,6 +1003,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tasks'
     | '/treasury'
+    | '/whatsapp-settings'
     | '/api/public/whatsapp'
     | '/customers/$id'
     | '/hr/attendance'
@@ -1081,6 +1093,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/suppliers'
     | '/_authenticated/_app/tasks'
     | '/_authenticated/_app/treasury'
+    | '/_authenticated/_app/whatsapp-settings'
     | '/api/public/whatsapp'
     | '/_authenticated/_app/customers/$id'
     | '/_authenticated/_app/hr/attendance'
@@ -1212,6 +1225,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/whatsapp'
       preLoaderRoute: typeof ApiPublicWhatsappRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app/whatsapp-settings': {
+      id: '/_authenticated/_app/whatsapp-settings'
+      path: '/whatsapp-settings'
+      fullPath: '/whatsapp-settings'
+      preLoaderRoute: typeof AuthenticatedAppWhatsappSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/treasury': {
       id: '/_authenticated/_app/treasury'
@@ -1865,6 +1885,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSuppliersRoute: typeof AuthenticatedAppSuppliersRouteWithChildren
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppTreasuryRoute: typeof AuthenticatedAppTreasuryRoute
+  AuthenticatedAppWhatsappSettingsRoute: typeof AuthenticatedAppWhatsappSettingsRoute
   AuthenticatedAppCustomersIdRoute: typeof AuthenticatedAppCustomersIdRoute
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrRequestsRoute: typeof AuthenticatedAppHrRequestsRoute
@@ -1930,6 +1951,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSuppliersRoute: AuthenticatedAppSuppliersRouteWithChildren,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppTreasuryRoute: AuthenticatedAppTreasuryRoute,
+  AuthenticatedAppWhatsappSettingsRoute: AuthenticatedAppWhatsappSettingsRoute,
   AuthenticatedAppCustomersIdRoute: AuthenticatedAppCustomersIdRoute,
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrRequestsRoute: AuthenticatedAppHrRequestsRoute,

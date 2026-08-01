@@ -338,6 +338,16 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "Order KPIs, shipping & collections, timeline and WhatsApp",
   },
   {
+    to: "/whatsapp-settings",
+    ar: "إعدادات واتساب",
+    en: "WhatsApp Settings",
+    icon: ShoppingBag,
+    hub: "sales",
+    requiresWrite: true,
+    descAr: "مفاتيح WhatsApp Cloud API وحالة الاتصال والـ Webhook",
+    descEn: "WhatsApp Cloud API keys, connection status and webhook",
+  },
+  {
     to: "/fulfillment",
     ar: "تحضير الأوردرات",
     en: "Order Prep",
