@@ -441,46 +441,36 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
   // Group nav pages by hub for a full view of every screen the user can be granted.
   const pagesByHub = HUBS.map((h) => ({ hub: h, pages: pagesForHub(h.key) }));
   const allPages = pagesByHub.flatMap(({ pages }) => pages);
-  const isPageVisible = (page: (typeof allPages)[number]): boolean => {
-    if (sections.includes(`deny:${page.to}`)) return false;
-    if (sections.includes(`write:${page.to}`) || sections.includes(`page:${page.to}`)) return true;
-    return !!(page.section && sections.includes(page.section));
+  type PageLevel = "none" | "read" | "write";
+  const pageLevel = (page: (typeof allPages)[number]): PageLevel => {
+    if (sections.includes(`write:${page.to}`)) return "write";
+    if (sections.includes(`page:${page.to}`)) return "read";
+    return "none";
   };
-  const setPageVisible = (page: (typeof allPages)[number], visible: boolean) => {
-    let next = sections.filter(
-      (key) => key !== `deny:${page.to}` && key !== `page:${page.to}` && key !== `write:${page.to}`,
+  const clearPageKeys = (keys: string[], route: string) =>
+    keys.filter(
+      (key) => key !== `deny:${route}` && key !== `page:${route}` && key !== `write:${route}`,
     );
-
-    // Expand a legacy shared-section grant into explicit per-page grants before
-    // changing one page, otherwise the shared key would silently override Hidden.
-    if (page.section && next.includes(page.section)) {
-      next = next.filter((key) => key !== page.section);
-      for (const linked of allPages.filter((candidate) => candidate.section === page.section)) {
-        next.push(`page:${linked.to}`);
-      }
-      next = next.filter(
-        (key) =>
-          key !== `deny:${page.to}` && key !== `page:${page.to}` && key !== `write:${page.to}`,
-      );
-    }
-
-    next.push(`${visible ? "page" : "deny"}:${page.to}`);
+  const setPageLevel = (page: (typeof allPages)[number], level: PageLevel) => {
+    let next = clearPageKeys(sections, page.to);
+    if (level === "read") next.push(`page:${page.to}`);
+    else if (level === "write") next.push(`write:${page.to}`);
+    else next.push(`deny:${page.to}`);
     setSections(Array.from(new Set(next)));
   };
-  const setPagesVisible = (pages: typeof allPages, visible: boolean) => {
+  const setPagesLevel = (pages: typeof allPages, level: PageLevel) => {
     const routes = new Set(pages.map((page) => page.to));
-    const legacySections = new Set(pages.map((page) => page.section).filter(Boolean));
-    const next = sections.filter((key) => {
-      if (legacySections.has(key)) return false;
+    let next = sections.filter((key) => {
       if (key.startsWith("deny:") || key.startsWith("page:") || key.startsWith("write:")) {
         return !routes.has(key.slice(key.indexOf(":") + 1));
       }
       return true;
     });
-    const prefix = visible ? "page" : "deny";
+    const prefix = level === "write" ? "write" : level === "read" ? "page" : "deny";
     next.push(...pages.map((page) => `${prefix}:${page.to}`));
     setSections(Array.from(new Set(next)));
   };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
