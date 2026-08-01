@@ -129,13 +129,13 @@ export const HUBS: Hub[] = [
   },
   {
     key: "sales",
-    ar: "الأوردرات",
-    en: "Orders",
+    ar: "إدارة الأوردرات",
+    en: "Order Management",
     icon: ShoppingBag,
     accent: "from-emerald-500/40 to-primary/20",
     group: "operations",
-    descAr: "الأوردرات والشحن",
-    descEn: "Orders & shipping",
+    descAr: "دورة الأوردر كاملة: التأكيد، التوزيع، الشحن، التحصيل والمرتجعات",
+    descEn: "Full order lifecycle: confirm, distribute, ship, collect, return",
   },
 
   {
