@@ -18,6 +18,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_a
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as ApiPublicWhatsappRouteImport } from './routes/api/public/whatsapp'
+import { Route as AuthenticatedAppWhatsappTemplatesRouteImport } from './routes/_authenticated/_app.whatsapp-templates'
 import { Route as AuthenticatedAppWhatsappSettingsRouteImport } from './routes/_authenticated/_app.whatsapp-settings'
 import { Route as AuthenticatedAppTreasuryRouteImport } from './routes/_authenticated/_app.treasury'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/_app.tasks'
@@ -148,6 +149,12 @@ const ApiPublicWhatsappRoute = ApiPublicWhatsappRouteImport.update({
   path: '/api/public/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppWhatsappTemplatesRoute =
+  AuthenticatedAppWhatsappTemplatesRouteImport.update({
+    id: '/whatsapp-templates',
+    path: '/whatsapp-templates',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppWhatsappSettingsRoute =
   AuthenticatedAppWhatsappSettingsRouteImport.update({
     id: '/whatsapp-settings',
@@ -691,6 +698,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
   '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
+  '/whatsapp-templates': typeof AuthenticatedAppWhatsappTemplatesRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
@@ -782,6 +790,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
   '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
+  '/whatsapp-templates': typeof AuthenticatedAppWhatsappTemplatesRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
@@ -878,6 +887,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
   '/_authenticated/_app/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
+  '/_authenticated/_app/whatsapp-templates': typeof AuthenticatedAppWhatsappTemplatesRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/_authenticated/_app/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/_authenticated/_app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
@@ -973,6 +983,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/treasury'
     | '/whatsapp-settings'
+    | '/whatsapp-templates'
     | '/api/public/whatsapp'
     | '/customers/$id'
     | '/hr/attendance'
@@ -1064,6 +1075,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/treasury'
     | '/whatsapp-settings'
+    | '/whatsapp-templates'
     | '/api/public/whatsapp'
     | '/customers/$id'
     | '/hr/attendance'
@@ -1159,6 +1171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/tasks'
     | '/_authenticated/_app/treasury'
     | '/_authenticated/_app/whatsapp-settings'
+    | '/_authenticated/_app/whatsapp-templates'
     | '/api/public/whatsapp'
     | '/_authenticated/_app/customers/$id'
     | '/_authenticated/_app/hr/attendance'
@@ -1290,6 +1303,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/whatsapp'
       preLoaderRoute: typeof ApiPublicWhatsappRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app/whatsapp-templates': {
+      id: '/_authenticated/_app/whatsapp-templates'
+      path: '/whatsapp-templates'
+      fullPath: '/whatsapp-templates'
+      preLoaderRoute: typeof AuthenticatedAppWhatsappTemplatesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/whatsapp-settings': {
       id: '/_authenticated/_app/whatsapp-settings'
@@ -1991,6 +2011,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppTreasuryRoute: typeof AuthenticatedAppTreasuryRoute
   AuthenticatedAppWhatsappSettingsRoute: typeof AuthenticatedAppWhatsappSettingsRoute
+  AuthenticatedAppWhatsappTemplatesRoute: typeof AuthenticatedAppWhatsappTemplatesRoute
   AuthenticatedAppCustomersIdRoute: typeof AuthenticatedAppCustomersIdRoute
   AuthenticatedAppHrAttendanceRoute: typeof AuthenticatedAppHrAttendanceRoute
   AuthenticatedAppHrRequestsRoute: typeof AuthenticatedAppHrRequestsRoute
@@ -2065,6 +2086,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppTreasuryRoute: AuthenticatedAppTreasuryRoute,
   AuthenticatedAppWhatsappSettingsRoute: AuthenticatedAppWhatsappSettingsRoute,
+  AuthenticatedAppWhatsappTemplatesRoute:
+    AuthenticatedAppWhatsappTemplatesRoute,
   AuthenticatedAppCustomersIdRoute: AuthenticatedAppCustomersIdRoute,
   AuthenticatedAppHrAttendanceRoute: AuthenticatedAppHrAttendanceRoute,
   AuthenticatedAppHrRequestsRoute: AuthenticatedAppHrRequestsRoute,
