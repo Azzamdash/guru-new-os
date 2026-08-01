@@ -328,6 +328,17 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "All sales orders",
   },
   {
+    to: "/order-distribution",
+    ar: "توزيع الأوردرات",
+    en: "Order Distribution",
+    icon: ShoppingBag,
+    hub: "sales",
+    requiresWrite: true,
+    extraRoles: ["fulfillment_manager", "operation_manager"],
+    descAr: "توزيع الأوردرات على شركات الشحن والمناديب وأحمالهم",
+    descEn: "Assign orders to couriers and reps, load balancing",
+  },
+  {
     to: "/orders-center",
     ar: "مركز إدارة الأوردرات",
     en: "Orders Center",
