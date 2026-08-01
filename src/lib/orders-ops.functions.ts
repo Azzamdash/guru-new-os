@@ -626,9 +626,6 @@ export const deleteWhatsappTemplate = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export function renderTemplate(body: string, vars: Record<string, string>): string {
-  return body.replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, k: string) => vars[k] ?? "");
-}
 
 /** Sends a template to the order's customer via WhatsApp (creates the thread if needed). */
 export const sendOrderTemplate = createServerFn({ method: "POST" })
