@@ -1,0 +1,30 @@
+[Unit]
+Description=e-Gurus OS (TanStack Start, Node server)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=egurus
+Group=egurus
+WorkingDirectory=/srv/egurus-os/current
+EnvironmentFile=/etc/egurus-os.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+ExecStart=/usr/bin/node /srv/egurus-os/current/.output/server/index.mjs
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
