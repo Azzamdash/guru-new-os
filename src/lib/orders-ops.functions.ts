@@ -366,24 +366,6 @@ export const listSettlements = createServerFn({ method: "POST" })
     });
   });
 
-export type ParsedLine = { tracking: string; amount: number; fee: number };
-
-/** Parses pasted CSV text: tracking,amount[,fee] — header row optional. */
-export function parseSettlementCsv(text: string): ParsedLine[] {
-  const out: ParsedLine[] = [];
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line) continue;
-    const parts = line.split(/[,;\t]/).map((p) => p.trim());
-    if (parts.length < 2) continue;
-    const tracking = parts[0]!.replace(/^["']|["']$/g, "");
-    const amount = Number(parts[1]!.replace(/[^\d.-]/g, ""));
-    const fee = parts[2] ? Number(parts[2].replace(/[^\d.-]/g, "")) : 0;
-    if (!tracking || Number.isNaN(amount)) continue;
-    out.push({ tracking, amount, fee: Number.isNaN(fee) ? 0 : fee });
-  }
-  return out;
-}
 
 export const importSettlement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
