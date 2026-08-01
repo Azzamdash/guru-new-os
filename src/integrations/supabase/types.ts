@@ -1322,13 +1322,6 @@ export type Database = {
             foreignKeyName: "employee_attendance_entries_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "employee_directory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_attendance_entries_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -1388,13 +1381,6 @@ export type Database = {
             foreignKeyName: "employee_requests_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "employee_directory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "employee_requests_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -1432,13 +1418,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "employee_time_logs_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employee_directory"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "employee_time_logs_employee_id_fkey"
             columns: ["employee_id"]
@@ -1747,13 +1726,6 @@ export type Database = {
             foreignKeyName: "fulfillment_entries_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "employee_directory"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fulfillment_entries_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
@@ -1880,13 +1852,6 @@ export type Database = {
           worker_name?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "inventory_movements_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employee_directory"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "inventory_movements_employee_id_fkey"
             columns: ["employee_id"]
@@ -2509,13 +2474,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employee_directory"
             referencedColumns: ["id"]
           },
           {
@@ -3700,41 +3658,7 @@ export type Database = {
       }
     }
     Views: {
-      employee_directory: {
-        Row: {
-          active: boolean | null
-          brand_id: string | null
-          id: string | null
-          name: string | null
-          position: string | null
-          user_id: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          brand_id?: string | null
-          id?: string | null
-          name?: string | null
-          position?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          brand_id?: string | null
-          id?: string | null
-          name?: string | null
-          position?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "employees_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       accounting_profit_report: {
