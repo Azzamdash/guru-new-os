@@ -238,11 +238,7 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       queue,
       loads,
       couriers,
-      employees: (empRes.data ?? []).map((e: { id: string; name: string; brand_id: string | null }) => ({
-        id: e.id,
-        name: e.name,
-        brandId: e.brand_id,
-      })),
+      employees: staff.map((e) => ({ id: e.id, name: e.name, brandId: e.brandId })),
       governorates: [...govSet].sort((a, b) => a.localeCompare(b, "ar")),
       totals: { unassigned, assigned, openAmount },
     };
