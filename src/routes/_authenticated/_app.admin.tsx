@@ -485,14 +485,15 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
             الصلاحيات — <span dir="ltr">{email}</span>
           </DialogTitle>
           <DialogDescription>
-            حدّد الصفحات الظاهرة للمستخدم، ثم اختر البراندات المسموحة له. صلاحية التعديل تأتي من
-            الدور الوظيفي.
+            المستخدم لا يرى أي صفحة إلا ما تحدده هنا صراحةً، ولكل صفحة تختار: مخفي / مشاهدة فقط /
+            تعديل.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
-            صلاحيات الصفحات هنا تتحكم في الظهور فقط. التعديل محمي في السيرفر حسب الدور الوظيفي.
+            لا توجد صلاحيات افتراضية: أي صفحة غير محددة تكون مخفية. «مشاهدة فقط» تمنع الإضافة
+            والتعديل والحذف على مستوى السيرفر.
           </div>
 
           <div className="space-y-4">
@@ -507,18 +508,42 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                       </div>
                       <div className="text-sm font-semibold">{hub.ar}</div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-xs h-7"
-                      onClick={() => setPagesVisible(pages, true)}
-                    >
-                      إظهار الكل
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7"
+                        onClick={() => setPagesLevel(pages, "none")}
+                      >
+                        إخفاء الكل
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7"
+                        onClick={() => setPagesLevel(pages, "read")}
+                      >
+                        مشاهدة الكل
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs h-7"
+                        onClick={() => setPagesLevel(pages, "write")}
+                      >
+                        تعديل الكل
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                     {pages.map((p) => {
+                      const level = pageLevel(p);
+                      const opts: { key: "none" | "read" | "write"; label: string }[] = [
+                        { key: "none", label: "مخفي" },
+                        { key: "read", label: "مشاهدة" },
+                        { key: "write", label: "تعديل" },
+                      ];
                       return (
                         <div
                           key={p.to}
@@ -526,14 +551,28 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         >
                           <p.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                           <span className="truncate flex-1">{p.ar}</span>
-                          <Checkbox
-                            checked={isPageVisible(p)}
-                            onCheckedChange={(checked) => setPageVisible(p, checked === true)}
-                          />
+                          <div className="flex rounded-md border border-border/60 overflow-hidden shrink-0">
+                            {opts.map((o) => (
+                              <button
+                                key={o.key}
+                                type="button"
+                                onClick={() => setPageLevel(p, o.key)}
+                                className={
+                                  "px-2 py-0.5 text-[11px] transition-colors " +
+                                  (level === o.key
+                                    ? "bg-primary text-primary-foreground"
+                                    : "hover:bg-muted text-muted-foreground")
+                                }
+                              >
+                                {o.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
+
                 </div>
               );
             })}
