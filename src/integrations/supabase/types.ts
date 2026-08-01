@@ -2126,6 +2126,80 @@ export type Database = {
         }
         Relationships: []
       }
+      order_collections: {
+        Row: {
+          amount: number
+          brand_id: string
+          collected_at: string
+          courier_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          method: string
+          note: string | null
+          order_id: string
+          shipment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          brand_id: string
+          collected_at?: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method?: string
+          note?: string | null
+          order_id: string
+          shipment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          brand_id?: string
+          collected_at?: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          method?: string
+          note?: string | null
+          order_id?: string
+          shipment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_collections_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_collections_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_collections_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_collections_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "order_shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string
@@ -2239,6 +2313,88 @@ export type Database = {
           },
           {
             foreignKeyName: "order_lifecycle_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_shipments: {
+        Row: {
+          attempt_no: number
+          brand_id: string
+          courier_id: string | null
+          created_at: string
+          created_by: string | null
+          delivered_at: string | null
+          expected_cod: number
+          id: string
+          note: string | null
+          order_id: string
+          raw: Json | null
+          returned_at: string | null
+          shipped_at: string | null
+          shipping_fee: number
+          status: string
+          tracking: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_no?: number
+          brand_id: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          expected_cod?: number
+          id?: string
+          note?: string | null
+          order_id: string
+          raw?: Json | null
+          returned_at?: string | null
+          shipped_at?: string | null
+          shipping_fee?: number
+          status?: string
+          tracking?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_no?: number
+          brand_id?: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          expected_cod?: number
+          id?: string
+          note?: string | null
+          order_id?: string
+          raw?: Json | null
+          returned_at?: string | null
+          shipped_at?: string | null
+          shipping_fee?: number
+          status?: string
+          tracking?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_shipments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_shipments_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_shipments_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
@@ -3655,6 +3811,136 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          direction: string
+          error: string | null
+          id: string
+          media_url: string | null
+          sent_at: string
+          status: string
+          thread_id: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          error?: string | null
+          id?: string
+          media_url?: string | null
+          sent_at?: string
+          status?: string
+          thread_id: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          error?: string | null
+          id?: string
+          media_url?: string | null
+          sent_at?: string
+          status?: string
+          thread_id?: string
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_threads: {
+        Row: {
+          brand_id: string
+          created_at: string
+          customer_id: string | null
+          display_name: string | null
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          order_id: string | null
+          phone: string
+          status: string
+          unread_count: number
+          updated_at: string
+          wa_conversation_id: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          customer_id?: string | null
+          display_name?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          order_id?: string | null
+          phone: string
+          status?: string
+          unread_count?: number
+          updated_at?: string
+          wa_conversation_id?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          customer_id?: string | null
+          display_name?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          order_id?: string | null
+          phone?: string
+          status?: string
+          unread_count?: number
+          updated_at?: string
+          wa_conversation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_threads_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_threads_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_threads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

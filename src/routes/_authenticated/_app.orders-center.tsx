@@ -1,0 +1,421 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useMemo, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw } from "lucide-react";
+import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
+import { usePersistedPeriod } from "@/lib/global-period";
+import { queryPresets } from "@/lib/query-presets";
+import { listBrands } from "@/lib/internal.functions";
+import {
+  getOrdersOverview, getOrderTimeline, addShipmentAttempt, recordCollection,
+  listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
+} from "@/lib/orders-management.functions";
+
+export const Route = createFileRoute("/_authenticated/_app/orders-center")({
+  head: () => ({ meta: [
+    { title: "مركز إدارة الأوردرات — e-GURUS" },
+    { name: "description", content: "مؤشرات الأوردرات، الشحنات والتحصيل، وسجل حالات كل أوردر، بالإضافة لصندوق محادثات واتساب." },
+    { name: "robots", content: "noindex, nofollow" },
+  ]}),
+  component: OrdersCenterPage,
+});
+
+const nf = (n: number) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+const pct = (n: number) => `${Number(n || 0).toFixed(1)}%`;
+
+function Kpi({ label, value, hint, icon: Icon }: { label: string; value: string; hint?: string; icon: typeof Truck }) {
+  return (
+    <Card className="p-4 space-y-1">
+      <div className="flex items-center justify-between text-muted-foreground text-sm">
+        <span>{label}</span>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="text-2xl font-bold tabular-nums">{value}</div>
+      {hint ? <div className="text-xs text-muted-foreground">{hint}</div> : null}
+    </Card>
+  );
+}
+
+function OrdersCenterPage() {
+  const [period, setPeriod] = usePersistedPeriod("orders-center");
+  const resolved = useMemo(() => resolvePeriod(period), [period]);
+  const [brandId, setBrandId] = useState<string>("all");
+
+  const brands = useQuery({
+    queryKey: ["brands"],
+    queryFn: () => listBrands(),
+    ...queryPresets.reference,
+  });
+
+  const overviewFn = useServerFn(getOrdersOverview);
+  const overview = useQuery({
+    queryKey: ["orders-center", "overview", resolved.dateFrom, resolved.dateTo, brandId],
+    queryFn: () => overviewFn({ data: { dateFrom: resolved.dateFrom, dateTo: resolved.dateTo, brandId: brandId === "all" ? null : brandId } }),
+    ...queryPresets.report,
+  });
+
+  const o = overview.data;
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-bold">مركز إدارة الأوردرات</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={brandId} onValueChange={setBrandId}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل البراندات</SelectItem>
+              {(brands.data ?? []).map((b: { id: string; name: string }) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <PeriodFilter value={period} onChange={setPeriod} />
+          <Button variant="outline" size="sm" onClick={() => overview.refetch()}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="kpis">
+        <TabsList>
+          <TabsTrigger value="kpis">المؤشرات</TabsTrigger>
+          <TabsTrigger value="ops">الشحن والتحصيل</TabsTrigger>
+          <TabsTrigger value="timeline">سجل الأوردر</TabsTrigger>
+          <TabsTrigger value="wa">واتساب</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="kpis" className="space-y-4 pt-4">
+          {overview.isLoading ? <Card className="p-6 text-muted-foreground">جارٍ التحميل…</Card> : null}
+          {o ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Kpi label="عدد الأوردرات" value={nf(o.totals.orders)} icon={Activity} />
+                <Kpi label="إجمالي المبيعات" value={nf(o.totals.revenue)} hint={`متوسط الأوردر ${nf(o.totals.avgOrderValue)}`} icon={Wallet} />
+                <Kpi label="نسبة التسليم" value={pct(o.delivery.deliveryRate)} hint={`${nf(o.delivery.delivered)} تم تسليمها`} icon={Truck} />
+                <Kpi label="نسبة المرتجع" value={pct(o.delivery.returnRate)} hint={`${nf(o.delivery.returned)} مرتجع`} icon={Truck} />
+                <Kpi label="المتوقع تحصيله" value={nf(o.collection.expected)} icon={Wallet} />
+                <Kpi label="المحصّل فعليًا" value={nf(o.collection.collected)} hint={pct(o.collection.collectionRate)} icon={Wallet} />
+                <Kpi label="المتبقي" value={nf(o.collection.outstanding)} icon={Wallet} />
+                <Kpi label="قيد التنفيذ" value={nf(o.delivery.open)} hint={`${nf(o.delivery.cancelled)} ملغي`} icon={Activity} />
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Card className="p-4">
+                  <div className="font-semibold mb-2">حسب الحالة</div>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {o.byStatus.map((r) => (
+                        <tr key={r.status} className="border-b last:border-0">
+                          <td className="py-1">{r.status}</td>
+                          <td className="py-1 text-right tabular-nums">{nf(r.count)}</td>
+                          <td className="py-1 text-right tabular-nums">{nf(r.amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Card>
+                <Card className="p-4">
+                  <div className="font-semibold mb-2">أداء شركات الشحن</div>
+                  <table className="w-full text-sm">
+                    <thead className="text-muted-foreground">
+                      <tr><th className="text-start">الشركة</th><th>أوردرات</th><th>تسليم</th><th>مرتجع</th><th>النسبة</th></tr>
+                    </thead>
+                    <tbody>
+                      {o.byCourier.map((r) => (
+                        <tr key={r.name} className="border-b last:border-0 text-center">
+                          <td className="py-1 text-start">{r.name}</td>
+                          <td className="tabular-nums">{nf(r.count)}</td>
+                          <td className="tabular-nums">{nf(r.delivered)}</td>
+                          <td className="tabular-nums">{nf(r.returned)}</td>
+                          <td className="tabular-nums">{pct(r.deliveryRate)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Card>
+                <Card className="p-4 lg:col-span-2">
+                  <div className="font-semibold mb-2">التوزيع الجغرافي</div>
+                  <table className="w-full text-sm">
+                    <thead className="text-muted-foreground">
+                      <tr><th className="text-start">المحافظة</th><th>أوردرات</th><th>تم التسليم</th><th>القيمة</th></tr>
+                    </thead>
+                    <tbody>
+                      {o.byGovernorate.map((r) => (
+                        <tr key={r.name} className="border-b last:border-0 text-center">
+                          <td className="py-1 text-start">{r.name}</td>
+                          <td className="tabular-nums">{nf(r.count)}</td>
+                          <td className="tabular-nums">{nf(r.delivered)}</td>
+                          <td className="tabular-nums">{nf(r.amount)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Card>
+              </div>
+            </>
+          ) : null}
+        </TabsContent>
+
+        <TabsContent value="ops" className="pt-4">
+          <ShipmentsPanel />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="pt-4">
+          <TimelinePanel />
+        </TabsContent>
+
+        <TabsContent value="wa" className="pt-4">
+          <WhatsappPanel brands={(brands.data ?? []) as Array<{ id: string; name: string }>} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function useOrderTimeline(orderId: string) {
+  const fn = useServerFn(getOrderTimeline);
+  return useQuery({
+    queryKey: ["orders-center", "timeline", orderId],
+    queryFn: () => fn({ data: { orderId } }),
+    enabled: !!orderId,
+    ...queryPresets.live,
+  });
+}
+
+function TimelinePanel() {
+  const [orderId, setOrderId] = useState("");
+  const [active, setActive] = useState("");
+  const timeline = useOrderTimeline(active);
+  return (
+    <div className="space-y-4">
+      <Card className="p-4 flex flex-wrap items-end gap-2">
+        <div className="space-y-1">
+          <Label>معرّف الأوردر (UUID)</Label>
+          <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} className="w-[340px]" placeholder="order id" />
+        </div>
+        <Button onClick={() => setActive(orderId.trim())}>عرض السجل</Button>
+      </Card>
+      {timeline.data ? (
+        <Card className="p-4 space-y-3">
+          {timeline.data.entries.length === 0 ? <div className="text-muted-foreground">لا يوجد سجل بعد.</div> : null}
+          {timeline.data.entries.map((e) => (
+            <div key={e.id} className="flex gap-3 border-b last:border-0 pb-2">
+              <Badge variant={e.kind === "collection" ? "default" : e.kind === "shipment" ? "secondary" : "outline"}>
+                {e.kind === "collection" ? "تحصيل" : e.kind === "shipment" ? "شحن" : "حالة"}
+              </Badge>
+              <div className="flex-1">
+                <div className="font-medium">{e.title}</div>
+                {e.detail ? <div className="text-xs text-muted-foreground">{e.detail}</div> : null}
+              </div>
+              <div className="text-xs text-muted-foreground tabular-nums">{new Date(e.at).toLocaleString("en-GB")}</div>
+            </div>
+          ))}
+        </Card>
+      ) : null}
+    </div>
+  );
+}
+
+function ShipmentsPanel() {
+  const qc = useQueryClient();
+  const [orderId, setOrderId] = useState("");
+  const [active, setActive] = useState("");
+  const [tracking, setTracking] = useState("");
+  const [amount, setAmount] = useState("");
+  const timeline = useOrderTimeline(active);
+
+  const addShip = useServerFn(addShipmentAttempt);
+  const addColl = useServerFn(recordCollection);
+
+  const shipMut = useMutation({
+    mutationFn: () => addShip({ data: { orderId: active, tracking: tracking || null } }),
+    onSuccess: () => { toast.success("تم تسجيل محاولة شحن جديدة"); setTracking(""); qc.invalidateQueries({ queryKey: ["orders-center", "timeline", active] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const collMut = useMutation({
+    mutationFn: () => addColl({ data: { orderId: active, amount: Number(amount) } }),
+    onSuccess: () => { toast.success("تم تسجيل التحصيل"); setAmount(""); qc.invalidateQueries({ queryKey: ["orders-center", "timeline", active] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4 flex flex-wrap items-end gap-2">
+        <div className="space-y-1">
+          <Label>معرّف الأوردر (UUID)</Label>
+          <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} className="w-[340px]" />
+        </div>
+        <Button onClick={() => setActive(orderId.trim())}>فتح</Button>
+      </Card>
+
+      {active ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="p-4 space-y-3">
+            <div className="font-semibold">محاولات الشحن</div>
+            <table className="w-full text-sm">
+              <thead className="text-muted-foreground"><tr><th>#</th><th>الحالة</th><th>التتبع</th><th>المتوقع</th></tr></thead>
+              <tbody>
+                {(timeline.data?.shipments ?? []).map((s) => (
+                  <tr key={s.id} className="border-b last:border-0 text-center">
+                    <td className="py-1">{s.attempt_no}</td>
+                    <td>{s.status}</td>
+                    <td>{s.tracking ?? "—"}</td>
+                    <td className="tabular-nums">{nf(Number(s.expected_cod))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex items-end gap-2">
+              <div className="space-y-1 flex-1">
+                <Label>رقم التتبع</Label>
+                <Input value={tracking} onChange={(e) => setTracking(e.target.value)} />
+              </div>
+              <Button onClick={() => shipMut.mutate()} disabled={shipMut.isPending}>
+                <Truck className="h-4 w-4 me-1" /> محاولة شحن
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-4 space-y-3">
+            <div className="font-semibold">التحصيلات</div>
+            <table className="w-full text-sm">
+              <thead className="text-muted-foreground"><tr><th>المبلغ</th><th>الطريقة</th><th>التاريخ</th></tr></thead>
+              <tbody>
+                {(timeline.data?.collections ?? []).map((c) => (
+                  <tr key={c.id} className="border-b last:border-0 text-center">
+                    <td className="py-1 tabular-nums">{nf(Number(c.amount))}</td>
+                    <td>{c.method}</td>
+                    <td className="tabular-nums">{new Date(c.collected_at).toLocaleDateString("en-GB")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex items-end gap-2">
+              <div className="space-y-1 flex-1">
+                <Label>المبلغ المحصّل</Label>
+                <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              </div>
+              <Button onClick={() => collMut.mutate()} disabled={collMut.isPending}>
+                <Wallet className="h-4 w-4 me-1" /> تسجيل تحصيل
+              </Button>
+            </div>
+          </Card>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }> }) {
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [threadId, setThreadId] = useState("");
+  const [text, setText] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newBrand, setNewBrand] = useState<string>(brands[0]?.id ?? "");
+
+  const listFn = useServerFn(listWhatsappThreads);
+  const threadFn = useServerFn(getWhatsappThread);
+  const sendFn = useServerFn(sendWhatsappMessage);
+  const startFn = useServerFn(startWhatsappThread);
+
+  const threads = useQuery({
+    queryKey: ["orders-center", "wa", search],
+    queryFn: () => listFn({ data: { search: search || null } }),
+    ...queryPresets.live,
+  });
+  const thread = useQuery({
+    queryKey: ["orders-center", "wa-thread", threadId],
+    queryFn: () => threadFn({ data: { threadId } }),
+    enabled: !!threadId,
+    ...queryPresets.live,
+  });
+
+  const send = useMutation({
+    mutationFn: () => sendFn({ data: { threadId, body: text } }),
+    onSuccess: (r) => {
+      setText("");
+      if (r.status === "sent") toast.success("تم الإرسال");
+      else toast.warning(r.error ?? "الرسالة في الانتظار");
+      qc.invalidateQueries({ queryKey: ["orders-center", "wa-thread", threadId] });
+      qc.invalidateQueries({ queryKey: ["orders-center", "wa"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const start = useMutation({
+    mutationFn: () => startFn({ data: { brandId: newBrand, phone: newPhone } }),
+    onSuccess: (r) => { setNewPhone(""); setThreadId(r.id); qc.invalidateQueries({ queryKey: ["orders-center", "wa"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <Card className="p-3 space-y-3">
+        <Input placeholder="بحث برقم أو اسم" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="space-y-1 max-h-[420px] overflow-auto">
+          {(threads.data ?? []).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setThreadId(t.id)}
+              className={`w-full text-start p-2 rounded-md border ${threadId === t.id ? "bg-accent" : ""}`}
+            >
+              <div className="font-medium text-sm">{t.display_name ?? t.phone}</div>
+              <div className="text-xs text-muted-foreground truncate">{t.last_message_preview ?? "—"}</div>
+            </button>
+          ))}
+          {(threads.data ?? []).length === 0 ? <div className="text-sm text-muted-foreground p-2">لا توجد محادثات.</div> : null}
+        </div>
+        <div className="space-y-2 border-t pt-3">
+          <Label>محادثة جديدة</Label>
+          <Select value={newBrand} onValueChange={setNewBrand}>
+            <SelectTrigger><SelectValue placeholder="البراند" /></SelectTrigger>
+            <SelectContent>
+              {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2">
+            <Input placeholder="رقم الهاتف" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
+            <Button onClick={() => start.mutate()} disabled={!newBrand || !newPhone || start.isPending}>بدء</Button>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-4 flex flex-col min-h-[420px]">
+        {!threadId ? (
+          <div className="m-auto text-muted-foreground flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" /> اختر محادثة
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 space-y-2 overflow-auto">
+              {(thread.data?.messages ?? []).map((m) => (
+                <div key={m.id} className={`max-w-[75%] rounded-lg p-2 text-sm ${m.direction === "out" ? "ms-auto bg-primary/10" : "bg-muted"}`}>
+                  <div>{m.body}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {new Date(m.sent_at).toLocaleString("en-GB")} • {m.status}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-3 border-t mt-3">
+              <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" />
+              <Button onClick={() => send.mutate()} disabled={!text.trim() || send.isPending}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </>
+        )}
+      </Card>
+    </div>
+  );
+}

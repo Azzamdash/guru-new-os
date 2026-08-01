@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/_app'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as ApiPublicWhatsappRouteImport } from './routes/api/public/whatsapp'
 import { Route as AuthenticatedAppTreasuryRouteImport } from './routes/_authenticated/_app.treasury'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/_app.tasks'
 import { Route as AuthenticatedAppSuppliersRouteImport } from './routes/_authenticated/_app.suppliers'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedAppProductsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppProductionTasksRouteImport } from './routes/_authenticated/_app.production-tasks'
 import { Route as AuthenticatedAppProductionRouteImport } from './routes/_authenticated/_app.production'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/_app.pos'
+import { Route as AuthenticatedAppOrdersCenterRouteImport } from './routes/_authenticated/_app.orders-center'
 import { Route as AuthenticatedAppOrdersRouteImport } from './routes/_authenticated/_app.orders'
 import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/_app.operations'
@@ -135,6 +137,11 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWhatsappRoute = ApiPublicWhatsappRouteImport.update({
+  id: '/api/public/whatsapp',
+  path: '/api/public/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppTreasuryRoute =
   AuthenticatedAppTreasuryRouteImport.update({
     id: '/treasury',
@@ -193,6 +200,12 @@ const AuthenticatedAppPosRoute = AuthenticatedAppPosRouteImport.update({
   path: '/pos',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppOrdersCenterRoute =
+  AuthenticatedAppOrdersCenterRouteImport.update({
+    id: '/orders-center',
+    path: '/orders-center',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppOrdersRoute = AuthenticatedAppOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -619,6 +632,7 @@ export interface FileRoutesByFullPath {
   '/operations': typeof AuthenticatedAppOperationsRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/orders': typeof AuthenticatedAppOrdersRoute
+  '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/pos': typeof AuthenticatedAppPosRoute
   '/production': typeof AuthenticatedAppProductionRoute
   '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
@@ -629,6 +643,7 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -704,6 +719,7 @@ export interface FileRoutesByTo {
   '/operations': typeof AuthenticatedAppOperationsRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/orders': typeof AuthenticatedAppOrdersRoute
+  '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/pos': typeof AuthenticatedAppPosRoute
   '/production': typeof AuthenticatedAppProductionRoute
   '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
@@ -712,6 +728,7 @@ export interface FileRoutesByTo {
   '/services': typeof AuthenticatedAppServicesRoute
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -790,6 +807,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/operations': typeof AuthenticatedAppOperationsRoute
   '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/_authenticated/_app/orders': typeof AuthenticatedAppOrdersRoute
+  '/_authenticated/_app/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/_authenticated/_app/pos': typeof AuthenticatedAppPosRoute
   '/_authenticated/_app/production': typeof AuthenticatedAppProductionRoute
   '/_authenticated/_app/production-tasks': typeof AuthenticatedAppProductionTasksRoute
@@ -800,6 +818,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
   '/_authenticated/_app/customers/$id': typeof AuthenticatedAppCustomersIdRoute
   '/_authenticated/_app/hr/attendance': typeof AuthenticatedAppHrAttendanceRoute
   '/_authenticated/_app/hr/requests': typeof AuthenticatedAppHrRequestsRoute
@@ -877,6 +896,7 @@ export interface FileRouteTypes {
     | '/operations'
     | '/order-pipeline'
     | '/orders'
+    | '/orders-center'
     | '/pos'
     | '/production'
     | '/production-tasks'
@@ -887,6 +907,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tasks'
     | '/treasury'
+    | '/api/public/whatsapp'
     | '/customers/$id'
     | '/hr/attendance'
     | '/hr/requests'
@@ -962,6 +983,7 @@ export interface FileRouteTypes {
     | '/operations'
     | '/order-pipeline'
     | '/orders'
+    | '/orders-center'
     | '/pos'
     | '/production'
     | '/production-tasks'
@@ -970,6 +992,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tasks'
     | '/treasury'
+    | '/api/public/whatsapp'
     | '/customers/$id'
     | '/hr/attendance'
     | '/hr/requests'
@@ -1047,6 +1070,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/operations'
     | '/_authenticated/_app/order-pipeline'
     | '/_authenticated/_app/orders'
+    | '/_authenticated/_app/orders-center'
     | '/_authenticated/_app/pos'
     | '/_authenticated/_app/production'
     | '/_authenticated/_app/production-tasks'
@@ -1057,6 +1081,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/suppliers'
     | '/_authenticated/_app/tasks'
     | '/_authenticated/_app/treasury'
+    | '/api/public/whatsapp'
     | '/_authenticated/_app/customers/$id'
     | '/_authenticated/_app/hr/attendance'
     | '/_authenticated/_app/hr/requests'
@@ -1113,6 +1138,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicWhatsappRoute: typeof ApiPublicWhatsappRoute
   ApiPublicHooksBostaRecallRoute: typeof ApiPublicHooksBostaRecallRoute
   ApiPublicHooksShopifySyncRoute: typeof ApiPublicHooksShopifySyncRoute
   ApiPublicOauthShopifyDotcallbackRoute: typeof ApiPublicOauthShopifyDotcallbackRoute
@@ -1178,6 +1204,13 @@ declare module '@tanstack/react-router' {
       path: '/.mcp/list-tools'
       fullPath: '/.mcp/list-tools'
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whatsapp': {
+      id: '/api/public/whatsapp'
+      path: '/api/public/whatsapp'
+      fullPath: '/api/public/whatsapp'
+      preLoaderRoute: typeof ApiPublicWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_app/treasury': {
@@ -1248,6 +1281,13 @@ declare module '@tanstack/react-router' {
       path: '/pos'
       fullPath: '/pos'
       preLoaderRoute: typeof AuthenticatedAppPosRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/orders-center': {
+      id: '/_authenticated/_app/orders-center'
+      path: '/orders-center'
+      fullPath: '/orders-center'
+      preLoaderRoute: typeof AuthenticatedAppOrdersCenterRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/orders': {
@@ -1814,6 +1854,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
   AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
   AuthenticatedAppOrdersRoute: typeof AuthenticatedAppOrdersRoute
+  AuthenticatedAppOrdersCenterRoute: typeof AuthenticatedAppOrdersCenterRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
   AuthenticatedAppProductionRoute: typeof AuthenticatedAppProductionRoute
   AuthenticatedAppProductionTasksRoute: typeof AuthenticatedAppProductionTasksRoute
@@ -1877,6 +1918,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
   AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,
   AuthenticatedAppOrdersRoute: AuthenticatedAppOrdersRoute,
+  AuthenticatedAppOrdersCenterRoute: AuthenticatedAppOrdersCenterRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
   AuthenticatedAppProductionRoute: AuthenticatedAppProductionRoute,
   AuthenticatedAppProductionTasksRoute: AuthenticatedAppProductionTasksRoute,
@@ -1956,6 +1998,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicWhatsappRoute: ApiPublicWhatsappRoute,
   ApiPublicHooksBostaRecallRoute: ApiPublicHooksBostaRecallRoute,
   ApiPublicHooksShopifySyncRoute: ApiPublicHooksShopifySyncRoute,
   ApiPublicOauthShopifyDotcallbackRoute: ApiPublicOauthShopifyDotcallbackRoute,
