@@ -313,7 +313,7 @@ function AppLayout() {
               <Languages className="w-4 h-4" />
             </Button>
           </header>
-          {isPrivileged && <GlobalPeriodBar />}
+          {isPrivileged && location.pathname === "/dashboard" && <GlobalPeriodBar />}
           <div
             className="flex-1 min-w-0"
             data-page-access={currentPageAccess}
