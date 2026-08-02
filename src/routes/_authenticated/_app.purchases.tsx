@@ -1,3 +1,4 @@
+import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -64,7 +65,7 @@ function PurchasesPage() {
   const brandName = (id: string | null) => id ? (brands.find((b) => b.id === id)?.name ?? "—") : "—";
 
   const allRows = (invoicesQ.data ?? []) as Invoice[];
-  const [dateFrom, setDateFrom] = useState<string>(() => { const d = new Date(); d.setDate(d.getDate() - 90); return d.toISOString().slice(0, 10); });
+  const [dateFrom, setDateFrom] = useState<string>(() => { const d = new Date(); d.setDate(d.getDate() - 90); return formatBusinessDate(d); });
   const [dateTo, setDateTo] = useState<string>(getTodayInBusinessTimezone());
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const rows = useMemo(() => allRows.filter((r) => {

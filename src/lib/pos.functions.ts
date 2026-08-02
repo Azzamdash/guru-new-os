@@ -1,3 +1,4 @@
+import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -167,7 +168,7 @@ export const listMyRecentSales = createServerFn({ method: "GET" })
   .inputValidator((d: { days?: number; brandId?: string | null } = {}) => d)
   .handler(async ({ data: input, context }) => {
     const days = Math.max(1, Number(input?.days ?? 7));
-    const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    const since = formatBusinessDate(new Date(Date.now() - days * 86400000));
     const { data, error } = await context.supabase
       .from("sales_invoices")
       .select("id,total_amount,payment_method,customer_name,customer_phone,created_at,brand_id")
@@ -187,7 +188,7 @@ export const listBranchInvoicesForPrint = createServerFn({ method: "GET" })
   .handler(async ({ data: input, context }) => {
     await assertSalesAccess(context);
     const days = Math.max(1, Math.min(60, Number(input?.days ?? 14)));
-    const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    const since = formatBusinessDate(new Date(Date.now() - days * 86400000));
 
     const { data: branches } = await context.supabase
       .from("brands").select("id,name").eq("type", "offline_branch").eq("active", true);
@@ -271,7 +272,7 @@ export const listOfflineInvoices = createServerFn({ method: "GET" })
     if (branchIds.length === 0) return { invoices: [], canDelete: isAdmin, canEdit: isPrivileged };
     const nameById = new Map((branches ?? []).map((b: { id: string; name: string }) => [b.id, b.name]));
 
-    const since = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
+    const since = formatBusinessDate(new Date(Date.now() - 90 * 86400000));
     const rows = await fetchAllRows(() => {
       let q = context.supabase
         .from("sales_invoices")
@@ -395,7 +396,7 @@ export const getBranchesReport = createServerFn({ method: "GET" })
     ]);
     if (!adminR.data && !mgrR.data) throw new Error("Forbidden");
 
-    const start = data.startDate ?? new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    const start = data.startDate ?? formatBusinessDate(new Date(Date.now() - 30 * 86400000));
     const end = data.endDate ?? getTodayInBusinessTimezone();
 
     const { data: branches } = await context.supabase

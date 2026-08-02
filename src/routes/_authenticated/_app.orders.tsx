@@ -1,3 +1,4 @@
+import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
@@ -253,7 +254,7 @@ function OrdersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
   const [backfillOpen, setBackfillOpen] = useState(false);
-  const [backfillFrom, setBackfillFrom] = useState(() => new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10));
+  const [backfillFrom, setBackfillFrom] = useState(() => formatBusinessDate(new Date(Date.now() - 7 * 86400000)));
   const [backfillTo, setBackfillTo] = useState(() => getTodayInBusinessTimezone());
   const backfill = useMutation({
     mutationFn: () => backfillFn({ data: {

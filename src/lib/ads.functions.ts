@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { formatBusinessDate } from "@/lib/timezone";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Ctx = { supabase: any; userId: string };
@@ -110,7 +111,7 @@ export const getMetaInsights = createServerFn({ method: "POST" })
     const days = Math.min(Math.max(data.days ?? 30, 1), 90);
     const until = new Date();
     const since = new Date(Date.now() - days * 86400_000);
-    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const iso = (d: Date) => formatBusinessDate(d);
     const timeRange = encodeURIComponent(JSON.stringify({ since: iso(since), until: iso(until) }));
     const token = encodeURIComponent(creds.access_token);
     const commonFields = "spend,impressions,clicks,ctr,cpc,cpm,actions,action_values";
@@ -228,7 +229,7 @@ export const getTikTokInsights = createServerFn({ method: "POST" })
     const advertiser_id = String(config.advertiser_id ?? "").trim();
     if (!advertiser_id) throw new Error("advertiser_id مفقود");
     const days = Math.min(Math.max(data.days ?? 30, 1), 90);
-    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const iso = (d: Date) => formatBusinessDate(d);
     const start_date = iso(new Date(Date.now() - days * 86400_000));
     const end_date = iso(new Date());
     const metrics = ["spend", "impressions", "clicks", "ctr", "cpc", "cpm", "conversion", "total_purchase_value"];

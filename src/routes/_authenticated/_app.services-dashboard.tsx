@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, FolderKanban, CalendarDays, BarChart3, Briefcase } from "lucide-react";
 import { listBrands } from "@/lib/internal.functions";
+import { formatBusinessDate } from "@/lib/timezone";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/_app/services-dashboard")(
 function periodToRange(period: string, from?: string, to?: string) {
   if (period === "custom") return { from: from ?? null, to: to ?? null };
   const now = new Date();
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const iso = (d: Date) => formatBusinessDate(d);
   const start = new Date(now);
   if (period === "today") start.setDate(now.getDate());
   else if (period === "week") start.setDate(now.getDate() - 6);

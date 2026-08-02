@@ -1,3 +1,4 @@
+import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/_app/reports/offline-invoi
 type Range = "day" | "week" | "month" | "year" | "custom";
 
 function todayISO() { return getTodayInBusinessTimezone(); }
-function daysAgo(n: number) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
+function daysAgo(n: number) { return formatBusinessDate(new Date(Date.now() - n * 86400000)); }
 
 function OfflineInvoicesPage() {
   const [range, setRange] = useState<Range>("day");

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -30,10 +31,10 @@ export type EmployeeRequest = {
   updated_at: string;
 };
 
-/** Minimum requested date (today + 2 days) as YYYY-MM-DD. */
+/** Minimum requested date (today + 2 days) as YYYY-MM-DD, in business timezone. */
 export function minRequestDate(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 2);
+  const d = new Date(`${getTodayInBusinessTimezone()}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 2);
   return d.toISOString().slice(0, 10);
 }
 
