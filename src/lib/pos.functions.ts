@@ -144,7 +144,7 @@ export const createPosSale = createServerFn({ method: "POST" })
           payment_method: data.paymentMethod,
           cash_amount: cash,
           card_amount: card,
-          collected_amount: totalAmount,
+          collected_amount: data.paymentMethod === "mixed" ? cash + card : totalAmount,
           sold_by: context.userId,
           stage: "delivered",
           note: "POS sale",
