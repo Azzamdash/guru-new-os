@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw } from "lucide-react";
+import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw, Link2, Unlink } from "lucide-react";
 import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
 import { queryPresets } from "@/lib/query-presets";
@@ -18,8 +18,11 @@ import { listBrands } from "@/lib/internal.functions";
 import {
   getOrdersOverview, getOrderTimeline, addShipmentAttempt, recordCollection,
   listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
+  linkThreadToOrder,
 } from "@/lib/orders-management.functions";
+import { getOrder } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
+
 
 
 export const Route = createFileRoute("/_authenticated/_app/orders-center")({
@@ -359,6 +362,27 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const currentThread = (threads.data ?? []).find((t) => t.id === threadId) ?? null;
+  const linkedOrderId = currentThread?.order_id ?? null;
+
+  const getOrderFn = useServerFn(getOrder);
+  const linkedOrder = useQuery({
+    queryKey: ["orders-center", "wa-linked-order", linkedOrderId],
+    queryFn: () => getOrderFn({ data: { id: linkedOrderId as string } }),
+    enabled: !!linkedOrderId,
+  });
+
+  const linkFn = useServerFn(linkThreadToOrder);
+  const linkMut = useMutation({
+    mutationFn: (orderId: string | null) => linkFn({ data: { threadId, orderId } }),
+    onSuccess: (_r, orderId) => {
+      toast.success(orderId ? "تم ربط المحادثة بالأوردر" : "تم فك الربط");
+      qc.invalidateQueries({ queryKey: ["orders-center", "wa"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
       <Card className="p-3 space-y-3">
@@ -370,8 +394,12 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
               onClick={() => setThreadId(t.id)}
               className={`w-full text-start p-2 rounded-md border ${threadId === t.id ? "bg-accent" : ""}`}
             >
-              <div className="font-medium text-sm">{t.display_name ?? t.phone}</div>
+              <div className="font-medium text-sm flex items-center gap-1">
+                {t.order_id ? <Link2 className="h-3.5 w-3.5 text-primary shrink-0" aria-label="مرتبطة بأوردر" /> : null}
+                <span className="truncate">{t.display_name ?? t.phone}</span>
+              </div>
               <div className="text-xs text-muted-foreground truncate">{t.last_message_preview ?? "—"}</div>
+
             </button>
           ))}
           {(threads.data ?? []).length === 0 ? <div className="text-sm text-muted-foreground p-2">لا توجد محادثات.</div> : null}
@@ -398,7 +426,27 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
           </div>
         ) : (
           <>
+            <div className="flex flex-wrap items-center gap-2 pb-3 mb-3 border-b">
+              {linkedOrderId ? (
+                <>
+                  <Badge variant="secondary" className="gap-1">
+                    <Link2 className="h-3 w-3" />
+                    #{linkedOrder.data?.external_order_number ?? linkedOrderId.slice(0, 8)}
+                    {linkedOrder.data ? ` • ${linkedOrder.data.fulfillment_status}` : ""}
+                  </Badge>
+                  <Button variant="ghost" size="sm" onClick={() => linkMut.mutate(null)} disabled={linkMut.isPending}>
+                    <Unlink className="h-4 w-4 me-1" /> فك الربط
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm text-muted-foreground">ربط بأوردر:</span>
+                  <OrderSearchCombobox className="w-[280px]" onSelect={(o) => linkMut.mutate(o.id)} />
+                </>
+              )}
+            </div>
             <div className="flex-1 space-y-2 overflow-auto">
+
               {(thread.data?.messages ?? []).map((m) => (
                 <div key={m.id} className={`max-w-[75%] rounded-lg p-2 text-sm ${m.direction === "out" ? "ms-auto bg-primary/10" : "bg-muted"}`}>
                   <div>{m.body}</div>
