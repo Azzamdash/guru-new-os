@@ -35,6 +35,13 @@ export const Route = createFileRoute("/auth")({
     ],
     links: [{ rel: "canonical", href: "https://egurus.info/auth" }],
   }),
+  pendingComponent: () => (
+    <main className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_hsl(var(--primary)/0.15),_transparent_60%),radial-gradient(ellipse_at_bottom_right,_hsl(var(--primary)/0.1),_transparent_50%)]" />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,_hsl(var(--border)/0.15)_1px,_transparent_1px),linear-gradient(to_bottom,_hsl(var(--border)/0.15)_1px,_transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </main>
+  ),
   component: AuthPage,
 });
 
