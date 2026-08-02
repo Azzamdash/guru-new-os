@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw, Link2, Unlink } from "lucide-react";
+import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw, Link2, Unlink, AlertTriangle } from "lucide-react";
 import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
 import { queryPresets } from "@/lib/query-presets";
@@ -18,7 +18,7 @@ import { listBrands } from "@/lib/internal.functions";
 import {
   getOrdersOverview, getOrderTimeline, addShipmentAttempt, recordCollection,
   listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
-  linkThreadToOrder,
+  linkThreadToOrder, getStuckOrdersAlerts, type StuckOrderAlert,
 } from "@/lib/orders-management.functions";
 import { getOrder, listOrders, type OrderRow } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
@@ -79,6 +79,14 @@ function OrdersCenterPage() {
     ...queryPresets.report,
   });
 
+  const stuckFn = useServerFn(getStuckOrdersAlerts);
+  const stuck = useQuery({
+    queryKey: ["orders-center", "stuck", brandId],
+    queryFn: () => stuckFn({ data: { brandId: brandId === "all" ? null : brandId } }),
+    ...queryPresets.report,
+  });
+  const stuckCount = stuck.data?.total ?? 0;
+
   const waListFn = useServerFn(listWhatsappThreads);
   const waThreads = useQuery({
     queryKey: ["orders-center", "wa-unread"],
@@ -113,6 +121,14 @@ function OrdersCenterPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="kpis">المؤشرات</TabsTrigger>
+          <TabsTrigger value="attention" className="relative">
+            يحتاج تدخل
+            {stuckCount > 0 && (
+              <span className="absolute -top-1 -end-1 min-w-4 rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
+                {stuckCount > 99 ? "99+" : stuckCount}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="orders">الأوردرات</TabsTrigger>
           <TabsTrigger value="ops">الشحن والتحصيل</TabsTrigger>
           <TabsTrigger value="timeline">سجل الأوردر</TabsTrigger>
@@ -128,6 +144,21 @@ function OrdersCenterPage() {
         </TabsList>
 
         <TabsContent value="kpis" className="space-y-4 pt-4">
+          {stuckCount > 0 ? (
+            <Card className="border-destructive/50 bg-destructive/5 p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                <span className="font-semibold">
+                  {stuckCount} أوردر يحتاج تدخل عاجل
+                  {" — "}
+                  {(stuck.data?.noShipment.length ?? 0)} بدون شحن أكثر من 3 أيام،
+                  {" "}
+                  {(stuck.data?.uncollected.length ?? 0)} تم تسليمها بدون تحصيل كامل
+                </span>
+              </div>
+              <Button size="sm" variant="destructive" onClick={() => setTab("attention")}>عرض التفاصيل</Button>
+            </Card>
+          ) : null}
           {overview.isLoading ? <Card className="p-6 text-muted-foreground">جارٍ التحميل…</Card> : null}
           {o ? (
             <>
@@ -199,6 +230,15 @@ function OrdersCenterPage() {
           ) : null}
         </TabsContent>
 
+        <TabsContent value="attention" className="pt-4">
+          <AttentionPanel
+            loading={stuck.isLoading}
+            noShipment={stuck.data?.noShipment ?? []}
+            uncollected={stuck.data?.uncollected ?? []}
+            onOpen={(id) => { setActiveOrder(id); setActiveRow(null); setTab("ops"); }}
+          />
+        </TabsContent>
+
         <TabsContent value="orders" className="pt-4">
           <OrdersListPanel
             dateFrom={resolved.dateFrom ?? ""}
@@ -248,6 +288,56 @@ function Field({ label, value }: { label: string; value: string }) {
     <div className="space-y-1">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="font-medium break-words">{value}</div>
+    </div>
+  );
+}
+
+function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
+  loading: boolean;
+  noShipment: StuckOrderAlert[];
+  uncollected: StuckOrderAlert[];
+  onOpen: (orderId: string) => void;
+}) {
+  const section = (title: string, hint: string, rows: StuckOrderAlert[]) => (
+    <Card className="p-4 space-y-3">
+      <div>
+        <div className="font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-destructive" /> {title}
+          <Badge variant="secondary">{rows.length}</Badge>
+        </div>
+        <div className="text-xs text-muted-foreground">{hint}</div>
+      </div>
+      {rows.length === 0 ? (
+        <div className="text-sm text-muted-foreground">لا توجد حالات هنا. 👌</div>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((r) => (
+            <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b last:border-0 pb-2">
+              <div className="min-w-0">
+                <div className="font-medium truncate">
+                  {r.externalNumber ?? r.id.slice(0, 8)} — {r.customerName ?? "بدون اسم"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {r.customerPhone ?? "—"} · منذ {r.daysStuck} يوم
+                  {r.kind === "uncollected" ? ` · متبقٍ ${nf(r.outstanding)} من ${nf(r.totalAmount)}` : ` · ${nf(r.totalAmount)} ج.م`}
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => onOpen(r.id)}>
+                <Truck className="h-3 w-3 me-1" /> الشحن والتحصيل
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+
+  if (loading) return <Card className="p-6 text-muted-foreground">جارٍ فحص الأوردرات…</Card>;
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      {section("بدون شحنة", "أوردرات قيد الشحن ومر عليها أكثر من 3 أيام بدون أي محاولة شحن مسجلة", noShipment)}
+      {section("تسليم بدون تحصيل كامل", "أوردرات تم تسليمها ومر عليها أكثر من 5 أيام والمبلغ المحصّل أقل من إجمالي الأوردر", uncollected)}
     </div>
   );
 }

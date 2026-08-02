@@ -426,3 +426,130 @@ export const linkThreadToOrder = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type StuckOrderAlert = {
+  id: string;
+  kind: "no_shipment" | "uncollected";
+  externalNumber: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  orderStatus: string;
+  totalAmount: number;
+  collected: number;
+  outstanding: number;
+  daysStuck: number;
+  since: string;
+};
+
+export type StuckOrdersAlerts = {
+  noShipment: StuckOrderAlert[];
+  uncollected: StuckOrderAlert[];
+  total: number;
+};
+
+const DAY_MS = 86400000;
+
+export const getStuckOrdersAlerts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { brandId?: string | null } = {}) => input)
+  .handler(async ({ data, context }): Promise<StuckOrdersAlerts> => {
+    const ctx = context as unknown as Ctx;
+    const now = Date.now();
+    const cutoff3 = new Date(now - 3 * DAY_MS).toISOString();
+    const cutoff5 = new Date(now - 5 * DAY_MS).toISOString();
+    const select = "id, external_order_number, customer_name, customer_phone, order_status, shipment_outcome, total_amount, occurred_at, lifecycle_updated_at";
+
+    // (1) In-transit orders with no shipment row for more than 3 days.
+    let q1 = ctx.supabase
+      .from("orders")
+      .select(select)
+      .in("shipment_outcome", ["open"])
+      .not("order_status", "in", "(cancelled)")
+      .lt("occurred_at", cutoff3)
+      .order("occurred_at", { ascending: true })
+      .limit(300);
+    if (data.brandId) q1 = q1.eq("brand_id", data.brandId);
+
+    // (2) Delivered orders not fully collected after 5 days.
+    let q2 = ctx.supabase
+      .from("orders")
+      .select(select)
+      .eq("shipment_outcome", "delivered")
+      .lt("lifecycle_updated_at", cutoff5)
+      .order("lifecycle_updated_at", { ascending: true })
+      .limit(300);
+    if (data.brandId) q2 = q2.eq("brand_id", data.brandId);
+
+    const [openRes, deliveredRes] = await Promise.all([q1, q2]);
+    if (openRes.error) throw new Error(openRes.error.message);
+    if (deliveredRes.error) throw new Error(deliveredRes.error.message);
+
+    type Row = {
+      id: string; external_order_number: string | null; customer_name: string | null;
+      customer_phone: string | null; order_status: string; total_amount: number | null;
+      occurred_at: string; lifecycle_updated_at: string | null;
+    };
+    const openRows = (openRes.data ?? []) as Row[];
+    const deliveredRows = (deliveredRes.data ?? []) as Row[];
+
+    const openIds = openRows.map((r) => r.id);
+    const shipped = new Set<string>();
+    if (openIds.length) {
+      const { data: ships, error } = await ctx.supabase
+        .from("order_shipments").select("order_id").in("order_id", openIds);
+      if (error) throw new Error(error.message);
+      for (const s of (ships ?? []) as Array<{ order_id: string }>) shipped.add(s.order_id);
+    }
+
+    const deliveredIds = deliveredRows.map((r) => r.id);
+    const collectedMap = new Map<string, number>();
+    if (deliveredIds.length) {
+      const { data: cols, error } = await ctx.supabase
+        .from("order_collections").select("order_id, amount").in("order_id", deliveredIds);
+      if (error) throw new Error(error.message);
+      for (const c of (cols ?? []) as Array<{ order_id: string; amount: number | null }>) {
+        collectedMap.set(c.order_id, (collectedMap.get(c.order_id) ?? 0) + Number(c.amount ?? 0));
+      }
+    }
+
+    const daysSince = (iso: string) => Math.max(0, Math.floor((now - new Date(iso).getTime()) / DAY_MS));
+
+    const noShipment: StuckOrderAlert[] = openRows
+      .filter((r) => !shipped.has(r.id))
+      .map((r) => ({
+        id: r.id,
+        kind: "no_shipment" as const,
+        externalNumber: r.external_order_number,
+        customerName: r.customer_name,
+        customerPhone: r.customer_phone,
+        orderStatus: r.order_status,
+        totalAmount: Number(r.total_amount ?? 0),
+        collected: 0,
+        outstanding: Number(r.total_amount ?? 0),
+        daysStuck: daysSince(r.occurred_at),
+        since: r.occurred_at,
+      }));
+
+    const uncollected: StuckOrderAlert[] = deliveredRows
+      .map((r) => {
+        const total = Number(r.total_amount ?? 0);
+        const collected = collectedMap.get(r.id) ?? 0;
+        const since = r.lifecycle_updated_at ?? r.occurred_at;
+        return {
+          id: r.id,
+          kind: "uncollected" as const,
+          externalNumber: r.external_order_number,
+          customerName: r.customer_name,
+          customerPhone: r.customer_phone,
+          orderStatus: r.order_status,
+          totalAmount: total,
+          collected,
+          outstanding: Math.round((total - collected) * 100) / 100,
+          daysStuck: daysSince(since),
+          since,
+        };
+      })
+      .filter((r) => r.outstanding > 0.5);
+
+    return { noShipment, uncollected, total: noShipment.length + uncollected.length };
+  });
