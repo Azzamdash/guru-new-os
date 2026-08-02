@@ -271,20 +271,21 @@ export const listOfflineInvoices = createServerFn({ method: "GET" })
     if (branchIds.length === 0) return { invoices: [], canDelete: isAdmin, canEdit: isPrivileged };
     const nameById = new Map((branches ?? []).map((b: { id: string; name: string }) => [b.id, b.name]));
 
+    const since = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
     const rows = await fetchAllRows(() => {
       let q = context.supabase
         .from("sales_invoices")
         .select("id,brand_id,customer_id,total_amount,cash_amount,card_amount,payment_method,customer_name,customer_phone,customer_email,occurred_at,created_at,sold_by,note,qty")
         .in("brand_id", data.brandId ? [data.brandId] : branchIds)
+        .gte("occurred_at", data.startDate ?? since)
         .order("created_at", { ascending: false });
-      if (data.startDate) q = q.gte("occurred_at", data.startDate);
       if (data.endDate) q = q.lte("occurred_at", data.endDate);
       if (data.search?.trim()) {
         const s = data.search.trim();
         q = q.or(`customer_name.ilike.%${s}%,customer_phone.ilike.%${s}%`);
       }
       return q;
-    });
+    }, { maxRows: 2000 });
 
     // Resolve seller emails
     const sellerIds = Array.from(new Set((rows ?? []).map((r: { sold_by: string | null }) => r.sold_by).filter(Boolean))) as string[];
