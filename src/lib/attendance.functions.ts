@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -95,89 +96,125 @@ function toMin(hhmm: string | null | undefined): number | null {
   return h * 60 + m;
 }
 
+/**
+ * Last day of the month that has actually elapsed, in the business timezone.
+ * For a past month this is the same as the calendar's last day. For the
+ * current, still-in-progress month it's clamped to today, so approving
+ * attendance mid-month doesn't count the remaining, not-yet-happened days
+ * as absences. For a future month it's 0 (no elapsed days yet).
+ */
+function elapsedLastDay(year: number, month: number, calendarLastDay: number): number {
+  const [ty, tm, td] = getTodayInBusinessTimezone().split("-").map(Number);
+  if (year < ty || (year === ty && month < tm)) return calendarLastDay;
+  if (year === ty && month === tm) return Math.min(calendarLastDay, td);
+  return 0;
+}
+
+type AttendanceEmployee = {
+  id: string;
+  salary: number | null;
+  work_start_time: string | null;
+  work_end_time: string | null;
+  monthly_work_hours: number | null;
+  off_days: number[] | null;
+  hourly_rate: number | null;
+};
+
+async function computeAttendanceRows(
+  context: Ctx,
+  year: number,
+  month: number,
+  employeeColumns: string,
+): Promise<{ emps: AttendanceEmployee[]; rows: ComputedAttendance[] }> {
+  const from = `${year}-${String(month).padStart(2, "0")}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const to = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  const effectiveLastDay = elapsedLastDay(year, month, lastDay);
+
+  const [empRes, logsRes, reqRes] = await Promise.all([
+    context.supabase.from("employees").select(employeeColumns),
+    context.supabase.from("employee_time_logs")
+      .select("employee_id, log_date, check_in, check_out")
+      .gte("log_date", from).lte("log_date", to),
+    context.supabase.from("employee_requests")
+      .select("employee_id, requested_date, type, status")
+      .eq("type", "leave").eq("status", "approved")
+      .gte("requested_date", from).lte("requested_date", to),
+  ]);
+  if (empRes.error) throw empRes.error;
+  if (logsRes.error) throw logsRes.error;
+  if (reqRes.error) throw reqRes.error;
+
+  const emps = (empRes.data ?? []) as AttendanceEmployee[];
+  const logs = (logsRes.data ?? []) as { employee_id: string; log_date: string; check_in: string | null; check_out: string | null }[];
+  const leaves = (reqRes.data ?? []) as { employee_id: string | null; requested_date: string }[];
+
+  const workingDaysFor = (off: number[] | null): number => {
+    const set = new Set((off ?? []).map(Number));
+    let n = 0;
+    for (let d = 1; d <= effectiveLastDay; d++) {
+      const dow = new Date(year, month - 1, d).getDay();
+      if (!set.has(dow)) n++;
+    }
+    return n;
+  };
+
+  const logsByEmp = new Map<string, typeof logs>();
+  for (const l of logs) {
+    const arr = logsByEmp.get(l.employee_id) ?? [];
+    arr.push(l); logsByEmp.set(l.employee_id, arr);
+  }
+  const leaveDaysByEmp = new Map<string, Set<string>>();
+  for (const r of leaves) {
+    if (!r.employee_id) continue;
+    const s = leaveDaysByEmp.get(r.employee_id) ?? new Set<string>();
+    s.add(r.requested_date); leaveDaysByEmp.set(r.employee_id, s);
+  }
+
+  const rows: ComputedAttendance[] = emps.map((e) => {
+    const salary = Number(e.salary || 0);
+    const mHours = Number(e.monthly_work_hours || 0);
+    const manualHr = Number(e.hourly_rate || 0);
+    const hr = manualHr > 0 ? manualHr : (salary && mHours ? salary / mHours : 0);
+    const ws = toMin(e.work_start_time);
+    const we = toMin(e.work_end_time);
+    const working = workingDaysFor(e.off_days);
+    const empLogs = logsByEmp.get(e.id) ?? [];
+    const vacationDays = leaveDaysByEmp.get(e.id)?.size ?? 0;
+    let workedDays = 0, timesLate = 0, lateMin = 0, otMin = 0;
+    for (const l of empLogs) {
+      const ci = toMin(l.check_in);
+      const co = toMin(l.check_out);
+      if (ci != null) workedDays++;
+      if (ci != null && ws != null && ci > ws) { timesLate++; lateMin += ci - ws; }
+      if (co != null && we != null && co > we) { otMin += co - we; }
+    }
+    const daysAbsent = Math.max(0, working - workedDays - vacationDays);
+    const perDay = working > 0 ? salary / working : 0;
+    const deductions = Math.round((lateMin / 60) * hr + daysAbsent * perDay);
+    const bonuses = Math.round((otMin / 60) * hr);
+    return {
+      employee_id: e.id,
+      working_days: working, worked_days: workedDays,
+      days_absent: daysAbsent, days_vacation: vacationDays,
+      times_late: timesLate, late_minutes: lateMin, overtime_minutes: otMin,
+      deductions, bonuses, hourly_rate: Math.round(hr * 100) / 100,
+    };
+  });
+  return { emps, rows };
+}
+
 export const computeAttendanceReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { year: number; month: number }) => d)
   .handler(async ({ data, context }) => {
     await assertHr(context);
-    const { year, month } = data;
-    const from = `${year}-${String(month).padStart(2, "0")}-01`;
-    const lastDay = new Date(year, month, 0).getDate();
-    const to = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-
-    const [empRes, logsRes, reqRes] = await Promise.all([
-      context.supabase.from("employees")
-        .select("id, salary, work_start_time, work_end_time, monthly_work_hours, off_days, hourly_rate, active"),
-      context.supabase.from("employee_time_logs")
-        .select("employee_id, log_date, check_in, check_out")
-        .gte("log_date", from).lte("log_date", to),
-      context.supabase.from("employee_requests")
-        .select("employee_id, requested_date, type, status")
-        .eq("type", "leave").eq("status", "approved")
-        .gte("requested_date", from).lte("requested_date", to),
-    ]);
-    if (empRes.error) throw empRes.error;
-    if (logsRes.error) throw logsRes.error;
-    if (reqRes.error) throw reqRes.error;
-
-    type Emp = { id: string; salary: number | null; work_start_time: string | null; work_end_time: string | null; monthly_work_hours: number | null; off_days: number[] | null; hourly_rate: number | null; active: boolean };
-    const emps = (empRes.data ?? []) as Emp[];
-    const logs = (logsRes.data ?? []) as { employee_id: string; log_date: string; check_in: string | null; check_out: string | null }[];
-    const leaves = (reqRes.data ?? []) as { employee_id: string | null; requested_date: string }[];
-
-    // Working days in month per off_days
-    const workingDaysFor = (off: number[] | null): number => {
-      const set = new Set((off ?? []).map(Number));
-      let n = 0;
-      for (let d = 1; d <= lastDay; d++) {
-        const dow = new Date(year, month - 1, d).getDay();
-        if (!set.has(dow)) n++;
-      }
-      return n;
-    };
-
-    const logsByEmp = new Map<string, typeof logs>();
-    for (const l of logs) {
-      const arr = logsByEmp.get(l.employee_id) ?? [];
-      arr.push(l); logsByEmp.set(l.employee_id, arr);
-    }
-    const leaveDaysByEmp = new Map<string, Set<string>>();
-    for (const r of leaves) {
-      if (!r.employee_id) continue;
-      const s = leaveDaysByEmp.get(r.employee_id) ?? new Set<string>();
-      s.add(r.requested_date); leaveDaysByEmp.set(r.employee_id, s);
-    }
-
-    const rows: ComputedAttendance[] = emps.map((e) => {
-      const salary = Number(e.salary || 0);
-      const mHours = Number(e.monthly_work_hours || 0);
-      const manualHr = Number(e.hourly_rate || 0);
-      const hr = manualHr > 0 ? manualHr : (salary && mHours ? salary / mHours : 0);
-      const ws = toMin(e.work_start_time);
-      const we = toMin(e.work_end_time);
-      const working = workingDaysFor(e.off_days);
-      const empLogs = logsByEmp.get(e.id) ?? [];
-      const vacationDays = leaveDaysByEmp.get(e.id)?.size ?? 0;
-      let workedDays = 0, timesLate = 0, lateMin = 0, otMin = 0;
-      for (const l of empLogs) {
-        const ci = toMin(l.check_in);
-        const co = toMin(l.check_out);
-        if (ci != null) workedDays++;
-        if (ci != null && ws != null && ci > ws) { timesLate++; lateMin += ci - ws; }
-        if (co != null && we != null && co > we) { otMin += co - we; }
-      }
-      const daysAbsent = Math.max(0, working - workedDays - vacationDays);
-      const perDay = working > 0 ? salary / working : 0;
-      const deductions = Math.round((lateMin / 60) * hr + daysAbsent * perDay);
-      const bonuses = Math.round((otMin / 60) * hr);
-      return {
-        employee_id: e.id,
-        working_days: working, worked_days: workedDays,
-        days_absent: daysAbsent, days_vacation: vacationDays,
-        times_late: timesLate, late_minutes: lateMin, overtime_minutes: otMin,
-        deductions, bonuses, hourly_rate: Math.round(hr * 100) / 100,
-      };
-    });
+    const { rows } = await computeAttendanceRows(
+      context,
+      data.year,
+      data.month,
+      "id, salary, work_start_time, work_end_time, monthly_work_hours, off_days, hourly_rate, active",
+    );
     return rows;
   });
 
@@ -186,54 +223,24 @@ export const approveComputedAttendance = createServerFn({ method: "POST" })
   .inputValidator((d: { year: number; month: number }) => d)
   .handler(async ({ data, context }) => {
     await assertHr(context);
-    // Reuse compute path via a direct call would double auth; inline instead
     const { year, month } = data;
-    const from = `${year}-${String(month).padStart(2, "0")}-01`;
-    const lastDay = new Date(year, month, 0).getDate();
-    const to = `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-    const [empRes, logsRes, reqRes] = await Promise.all([
-      context.supabase.from("employees").select("id, salary, work_start_time, work_end_time, monthly_work_hours, off_days, hourly_rate"),
-      context.supabase.from("employee_time_logs").select("employee_id, log_date, check_in, check_out").gte("log_date", from).lte("log_date", to),
-      context.supabase.from("employee_requests").select("employee_id, requested_date, type, status").eq("type","leave").eq("status","approved").gte("requested_date", from).lte("requested_date", to),
-    ]);
-    if (empRes.error) throw empRes.error;
-    if (logsRes.error) throw logsRes.error;
-    if (reqRes.error) throw reqRes.error;
-    const emps = (empRes.data ?? []) as Array<{ id: string; salary: number | null; work_start_time: string | null; work_end_time: string | null; monthly_work_hours: number | null; off_days: number[] | null; hourly_rate: number | null }>;
-    const logs = (logsRes.data ?? []) as Array<{ employee_id: string; check_in: string | null; check_out: string | null }>;
-    const leaves = (reqRes.data ?? []) as Array<{ employee_id: string | null; requested_date: string }>;
-    const workingDaysFor = (off: number[] | null) => {
-      const set = new Set((off ?? []).map(Number));
-      let n = 0;
-      for (let d = 1; d <= lastDay; d++) { const dow = new Date(year, month - 1, d).getDay(); if (!set.has(dow)) n++; }
-      return n;
-    };
-    const logsByEmp = new Map<string, typeof logs>();
-    for (const l of logs) { const a = logsByEmp.get(l.employee_id) ?? []; a.push(l); logsByEmp.set(l.employee_id, a); }
-    const leaveByEmp = new Map<string, Set<string>>();
-    for (const r of leaves) { if (!r.employee_id) continue; const s = leaveByEmp.get(r.employee_id) ?? new Set<string>(); s.add(r.requested_date); leaveByEmp.set(r.employee_id, s); }
-    const rows = emps.map((e) => {
-      const salary = Number(e.salary || 0);
-      const mHours = Number(e.monthly_work_hours || 0);
-      const manualHr = Number(e.hourly_rate || 0);
-      const hr = manualHr > 0 ? manualHr : (salary && mHours ? salary / mHours : 0);
-      const ws = toMin(e.work_start_time); const we = toMin(e.work_end_time);
-      const working = workingDaysFor(e.off_days);
-      const empLogs = logsByEmp.get(e.id) ?? [];
-      const vacation = leaveByEmp.get(e.id)?.size ?? 0;
-      let worked=0, timesLate=0, lateMin=0, otMin=0;
-      for (const l of empLogs) {
-        const ci = toMin(l.check_in); const co = toMin(l.check_out);
-        if (ci != null) worked++;
-        if (ci != null && ws != null && ci > ws) { timesLate++; lateMin += ci - ws; }
-        if (co != null && we != null && co > we) { otMin += co - we; }
-      }
-      const daysAbsent = Math.max(0, working - worked - vacation);
-      const perDay = working > 0 ? salary / working : 0;
-      const deductions = Math.round((lateMin / 60) * hr + daysAbsent * perDay);
-      const bonuses = Math.round((otMin / 60) * hr);
-      return { employee_id: e.id, year, month, days_absent: daysAbsent, days_vacation: vacation, times_late: timesLate, deductions, bonuses, note: "auto-computed", approved: true };
-    });
+    const { rows: computed } = await computeAttendanceRows(
+      context,
+      year,
+      month,
+      "id, salary, work_start_time, work_end_time, monthly_work_hours, off_days, hourly_rate",
+    );
+    const rows = computed.map((r) => ({
+      employee_id: r.employee_id,
+      year, month,
+      days_absent: r.days_absent,
+      days_vacation: r.days_vacation,
+      times_late: r.times_late,
+      deductions: r.deductions,
+      bonuses: r.bonuses,
+      note: "auto-computed",
+      approved: true,
+    }));
     if (rows.length === 0) return { ok: true, count: 0 };
     const { error } = await context.supabase.from("employee_attendance_entries").upsert(rows, { onConflict: "employee_id,year,month" });
     if (error) throw error;

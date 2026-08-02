@@ -2,7 +2,7 @@ import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { fetchAllRows } from "./paginate";
+import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -206,7 +206,8 @@ export const listBranchInvoicesForPrint = createServerFn({ method: "GET" })
       if (input?.endDate) q = q.lte("occurred_at", input.endDate);
       if (input?.search?.trim()) {
         const s = input.search.trim();
-        q = q.or(`customer_name.ilike.%${s}%,customer_phone.ilike.%${s}%`);
+        const safeS = sanitizeOrFilterValue(s);
+        q = q.or(`customer_name.ilike.%${safeS}%,customer_phone.ilike.%${safeS}%`);
       }
       return q;
     });
@@ -283,7 +284,8 @@ export const listOfflineInvoices = createServerFn({ method: "GET" })
       if (data.endDate) q = q.lte("occurred_at", data.endDate);
       if (data.search?.trim()) {
         const s = data.search.trim();
-        q = q.or(`customer_name.ilike.%${s}%,customer_phone.ilike.%${s}%`);
+        const safeS = sanitizeOrFilterValue(s);
+        q = q.or(`customer_name.ilike.%${safeS}%,customer_phone.ilike.%${safeS}%`);
       }
       return q;
     }, { maxRows: 2000 });

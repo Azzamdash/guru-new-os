@@ -3,7 +3,10 @@
 export type CsvColumn<T> = { key: keyof T | string; label: string; fmt?: (v: unknown, row: T) => string };
 
 function csvEscape(v: unknown): string {
-  const s = v == null ? "" : String(v);
+  let s = v == null ? "" : String(v);
+  // Prevent CSV/formula injection: a leading =, +, -, or @ is interpreted as a
+  // formula by Excel/Sheets when the file is opened.
+  if (/^[=+\-@]/.test(s)) s = `'${s}`;
   if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
   return s;
 }

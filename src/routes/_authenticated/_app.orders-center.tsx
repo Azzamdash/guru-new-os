@@ -472,7 +472,6 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
     exportToCSV(`orders-selected-${formatBusinessDate(new Date())}`, selectedRows, [
       { key: "customer_name", label: "اسم العميل", fmt: (v) => (v as string) ?? "—" },
       { key: "customer_phone", label: "التليفون", fmt: (v) => (v as string) ?? "—" },
-      { key: "shipping_governorate", label: "العنوان", fmt: (v) => (v as string) ?? "—" },
       { key: "shipping_governorate", label: "المحافظة", fmt: (v) => (v as string) ?? "—" },
       { key: "courier_name", label: "شركة الشحن", fmt: (v) => (v as string) ?? "—" },
       { key: "total_amount", label: "المبلغ", fmt: (v) => String(Number(v ?? 0)) },

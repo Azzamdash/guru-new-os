@@ -39,15 +39,14 @@ export function GlobalPeriodProvider({ children }: { children: ReactNode }) {
   return <GlobalPeriodContext.Provider value={value}>{children}</GlobalPeriodContext.Provider>;
 }
 
-const FALLBACK_PERIOD = defaultPeriod();
-
-/** Read-only access; safe to call outside provider (returns stable defaults). */
+/** Read-only access; safe to call outside provider (returns stable defaults, recomputed each call). */
 export function useGlobalPeriod(): Ctx {
   const ctx = useContext(GlobalPeriodContext);
-  const fallback = useMemo<Ctx>(() => ({
-    period: FALLBACK_PERIOD,
-    resolved: resolvePeriod(FALLBACK_PERIOD),
+  if (ctx) return ctx;
+  const period = defaultPeriod();
+  return {
+    period,
+    resolved: resolvePeriod(period),
     setPeriod: () => { /* noop */ },
-  }), []);
-  return ctx ?? fallback;
+  };
 }

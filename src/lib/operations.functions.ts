@@ -71,25 +71,26 @@ export const getOperationsSnapshot = createServerFn({ method: "GET" })
     const products = (prodR.data ?? []) as (ProductRow & { sell_price: number; cogs_override: number | null; cogs_percent: number | null })[];
     const productIds = products.map((p) => p.id);
 
-    const [movesR, itemsR, brandsR, purchR] = await Promise.all([
+    const [moves, items, brandsR, purch] = await Promise.all([
       productIds.length
-        ? context.supabase.from("inventory_movements").select("product_id, type, qty").in("product_id", productIds)
-        : Promise.resolve({ data: [], error: null }),
+        ? fetchAllRows<MoveRow>(() =>
+            context.supabase.from("inventory_movements").select("product_id, type, qty").in("product_id", productIds))
+        : Promise.resolve([]),
       productIds.length
-        ? context.supabase.from("sales_invoice_items")
-            .select("product_id, qty, sales_invoices!inner(occurred_at, type)")
-            .in("product_id", productIds)
-            .gte("sales_invoices.occurred_at", cutoff)
-        : Promise.resolve({ data: [], error: null }),
+        ? fetchAllRows<ItemRow>(() =>
+            context.supabase.from("sales_invoice_items")
+              .select("product_id, qty, sales_invoices!inner(occurred_at, type)")
+              .in("product_id", productIds)
+              .gte("sales_invoices.occurred_at", cutoff))
+        : Promise.resolve([]),
       context.supabase.from("brands").select("id, name, cogs_percent_default"),
       productIds.length
-        ? context.supabase.from("supplier_invoice_items")
-            .select("product_id, qty, unit_cost").eq("kind", "product").in("product_id", productIds)
-        : Promise.resolve({ data: [], error: null }),
+        ? fetchAllRows<PurchaseRow>(() =>
+            context.supabase.from("supplier_invoice_items")
+              .select("product_id, qty, unit_cost").eq("kind", "product").in("product_id", productIds))
+        : Promise.resolve([]),
     ]);
-    if (movesR.error) throw movesR.error;
-    if (itemsR.error) throw itemsR.error;
-    if (purchR.error) throw purchR.error;
+    if (brandsR.error) throw brandsR.error;
 
     const brandsList = (brandsR.data ?? []) as Array<{ id: string; name: string; cogs_percent_default: number | null }>;
     const brandName = new Map<string, string>(brandsList.map((b) => [b.id, b.name]));
@@ -97,20 +98,20 @@ export const getOperationsSnapshot = createServerFn({ method: "GET" })
 
     // Stock per product = sum(in) - sum(out) - sum(sold)
     const stockByProduct = new Map<string, number>();
-    for (const m of (movesR.data ?? []) as MoveRow[]) {
+    for (const m of moves as MoveRow[]) {
       const q = Number(m.qty) || 0;
       const sign = m.type === "in" ? 1 : -1;
       stockByProduct.set(m.product_id, (stockByProduct.get(m.product_id) ?? 0) + sign * q);
     }
     // Purchases (supplier invoices, kind=product) also increment stock
-    for (const p of (purchR.data ?? []) as PurchaseRow[]) {
+    for (const p of purch as PurchaseRow[]) {
       if (!p.product_id) continue;
       const q = Number(p.qty) || 0;
       stockByProduct.set(p.product_id, (stockByProduct.get(p.product_id) ?? 0) + q);
     }
     // Daily sales rate over last 30 days (sales - returns)
     const soldByProduct = new Map<string, number>();
-    for (const it of (itemsR.data ?? []) as ItemRow[]) {
+    for (const it of items as ItemRow[]) {
       if (!it.sales_invoices) continue;
       const q = Number(it.qty) || 0;
       const sign = it.sales_invoices.type === "return" ? -1 : 1;
@@ -121,7 +122,7 @@ export const getOperationsSnapshot = createServerFn({ method: "GET" })
 
     // Latest purchase unit cost per product (fallback for valuation)
     const lastCostByProduct = new Map<string, number>();
-    for (const p of (purchR.data ?? []) as PurchaseRow[]) {
+    for (const p of purch as PurchaseRow[]) {
       if (!p.product_id) continue;
       lastCostByProduct.set(p.product_id, Number(p.unit_cost) || 0);
     }

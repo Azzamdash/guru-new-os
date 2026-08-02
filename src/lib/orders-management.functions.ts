@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
-import { fetchAllRows } from "./paginate";
+import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -325,7 +325,10 @@ export const listWhatsappThreads = createServerFn({ method: "POST" })
     let q = ctx.supabase.from("whatsapp_threads").select("*")
       .order("last_message_at", { ascending: false, nullsFirst: false }).limit(200);
     if (data.brandId) q = q.eq("brand_id", data.brandId);
-    if (data.search) q = q.or(`phone.ilike.%${data.search}%,display_name.ilike.%${data.search}%`);
+    if (data.search) {
+      const s = sanitizeOrFilterValue(data.search);
+      q = q.or(`phone.ilike.%${s}%,display_name.ilike.%${s}%`);
+    }
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     return (rows ?? []) as WhatsappThread[];

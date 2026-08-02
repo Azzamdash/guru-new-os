@@ -6,7 +6,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Check, Loader2 } from "lucide-react";
-import { listOrders, type OrderRow } from "@/lib/orders.functions";
+import { listOrders, getOrder, type OrderRow } from "@/lib/orders.functions";
 
 export function OrderSearchCombobox({
   value,
@@ -37,10 +37,22 @@ export function OrderSearchCombobox({
 
   const rows = useMemo(() => q.data?.rows ?? [], [q.data]);
 
+  const getOrderFn = useServerFn(getOrder);
+  const resolvedQ = useQuery({
+    queryKey: ["orders-center", "resolve-order", value],
+    queryFn: () => getOrderFn({ data: { id: value! } }),
+    enabled: !!value && !selected,
+    staleTime: 60_000,
+  });
+
   const label = selected
     ? `${selected.customer_name ?? "بدون اسم"} — ${selected.external_order_number ?? selected.id.slice(0, 8)}`
     : value
-      ? value
+      ? resolvedQ.data
+        ? `${resolvedQ.data.customer_name ?? "بدون اسم"} — ${resolvedQ.data.external_order_number ?? value.slice(0, 8)}`
+        : resolvedQ.isFetching
+          ? "جارٍ التحميل…"
+          : value
       : "ابحث باسم العميل أو رقم التليفون أو رقم الأوردر";
 
   return (
