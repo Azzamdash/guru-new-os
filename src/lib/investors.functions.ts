@@ -458,9 +458,12 @@ export const listInvestorsValuation = createServerFn({ method: "GET" })
     if (investorFilterId) invQ = invQ.eq("id", investorFilterId);
     const { data: investors, error } = await invQ;
     if (error) throw error;
+    // Compute the company-wide valuation snapshot once and reuse it for every investor.
+    const shared = await buildValuationContext(context as unknown as Ctx);
     const rows = await Promise.all(
       ((investors ?? []) as Array<{ id: string; name: string; email: string | null }>).map(async (i) => {
-        const v = await computeInvestorValuation(context, i.id);
+        const v = await computeInvestorValuation(context, i.id, shared);
+
         return {
           investor_id: i.id,
           investor_name: i.name,
