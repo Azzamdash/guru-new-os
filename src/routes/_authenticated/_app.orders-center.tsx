@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +59,14 @@ function OrdersCenterPage() {
   const [tab, setTab] = useState("kpis");
   const [activeOrder, setActiveOrder] = useState("");
   const [activeRow, setActiveRow] = useState<OrderRow | null>(null);
+  const [ordersFilter, setOrdersFilter] = useState<OrdersListFilter>({ status: "all", courier: "all", gov: "all" });
+  const ordersTabRef = useRef<HTMLDivElement | null>(null);
+
+  const drillTo = (patch: Partial<OrdersListFilter>) => {
+    setOrdersFilter({ status: "all", courier: "all", gov: "all", ...patch });
+    setTab("orders");
+    setTimeout(() => ordersTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
 
   const openOrderIn = (target: "ops" | "timeline", row: OrderRow) => {
     setActiveOrder(row.id);
@@ -220,7 +228,12 @@ function OrdersCenterPage() {
                   <table className="w-full text-sm">
                     <tbody>
                       {o.byStatus.map((r) => (
-                        <tr key={r.status} className="border-b last:border-0">
+                        <tr
+                          key={r.status}
+                          onClick={() => drillTo({ status: r.status })}
+                          title="اضغط لعرض أوردرات هذه الحالة"
+                          className="border-b last:border-0 cursor-pointer transition-colors hover:bg-accent/60"
+                        >
                           <td className="py-1">{r.status}</td>
                           <td className="py-1 text-right tabular-nums">{nf(r.count)}</td>
                           <td className="py-1 text-right tabular-nums">{nf(r.amount)}</td>
@@ -237,7 +250,12 @@ function OrdersCenterPage() {
                     </thead>
                     <tbody>
                       {o.byCourier.map((r) => (
-                        <tr key={r.name} className="border-b last:border-0 text-center">
+                        <tr
+                          key={r.name}
+                          onClick={() => drillTo({ courier: r.name })}
+                          title="اضغط لعرض أوردرات شركة الشحن دي"
+                          className="border-b last:border-0 text-center cursor-pointer transition-colors hover:bg-accent/60"
+                        >
                           <td className="py-1 text-start">{r.name}</td>
                           <td className="tabular-nums">{nf(r.count)}</td>
                           <td className="tabular-nums">{nf(r.delivered)}</td>
@@ -256,7 +274,12 @@ function OrdersCenterPage() {
                     </thead>
                     <tbody>
                       {o.byGovernorate.map((r) => (
-                        <tr key={r.name} className="border-b last:border-0 text-center">
+                        <tr
+                          key={r.name}
+                          onClick={() => drillTo({ gov: r.name })}
+                          title="اضغط لعرض أوردرات المحافظة دي"
+                          className="border-b last:border-0 text-center cursor-pointer transition-colors hover:bg-accent/60"
+                        >
                           <td className="py-1 text-start">{r.name}</td>
                           <td className="tabular-nums">{nf(r.count)}</td>
                           <td className="tabular-nums">{nf(r.delivered)}</td>
@@ -280,7 +303,7 @@ function OrdersCenterPage() {
           />
         </TabsContent>
 
-        <TabsContent value="orders" className="pt-4">
+        <TabsContent value="orders" className="pt-4" ref={ordersTabRef}>
           <OrdersListPanel
             dateFrom={resolved.dateFrom ?? ""}
             dateTo={resolved.dateTo ?? ""}
@@ -289,6 +312,8 @@ function OrdersCenterPage() {
             couriers={(o?.byCourier ?? []).map((r) => r.name)}
             governorates={(o?.byGovernorate ?? []).map((r) => r.name)}
             onOpen={openOrderIn}
+            filter={ordersFilter}
+            setFilter={setOrdersFilter}
           />
         </TabsContent>
 
@@ -383,7 +408,9 @@ function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
   );
 }
 
-function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, governorates, onOpen }: {
+export type OrdersListFilter = { status: string; courier: string; gov: string };
+
+function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, governorates, onOpen, filter, setFilter }: {
   dateFrom: string;
   dateTo: string;
   brandId: string;
@@ -391,10 +418,13 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
   couriers: string[];
   governorates: string[];
   onOpen: (target: "ops" | "timeline", row: OrderRow) => void;
+  filter: OrdersListFilter;
+  setFilter: (next: OrdersListFilter) => void;
 }) {
-  const [status, setStatus] = useState("all");
-  const [courier, setCourier] = useState("all");
-  const [gov, setGov] = useState("all");
+  const { status, courier, gov } = filter;
+  const setStatus = (v: string) => setFilter({ ...filter, status: v });
+  const setCourier = (v: string) => setFilter({ ...filter, courier: v });
+  const setGov = (v: string) => setFilter({ ...filter, gov: v });
   const [page, setPage] = useState(0);
   const [cursors, setCursors] = useState<Array<{ occurredAt: string; id: string } | null>>([null]);
   const pageSize = 25;
