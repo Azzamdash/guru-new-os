@@ -10,6 +10,7 @@ import { LineChart, BarChart3, PieChart, TrendingUp } from "lucide-react";
 import logoAsset from "@/assets/egurus-logo.asset.json";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
     next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : "",
   }),
