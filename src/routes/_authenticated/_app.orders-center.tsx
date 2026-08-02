@@ -304,15 +304,27 @@ function ShipmentsPanel() {
                 ))}
               </tbody>
             </table>
-            <div className="flex items-end gap-2">
-              <div className="space-y-1 flex-1">
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="space-y-1 flex-1 min-w-[120px]">
                 <Label>المبلغ المحصّل</Label>
                 <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              </div>
+              <div className="space-y-1 min-w-[150px]">
+                <Label>طريقة التحصيل</Label>
+                <Select value={method} onValueChange={setMethod}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {COLLECTION_METHODS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <Button onClick={() => collMut.mutate()} disabled={collMut.isPending}>
                 <Wallet className="h-4 w-4 me-1" /> تسجيل تحصيل
               </Button>
             </div>
+
           </Card>
         </div>
       ) : null}
