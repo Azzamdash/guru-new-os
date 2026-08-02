@@ -245,6 +245,7 @@ function SyncButton({
   syncFn,
   onDone,
   label,
+  syncDays,
 }: {
   brand_id: string;
   provider: Provider;
@@ -254,6 +255,7 @@ function SyncButton({
   syncFn: any;
   onDone: () => void;
   label?: string;
+  syncDays?: number;
 }) {
   const test = useServerFn(testFn);
   const sync = useServerFn(syncFn);
