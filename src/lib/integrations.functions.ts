@@ -199,43 +199,24 @@ export const syncShopifyOrders = createServerFn({ method: "POST" })
   .inputValidator((d: { brand_id: string; days?: number }) => d)
   .handler(async ({ data, context }) => {
     await assertManager(context);
+    await assertBrandAccess(context, data.brand_id);
     try {
-      const { creds, config } = await loadCreds(context, data.brand_id, "shopify");
-      const days = Math.min(Math.max(data.days ?? 7, 1), 90);
+      // Full import (not just a summary): paginate through every page so no order is missed.
+      const days = Math.min(Math.max(data.days ?? 365, 1), 3650);
       const since = new Date(Date.now() - days * 86400_000).toISOString();
-      const url = `${shopifyBase(config)}/orders.json?status=any&limit=50&created_at_min=${encodeURIComponent(since)}`;
-      const res = await fetch(url, {
-        headers: { "X-Shopify-Access-Token": creds.access_token, Accept: "application/json" },
+      const { syncShopifyOrdersForBrand } = await import("@/server/shopifySync.server");
+      const res = await syncShopifyOrdersForBrand(data.brand_id, {
+        sinceISO: since,
+        paginate: true,
       });
-      const body = await res.text();
-      if (!res.ok) throw new Error(`Shopify ${res.status}: ${body.slice(0, 200)}`);
-      const parsed = JSON.parse(body);
-      const orders = (parsed.orders ?? []) as Array<{
-        total_price: string;
-        financial_status: string;
-        fulfillment_status: string | null;
-      }>;
-      const total = orders.reduce((s, o) => s + Number(o.total_price || 0), 0);
-      const summary = {
-        orders: orders.length,
-        total_amount: total,
-        paid: orders.filter((o) => o.financial_status === "paid").length,
-        fulfilled: orders.filter((o) => o.fulfillment_status === "fulfilled").length,
-        since,
-      };
-      await updateStatus(context, data.brand_id, "shopify", {
-        status: "connected",
-        last_error: null,
-        last_sync_at: new Date().toISOString(),
-        last_sync_summary: summary,
-      });
-      return summary;
+      return { fetched: res.fetched, upserted: res.upserted, since };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await updateStatus(context, data.brand_id, "shopify", { status: "error", last_error: msg });
       throw new Error(msg);
     }
   });
+
 
 // Manually (re-)register Shopify webhooks for a brand. Same logic auto-runs on OAuth callback.
 export const registerShopifyWebhooks = createServerFn({ method: "POST" })

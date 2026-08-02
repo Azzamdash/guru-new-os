@@ -102,7 +102,7 @@ function IntegrationsPage() {
                 onDeleted={invalidate}
                 testFn={testShopify}
                 syncFn={syncShopifyOrders}
-                syncLabel="مزامنة الطلبات (7 أيام)"
+                syncLabel="استيراد الطلبات (سنة كاملة)"
               />
             );
           })}
@@ -218,7 +218,7 @@ function BrandRow({
           {integration?.last_error && <div className="text-[11px] text-destructive truncate">{integration.last_error}</div>}
         </div>
         <div className="flex gap-1 shrink-0">
-          {integration && <SyncButton brand_id={brand.id} provider="shopify" testFn={testFn} syncFn={syncFn} onDone={onDeleted} label={syncLabel} />}
+          {integration && <SyncButton brand_id={brand.id} provider="shopify" testFn={testFn} syncFn={syncFn} onDone={onDeleted} label={syncLabel} syncDays={365} />}
           {integration && integration.status === "connected" && <RegisterWebhooksButton brand_id={brand.id} onDone={onDeleted} />}
           <Button size="sm" variant="outline" onClick={onConfigure}>
             <Settings2 className="w-3.5 h-3.5" />
@@ -245,6 +245,7 @@ function SyncButton({
   syncFn,
   onDone,
   label,
+  syncDays,
 }: {
   brand_id: string;
   provider: Provider;
@@ -254,12 +255,13 @@ function SyncButton({
   syncFn: any;
   onDone: () => void;
   label?: string;
+  syncDays?: number;
 }) {
   const test = useServerFn(testFn);
   const sync = useServerFn(syncFn);
   const del = useServerFn(deleteIntegration);
   const testM = useMutation({ mutationFn: () => test({ data: { brand_id } }), onSuccess: () => { toast.success("الاتصال يعمل"); onDone(); }, onError: (e) => toast.error(String(e)) });
-  const syncM = useMutation({ mutationFn: () => sync({ data: { brand_id, days: 7 } }), onSuccess: (r) => { toast.success(`تمت المزامنة: ${JSON.stringify(r)}`); onDone(); }, onError: (e) => toast.error(String(e)) });
+  const syncM = useMutation({ mutationFn: () => sync({ data: { brand_id, days: syncDays ?? 7 } }), onSuccess: (r) => { toast.success(`تمت المزامنة: ${JSON.stringify(r)}`); onDone(); }, onError: (e) => toast.error(String(e)) });
   const delM = useMutation({ mutationFn: () => del({ data: { brand_id, provider } }), onSuccess: () => { toast.success("تم الحذف"); onDone(); }, onError: (e) => toast.error(String(e)) });
 
   return (
