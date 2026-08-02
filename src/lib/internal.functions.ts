@@ -607,57 +607,15 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       .map(([cid, amt]) => ({ name: catName.get(cid) ?? "—", value: amt }))
       .sort((a, b) => b.value - a.value);
 
-    // Supplier debts
-    const paidByInv = new Map<string, number>();
-    const paidBySupplierStandalone = new Map<string, number>();
-    for (const p of payRows) {
-      if (p.invoice_id) paidByInv.set(p.invoice_id, (paidByInv.get(p.invoice_id) ?? 0) + (Number(p.amount) || 0));
-      else if (p.supplier_id) paidBySupplierStandalone.set(p.supplier_id, (paidBySupplierStandalone.get(p.supplier_id) ?? 0) + (Number(p.amount) || 0));
-    }
-    const today = getTodayInBusinessTimezone();
-    const supplierDebt = new Map<string, { name: string; outstanding: number; overdue: number }>();
-    const remainingStandalone = new Map<string, number>(paidBySupplierStandalone);
-    let totalOutstanding = 0, overdueCount = 0;
-    // Seed opening balances (respect brand filter); reduce by standalone first
-    for (const s of supRows as Array<{ id: string; name: string; brand_id: string | null; opening_balance: number }>) {
-      if (brandId && s.brand_id && s.brand_id !== brandId) continue;
-      const opening = Number(s.opening_balance) || 0;
-      const standalone = remainingStandalone.get(s.id) ?? 0;
-      const applied = Math.min(opening, standalone);
-      remainingStandalone.set(s.id, standalone - applied);
-      const net = opening - applied;
-      if (net === 0) continue;
-      const entry = supplierDebt.get(s.id) ?? { name: s.name, outstanding: 0, overdue: 0 };
-      entry.outstanding += net;
-      supplierDebt.set(s.id, entry);
-      totalOutstanding += net;
-    }
-    for (const inv of invRows) {
-      if (brandId) {
-        const invBrand = inv.brand_id ?? supBrand.get(inv.supplier_id) ?? null;
-        if (invBrand && invBrand !== brandId) continue;
-        if (!invBrand && supBrand.get(inv.supplier_id) && supBrand.get(inv.supplier_id) !== brandId) continue;
-      }
-      const paid = paidByInv.get(inv.id) ?? 0;
-      let remaining = Math.max(0, (Number(inv.amount) || 0) - paid);
-      if (remaining <= 0) continue;
-      // Apply any leftover standalone payments to reduce invoice remaining
-      const leftover = remainingStandalone.get(inv.supplier_id) ?? 0;
-      if (leftover > 0) {
-        const applied = Math.min(leftover, remaining);
-        remaining -= applied;
-        remainingStandalone.set(inv.supplier_id, leftover - applied);
-      }
-      if (remaining <= 0) continue;
-      totalOutstanding += remaining;
-      const isOverdue = inv.due_at && inv.due_at < today && inv.status !== "paid";
-      if (isOverdue) overdueCount += 1;
-      const entry = supplierDebt.get(inv.supplier_id) ?? { name: supName.get(inv.supplier_id) ?? "—", outstanding: 0, overdue: 0 };
-      entry.outstanding += remaining;
-      if (isOverdue) entry.overdue += remaining;
-      supplierDebt.set(inv.supplier_id, entry);
-    }
-    const topSuppliers = Array.from(supplierDebt.values()).sort((a, b) => b.outstanding - a.outstanding).slice(0, 5);
+    // Supplier debts (computed in the database via RPC)
+    const totalOutstanding = Number(supplierDebtSummary.totalOutstanding) || 0;
+    const overdueCount = Number(supplierDebtSummary.overdueCount) || 0;
+    const topSuppliers = (supplierDebtSummary.topSuppliers ?? []).map((s) => ({
+      name: s.name,
+      outstanding: Number(s.outstanding) || 0,
+      overdue: Number(s.overdue) || 0,
+    }));
+
 
     const mkAgg = new Map<string, { spend: number; revenue: number }>();
     for (const r of eeRows) {
