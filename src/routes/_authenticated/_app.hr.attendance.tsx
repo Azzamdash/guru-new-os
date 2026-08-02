@@ -87,6 +87,21 @@ function AttendancePage() {
   const empQ = useQuery({ queryKey: ["employees"], queryFn: () => listEmpFn() });
   const employees = empQ.data ?? [];
 
+  const listUsersFn = useServerFn(listLinkableUsers);
+  const linkFn = useServerFn(linkEmployeeUser);
+  const usersQ = useQuery({ queryKey: ["hr-linkable-users"], queryFn: () => listUsersFn() });
+  const users = usersQ.data ?? [];
+  const linkUser = useMutation({
+    mutationFn: (d: { employeeId: string; userId: string | null }) => linkFn({ data: d }),
+    onSuccess: () => {
+      toast.success("تم تحديث الربط");
+      qc.invalidateQueries({ queryKey: ["employees"] });
+      qc.invalidateQueries({ queryKey: ["hr-linkable-users"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الربط"),
+  });
+
+
   // Period
   const today = new Date();
   const [period, setPeriod] = useState<"day" | "week" | "month" | "year">("day");
