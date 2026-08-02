@@ -741,6 +741,16 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const linkedTimeline = useOrderTimeline(linkedOrderId ?? "");
+
+  const lo = linkedOrder.data;
+  const linkedTotal = lo
+    ? lo.items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.unit_price || 0), 0)
+      + Number(lo.shipping_amount || 0) - Number(lo.discount_amount || 0)
+    : 0;
+  const linkedCollected = (linkedTimeline.data?.collections ?? []).reduce((s, c) => s + Number(c.amount || 0), 0);
+  const linkedOutstanding = Math.max(0, linkedTotal - linkedCollected);
+  const lastShipment = (linkedTimeline.data?.shipments ?? []).slice(-1)[0] ?? null;
 
 
   return (
@@ -805,6 +815,28 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
                 </>
               )}
             </div>
+            {linkedOrderId ? (
+              <div className="mb-3 rounded-lg border bg-muted/40 p-3">
+                {linkedOrder.isLoading || linkedTimeline.isLoading ? (
+                  <div className="text-xs text-muted-foreground">جارٍ تحميل بيانات الأوردر…</div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-4 text-sm">
+                    <div className="space-y-1">
+                      <div className="text-xs text-muted-foreground">الحالة</div>
+                      <Badge variant="secondary">{lo?.fulfillment_status ?? "—"}</Badge>
+                    </div>
+                    <Field label="المبلغ الإجمالي" value={`${nf(linkedTotal)} ج.م`} />
+                    <Field label="المتوقع تحصيله" value={`${nf(linkedOutstanding)} ج.م`} />
+                    <Field
+                      label="آخر محاولة شحن"
+                      value={lastShipment
+                        ? `#${lastShipment.attempt_no} • ${lastShipment.status}${lastShipment.tracking ? ` • ${lastShipment.tracking}` : ""}`
+                        : "لا توجد"}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : null}
             <div className="flex-1 space-y-2 overflow-auto">
 
               {(thread.data?.messages ?? []).map((m) => (
