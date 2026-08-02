@@ -53,9 +53,11 @@ function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
   const goNext = () => {
-    if (next) window.location.href = next;
+    const target = safeNextPath(next);
+    if (target) window.location.href = target;
     else navigate({ to: "/hub/$hub", params: { hub: "overview" } });
   };
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
