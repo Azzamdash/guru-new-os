@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -40,7 +41,7 @@ const PLATFORM_LABELS: Record<string, string> = {
 type Platform = "tiktok"|"meta"|"google"|"snapchat"|"whatsapp"|"sms"|"influencer"|"ugc"|"media_production"|"other";
 type PeriodType = "daily"|"weekly"|"monthly"|"yearly"|"custom";
 
-function today() { return new Date().toISOString().slice(0, 10); }
+function today() { return getTodayInBusinessTimezone(); }
 function addDays(dateStr: string, d: number) {
   const dt = new Date(dateStr); dt.setDate(dt.getDate() + d); return dt.toISOString().slice(0, 10);
 }

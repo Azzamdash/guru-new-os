@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -52,7 +53,7 @@ const TYPE_ICON: Record<CashTxnType, typeof Wallet> = {
   other_out: ArrowUpFromLine,
 };
 
-function today() { return new Date().toISOString().slice(0, 10); }
+function today() { return getTodayInBusinessTimezone(); }
 function addDays(d: string, n: number) { const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().slice(0, 10); }
 function fmt(n: number) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n); }
 

@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/_app/inventory")({
 
 const money = (n: number) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 const num = (n: number) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 3 });
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => getTodayInBusinessTimezone();
 const monthAgo = () => new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
 
 function InventoryPage() {

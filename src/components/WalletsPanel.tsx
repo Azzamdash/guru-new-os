@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -16,7 +17,7 @@ import { listWallets, upsertWallet, deleteWallet, getWalletBalances, transferBet
 const KIND_LABEL: Record<WalletKind, string> = { cash: "خزنة كاش", bank: "حساب بنكي", ewallet: "محفظة إلكترونية" };
 const KIND_ICON: Record<WalletKind, typeof Wallet> = { cash: Wallet, bank: Landmark, ewallet: Smartphone };
 function fmt(n: number) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n); }
-function today() { return new Date().toISOString().slice(0, 10); }
+function today() { return getTodayInBusinessTimezone(); }
 
 export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: string; to: string }) {
   const qc = useQueryClient();

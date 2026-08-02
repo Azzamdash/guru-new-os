@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/_app/reports/branches")({
 });
 
 function BranchesReportPage() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInBusinessTimezone();
   const thirtyAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const [start, setStart] = useState(thirtyAgo);
   const [end, setEnd] = useState(today);

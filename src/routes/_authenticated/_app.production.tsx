@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -37,7 +38,7 @@ function ProductionPage() {
   const movesQ = useQuery({ queryKey: ["inv-moves"], queryFn: () => listM({ data: { productId: null } }) });
   const empQ = useQuery({ queryKey: ["employees"], queryFn: () => listE() });
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInBusinessTimezone();
   const [brandId, setBrandId] = useState("");
   const [form, setForm] = useState({ product_id: "", type: "production" as "production"|"sale"|"return"|"adjustment", qty: 1, occurred_at: today, note: "", worker_name: "", employee_id: "" });
 

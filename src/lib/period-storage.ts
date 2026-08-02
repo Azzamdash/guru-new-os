@@ -2,6 +2,7 @@
  * Pure, DOM-free helpers for the period filter state.
  * Kept free of React/UI imports so it can be unit tested in a node environment.
  */
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 
 export type PeriodPreset =
   | "today" | "yesterday" | "this_week" | "this_month" | "this_year" | "last_12" | "custom";
@@ -27,7 +28,7 @@ export function periodStorageKey(key: string): string {
 /** The default every page starts from when nothing was stored yet: today. */
 export function defaultPeriod(): PeriodValue {
   const today = new Date();
-  const iso = today.toISOString().slice(0, 10);
+  const iso = getTodayInBusinessTimezone();
   return { preset: "today", year: today.getFullYear(), dateFrom: iso, dateTo: iso, compare: false };
 }
 

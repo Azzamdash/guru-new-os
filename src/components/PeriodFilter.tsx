@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useLang } from "@/lib/i18n";
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 
 export { defaultPeriod } from "@/lib/period-storage";
 export type { PeriodPreset, PeriodValue } from "@/lib/period-storage";
@@ -38,8 +39,10 @@ export function resolvePeriod(v: PeriodValue): ResolvedPeriod {
   const iso = fmtISO;
   let cur: { periodType: "custom" | null; dateFrom: string | null; dateTo: string | null; year: number };
   switch (v.preset) {
-    case "today":
-      cur = { periodType: "custom", dateFrom: iso(today), dateTo: iso(today), year: y }; break;
+    case "today": {
+      const t = getTodayInBusinessTimezone();
+      cur = { periodType: "custom", dateFrom: t, dateTo: t, year: y }; break;
+    }
     case "yesterday": {
       const d = new Date(today); d.setDate(d.getDate() - 1);
       cur = { periodType: "custom", dateFrom: iso(d), dateTo: iso(d), year: d.getFullYear() }; break;

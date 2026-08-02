@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "@/lib/paginate";
@@ -619,7 +620,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       if (p.invoice_id) paidByInv.set(p.invoice_id, (paidByInv.get(p.invoice_id) ?? 0) + (Number(p.amount) || 0));
       else if (p.supplier_id) paidBySupplierStandalone.set(p.supplier_id, (paidBySupplierStandalone.get(p.supplier_id) ?? 0) + (Number(p.amount) || 0));
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getTodayInBusinessTimezone();
     const supplierDebt = new Map<string, { name: string; outstanding: number; overdue: number }>();
     const remainingStandalone = new Map<string, number>(paidBySupplierStandalone);
     let totalOutstanding = 0, overdueCount = 0;

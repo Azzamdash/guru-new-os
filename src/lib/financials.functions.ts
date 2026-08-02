@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAccountingProfitReport } from "./accounting-read-model.server";
@@ -34,7 +35,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { from?: string; to?: string; brandId?: string | null; excludeBrandIds?: string[] } = {}) => d)
   .handler(async ({ data, context }): Promise<IncomeStatement> => {
-    const to = data.to ?? new Date().toISOString().slice(0, 10);
+    const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? `${new Date(to).getFullYear()}-01-01`;
     const report = await fetchAccountingProfitReport(context.supabase, {
       from,
@@ -101,7 +102,7 @@ export const getCashFlow = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { from?: string; to?: string; brandId?: string | null } = {}) => d)
   .handler(async ({ data, context }): Promise<CashFlowReport> => {
-    const to = data.to ?? new Date().toISOString().slice(0, 10);
+    const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? `${new Date(to).getFullYear()}-01-01`;
 
     const { data: grouped, error } = await (context.supabase as any).rpc("cash_flow_grouped", {

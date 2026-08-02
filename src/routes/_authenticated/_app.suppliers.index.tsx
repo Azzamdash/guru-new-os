@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -51,7 +52,7 @@ function SuppliersPage() {
     qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
   };
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInBusinessTimezone();
   const [asOfDate, setAsOfDate] = useState<string>(today);
   const paidByInv = useMemo(() => {
     const m = new Map<string, number>();

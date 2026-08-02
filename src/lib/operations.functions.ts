@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getCogsMap } from "./cogs.server";
@@ -253,7 +254,7 @@ export const getPrepStaffPerformance = createServerFn({ method: "GET" })
     if (!allowed) throw new Error("Forbidden");
 
     const dateFrom = data.dateFrom ?? new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-    const dateTo = data.dateTo ?? new Date().toISOString().slice(0, 10);
+    const dateTo = data.dateTo ?? getTodayInBusinessTimezone();
 
     const list = await fetchAllRows<{ id: string; prep_assignee_id: string; stage: Stage; stage_updated_at: string; occurred_at: string; brand_id: string; total_amount: number }>(() => {
       let q = context.supabase

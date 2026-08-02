@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
@@ -56,7 +57,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
     ) => d,
   )
   .handler(async ({ data, context }) => {
-    const to = data.to ?? new Date().toISOString().slice(0, 10);
+    const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
 
     const ordersBuilder = () => {
