@@ -69,6 +69,14 @@ function OrdersCenterPage() {
     ...queryPresets.report,
   });
 
+  const waListFn = useServerFn(listWhatsappThreads);
+  const waThreads = useQuery({
+    queryKey: ["orders-center", "wa-unread"],
+    queryFn: () => waListFn({ data: { search: null } }),
+    ...queryPresets.live,
+  });
+  const waUnread = (waThreads.data ?? []).reduce((sum, t) => sum + (t.unread_count || 0), 0);
+
   const o = overview.data;
 
   return (
@@ -97,7 +105,14 @@ function OrdersCenterPage() {
           <TabsTrigger value="kpis">المؤشرات</TabsTrigger>
           <TabsTrigger value="ops">الشحن والتحصيل</TabsTrigger>
           <TabsTrigger value="timeline">سجل الأوردر</TabsTrigger>
-          <TabsTrigger value="wa">واتساب</TabsTrigger>
+          <TabsTrigger value="wa" className="relative">
+            واتساب
+            {waUnread > 0 && (
+              <span className="absolute -top-1 -end-1 min-w-4 rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
+                {waUnread > 9 ? "9+" : waUnread}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="kpis" className="space-y-4 pt-4">
