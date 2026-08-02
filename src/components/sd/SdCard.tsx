@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { formatBusinessDate } from "@/lib/timezone";
 
 export function SdCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
@@ -11,7 +12,7 @@ export function SdCard({ children, className = "" }: { children: ReactNode; clas
 export function periodToRange(period: string, from?: string, to?: string) {
   if (period === "custom") return { from: from ?? null, to: to ?? null };
   const now = new Date();
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const iso = (d: Date) => formatBusinessDate(d);
   const start = new Date(now);
   if (period === "today") start.setDate(now.getDate());
   else if (period === "week") start.setDate(now.getDate() - 6);
