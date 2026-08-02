@@ -69,6 +69,14 @@ function OrdersCenterPage() {
     ...queryPresets.report,
   });
 
+  const waListFn = useServerFn(listWhatsappThreads);
+  const waThreads = useQuery({
+    queryKey: ["orders-center", "wa-unread"],
+    queryFn: () => waListFn({ data: { search: null } }),
+    ...queryPresets.live,
+  });
+  const waUnread = (waThreads.data ?? []).reduce((sum, t) => sum + (t.unread_count || 0), 0);
+
   const o = overview.data;
 
   return (
