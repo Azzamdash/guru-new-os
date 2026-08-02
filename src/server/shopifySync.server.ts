@@ -310,7 +310,10 @@ export async function syncAllConnectedShopify() {
   const results: Array<{ brand_id: string; ok: boolean; upserted?: number; error?: string }> = [];
   for (const r of (rows ?? []) as Array<{ brand_id: string }>) {
     try {
-      const res = await syncShopifyOrdersForBrand(r.brand_id);
+      const res = await syncShopifyOrdersForBrand(r.brand_id, {
+        sinceISO: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+        paginate: true,
+      });
       results.push({ brand_id: r.brand_id, ok: true, upserted: res.upserted });
     } catch (e) {
       results.push({ brand_id: r.brand_id, ok: false, error: (e as Error).message });
