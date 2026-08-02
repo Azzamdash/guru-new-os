@@ -45,6 +45,8 @@ import { calculateHealthScore } from "@/lib/health-score.shared";
 import { SectionCard } from "./SectionCard";
 import { KpiTile } from "./KpiTile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const nf0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const nfCompact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
