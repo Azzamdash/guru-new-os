@@ -9,11 +9,10 @@ RUN npm run build
 # Production Phase
 FROM nginx:alpine
 
-# 1. مسح صفحة Nginx الافتراضية تماماً
+# مسح أي محتوى افتراضي لـ nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# 2. نسخ الملفات المترجمة (سيتم التفتيش عن المجلد الموجود فعلياً)
-COPY --from=build /app/dist /usr/share/nginx/html
+# نسخ المجلد الناتج الصحيح مباشرة
 COPY --from=build /app/.output/public /usr/share/nginx/html
 
 EXPOSE 80
