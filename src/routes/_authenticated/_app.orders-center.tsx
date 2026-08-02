@@ -228,7 +228,12 @@ function OrdersCenterPage() {
                   <table className="w-full text-sm">
                     <tbody>
                       {o.byStatus.map((r) => (
-                        <tr key={r.status} className="border-b last:border-0">
+                        <tr
+                          key={r.status}
+                          onClick={() => drillTo({ status: r.status })}
+                          title="اضغط لعرض أوردرات هذه الحالة"
+                          className="border-b last:border-0 cursor-pointer transition-colors hover:bg-accent/60"
+                        >
                           <td className="py-1">{r.status}</td>
                           <td className="py-1 text-right tabular-nums">{nf(r.count)}</td>
                           <td className="py-1 text-right tabular-nums">{nf(r.amount)}</td>
