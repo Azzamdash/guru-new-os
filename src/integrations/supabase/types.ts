@@ -4508,7 +4508,7 @@ export type Database = {
         Returns: boolean
       }
       invoke_public_hook: {
-        Args: { _body?: Json; _path: string }
+        Args: { _body?: Json; _path: string; _secret_name?: string }
         Returns: number
       }
       is_global_reader: { Args: { _user_id: string }; Returns: boolean }
