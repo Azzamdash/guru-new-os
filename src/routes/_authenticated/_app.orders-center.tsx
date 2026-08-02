@@ -112,6 +112,11 @@ function OrdersCenterPage() {
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
+          {tab === "kpis" ? (
+            <Button variant="outline" size="sm" onClick={exportOverviewCsv} disabled={!o} className="gap-1.5">
+              <Download className="h-4 w-4" /> تصدير CSV
+            </Button>
+          ) : null}
           <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["orders-center"] })}>
             <RefreshCw className="h-4 w-4" />
           </Button>
