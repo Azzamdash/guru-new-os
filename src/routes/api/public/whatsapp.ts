@@ -8,6 +8,19 @@ type WaChange = {
   };
 };
 
+/** Verify Meta's X-Hub-Signature-256 (HMAC-SHA256 over the RAW body). */
+async function isValidSignature(rawBody: string, header: string | null): Promise<boolean> {
+  const appSecret = process.env["WHATSAPP_APP_SECRET"];
+  if (!appSecret || !header) return false;
+
+  const { createHmac, timingSafeEqual } = await import("node:crypto");
+  const expected = `sha256=${createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex")}`;
+  const a = Buffer.from(header, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+
 export const Route = createFileRoute("/api/public/whatsapp")({
   server: {
     handlers: {
@@ -25,15 +38,21 @@ export const Route = createFileRoute("/api/public/whatsapp")({
       },
 
       POST: async ({ request }) => {
-        const expected = process.env["WHATSAPP_VERIFY_TOKEN"];
-        if (!expected) return new Response("Not configured", { status: 503 });
+        if (!process.env["WHATSAPP_APP_SECRET"]) return new Response("Not configured", { status: 503 });
+
+        // Read the RAW body first — HMAC must be computed before any JSON.parse.
+        const rawBody = await request.text();
+        if (!(await isValidSignature(rawBody, request.headers.get("x-hub-signature-256")))) {
+          return new Response("Unauthorized", { status: 401 });
+        }
 
         let payload: { entry?: Array<{ changes?: WaChange[] }> };
         try {
-          payload = (await request.json()) as typeof payload;
+          payload = JSON.parse(rawBody) as typeof payload;
         } catch {
           return new Response("Bad request", { status: 400 });
         }
+
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
