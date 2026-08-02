@@ -218,7 +218,7 @@ function BrandRow({
           {integration?.last_error && <div className="text-[11px] text-destructive truncate">{integration.last_error}</div>}
         </div>
         <div className="flex gap-1 shrink-0">
-          {integration && <SyncButton brand_id={brand.id} provider="shopify" testFn={testFn} syncFn={syncFn} onDone={onDeleted} label={syncLabel} />}
+          {integration && <SyncButton brand_id={brand.id} provider="shopify" testFn={testFn} syncFn={syncFn} onDone={onDeleted} label={syncLabel} syncDays={365} />}
           {integration && integration.status === "connected" && <RegisterWebhooksButton brand_id={brand.id} onDone={onDeleted} />}
           <Button size="sm" variant="outline" onClick={onConfigure}>
             <Settings2 className="w-3.5 h-3.5" />
