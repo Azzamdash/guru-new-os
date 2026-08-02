@@ -4472,6 +4472,10 @@ export type Database = {
         Args: { _brand_id?: string; _from: string; _to: string }
         Returns: Json
       }
+      dashboard_supplier_debt_summary: {
+        Args: { _brand_id?: string }
+        Returns: Json
+      }
       finalize_generic_order_dispatch: {
         Args: {
           _claim_token: string
