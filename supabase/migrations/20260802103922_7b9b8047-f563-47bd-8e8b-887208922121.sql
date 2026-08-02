@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.invoke_public_hook(text, jsonb);
