@@ -20,7 +20,7 @@ import {
   listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
   linkThreadToOrder,
 } from "@/lib/orders-management.functions";
-import { getOrder } from "@/lib/orders.functions";
+import { getOrder, type OrderRow } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
 
 
