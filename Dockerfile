@@ -9,11 +9,11 @@ RUN npm run build
 # Production Phase
 FROM nginx:alpine
 
-# مسح أي محتوى افتراضي لـ nginx
+# مسح أي محتوى قديم
 RUN rm -rf /usr/share/nginx/html/*
 
-# نسخ المجلد الناتج الصحيح مباشرة
-COPY --from=build /app/.output/public /usr/share/nginx/html
+# نسخ محتويات المجلد مباشرة مع / في الآخر
+COPY --from=build /app/.output/public/ /usr/share/nginx/html/
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
