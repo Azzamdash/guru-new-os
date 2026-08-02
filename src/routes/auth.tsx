@@ -9,11 +9,21 @@ import { toast } from "sonner";
 import { LineChart, BarChart3, PieChart, TrendingUp } from "lucide-react";
 import logoAsset from "@/assets/egurus-logo.asset.json";
 
+/** Only allow same-origin absolute paths: "/x". Rejects "//host", "/\host", and any "scheme://". */
+function safeNextPath(value: unknown): string {
+  if (typeof value !== "string") return "";
+  if (!value.startsWith("/")) return "";
+  if (value.startsWith("//") || value.startsWith("/\\")) return "";
+  if (value.includes("://")) return "";
+  return value;
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
-    next: typeof s.next === "string" && s.next.startsWith("/") ? s.next : "",
+    next: safeNextPath(s.next),
   }),
+
   head: () => ({
     meta: [
       { title: "تسجيل الدخول — e-GURUS Dashboard" },
@@ -43,9 +53,11 @@ function AuthPage() {
   const navigate = useNavigate();
   const { next } = Route.useSearch();
   const goNext = () => {
-    if (next) window.location.href = next;
+    const target = safeNextPath(next);
+    if (target) window.location.href = target;
     else navigate({ to: "/hub/$hub", params: { hub: "overview" } });
   };
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
