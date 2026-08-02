@@ -51,6 +51,7 @@ function Kpi({ label, value, hint, icon: Icon }: { label: string; value: string;
 }
 
 function OrdersCenterPage() {
+  const qc = useQueryClient();
   const [period, setPeriod] = usePersistedPeriod("orders-center");
   const resolved = useMemo(() => resolvePeriod(period), [period]);
   const [brandId, setBrandId] = useState<string>("all");
@@ -85,7 +86,7 @@ function OrdersCenterPage() {
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
-          <Button variant="outline" size="sm" onClick={() => overview.refetch()}>
+          <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["orders-center"] })}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
