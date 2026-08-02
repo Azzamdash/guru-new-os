@@ -815,6 +815,28 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
                 </>
               )}
             </div>
+            {linkedOrderId ? (
+              <div className="mb-3 rounded-lg border bg-muted/40 p-3">
+                {linkedOrder.isLoading || linkedTimeline.isLoading ? (
+                  <div className="text-xs text-muted-foreground">جارٍ تحميل بيانات الأوردر…</div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-4 text-sm">
+                    <div className="space-y-1">
+                      <div className="text-xs text-muted-foreground">الحالة</div>
+                      <Badge variant="secondary">{lo?.fulfillment_status ?? "—"}</Badge>
+                    </div>
+                    <Field label="المبلغ الإجمالي" value={`${nf(linkedTotal)} ج.م`} />
+                    <Field label="المتوقع تحصيله" value={`${nf(linkedOutstanding)} ج.م`} />
+                    <Field
+                      label="آخر محاولة شحن"
+                      value={lastShipment
+                        ? `#${lastShipment.attempt_no} • ${lastShipment.status}${lastShipment.tracking ? ` • ${lastShipment.tracking}` : ""}`
+                        : "لا توجد"}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : null}
             <div className="flex-1 space-y-2 overflow-auto">
 
               {(thread.data?.messages ?? []).map((m) => (
