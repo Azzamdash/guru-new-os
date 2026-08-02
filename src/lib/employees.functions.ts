@@ -26,7 +26,9 @@ export type EmployeeWithSalary = Employee & {
   work_end_time: string | null;
   monthly_work_hours: number | null;
   off_days: number[] | null;
+  user_id: string | null;
 };
+
 
 
 export const listEmployees = createServerFn({ method: "GET" })
