@@ -230,12 +230,23 @@ function TimelinePanel() {
   );
 }
 
+const COLLECTION_METHODS = [
+  { value: "cod", label: "دفع عند الاستلام (COD)" },
+  { value: "cash", label: "كاش" },
+  { value: "bank_transfer", label: "تحويل بنكي" },
+  { value: "vodafone_cash", label: "فودافون كاش" },
+  { value: "instapay", label: "إنستاباي" },
+  { value: "card", label: "بطاقة / فيزا" },
+  { value: "other", label: "أخرى" },
+] as const;
+
 function ShipmentsPanel() {
   const qc = useQueryClient();
-  
+
   const [active, setActive] = useState("");
   const [tracking, setTracking] = useState("");
   const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState<string>("cod");
   const timeline = useOrderTimeline(active);
 
   const addShip = useServerFn(addShipmentAttempt);
@@ -247,10 +258,11 @@ function ShipmentsPanel() {
     onError: (e: Error) => toast.error(e.message),
   });
   const collMut = useMutation({
-    mutationFn: () => addColl({ data: { orderId: active, amount: Number(amount) } }),
+    mutationFn: () => addColl({ data: { orderId: active, amount: Number(amount), method } }),
     onSuccess: () => { toast.success("تم تسجيل التحصيل"); setAmount(""); qc.invalidateQueries({ queryKey: ["orders-center", "timeline", active] }); },
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   return (
     <div className="space-y-4">
