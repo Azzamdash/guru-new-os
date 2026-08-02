@@ -197,6 +197,15 @@ function useOrderTimeline(orderId: string) {
   });
 }
 
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="font-medium break-words">{value}</div>
+    </div>
+  );
+}
+
 function TimelinePanel() {
   const [active, setActive] = useState("");
   const [selectedRow, setSelectedRow] = useState<OrderRow | null>(null);
