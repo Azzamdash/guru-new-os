@@ -55,7 +55,7 @@ export const listEmployeesWithSalary = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("employees")
-      .select("id, name, brand_id, position, active, note, salary, work_start_time, work_end_time, monthly_work_hours, off_days, hourly_rate")
+      .select("id, name, brand_id, position, active, note, salary, work_start_time, work_end_time, monthly_work_hours, off_days, hourly_rate, user_id")
       .order("name", { ascending: true });
     if (error) throw error;
     return (data ?? []) as EmployeeWithSalary[];
