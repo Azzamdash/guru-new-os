@@ -24,6 +24,7 @@ export type StockItem = {
   brand_name: string;
   on_hand_qty: number;
   reorder_point: number;
+  lead_time_days: number | null;
   unit_cost: number;
   total_value: number;
   low_stock: boolean;
@@ -40,7 +41,7 @@ export const listStock = createServerFn({ method: "POST" })
     if (kind !== "material") {
       let q = (context as Ctx).supabase
         .from("products")
-        .select("id, name, sku, unit, brand_id, on_hand_qty, moving_avg_cost, reorder_point, updated_at, brands(name)")
+        .select("id, name, sku, unit, brand_id, on_hand_qty, moving_avg_cost, reorder_point, lead_time_days, updated_at, brands(name)")
         .eq("active", true);
       if (data.brandId) q = q.eq("brand_id", data.brandId);
       const { data: rows, error } = await q.order("name");
@@ -59,6 +60,7 @@ export const listStock = createServerFn({ method: "POST" })
           brand_name: r.brands?.name ?? "",
           on_hand_qty: qty,
           reorder_point: Number(r.reorder_point || 0),
+          lead_time_days: r.lead_time_days != null ? Number(r.lead_time_days) : null,
           unit_cost: cost,
           total_value: qty * cost,
           low_stock: qty <= Number(r.reorder_point || 0),
@@ -88,6 +90,7 @@ export const listStock = createServerFn({ method: "POST" })
           brand_name: "",
           on_hand_qty: qty,
           reorder_point: Number(r.reorder_point || 0),
+          lead_time_days: null,
           unit_cost: cost,
           total_value: qty * cost,
           low_stock: qty <= Number(r.reorder_point || 0),
@@ -208,7 +211,7 @@ async function loadMovements(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (rows ?? []).map((r: any): MovementRow => {
     const kind: "product" | "material" = r.product_id ? "product" : "material";
-    const isIn = r.type === "production" || r.type === "return" || (r.type === "adjustment" && Number(r.qty) > 0);
+    const isIn = r.type === "production" || r.type === "return" || r.type === "transfer_in" || r.type === "purchase_receipt" || (r.type === "adjustment" && Number(r.qty) > 0);
     const qty = Math.abs(Number(r.qty || 0));
     const cost = r.unit_cost === null || r.unit_cost === undefined ? null : Number(r.unit_cost);
     return {
@@ -302,4 +305,71 @@ export const getInventoryReports = createServerFn({ method: "POST" })
       items: items.sort((a, b) => b.out_qty - a.out_qty),
       bySource: Array.from(bySource.values()).sort((a, b) => b.count - a.count),
     };
+  });
+
+export type StockTransfer = {
+  transfer_group: string;
+  occurred_at: string;
+  qty: number;
+  note: string | null;
+  from_product_id: string;
+  from_product_name: string;
+  to_product_id: string;
+  to_product_name: string;
+};
+
+export const transferStock = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { fromProductId: string; toProductId: string; qty: number; note?: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    const { data: group, error } = await (context as Ctx).supabase.rpc("transfer_stock", {
+      _from_product_id: data.fromProductId,
+      _to_product_id: data.toProductId,
+      _qty: data.qty,
+      _note: data.note ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return { transferGroup: group as string };
+  });
+
+export const listStockTransfers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { from?: string; to?: string; limit?: number } = {}) => d)
+  .handler(async ({ data, context }): Promise<StockTransfer[]> => {
+    const ctx = context as Ctx;
+    let q = ctx.supabase
+      .from("inventory_movements")
+      .select("transfer_group, occurred_at, qty, note, type, product_id")
+      .not("transfer_group", "is", null)
+      .order("occurred_at", { ascending: false })
+      .limit(data.limit ?? 500);
+    if (data.from) q = q.gte("occurred_at", data.from);
+    if (data.to) q = q.lte("occurred_at", data.to);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+
+    const { data: prods } = await ctx.supabase.from("products").select("id, name");
+    const pName = new Map<string, string>((prods ?? []).map((p: { id: string; name: string }) => [p.id, p.name]));
+
+    const byGroup = new Map<string, { occurred_at: string; qty: number; note: string | null; from?: string; to?: string }>();
+    for (const r of (rows ?? []) as Array<{ transfer_group: string; occurred_at: string; qty: number; note: string | null; type: string; product_id: string | null }>) {
+      const e = byGroup.get(r.transfer_group) ?? { occurred_at: r.occurred_at, qty: Number(r.qty), note: r.note };
+      if (r.type === "transfer_out") e.from = r.product_id ?? undefined;
+      if (r.type === "transfer_in") e.to = r.product_id ?? undefined;
+      byGroup.set(r.transfer_group, e);
+    }
+
+    return Array.from(byGroup.entries())
+      .filter(([, e]) => e.from && e.to)
+      .map(([group, e]) => ({
+        transfer_group: group,
+        occurred_at: e.occurred_at,
+        qty: e.qty,
+        note: e.note,
+        from_product_id: e.from!,
+        from_product_name: pName.get(e.from!) ?? "—",
+        to_product_id: e.to!,
+        to_product_name: pName.get(e.to!) ?? "—",
+      }))
+      .sort((a, b) => (a.occurred_at < b.occurred_at ? 1 : -1));
   });
