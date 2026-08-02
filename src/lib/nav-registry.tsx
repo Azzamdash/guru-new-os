@@ -903,7 +903,7 @@ export const NAV_PAGES: NavPage[] = [
 
   // INVENTORY
   {
-    to: "/inventory",
+    to: "/inventory-management",
     ar: "إدارة المخزون",
     en: "Inventory Management",
     icon: Boxes,
@@ -915,8 +915,8 @@ export const NAV_PAGES: NavPage[] = [
       "branch_manager",
       "fulfillment_manager",
     ],
-    descAr: "المخزون الحالي، الحركات والتنبيهات",
-    descEn: "Stock levels, movements & alerts",
+    descAr: "الرئيسية، الكتالوج، نقل المخزون، الموردين، أوامر الشراء، والتحليلات",
+    descEn: "Dashboard, catalog, transfers, suppliers, purchase orders & analytics",
   },
   {
     to: "/materials",

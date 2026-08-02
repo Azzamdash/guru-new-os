@@ -33,6 +33,7 @@ import { Route as AuthenticatedAppFulfillmentRouteImport } from './routes/_authe
 import { Route as AuthenticatedAppIntegrationLogsRouteImport } from './routes/_authenticated/_app.integration-logs'
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/_app.integrations'
 import { Route as AuthenticatedAppInventoryRouteImport } from './routes/_authenticated/_app.inventory'
+import { Route as AuthenticatedAppInventoryManagementRouteImport } from './routes/_authenticated/_app.inventory-management'
 import { Route as AuthenticatedAppInvestorsRouteImport } from './routes/_authenticated/_app.investors'
 import { Route as AuthenticatedAppInvoicePrintRouteImport } from './routes/_authenticated/_app.invoice-print'
 import { Route as AuthenticatedAppMaterialsRouteImport } from './routes/_authenticated/_app.materials'
@@ -235,6 +236,12 @@ const AuthenticatedAppInventoryRoute =
   AuthenticatedAppInventoryRouteImport.update({
     id: '/inventory',
     path: '/inventory',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppInventoryManagementRoute =
+  AuthenticatedAppInventoryManagementRouteImport.update({
+    id: '/inventory-management',
+    path: '/inventory-management',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppInvestorsRoute =
@@ -681,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
   '/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/inventory': typeof AuthenticatedAppInventoryRoute
+  '/inventory-management': typeof AuthenticatedAppInventoryManagementRoute
   '/investors': typeof AuthenticatedAppInvestorsRouteWithChildren
   '/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
   '/materials': typeof AuthenticatedAppMaterialsRoute
@@ -776,6 +784,7 @@ export interface FileRoutesByTo {
   '/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
   '/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/inventory': typeof AuthenticatedAppInventoryRoute
+  '/inventory-management': typeof AuthenticatedAppInventoryManagementRoute
   '/investors': typeof AuthenticatedAppInvestorsRouteWithChildren
   '/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
   '/materials': typeof AuthenticatedAppMaterialsRoute
@@ -872,6 +881,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
   '/_authenticated/_app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/_app/inventory': typeof AuthenticatedAppInventoryRoute
+  '/_authenticated/_app/inventory-management': typeof AuthenticatedAppInventoryManagementRoute
   '/_authenticated/_app/investors': typeof AuthenticatedAppInvestorsRouteWithChildren
   '/_authenticated/_app/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
   '/_authenticated/_app/materials': typeof AuthenticatedAppMaterialsRoute
@@ -969,6 +979,7 @@ export interface FileRouteTypes {
     | '/integration-logs'
     | '/integrations'
     | '/inventory'
+    | '/inventory-management'
     | '/investors'
     | '/invoice-print'
     | '/materials'
@@ -1064,6 +1075,7 @@ export interface FileRouteTypes {
     | '/integration-logs'
     | '/integrations'
     | '/inventory'
+    | '/inventory-management'
     | '/investors'
     | '/invoice-print'
     | '/materials'
@@ -1159,6 +1171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/integration-logs'
     | '/_authenticated/_app/integrations'
     | '/_authenticated/_app/inventory'
+    | '/_authenticated/_app/inventory-management'
     | '/_authenticated/_app/investors'
     | '/_authenticated/_app/invoice-print'
     | '/_authenticated/_app/materials'
@@ -1420,6 +1433,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/inventory'
       preLoaderRoute: typeof AuthenticatedAppInventoryRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/inventory-management': {
+      id: '/_authenticated/_app/inventory-management'
+      path: '/inventory-management'
+      fullPath: '/inventory-management'
+      preLoaderRoute: typeof AuthenticatedAppInventoryManagementRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/investors': {
@@ -2007,6 +2027,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppIntegrationLogsRoute: typeof AuthenticatedAppIntegrationLogsRoute
   AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppInventoryRoute: typeof AuthenticatedAppInventoryRoute
+  AuthenticatedAppInventoryManagementRoute: typeof AuthenticatedAppInventoryManagementRoute
   AuthenticatedAppInvestorsRoute: typeof AuthenticatedAppInvestorsRouteWithChildren
   AuthenticatedAppInvoicePrintRoute: typeof AuthenticatedAppInvoicePrintRoute
   AuthenticatedAppMaterialsRoute: typeof AuthenticatedAppMaterialsRoute
@@ -2080,6 +2101,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppIntegrationLogsRoute: AuthenticatedAppIntegrationLogsRoute,
   AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppInventoryRoute: AuthenticatedAppInventoryRoute,
+  AuthenticatedAppInventoryManagementRoute:
+    AuthenticatedAppInventoryManagementRoute,
   AuthenticatedAppInvestorsRoute: AuthenticatedAppInvestorsRouteWithChildren,
   AuthenticatedAppInvoicePrintRoute: AuthenticatedAppInvoicePrintRoute,
   AuthenticatedAppMaterialsRoute: AuthenticatedAppMaterialsRoute,
