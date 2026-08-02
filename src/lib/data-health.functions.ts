@@ -72,16 +72,21 @@ export const getDataHealth = createServerFn({ method: "GET" })
       .from("sales_invoices")
       .select("total_amount, collected_amount, type")
       .eq("type", "sale");
-    const openCod = (courierData ?? []).reduce(
-      (a: number, r: { total_amount: number; collected_amount: number }) =>
-        a + Math.max(0, (Number(r.total_amount) || 0) - (Number(r.collected_amount) || 0)),
-      0,
-    );
+    let openCod = 0;
+    let unreconciledInvoices = 0;
+    for (const r of (courierData ?? []) as Array<{ total_amount: number; collected_amount: number }>) {
+      const drift = (Number(r.total_amount) || 0) - (Number(r.collected_amount) || 0);
+      if (drift > 0) {
+        openCod += drift;
+        unreconciledInvoices += 1;
+      }
+    }
 
     // Orphans
-    const [ordersNoInv, invNoBrand] = await Promise.all([
+    const [ordersNoInv, invNoBrand, invNoStage] = await Promise.all([
       s.from("orders").select("id", { count: "exact", head: true }).is("invoice_id", null),
       s.from("sales_invoices").select("id", { count: "exact", head: true }).is("brand_id", null),
+      s.from("sales_invoices").select("id", { count: "exact", head: true }).is("stage", null),
     ]);
 
     // Webhook success/failure (integration_logs last 24h)
@@ -100,13 +105,13 @@ export const getDataHealth = createServerFn({ method: "GET" })
         ordersWithZeroCost: zeroCostOrders.count ?? 0,
       },
       couriers: {
-        unreconciledInvoices: 0,
+        unreconciledInvoices,
         totalOpenCod: openCod,
       },
       orphans: {
         ordersMissingInvoice: ordersNoInv.count ?? 0,
         invoicesMissingBrand: invNoBrand.count ?? 0,
-        salesInvoicesWithoutStage: 0,
+        salesInvoicesWithoutStage: invNoStage.count ?? 0,
       },
       webhooks: {
         last24hFailures: wFail.count ?? 0,
