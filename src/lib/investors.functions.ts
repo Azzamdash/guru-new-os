@@ -137,35 +137,75 @@ async function computeBrandProfit(
   return { revenue: r.revenue, costs: r.cogs + r.expenses, profit: r.netProfit };
 }
 
-// Compute per-brand valuation (annual revenue x1.5 + net assets) for a specific brand.
-async function computeBrandValuation(ctx: Ctx, brandId: string): Promise<{ annual_revenue: number; assets_net: number; valuation: number }> {
-  const yearAgo = trailing12mStart();
-  const [revMap, aRes] = await Promise.all([
-    revenueByBrandSince(ctx.supabase, yearAgo, brandId),
-    ctx.supabase.from("company_assets").select("cost, purchase_date, annual_depreciation_rate").eq("brand_id", brandId),
-  ]);
-  const assets = (aRes.data ?? []) as Array<{ cost: number; purchase_date: string; annual_depreciation_rate: number }>;
-  const revenue = revMap.get(brandId) ?? 0;
-  const now = Date.now();
-  let assetsNet = 0;
+type AssetRow = { cost: number; purchase_date: string; annual_depreciation_rate: number; brand_id: string | null };
+
+function netAssetValue(assets: AssetRow[], now = Date.now()): number {
+  let net = 0;
   for (const a of assets) {
     const cost = Number(a.cost) || 0;
     const rate = Number(a.annual_depreciation_rate) || 0;
     const years = Math.max(0, (now - new Date(a.purchase_date).getTime()) / (365.25 * 24 * 3600 * 1000));
     const acc = Math.min(cost, cost * (rate / 100) * years);
-    assetsNet += Math.max(0, cost - acc);
+    net += Math.max(0, cost - acc);
   }
-  return { annual_revenue: revenue, assets_net: assetsNet, valuation: revenue * 1.5 + assetsNet };
+  return net;
 }
 
-async function computeInvestorValuation(ctx: Ctx, investorId: string) {
+type BrandValuation = { annual_revenue: number; assets_net: number; valuation: number };
+
+// Company-wide valuation snapshot, computed ONCE (3 queries total) and shared
+// across every investor instead of recomputing per brand per investor.
+export type ValuationContext = {
+  brandValuation: (brandId: string) => BrandValuation;
+  totalBrandVal: number;
+  companyWideAssetsNet: number;
+};
+
+async function buildValuationContext(ctx: Ctx): Promise<ValuationContext> {
+  const yearAgo = trailing12mStart();
+  const [revMap, assetsRes, brandsRes] = await Promise.all([
+    revenueByBrandSince(ctx.supabase, yearAgo),
+    ctx.supabase.from("company_assets").select("cost, purchase_date, annual_depreciation_rate, brand_id"),
+    ctx.supabase.from("brands").select("id").eq("active", true),
+  ]);
+  const assets = (assetsRes.data ?? []) as AssetRow[];
+  const now = Date.now();
+  const byBrand = new Map<string, AssetRow[]>();
+  const companyWide: AssetRow[] = [];
+  for (const a of assets) {
+    if (!a.brand_id) companyWide.push(a);
+    else {
+      const list = byBrand.get(a.brand_id);
+      if (list) list.push(a);
+      else byBrand.set(a.brand_id, [a]);
+    }
+  }
+  const cache = new Map<string, BrandValuation>();
+  const brandValuation = (brandId: string): BrandValuation => {
+    const hit = cache.get(brandId);
+    if (hit) return hit;
+    const revenue = revMap.get(brandId) ?? 0;
+    const assetsNet = netAssetValue(byBrand.get(brandId) ?? [], now);
+    const v = { annual_revenue: revenue, assets_net: assetsNet, valuation: revenue * 1.5 + assetsNet };
+    cache.set(brandId, v);
+    return v;
+  };
+  const totalBrandVal = ((brandsRes.data ?? []) as Array<{ id: string }>).reduce(
+    (s, b) => s + brandValuation(b.id).valuation,
+    0,
+  );
+  return { brandValuation, totalBrandVal, companyWideAssetsNet: netAssetValue(companyWide, now) };
+}
+
+async function computeInvestorValuation(ctx: Ctx, investorId: string, shared?: ValuationContext) {
+  const vctx = shared ?? (await buildValuationContext(ctx));
   const { data: shares } = await ctx.supabase
     .from("investor_brand_shares")
     .select("brand_id, share_percentage, brands:brands(id, name, type)")
     .eq("investor_id", investorId);
-  const rows = await Promise.all(
-    (shares ?? []).map(async (s: { brand_id: string; share_percentage: number; brands: { name: string; type: string } | null }) => {
-      const v = await computeBrandValuation(ctx, s.brand_id);
+  const rows = ((shares ?? []) as Array<{ brand_id: string; share_percentage: number; brands: { name: string; type: string } | null }>).map(
+    (s) => {
+      const v = vctx.brandValuation(s.brand_id);
       const pct = Number(s.share_percentage) || 0;
       return {
         brand_id: s.brand_id,
@@ -177,7 +217,7 @@ async function computeInvestorValuation(ctx: Ctx, investorId: string) {
         brand_valuation: v.valuation,
         investor_valuation: (v.valuation * pct) / 100,
       };
-    }),
+    },
   );
   const brand_totals = rows.reduce(
     (acc, r) => ({
@@ -189,19 +229,8 @@ async function computeInvestorValuation(ctx: Ctx, investorId: string) {
 
   // Total company valuation (all active brands + company-wide assets), then take
   // the investor's *effective* company share = sum of (brand_valuation_i * pct_i) / total_company_valuation
-  const { data: brandsAll } = await ctx.supabase.from("brands").select("id").eq("active", true);
-  const allBrandVals = await Promise.all(((brandsAll ?? []) as Array<{ id: string }>).map((b) => computeBrandValuation(ctx, b.id)));
-  const totalBrandVal = allBrandVals.reduce((s, v) => s + v.valuation, 0);
-  const { data: cwAssets } = await ctx.supabase.from("company_assets").select("cost, purchase_date, annual_depreciation_rate").is("brand_id", null);
-  const now = Date.now();
-  let cwNet = 0;
-  for (const a of ((cwAssets ?? []) as Array<{ cost: number; purchase_date: string; annual_depreciation_rate: number }>)) {
-    const cost = Number(a.cost) || 0;
-    const rate = Number(a.annual_depreciation_rate) || 0;
-    const years = Math.max(0, (now - new Date(a.purchase_date).getTime()) / (365.25 * 24 * 3600 * 1000));
-    const acc = Math.min(cost, cost * (rate / 100) * years);
-    cwNet += Math.max(0, cost - acc);
-  }
+  const totalBrandVal = vctx.totalBrandVal;
+  const cwNet = vctx.companyWideAssetsNet;
   const totalCompanyValuation = totalBrandVal + cwNet;
   // Effective ownership fraction of the whole company = investor_valuation / totalBrandVal (only brand-scoped)
   const effectiveOwnership = totalBrandVal > 0 ? brand_totals.investor_valuation / totalBrandVal : 0;
@@ -218,6 +247,7 @@ async function computeInvestorValuation(ctx: Ctx, investorId: string) {
     },
   };
 }
+
 
 export const getInvestorSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
