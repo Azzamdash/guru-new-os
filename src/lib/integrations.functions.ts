@@ -202,7 +202,7 @@ export const syncShopifyOrders = createServerFn({ method: "POST" })
     await assertBrandAccess(context, data.brand_id);
     try {
       // Full import (not just a summary): paginate through every page so no order is missed.
-      const days = Math.min(Math.max(data.days ?? 365, 1), 3650);
+      const days = Math.min(Math.max(data.days ?? 1, 1), 3650);
       const since = new Date(Date.now() - days * 86400_000).toISOString();
       const { syncShopifyOrdersForBrand } = await import("@/server/shopifySync.server");
       const res = await syncShopifyOrdersForBrand(data.brand_id, {
