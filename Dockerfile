@@ -7,13 +7,17 @@ COPY . .
 RUN npm run build
 
 # Production Phase
-FROM nginx:alpine
+FROM node:20-alpine AS runner
+WORKDIR /app
 
-# مسح أي محتوى قديم
-RUN rm -rf /usr/share/nginx/html/*
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
 
-# نسخ محتويات المجلد مباشرة مع / في الآخر
-COPY --from=build /app/.output/public/ /usr/share/nginx/html/
+# نسخ المخرجات كاملة
+COPY --from=build /app/.output ./.output
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000
+
+# تشغيل سيرفر Nitro/Node مباشرة
+CMD ["node", ".output/server/index.mjs"]
