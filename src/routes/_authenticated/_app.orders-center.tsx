@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw, Link2, Unlink, AlertTriangle } from "lucide-react";
+import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw, Link2, Unlink, AlertTriangle, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/export-utils";
 import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
 import { queryPresets } from "@/lib/query-presets";
@@ -97,6 +98,41 @@ function OrdersCenterPage() {
 
   const o = overview.data;
 
+  const exportOverviewCsv = () => {
+    if (!o) return;
+    const rows: Array<Record<string, unknown>> = [];
+    const push = (c1: unknown, c2: unknown = "", c3: unknown = "", c4: unknown = "", c5: unknown = "") =>
+      rows.push({ c1, c2, c3, c4, c5 });
+
+    push("حسب الحالة");
+    push("الحالة", "عدد الأوردرات", "القيمة");
+    o.byStatus.forEach((r) => push(r.status, r.count, r.amount));
+    push("");
+
+    push("أداء شركات الشحن");
+    push("الشركة", "أوردرات", "تم التسليم", "مرتجع", "نسبة التسليم %");
+    o.byCourier.forEach((r) => push(r.name, r.count, r.delivered, r.returned, Number(r.deliveryRate || 0).toFixed(1)));
+    push("");
+
+    push("التوزيع الجغرافي");
+    push("المحافظة", "أوردرات", "تم التسليم", "القيمة");
+    o.byGovernorate.forEach((r) => push(r.name, r.count, r.delivered, r.amount));
+
+    exportToCSV(
+      `orders-overview-${resolved.dateFrom ?? ""}_${resolved.dateTo ?? ""}`,
+      rows,
+      [
+        { key: "c1", label: "" },
+        { key: "c2", label: "" },
+        { key: "c3", label: "" },
+        { key: "c4", label: "" },
+        { key: "c5", label: "" },
+      ],
+    );
+    toast.success("تم تصدير المؤشرات");
+  };
+
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -112,6 +148,11 @@ function OrdersCenterPage() {
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
+          {tab === "kpis" ? (
+            <Button variant="outline" size="sm" onClick={exportOverviewCsv} disabled={!o} className="gap-1.5">
+              <Download className="h-4 w-4" /> تصدير CSV
+            </Button>
+          ) : null}
           <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["orders-center"] })}>
             <RefreshCw className="h-4 w-4" />
           </Button>
