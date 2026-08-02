@@ -253,11 +253,11 @@ function ShipmentsPanel() {
     <div className="space-y-4">
       <Card className="p-4 flex flex-wrap items-end gap-2">
         <div className="space-y-1">
-          <Label>معرّف الأوردر (UUID)</Label>
-          <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} className="w-[340px]" />
+          <Label>ابحث عن الأوردر</Label>
+          <OrderSearchCombobox value={active} onSelect={(o) => setActive(o.id)} />
         </div>
-        <Button onClick={() => setActive(orderId.trim())}>فتح</Button>
       </Card>
+
 
       {active ? (
         <div className="grid gap-4 lg:grid-cols-2">
