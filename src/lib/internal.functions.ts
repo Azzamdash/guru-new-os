@@ -1,4 +1,3 @@
-import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "@/lib/paginate";
@@ -464,13 +463,13 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     const fromDay = isCustom ? dateFrom! : `${year}-01-01`;
     const toDay = isCustom ? dateTo! : `${year}-12-31`;
 
-    const invQb = () => context.supabase.from("supplier_invoices").select("id, supplier_id, brand_id, amount, due_at, status");
-    const payQb = () => context.supabase.from("supplier_payments").select("invoice_id, supplier_id, amount");
-    const supQb = () => context.supabase.from("suppliers").select("id, name, brand_id, opening_balance");
     const prodQb = () => context.supabase.from("products").select("id, name, brand_id, sell_price, cogs_override, unit, reorder_point").eq("active", true);
     const operationsQ = (context.supabase as any).rpc("dashboard_operational_report", {
       _from: fromISO,
       _to: toISO,
+      _brand_id: brandId || null,
+    });
+    const supplierDebtQ = (context.supabase as any).rpc("dashboard_supplier_debt_summary", {
       _brand_id: brandId || null,
     });
 
@@ -483,22 +482,23 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       }
     };
 
-    const [brandsR, catsR, meR, eeR, invRowsA, payRowsA, supRowsA, prodRowsA, operationsR] =
+    const [brandsR, catsR, meR, eeR, prodRowsA, operationsR, supplierDebtR] =
       await Promise.all([
         timed("brands", brandsQ), timed("categories", catsQ),
         timed("monthly_entries", meQ), timed("expense_entries", eeQ),
-        timed("supplier_invoices", fetchAllRows(invQb)),
-        timed("supplier_payments", fetchAllRows(payQb)),
-        timed("suppliers", fetchAllRows(supQb)),
         timed("products", fetchAllRows(prodQb)),
         timed<{ data: unknown; error: unknown }>("operations_rpc", operationsQ),
+        timed<{ data: unknown; error: unknown }>("supplier_debt_rpc", supplierDebtQ),
       ]);
     for (const r of [brandsR, catsR, meR, eeR]) if (r.error) throw r.error;
     if (operationsR.error) throw operationsR.error;
-    const invR = { data: invRowsA, error: null };
-    const payR = { data: payRowsA, error: null };
-    const supR = { data: supRowsA, error: null };
+    if (supplierDebtR.error) throw supplierDebtR.error;
     const prodR = { data: prodRowsA, error: null };
+    const supplierDebtSummary = (supplierDebtR.data ?? {}) as {
+      totalOutstanding?: number;
+      overdueCount?: number;
+      topSuppliers?: Array<{ name: string; outstanding: number; overdue: number }>;
+    };
     const operations = (operationsR.data ?? {}) as {
       monthlySales: Array<{ month: number; brandId: string; revenue: number; cogs: number }>;
       productSales: Array<{ productId: string; sold: number; returned: number }>;
@@ -512,19 +512,12 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     const brands = (brandsR.data ?? []) as Array<{ id: string; name: string; type: "product" | "service" }>;
     const cats = (catsR.data ?? []) as Array<{ id: string; name: string }>;
     const catName = new Map(cats.map((c) => [c.id, c.name]));
-    const supName = new Map((supR.data ?? []).map((s: { id: string; name: string }) => [s.id, s.name]));
-    const supBrand = new Map((supR.data ?? []).map((s: { id: string; brand_id: string | null }) => [s.id, s.brand_id ?? null]));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const meRows = (meR.data ?? []) as any[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const eeRows = (eeR.data ?? []) as any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invRows = (invR.data ?? []) as any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payRows = (payR.data ?? []) as any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supRows = (supR.data ?? []) as any[];
+
 
     const monthly = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1, revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0,
@@ -613,57 +606,15 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       .map(([cid, amt]) => ({ name: catName.get(cid) ?? "—", value: amt }))
       .sort((a, b) => b.value - a.value);
 
-    // Supplier debts
-    const paidByInv = new Map<string, number>();
-    const paidBySupplierStandalone = new Map<string, number>();
-    for (const p of payRows) {
-      if (p.invoice_id) paidByInv.set(p.invoice_id, (paidByInv.get(p.invoice_id) ?? 0) + (Number(p.amount) || 0));
-      else if (p.supplier_id) paidBySupplierStandalone.set(p.supplier_id, (paidBySupplierStandalone.get(p.supplier_id) ?? 0) + (Number(p.amount) || 0));
-    }
-    const today = getTodayInBusinessTimezone();
-    const supplierDebt = new Map<string, { name: string; outstanding: number; overdue: number }>();
-    const remainingStandalone = new Map<string, number>(paidBySupplierStandalone);
-    let totalOutstanding = 0, overdueCount = 0;
-    // Seed opening balances (respect brand filter); reduce by standalone first
-    for (const s of supRows as Array<{ id: string; name: string; brand_id: string | null; opening_balance: number }>) {
-      if (brandId && s.brand_id && s.brand_id !== brandId) continue;
-      const opening = Number(s.opening_balance) || 0;
-      const standalone = remainingStandalone.get(s.id) ?? 0;
-      const applied = Math.min(opening, standalone);
-      remainingStandalone.set(s.id, standalone - applied);
-      const net = opening - applied;
-      if (net === 0) continue;
-      const entry = supplierDebt.get(s.id) ?? { name: s.name, outstanding: 0, overdue: 0 };
-      entry.outstanding += net;
-      supplierDebt.set(s.id, entry);
-      totalOutstanding += net;
-    }
-    for (const inv of invRows) {
-      if (brandId) {
-        const invBrand = inv.brand_id ?? supBrand.get(inv.supplier_id) ?? null;
-        if (invBrand && invBrand !== brandId) continue;
-        if (!invBrand && supBrand.get(inv.supplier_id) && supBrand.get(inv.supplier_id) !== brandId) continue;
-      }
-      const paid = paidByInv.get(inv.id) ?? 0;
-      let remaining = Math.max(0, (Number(inv.amount) || 0) - paid);
-      if (remaining <= 0) continue;
-      // Apply any leftover standalone payments to reduce invoice remaining
-      const leftover = remainingStandalone.get(inv.supplier_id) ?? 0;
-      if (leftover > 0) {
-        const applied = Math.min(leftover, remaining);
-        remaining -= applied;
-        remainingStandalone.set(inv.supplier_id, leftover - applied);
-      }
-      if (remaining <= 0) continue;
-      totalOutstanding += remaining;
-      const isOverdue = inv.due_at && inv.due_at < today && inv.status !== "paid";
-      if (isOverdue) overdueCount += 1;
-      const entry = supplierDebt.get(inv.supplier_id) ?? { name: supName.get(inv.supplier_id) ?? "—", outstanding: 0, overdue: 0 };
-      entry.outstanding += remaining;
-      if (isOverdue) entry.overdue += remaining;
-      supplierDebt.set(inv.supplier_id, entry);
-    }
-    const topSuppliers = Array.from(supplierDebt.values()).sort((a, b) => b.outstanding - a.outstanding).slice(0, 5);
+    // Supplier debts (computed in the database via RPC)
+    const totalOutstanding = Number(supplierDebtSummary.totalOutstanding) || 0;
+    const overdueCount = Number(supplierDebtSummary.overdueCount) || 0;
+    const topSuppliers = (supplierDebtSummary.topSuppliers ?? []).map((s) => ({
+      name: s.name,
+      outstanding: Number(s.outstanding) || 0,
+      overdue: Number(s.overdue) || 0,
+    }));
+
 
     const mkAgg = new Map<string, { spend: number; revenue: number }>();
     for (const r of eeRows) {
