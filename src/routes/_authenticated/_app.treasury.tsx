@@ -178,6 +178,7 @@ function TreasuryPage() {
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحذف"),
   });
 
   const couriersMap = useMemo(() => {
