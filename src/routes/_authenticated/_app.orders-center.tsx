@@ -741,6 +741,16 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const linkedTimeline = useOrderTimeline(linkedOrderId ?? "");
+
+  const lo = linkedOrder.data;
+  const linkedTotal = lo
+    ? lo.items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.unit_price || 0), 0)
+      + Number(lo.shipping_amount || 0) - Number(lo.discount_amount || 0)
+    : 0;
+  const linkedCollected = (linkedTimeline.data?.collections ?? []).reduce((s, c) => s + Number(c.amount || 0), 0);
+  const linkedOutstanding = Math.max(0, linkedTotal - linkedCollected);
+  const lastShipment = (linkedTimeline.data?.shipments ?? []).slice(-1)[0] ?? null;
 
 
   return (
