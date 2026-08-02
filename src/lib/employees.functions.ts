@@ -138,3 +138,55 @@ export const deleteAttendance = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+async function assertHrManager(context: Ctx) {
+  const results = await Promise.all(
+    ["admin", "manager", "hr"].map((role) =>
+      context.supabase.rpc("has_role", { _user_id: context.userId, _role: role }),
+    ),
+  );
+  if (!results.some((r: { data?: boolean; error?: unknown }) => !r.error && r.data === true)) {
+    throw new Error("Forbidden");
+  }
+}
+
+export type LinkableUser = { id: string; email: string; linkedEmployeeId: string | null };
+
+/** All auth users with their current employee link (HR/manager/admin only). */
+export const listLinkableUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertHrManager(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 200 });
+    if (error) throw error;
+    const { data: emps, error: eErr } = await supabaseAdmin
+      .from("employees").select("id, user_id").not("user_id", "is", null);
+    if (eErr) throw eErr;
+    const byUser = new Map<string, string>();
+    for (const e of emps ?? []) if (e.user_id) byUser.set(e.user_id, e.id);
+    return data.users
+      .map((u) => ({ id: u.id, email: u.email ?? "", linkedEmployeeId: byUser.get(u.id) ?? null }))
+      .sort((a, b) => a.email.localeCompare(b.email)) as LinkableUser[];
+  });
+
+/** Link (or unlink with userId=null) an employee record to a system user account. */
+export const linkEmployeeUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { employeeId: string; userId: string | null }) => d)
+  .handler(async ({ data, context }) => {
+    await assertHrManager(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.userId) {
+      const { data: taken, error: tErr } = await supabaseAdmin
+        .from("employees").select("id, name").eq("user_id", data.userId).maybeSingle();
+      if (tErr) throw tErr;
+      if (taken && taken.id !== data.employeeId) {
+        throw new Error(`هذا الحساب مرتبط بالفعل بالموظف: ${taken.name}`);
+      }
+    }
+    const { error } = await supabaseAdmin
+      .from("employees").update({ user_id: data.userId }).eq("id", data.employeeId);
+    if (error) throw error;
+    return { ok: true };
+  });
