@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw } from "lucide-react";
+import { MessageCircle, Truck, Wallet, Activity, Send, RefreshCw, Link2, Unlink } from "lucide-react";
 import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
 import { queryPresets } from "@/lib/query-presets";
