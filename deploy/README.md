@@ -23,7 +23,8 @@ chown -R egurus:egurus /srv/egurus-os
 # متغيرات التشغيل (سرّية)
 install -m 600 /dev/null /etc/egurus-os.env
 # أضف بداخله: VITE_SUPABASE_URL=..., VITE_SUPABASE_PUBLISHABLE_KEY=...,
-#              VITE_SUPABASE_PROJECT_ID=..., SUPABASE_SERVICE_ROLE_KEY=..., PORT=3000
+#              VITE_SUPABASE_PROJECT_ID=..., SUPABASE_SERVICE_ROLE_KEY=...,
+#              BOSTA_RECALL_SECRET=... (نفس القيمة المخزّنة في Vault باسم bosta_recall_secret), PORT=3000
 
 # سكربت النشر + خدمة systemd
 install -m 755 deploy/deploy-guru-recall.sh /usr/local/bin/deploy-guru-recall
