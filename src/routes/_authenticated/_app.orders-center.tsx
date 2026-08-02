@@ -1,3 +1,4 @@
+import { formatBusinessDate } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -468,7 +469,7 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
     return next;
   });
   const exportSelected = () => {
-    exportToCSV(`orders-selected-${new Date().toISOString().slice(0, 10)}`, selectedRows, [
+    exportToCSV(`orders-selected-${formatBusinessDate(new Date())}`, selectedRows, [
       { key: "customer_name", label: "اسم العميل", fmt: (v) => (v as string) ?? "—" },
       { key: "customer_phone", label: "التليفون", fmt: (v) => (v as string) ?? "—" },
       { key: "shipping_governorate", label: "العنوان", fmt: (v) => (v as string) ?? "—" },

@@ -1,3 +1,4 @@
+import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -54,7 +55,7 @@ export const getSdOverview = createServerFn({ method: "GET" })
     // Upcoming deadlines (next 14 days, not done)
     const in14 = new Date(); in14.setDate(in14.getDate() + 14);
     const upcoming = (projects ?? [])
-      .filter((p: { deadline: string | null; status: string }) => p.deadline && p.status !== "done" && p.status !== "cancelled" && p.deadline <= in14.toISOString().slice(0,10))
+      .filter((p: { deadline: string | null; status: string }) => p.deadline && p.status !== "done" && p.status !== "cancelled" && p.deadline <= formatBusinessDate(in14))
       .sort((a: { deadline: string | null }, b: { deadline: string | null }) => (a.deadline ?? "").localeCompare(b.deadline ?? ""))
       .slice(0, 15);
 

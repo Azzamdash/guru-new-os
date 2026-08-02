@@ -43,5 +43,5 @@ export async function revenueByBrandSince(
 export function trailing12mStart(now: Date = new Date()): string {
   const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   d.setUTCMonth(d.getUTCMonth() - 12);
-  return d.toISOString().slice(0, 10);
+  return formatBusinessDate(d);
 }
