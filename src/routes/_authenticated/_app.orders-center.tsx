@@ -457,6 +457,28 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
     && (gov === "all" || (r.shipping_governorate ?? "—") === gov)
   ), [q.data, courier, gov]);
 
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  useEffect(() => { setSelected(new Set()); }, [dateFrom, dateTo, brandId, status, courier, gov, page]);
+  const selectedRows = useMemo(() => rows.filter((r) => selected.has(r.id)), [rows, selected]);
+  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const toggleAll = (on: boolean) => setSelected(on ? new Set(rows.map((r) => r.id)) : new Set());
+  const toggleOne = (id: string, on: boolean) => setSelected((prev) => {
+    const next = new Set(prev);
+    if (on) next.add(id); else next.delete(id);
+    return next;
+  });
+  const exportSelected = () => {
+    exportToCSV(`orders-selected-${new Date().toISOString().slice(0, 10)}`, selectedRows, [
+      { key: "customer_name", label: "اسم العميل", fmt: (v) => (v as string) ?? "—" },
+      { key: "customer_phone", label: "التليفون", fmt: (v) => (v as string) ?? "—" },
+      { key: "shipping_governorate", label: "العنوان", fmt: (v) => (v as string) ?? "—" },
+      { key: "shipping_governorate", label: "المحافظة", fmt: (v) => (v as string) ?? "—" },
+      { key: "courier_name", label: "شركة الشحن", fmt: (v) => (v as string) ?? "—" },
+      { key: "total_amount", label: "المبلغ", fmt: (v) => Number(v ?? 0) },
+    ]);
+    toast.success(`تم تصدير ${selectedRows.length} أوردر`);
+  };
+
   const goNext = () => {
     const nc = q.data?.nextCursor;
     if (!nc) return;
