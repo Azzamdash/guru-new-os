@@ -8,6 +8,7 @@ RUN npm run build
 
 # Production Phase
 FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
+# عدلنا /app/dist لـ /app/.output/public
+COPY --from=build /app/.output/public /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
