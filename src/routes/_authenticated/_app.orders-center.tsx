@@ -426,7 +426,27 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
           </div>
         ) : (
           <>
+            <div className="flex flex-wrap items-center gap-2 pb-3 mb-3 border-b">
+              {linkedOrderId ? (
+                <>
+                  <Badge variant="secondary" className="gap-1">
+                    <Link2 className="h-3 w-3" />
+                    #{linkedOrder.data?.external_order_number ?? linkedOrderId.slice(0, 8)}
+                    {linkedOrder.data ? ` • ${linkedOrder.data.fulfillment_status}` : ""}
+                  </Badge>
+                  <Button variant="ghost" size="sm" onClick={() => linkMut.mutate(null)} disabled={linkMut.isPending}>
+                    <Unlink className="h-4 w-4 me-1" /> فك الربط
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm text-muted-foreground">ربط بأوردر:</span>
+                  <OrderSearchCombobox className="w-[280px]" onSelect={(o) => linkMut.mutate(o.id)} />
+                </>
+              )}
+            </div>
             <div className="flex-1 space-y-2 overflow-auto">
+
               {(thread.data?.messages ?? []).map((m) => (
                 <div key={m.id} className={`max-w-[75%] rounded-lg p-2 text-sm ${m.direction === "out" ? "ms-auto bg-primary/10" : "bg-muted"}`}>
                   <div>{m.body}</div>
