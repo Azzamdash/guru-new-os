@@ -8,7 +8,7 @@ RUN npm run build
 
 # Production Phase
 FROM nginx:alpine
-# عدلنا /app/dist لـ /app/.output/public
-COPY --from=build /app/.output/public /usr/share/nginx/html
+# نسخ الملفات المطلوبة لـ nginx
+COPY --from=build /app/.output/public/. /usr/share/nginx/html/
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
