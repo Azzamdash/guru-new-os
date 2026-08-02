@@ -8,10 +8,19 @@ import {
 } from "@/lib/order-lifecycle.shared";
 import { applyShopifyOrderAction } from "@/server/shopifySync.server";
 
+async function secretMatches(provided: string | null, expected: string | undefined): Promise<boolean> {
+  if (!expected || !provided) return false;
+  const { timingSafeEqual } = await import("node:crypto");
+  const a = Buffer.from(provided, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 /**
  * Bosta webhook receiver.
  * URL: /api/public/webhooks/bosta/:brandId
- * Optional shared secret via ?secret=... matched against BOSTA_WEBHOOK_SECRET.
+ * Shared secret via the x-webhook-secret header, matched against BOSTA_WEBHOOK_SECRET
+ * with a constant-time comparison.
  * Every event is logged with order_number, tracking_number, and a human-readable reason.
  */
 export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
@@ -19,10 +28,9 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
     handlers: {
       POST: async ({ request, params }) => {
         const started = Date.now();
-        const url = new URL(request.url);
-        const providedSecret =
-          url.searchParams.get("secret") ?? request.headers.get("x-webhook-secret");
+        const providedSecret = request.headers.get("x-webhook-secret");
         const expected = process.env.BOSTA_WEBHOOK_SECRET;
+        const secretOk = await secretMatches(providedSecret, expected);
 
         const raw = await request.text();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,7 +44,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { logIntegrationEvent } = await import("@/server/integrationLogger");
 
-        if (!expected || providedSecret !== expected) {
+        if (!secretOk) {
           const httpStatus = expected ? 401 : 503;
           await logIntegrationEvent(supabaseAdmin, {
             provider: "bosta",
