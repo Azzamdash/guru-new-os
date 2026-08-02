@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { revenueByBrandSince } from "@/lib/revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -96,24 +97,16 @@ export const getValuationReport = createServerFn({ method: "GET" })
     const now = new Date();
     const yearAgo = new Date(now.getTime() - 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
 
-    const [brandsRes, invoicesRes, assetsRes] = await Promise.all([
+    const [brandsRes, revByBrand, assetsRes] = await Promise.all([
       context.supabase.from("brands").select("id,name,type,active").order("sort_order").order("name"),
-      context.supabase.from("sales_invoices").select("brand_id,total_amount,type,occurred_at").gte("occurred_at", yearAgo),
+      revenueByBrandSince(context.supabase, yearAgo),
       context.supabase.from("company_assets").select("*"),
     ]);
     if (brandsRes.error) throw brandsRes.error;
-    if (invoicesRes.error) throw invoicesRes.error;
     if (assetsRes.error) throw assetsRes.error;
 
     const brands = brandsRes.data as Array<{ id: string; name: string; type: string; active: boolean }>;
-    const invoices = (invoicesRes.data ?? []) as Array<{ brand_id: string; total_amount: number; type: string }>;
     const assets = (assetsRes.data ?? []) as CompanyAsset[];
-
-    const revByBrand = new Map<string, number>();
-    for (const inv of invoices) {
-      const sign = inv.type === "return" ? -1 : 1;
-      revByBrand.set(inv.brand_id, (revByBrand.get(inv.brand_id) ?? 0) + sign * (Number(inv.total_amount) || 0));
-    }
     const assetsByBrand = new Map<string, { cost: number; net: number }>();
     let companyWideCost = 0;
     let companyWideNet = 0;

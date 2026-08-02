@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeBrandNetProfit } from "./profits.shared";
+import { revenueByBrandSince } from "./revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -114,13 +115,12 @@ async function computeBrandProfit(
 // Compute per-brand valuation (annual revenue x1.5 + net assets) for a specific brand.
 async function computeBrandValuation(ctx: Ctx, brandId: string): Promise<{ annual_revenue: number; assets_net: number; valuation: number }> {
   const yearAgo = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-  const [invRes, aRes] = await Promise.all([
-    ctx.supabase.from("sales_invoices").select("total_amount, type, occurred_at").eq("brand_id", brandId).gte("occurred_at", yearAgo),
+  const [revMap, aRes] = await Promise.all([
+    revenueByBrandSince(ctx.supabase, yearAgo, brandId),
     ctx.supabase.from("company_assets").select("cost, purchase_date, annual_depreciation_rate").eq("brand_id", brandId),
   ]);
-  const invoices = (invRes.data ?? []) as Array<{ total_amount: number; type: string }>;
   const assets = (aRes.data ?? []) as Array<{ cost: number; purchase_date: string; annual_depreciation_rate: number }>;
-  const revenue = invoices.reduce((s, r) => s + (r.type === "return" ? -1 : 1) * (Number(r.total_amount) || 0), 0);
+  const revenue = revMap.get(brandId) ?? 0;
   const now = Date.now();
   let assetsNet = 0;
   for (const a of assets) {
