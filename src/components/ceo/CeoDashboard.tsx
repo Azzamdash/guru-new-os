@@ -45,6 +45,8 @@ import { calculateHealthScore } from "@/lib/health-score.shared";
 import { SectionCard } from "./SectionCard";
 import { KpiTile } from "./KpiTile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const nf0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const nfCompact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
@@ -226,8 +228,51 @@ export function CeoDashboard() {
   const atRisk = cust?.atRisk ?? 0;
   const topCustomers = cust?.top ?? [];
 
+  const failedQueries = [
+    { label: "مؤشرات الفترة", q: dashQ },
+    { label: "قائمة الدخل", q: isQ },
+    { label: "التقييم", q: valQ },
+    { label: "الأصول", q: assetsQ },
+    { label: "الخزنة", q: cashQ },
+    { label: "أعمار الديون", q: agingQ },
+    { label: "العملاء", q: custQ },
+  ].filter((x) => x.q.isError);
+
   return (
     <div className="space-y-6">
+      {failedQueries.length > 0 && (
+        <div
+          role="alert"
+          className="rounded-lg border-2 border-destructive/60 bg-destructive/10 p-4 space-y-3"
+        >
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-destructive">
+                تعذّر تحميل بعض بيانات اللوحة، جرّب تحديث الصفحة
+              </p>
+              <p className="text-xs text-muted-foreground">
+                الأقسام المتأثرة: {failedQueries.map((x) => x.label).join("، ")} — الأرقام الظاهرة
+                فيها غير مكتملة (ليست صفرًا فعليًا).
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {failedQueries.map((x) => (
+              <Button
+                key={x.label}
+                size="sm"
+                variant="destructive"
+                disabled={x.q.isFetching}
+                onClick={() => void x.q.refetch()}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${x.q.isFetching ? "animate-spin" : ""}`} />
+                إعادة المحاولة — {x.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card/60 p-3">
         <span className="text-xs text-muted-foreground me-1">فترة لوحة الـCEO</span>
         <PeriodFilter value={period} onChange={setPeriod} />
