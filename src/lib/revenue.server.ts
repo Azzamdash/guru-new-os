@@ -37,3 +37,11 @@ export async function revenueByBrandSince(
   }
   return totals;
 }
+
+// Start date of the trailing 12-month window (rolling calendar months),
+// used as the single source of truth for valuation revenue.
+export function trailing12mStart(now: Date = new Date()): string {
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  d.setUTCMonth(d.getUTCMonth() - 12);
+  return d.toISOString().slice(0, 10);
+}

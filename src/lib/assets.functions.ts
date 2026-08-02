@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { revenueByBrandSince } from "@/lib/revenue.server";
+import { revenueByBrandSince, trailing12mStart } from "@/lib/revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -95,7 +95,7 @@ export const getValuationReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const now = new Date();
-    const yearAgo = new Date(now.getTime() - 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const yearAgo = trailing12mStart(now);
 
     const [brandsRes, revByBrand, assetsRes] = await Promise.all([
       context.supabase.from("brands").select("id,name,type,active").order("sort_order").order("name"),

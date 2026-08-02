@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeBrandNetProfit } from "./profits.shared";
-import { revenueByBrandSince } from "./revenue.server";
+import { revenueByBrandSince, trailing12mStart } from "./revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -114,7 +114,7 @@ async function computeBrandProfit(
 
 // Compute per-brand valuation (annual revenue x1.5 + net assets) for a specific brand.
 async function computeBrandValuation(ctx: Ctx, brandId: string): Promise<{ annual_revenue: number; assets_net: number; valuation: number }> {
-  const yearAgo = new Date(Date.now() - 365 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+  const yearAgo = trailing12mStart();
   const [revMap, aRes] = await Promise.all([
     revenueByBrandSince(ctx.supabase, yearAgo, brandId),
     ctx.supabase.from("company_assets").select("cost, purchase_date, annual_depreciation_rate").eq("brand_id", brandId),
