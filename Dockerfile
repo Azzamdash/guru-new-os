@@ -9,13 +9,13 @@ RUN npm run build
 # Production Phase
 FROM nginx:alpine
 
-# 1. مسح أي ملفات قديمة
+# مسح أي ملفات قديمة
 RUN rm -rf /usr/share/nginx/html/*
 
-# 2. نسخ كونفيج Nginx اللي عملناه
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# كتابة إعدادات Nginx المخصصة لـ React/SPA مباشرة هنا (عشان يحل مشكلة 403 و 404)
+RUN echo 'server { listen 80; location / { root /usr/share/nginx/html; index index.html; try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf
 
-# 3. نسخ المحتويات مع السلاش لضمان إن الفولدر ينزل فك
+# نسخ محتويات المجلد المترجم
 COPY --from=build /app/.output/public/ /usr/share/nginx/html/
 
 EXPOSE 80
