@@ -221,6 +221,8 @@ function AttendancePage() {
           <TabsTrigger value="log">تسجيل يومي</TabsTrigger>
           <TabsTrigger value="report">تقرير التأخير/الأوفر تايم</TabsTrigger>
           <TabsTrigger value="schedule">جداول العمل</TabsTrigger>
+          <TabsTrigger value="links">ربط الحسابات</TabsTrigger>
+
         </TabsList>
 
         {/* LOG ENTRY */}
