@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/_app/reports/valuation")({
   head: () => ({
     meta: [
       { title: "تقييم الشركات — e-GURUS" },
-      { name: "description", content: "تقييم كل براند بناءً على الإيرادات السنوية والأصول." },
+      { name: "description", content: "تقييم كل براند بناءً على إيرادات آخر ١٢ شهر والأصول." },
     ],
   }),
   component: ValuationPage,
@@ -49,7 +49,7 @@ function ValuationPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2"><Building2 className="w-7 h-7 text-primary" /> تقييم الشركات</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            المعادلة: قيمة البراند = (الإيرادات السنوية × 1.5) + القيمة الدفترية للأصول الخاصة بالبراند.
+            المعادلة: قيمة البراند = (إيرادات آخر ١٢ شهر × 1.5) + القيمة الدفترية للأصول الخاصة بالبراند.
           </p>
         </div>
         <ReportActions
@@ -59,7 +59,7 @@ function ValuationPage() {
           rows={rows as unknown as Record<string, unknown>[]}
           columns={[
             { key: "brand_name", label: "البراند" },
-            { key: "annual_revenue", label: "الإيرادات السنوية", fmt: (v) => fmt(Number(v)) },
+            { key: "annual_revenue", label: "إيرادات آخر ١٢ شهر", fmt: (v) => fmt(Number(v)) },
             { key: "assets_net", label: "القيمة الدفترية للأصول", fmt: (v) => fmt(Number(v)) },
             { key: "valuation", label: "التقييم", fmt: (v) => fmt(Number(v)) },
           ]}
@@ -74,7 +74,7 @@ function ValuationPage() {
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Kpi label="عدد البراندات" value={String(rows.length)} />
-            <Kpi label="إجمالي الإيرادات السنوية" value={fmt(data.totals.annual_revenue)} />
+            <Kpi label="إجمالي إيرادات آخر ١٢ شهر" value={fmt(data.totals.annual_revenue)} />
             <Kpi label="أصول عامة للشركة (صافي)" value={fmt(data.companyWide.net)} />
             <Kpi label="التقييم الإجمالي للشركة" value={fmt(data.totalCompanyValuation)} highlight />
           </div>
@@ -106,7 +106,7 @@ function ValuationPage() {
                   <tr className="text-muted-foreground text-right border-b border-border">
                     <th className="p-3">البراند</th>
                     <th className="p-3">النوع</th>
-                    <th className="p-3">الإيرادات السنوية</th>
+                    <th className="p-3">إيرادات آخر ١٢ شهر</th>
                     <th className="p-3">× 1.5</th>
                     <th className="p-3">أصول (صافي)</th>
                     <th className="p-3">التقييم</th>

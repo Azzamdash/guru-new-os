@@ -384,7 +384,7 @@ export function CeoDashboard() {
         <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="text-xs text-muted-foreground">
-              تقييم الشركة التقديري (إيراد سنوي × 1.5 + صافي الأصول)
+              تقييم الشركة التقديري (إيراد آخر ١٢ شهر × 1.5 + صافي الأصول)
             </div>
             <div className="text-2xl font-black text-primary">{egpFull(enterpriseVal)}</div>
           </div>
