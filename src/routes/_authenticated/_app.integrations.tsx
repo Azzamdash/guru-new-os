@@ -102,7 +102,7 @@ function IntegrationsPage() {
                 onDeleted={invalidate}
                 testFn={testShopify}
                 syncFn={syncShopifyOrders}
-                syncLabel="مزامنة الطلبات (7 أيام)"
+                syncLabel="استيراد الطلبات (سنة كاملة)"
               />
             );
           })}
