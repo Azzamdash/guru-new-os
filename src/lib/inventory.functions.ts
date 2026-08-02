@@ -5,6 +5,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
+async function assertWriter(context: Ctx) {
+  const results = await Promise.all([
+    context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+    context.supabase.rpc("has_role", { _user_id: context.userId, _role: "manager" }),
+  ]);
+  if (!results.some((r) => !r.error && r.data === true)) throw new Error("Forbidden");
+}
+
 export type StockItem = {
   key: string;
   kind: "product" | "material";
@@ -105,6 +113,7 @@ export const setReorderPoint = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { kind: "product" | "material"; id: string; reorder_point: number }) => d)
   .handler(async ({ data, context }) => {
+    await assertWriter(context as Ctx);
     const table = data.kind === "product" ? "products" : "materials";
     const { error } = await (context as Ctx).supabase
       .from(table)
@@ -127,6 +136,7 @@ export const addMovement = createServerFn({ method: "POST" })
     note?: string | null;
   }) => d)
   .handler(async ({ data, context }) => {
+    await assertWriter(context as Ctx);
     if (!data.id || !data.qty) throw new Error("Invalid input");
     const type = data.direction === "in" ? "production" : data.direction === "out" ? "sale" : "adjustment";
     const qty = data.direction === "adjust" ? Number(data.qty) : Math.abs(Number(data.qty));
