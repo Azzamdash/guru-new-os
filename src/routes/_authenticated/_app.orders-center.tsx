@@ -497,6 +497,13 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
         <table className="w-full text-sm">
           <thead className="text-muted-foreground">
             <tr>
+              <th className="w-8 py-1">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={(v) => toggleAll(v === true)}
+                  aria-label="تحديد الكل"
+                />
+              </th>
               <th className="text-start py-1">رقم الأوردر</th>
               <th className="text-start">العميل</th>
               <th className="text-start">البراند</th>
@@ -511,6 +518,13 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
           <tbody>
             {rows.map((r) => (
               <tr key={r.id} className="border-b last:border-0">
+                <td className="py-1">
+                  <Checkbox
+                    checked={selected.has(r.id)}
+                    onCheckedChange={(v) => toggleOne(r.id, v === true)}
+                    aria-label="تحديد الأوردر"
+                  />
+                </td>
                 <td className="py-1">{r.external_order_number ?? r.id.slice(0, 8)}</td>
                 <td>{r.customer_name ?? "—"}</td>
                 <td>{r.brand_name}</td>
@@ -530,11 +544,23 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
               </tr>
             ))}
             {!q.isLoading && rows.length === 0 ? (
-              <tr><td colSpan={9} className="py-6 text-center text-muted-foreground">لا توجد أوردرات مطابقة.</td></tr>
+              <tr><td colSpan={10} className="py-6 text-center text-muted-foreground">لا توجد أوردرات مطابقة.</td></tr>
             ) : null}
           </tbody>
         </table>
       </div>
+
+      {selectedRows.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2">
+          <div className="text-sm">تم تحديد {selectedRows.length} أوردر</div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
+            <Button size="sm" onClick={exportSelected}>
+              <Download className="h-3 w-3 me-1" /> تصدير المحدد CSV
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between">
         <div className="text-xs text-muted-foreground">{q.isFetching ? "جارٍ التحميل…" : `صفحة ${page + 1}`}</div>
