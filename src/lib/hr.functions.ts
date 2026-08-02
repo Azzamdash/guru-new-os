@@ -75,13 +75,25 @@ export const createRequest = createServerFn({ method: "POST" })
     if (data.requested_date < minRequestDate()) {
       throw new Error("Requested date must be at least 2 days from today");
     }
+    // employee_id must reference the employee row linked to the signed-in user (RLS)
+    const { data: emp, error: empErr } = await context.supabase
+      .from("employees")
+      .select("id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (empErr) throw empErr;
+    if (!emp?.id) {
+      throw new Error(
+        "لا يوجد ملف موظف مرتبط بحسابك. اطلب من الإدارة ربط حسابك بسجل موظف قبل تقديم الطلبات."
+      );
+    }
     const { error } = await context.supabase.from("employee_requests").insert({
       user_id: context.userId,
       type: data.type,
       requested_date: data.requested_date,
       amount: data.type === "advance" ? (data.amount ?? null) : null,
       note: data.note ?? null,
-      employee_id: data.employee_id ?? null,
+      employee_id: emp.id,
     });
     if (error) throw error;
     return { ok: true };
