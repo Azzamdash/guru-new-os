@@ -20,7 +20,7 @@ import {
   listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
   linkThreadToOrder,
 } from "@/lib/orders-management.functions";
-import { getOrder } from "@/lib/orders.functions";
+import { getOrder, type OrderRow } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
 
 
@@ -197,17 +197,72 @@ function useOrderTimeline(orderId: string) {
   });
 }
 
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-1">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="font-medium break-words">{value}</div>
+    </div>
+  );
+}
+
 function TimelinePanel() {
   const [active, setActive] = useState("");
+  const [selectedRow, setSelectedRow] = useState<OrderRow | null>(null);
   const timeline = useOrderTimeline(active);
+
+  const getOrderFn = useServerFn(getOrder);
+  const order = useQuery({
+    queryKey: ["orders-center", "timeline-order", active],
+    queryFn: () => getOrderFn({ data: { id: active } }),
+    enabled: !!active,
+    ...queryPresets.live,
+  });
+
+  const o = order.data;
+  const total = o
+    ? o.items.reduce((s, it) => s + Number(it.qty || 0) * Number(it.unit_price || 0), 0)
+      + Number(o.shipping_amount || 0) - Number(o.discount_amount || 0)
+    : selectedRow?.total_amount ?? 0;
+
   return (
     <div className="space-y-4">
       <Card className="p-4 flex flex-wrap items-end gap-2">
         <div className="space-y-1">
           <Label>ابحث عن الأوردر</Label>
-          <OrderSearchCombobox value={active} onSelect={(o) => setActive(o.id)} />
+          <OrderSearchCombobox
+            value={active}
+            onSelect={(row) => {
+              setActive(row.id);
+              setSelectedRow(row);
+            }}
+          />
         </div>
       </Card>
+
+      {active ? (
+        <Card className="p-4">
+          {order.isLoading ? (
+            <div className="text-sm text-muted-foreground">جارٍ تحميل بيانات الأوردر…</div>
+          ) : order.isError ? (
+            <div className="text-sm text-destructive">تعذّر تحميل بيانات الأوردر</div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="العميل" value={o?.customer_name ?? selectedRow?.customer_name ?? "—"} />
+              <Field label="التليفون" value={o?.customer_phone ?? selectedRow?.customer_phone ?? "—"} />
+              <Field label="البراند" value={selectedRow?.brand_name ?? "—"} />
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">الحالة الحالية</div>
+                <Badge variant="secondary">{selectedRow?.order_status ?? o?.fulfillment_status ?? "—"}</Badge>
+              </div>
+              <Field label="إجمالي المبلغ" value={`${Number(total).toLocaleString("en-GB", { maximumFractionDigits: 2 })} ج.م`} />
+              <Field label="شركة الشحن" value={selectedRow?.courier_name ?? "—"} />
+              {o?.external_order_number ? <Field label="رقم الأوردر" value={o.external_order_number} /> : null}
+            </div>
+          )}
+        </Card>
+      ) : null}
+
 
       {timeline.data ? (
         <Card className="p-4 space-y-3">
