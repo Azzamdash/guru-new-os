@@ -43,8 +43,8 @@ set -a
 set +a
 
 cd "$RELEASE"
-npm ci --legacy-peer-deps
-NITRO_PRESET=node-server npm run build
+bun install --frozen-lockfile
+NITRO_PRESET=node-server bun run build
 test -f "$RELEASE/.output/server/index.mjs"
 log "build ok"
 
