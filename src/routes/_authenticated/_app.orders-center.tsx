@@ -19,6 +19,8 @@ import {
   getOrdersOverview, getOrderTimeline, addShipmentAttempt, recordCollection,
   listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
 } from "@/lib/orders-management.functions";
+import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
+
 
 export const Route = createFileRoute("/_authenticated/_app/orders-center")({
   head: () => ({ meta: [
@@ -193,18 +195,17 @@ function useOrderTimeline(orderId: string) {
 }
 
 function TimelinePanel() {
-  const [orderId, setOrderId] = useState("");
   const [active, setActive] = useState("");
   const timeline = useOrderTimeline(active);
   return (
     <div className="space-y-4">
       <Card className="p-4 flex flex-wrap items-end gap-2">
         <div className="space-y-1">
-          <Label>معرّف الأوردر (UUID)</Label>
-          <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} className="w-[340px]" placeholder="order id" />
+          <Label>ابحث عن الأوردر</Label>
+          <OrderSearchCombobox value={active} onSelect={(o) => setActive(o.id)} />
         </div>
-        <Button onClick={() => setActive(orderId.trim())}>عرض السجل</Button>
       </Card>
+
       {timeline.data ? (
         <Card className="p-4 space-y-3">
           {timeline.data.entries.length === 0 ? <div className="text-muted-foreground">لا يوجد سجل بعد.</div> : null}
@@ -228,7 +229,7 @@ function TimelinePanel() {
 
 function ShipmentsPanel() {
   const qc = useQueryClient();
-  const [orderId, setOrderId] = useState("");
+  
   const [active, setActive] = useState("");
   const [tracking, setTracking] = useState("");
   const [amount, setAmount] = useState("");
@@ -252,11 +253,11 @@ function ShipmentsPanel() {
     <div className="space-y-4">
       <Card className="p-4 flex flex-wrap items-end gap-2">
         <div className="space-y-1">
-          <Label>معرّف الأوردر (UUID)</Label>
-          <Input value={orderId} onChange={(e) => setOrderId(e.target.value)} className="w-[340px]" />
+          <Label>ابحث عن الأوردر</Label>
+          <OrderSearchCombobox value={active} onSelect={(o) => setActive(o.id)} />
         </div>
-        <Button onClick={() => setActive(orderId.trim())}>فتح</Button>
       </Card>
+
 
       {active ? (
         <div className="grid gap-4 lg:grid-cols-2">
