@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/azzamdash/guru-new-os:latest
+    container_name: guru-new-os
+    restart: always
+    environment:
+      - PORT=${PORT:-3000}
+      - NODE_ENV=${NODE_ENV:-production}
+      - VITE_SUPABASE_URL
+      - VITE_SUPABASE_PUBLISHABLE_KEY
+    networks:
+      - app-net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - app-net
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app-net:
+    driver: bridge
