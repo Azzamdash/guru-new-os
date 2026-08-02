@@ -259,7 +259,7 @@ function SyncButton({
   const sync = useServerFn(syncFn);
   const del = useServerFn(deleteIntegration);
   const testM = useMutation({ mutationFn: () => test({ data: { brand_id } }), onSuccess: () => { toast.success("الاتصال يعمل"); onDone(); }, onError: (e) => toast.error(String(e)) });
-  const syncM = useMutation({ mutationFn: () => sync({ data: { brand_id, days: 7 } }), onSuccess: (r) => { toast.success(`تمت المزامنة: ${JSON.stringify(r)}`); onDone(); }, onError: (e) => toast.error(String(e)) });
+  const syncM = useMutation({ mutationFn: () => sync({ data: { brand_id, days: syncDays ?? 7 } }), onSuccess: (r) => { toast.success(`تمت المزامنة: ${JSON.stringify(r)}`); onDone(); }, onError: (e) => toast.error(String(e)) });
   const delM = useMutation({ mutationFn: () => del({ data: { brand_id, provider } }), onSuccess: () => { toast.success("تم الحذف"); onDone(); }, onError: (e) => toast.error(String(e)) });
 
   return (
