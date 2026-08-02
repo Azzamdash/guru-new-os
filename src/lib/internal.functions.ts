@@ -464,13 +464,13 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     const fromDay = isCustom ? dateFrom! : `${year}-01-01`;
     const toDay = isCustom ? dateTo! : `${year}-12-31`;
 
-    const invQb = () => context.supabase.from("supplier_invoices").select("id, supplier_id, brand_id, amount, due_at, status");
-    const payQb = () => context.supabase.from("supplier_payments").select("invoice_id, supplier_id, amount");
-    const supQb = () => context.supabase.from("suppliers").select("id, name, brand_id, opening_balance");
     const prodQb = () => context.supabase.from("products").select("id, name, brand_id, sell_price, cogs_override, unit, reorder_point").eq("active", true);
     const operationsQ = (context.supabase as any).rpc("dashboard_operational_report", {
       _from: fromISO,
       _to: toISO,
+      _brand_id: brandId || null,
+    });
+    const supplierDebtQ = (context.supabase as any).rpc("dashboard_supplier_debt_summary", {
       _brand_id: brandId || null,
     });
 
@@ -483,22 +483,23 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       }
     };
 
-    const [brandsR, catsR, meR, eeR, invRowsA, payRowsA, supRowsA, prodRowsA, operationsR] =
+    const [brandsR, catsR, meR, eeR, prodRowsA, operationsR, supplierDebtR] =
       await Promise.all([
         timed("brands", brandsQ), timed("categories", catsQ),
         timed("monthly_entries", meQ), timed("expense_entries", eeQ),
-        timed("supplier_invoices", fetchAllRows(invQb)),
-        timed("supplier_payments", fetchAllRows(payQb)),
-        timed("suppliers", fetchAllRows(supQb)),
         timed("products", fetchAllRows(prodQb)),
         timed<{ data: unknown; error: unknown }>("operations_rpc", operationsQ),
+        timed<{ data: unknown; error: unknown }>("supplier_debt_rpc", supplierDebtQ),
       ]);
     for (const r of [brandsR, catsR, meR, eeR]) if (r.error) throw r.error;
     if (operationsR.error) throw operationsR.error;
-    const invR = { data: invRowsA, error: null };
-    const payR = { data: payRowsA, error: null };
-    const supR = { data: supRowsA, error: null };
+    if (supplierDebtR.error) throw supplierDebtR.error;
     const prodR = { data: prodRowsA, error: null };
+    const supplierDebtSummary = (supplierDebtR.data ?? {}) as {
+      totalOutstanding?: number;
+      overdueCount?: number;
+      topSuppliers?: Array<{ name: string; outstanding: number; overdue: number }>;
+    };
     const operations = (operationsR.data ?? {}) as {
       monthlySales: Array<{ month: number; brandId: string; revenue: number; cogs: number }>;
       productSales: Array<{ productId: string; sold: number; returned: number }>;
@@ -512,19 +513,12 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     const brands = (brandsR.data ?? []) as Array<{ id: string; name: string; type: "product" | "service" }>;
     const cats = (catsR.data ?? []) as Array<{ id: string; name: string }>;
     const catName = new Map(cats.map((c) => [c.id, c.name]));
-    const supName = new Map((supR.data ?? []).map((s: { id: string; name: string }) => [s.id, s.name]));
-    const supBrand = new Map((supR.data ?? []).map((s: { id: string; brand_id: string | null }) => [s.id, s.brand_id ?? null]));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const meRows = (meR.data ?? []) as any[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const eeRows = (eeR.data ?? []) as any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invRows = (invR.data ?? []) as any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payRows = (payR.data ?? []) as any[];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supRows = (supR.data ?? []) as any[];
+
 
     const monthly = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1, revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0,
