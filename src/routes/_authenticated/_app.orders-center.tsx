@@ -250,7 +250,12 @@ function OrdersCenterPage() {
                     </thead>
                     <tbody>
                       {o.byCourier.map((r) => (
-                        <tr key={r.name} className="border-b last:border-0 text-center">
+                        <tr
+                          key={r.name}
+                          onClick={() => drillTo({ courier: r.name })}
+                          title="اضغط لعرض أوردرات شركة الشحن دي"
+                          className="border-b last:border-0 text-center cursor-pointer transition-colors hover:bg-accent/60"
+                        >
                           <td className="py-1 text-start">{r.name}</td>
                           <td className="tabular-nums">{nf(r.count)}</td>
                           <td className="tabular-nums">{nf(r.delivered)}</td>
