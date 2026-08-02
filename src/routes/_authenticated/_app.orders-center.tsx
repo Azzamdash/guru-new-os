@@ -303,7 +303,7 @@ function OrdersCenterPage() {
           />
         </TabsContent>
 
-        <TabsContent value="orders" className="pt-4">
+        <TabsContent value="orders" className="pt-4" ref={ordersTabRef}>
           <OrdersListPanel
             dateFrom={resolved.dateFrom ?? ""}
             dateTo={resolved.dateTo ?? ""}
