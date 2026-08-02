@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { fetchAllRows } from "./paginate";
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -51,13 +53,16 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
 
     const ids = rows.map((r) => r["id"] as string);
     let collected = 0;
-    if (ids.length) {
-      const { data: cols } = await ctx.supabase
-        .from("order_collections")
-        .select("order_id, amount")
-        .in("order_id", ids.slice(0, 1000));
-      for (const c of (cols ?? []) as Array<{ amount: number }>) collected += Number(c.amount ?? 0);
+    // Chunk the id list (URL length safety) and paginate each chunk fully.
+    const ID_CHUNK = 500;
+    for (let i = 0; i < ids.length; i += ID_CHUNK) {
+      const chunk = ids.slice(i, i + ID_CHUNK);
+      const cols = await fetchAllRows<{ amount: number }>(() =>
+        ctx.supabase.from("order_collections").select("order_id, amount").in("order_id", chunk),
+      );
+      for (const c of cols) collected += Number(c.amount ?? 0);
     }
+
 
     const { data: couriers } = await ctx.supabase.from("couriers").select("id, name");
     const courierName = new Map<string, string>(
