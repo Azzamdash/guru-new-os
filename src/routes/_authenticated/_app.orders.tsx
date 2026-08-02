@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { queryPresets } from "@/lib/query-presets";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -273,7 +273,9 @@ function OrdersPage() {
 
 
 
-  // Auto-sync Shopify orders every 60 seconds (silent; no toasts)
+  // Auto-sync Shopify orders every 30 seconds (silent; toasts only after 3 consecutive failures)
+  const consecutiveFailuresRef = useRef(0);
+  const hasWarnedRef = useRef(false);
   useEffect(() => {
     const tick = async () => {
       try {
@@ -281,7 +283,15 @@ function OrdersPage() {
         else await syncFn({ data: { brandId } });
         qc.invalidateQueries({ queryKey: ["orders"] });
         qc.invalidateQueries({ queryKey: ["orders-summary"] });
-      } catch { /* silent */ }
+        consecutiveFailuresRef.current = 0;
+        hasWarnedRef.current = false;
+      } catch {
+        consecutiveFailuresRef.current += 1;
+        if (consecutiveFailuresRef.current >= 3 && !hasWarnedRef.current) {
+          toast.warning("تعذّرت مزامنة Shopify، تحقق من الاتصال");
+          hasWarnedRef.current = true;
+        }
+      }
     };
     const iv = setInterval(tick, 30_000);
     return () => clearInterval(iv);
