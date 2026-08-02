@@ -17,8 +17,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Clock, Plus, Trash2, Save, Settings2 } from "lucide-react";
-import { listEmployeesWithSalary, upsertEmployee } from "@/lib/employees.functions";
+import { Clock, Plus, Trash2, Save, Settings2, Link as LinkIcon } from "lucide-react";
+import { listEmployeesWithSalary, upsertEmployee, listLinkableUsers, linkEmployeeUser } from "@/lib/employees.functions";
+
 import { listTimeLogs, upsertTimeLog, deleteTimeLog, type TimeLog } from "@/lib/attendance.functions";
 import { getMyRole } from "@/lib/admin.functions";
 
