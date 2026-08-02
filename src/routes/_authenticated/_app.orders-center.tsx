@@ -86,7 +86,7 @@ function OrdersCenterPage() {
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
-          <Button variant="outline" size="sm" onClick={() => overview.refetch()}>
+          <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["orders-center"] })}>
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
