@@ -9,14 +9,14 @@ RUN npm run build
 # Production Phase
 FROM nginx:alpine
 
-# مسح أي محتوى قديم
+# 1. مسح أي محتوى افتراضي
 RUN rm -rf /usr/share/nginx/html/*
 
-# كتابة إعدادات Nginx المخصصة لـ React/Vite
+# 2. إعدادات Nginx لـ SPA
 RUN echo 'server { listen 80; location / { root /usr/share/nginx/html; index index.html; try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf
 
-# نسخ المخرج الحقيقي لمشاريع Vite (فولدر dist)
-COPY --from=build /app/dist /usr/share/nginx/html
+# 3. نسخ المحتويات فقط لضمان وجود index.html في الجذر مباشرة
+COPY --from=build /app/.output/public/. /usr/share/nginx/html/
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
