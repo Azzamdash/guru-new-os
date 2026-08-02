@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,7 @@ import {
   listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
   linkThreadToOrder,
 } from "@/lib/orders-management.functions";
-import { getOrder, type OrderRow } from "@/lib/orders.functions";
+import { getOrder, listOrders, type OrderRow } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
 
 
@@ -55,6 +55,16 @@ function OrdersCenterPage() {
   const [period, setPeriod] = usePersistedPeriod("orders-center");
   const resolved = useMemo(() => resolvePeriod(period), [period]);
   const [brandId, setBrandId] = useState<string>("all");
+  const [tab, setTab] = useState("kpis");
+  const [activeOrder, setActiveOrder] = useState("");
+  const [activeRow, setActiveRow] = useState<OrderRow | null>(null);
+
+  const openOrderIn = (target: "ops" | "timeline", row: OrderRow) => {
+    setActiveOrder(row.id);
+    setActiveRow(row);
+    setTab(target);
+  };
+
 
   const brands = useQuery({
     queryKey: ["brands"],
@@ -100,11 +110,13 @@ function OrdersCenterPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="kpis">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="kpis">المؤشرات</TabsTrigger>
+          <TabsTrigger value="orders">الأوردرات</TabsTrigger>
           <TabsTrigger value="ops">الشحن والتحصيل</TabsTrigger>
           <TabsTrigger value="timeline">سجل الأوردر</TabsTrigger>
+
           <TabsTrigger value="wa" className="relative">
             واتساب
             {waUnread > 0 && (
@@ -187,13 +199,31 @@ function OrdersCenterPage() {
           ) : null}
         </TabsContent>
 
+        <TabsContent value="orders" className="pt-4">
+          <OrdersListPanel
+            dateFrom={resolved.dateFrom ?? ""}
+            dateTo={resolved.dateTo ?? ""}
+            brandId={brandId}
+            statuses={(o?.byStatus ?? []).map((r) => r.status)}
+            couriers={(o?.byCourier ?? []).map((r) => r.name)}
+            governorates={(o?.byGovernorate ?? []).map((r) => r.name)}
+            onOpen={openOrderIn}
+          />
+        </TabsContent>
+
         <TabsContent value="ops" className="pt-4">
-          <ShipmentsPanel />
+          <ShipmentsPanel orderId={activeOrder} setOrderId={setActiveOrder} />
         </TabsContent>
 
         <TabsContent value="timeline" className="pt-4">
-          <TimelinePanel />
+          <TimelinePanel
+            orderId={activeOrder}
+            setOrderId={setActiveOrder}
+            row={activeRow}
+            setRow={setActiveRow}
+          />
         </TabsContent>
+
 
         <TabsContent value="wa" className="pt-4">
           <WhatsappPanel brands={(brands.data ?? []) as Array<{ id: string; name: string }>} />
@@ -222,10 +252,153 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TimelinePanel() {
-  const [active, setActive] = useState("");
-  const [selectedRow, setSelectedRow] = useState<OrderRow | null>(null);
+function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, governorates, onOpen }: {
+  dateFrom: string;
+  dateTo: string;
+  brandId: string;
+  statuses: string[];
+  couriers: string[];
+  governorates: string[];
+  onOpen: (target: "ops" | "timeline", row: OrderRow) => void;
+}) {
+  const [status, setStatus] = useState("all");
+  const [courier, setCourier] = useState("all");
+  const [gov, setGov] = useState("all");
+  const [page, setPage] = useState(0);
+  const [cursors, setCursors] = useState<Array<{ occurredAt: string; id: string } | null>>([null]);
+  const pageSize = 25;
+
+  useEffect(() => {
+    setPage(0);
+    setCursors([null]);
+  }, [dateFrom, dateTo, brandId, status]);
+
+  const cursor = cursors[page] ?? null;
+  const listFn = useServerFn(listOrders);
+  const q = useQuery({
+    queryKey: ["orders-center", "orders-list", dateFrom, dateTo, brandId, status, cursor],
+    queryFn: () => listFn({ data: {
+      brandId: brandId === "all" ? null : brandId,
+      from: dateFrom,
+      to: dateTo,
+      orderStatus: status === "all" ? null : status,
+      pageSize,
+      cursorAt: cursor?.occurredAt ?? null,
+      cursorId: cursor?.id ?? null,
+    } }),
+    placeholderData: keepPreviousData,
+    ...queryPresets.listing,
+  });
+
+  const rows = useMemo(() => (q.data?.rows ?? []).filter((r) =>
+    (courier === "all" || (r.courier_name ?? "—") === courier)
+    && (gov === "all" || (r.shipping_governorate ?? "—") === gov)
+  ), [q.data, courier, gov]);
+
+  const goNext = () => {
+    const nc = q.data?.nextCursor;
+    if (!nc) return;
+    setCursors((prev) => {
+      const next = [...prev];
+      next[page + 1] = nc;
+      return next;
+    });
+    setPage((p) => p + 1);
+  };
+
+  return (
+    <Card className="p-4 space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="الحالة" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الحالات</SelectItem>
+            {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={courier} onValueChange={setCourier}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="شركة الشحن" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل شركات الشحن</SelectItem>
+            {couriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={gov} onValueChange={setGov}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="المحافظة" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل المحافظات</SelectItem>
+            {governorates.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-muted-foreground">
+            <tr>
+              <th className="text-start py-1">رقم الأوردر</th>
+              <th className="text-start">العميل</th>
+              <th className="text-start">البراند</th>
+              <th className="text-start">الحالة</th>
+              <th className="text-start">شركة الشحن</th>
+              <th className="text-start">المحافظة</th>
+              <th className="text-end">المبلغ</th>
+              <th className="text-end">التاريخ</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-b last:border-0">
+                <td className="py-1">{r.external_order_number ?? r.id.slice(0, 8)}</td>
+                <td>{r.customer_name ?? "—"}</td>
+                <td>{r.brand_name}</td>
+                <td><Badge variant="secondary">{r.order_status}</Badge></td>
+                <td>{r.courier_name ?? "—"}</td>
+                <td>{r.shipping_governorate ?? "—"}</td>
+                <td className="text-end tabular-nums">{nf(Number(r.total_amount))}</td>
+                <td className="text-end tabular-nums">{new Date(r.occurred_at).toLocaleDateString("en-GB")}</td>
+                <td className="text-end whitespace-nowrap">
+                  <Button size="sm" variant="outline" className="me-1" onClick={() => onOpen("ops", r)}>
+                    <Truck className="h-3 w-3 me-1" /> الشحن والتحصيل
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => onOpen("timeline", r)}>
+                    <Activity className="h-3 w-3 me-1" /> السجل
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {!q.isLoading && rows.length === 0 ? (
+              <tr><td colSpan={9} className="py-6 text-center text-muted-foreground">لا توجد أوردرات مطابقة.</td></tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">{q.isFetching ? "جارٍ التحميل…" : `صفحة ${page + 1}`}</div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>السابق</Button>
+          <Button size="sm" variant="outline" disabled={!q.data?.hasMore} onClick={goNext}>التالي</Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+
+function TimelinePanel({ orderId, setOrderId, row, setRow }: {
+  orderId: string;
+  setOrderId: (id: string) => void;
+  row: OrderRow | null;
+  setRow: (row: OrderRow | null) => void;
+}) {
+  const active = orderId;
+  const setActive = setOrderId;
+  const selectedRow = row;
+  const setSelectedRow = setRow;
   const timeline = useOrderTimeline(active);
+
 
   const getOrderFn = useServerFn(getOrder);
   const order = useQuery({
@@ -311,10 +484,12 @@ const COLLECTION_METHODS = [
   { value: "other", label: "أخرى" },
 ] as const;
 
-function ShipmentsPanel() {
+function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: (id: string) => void }) {
   const qc = useQueryClient();
 
-  const [active, setActive] = useState("");
+  const active = orderId;
+  const setActive = setOrderId;
+
   const [tracking, setTracking] = useState("");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<string>("cod");
