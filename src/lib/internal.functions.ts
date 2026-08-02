@@ -928,15 +928,17 @@ export const deleteCourier = createServerFn({ method: "POST" })
 // ============ SALES INVOICES (multi-line) ============
 export const listSalesInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { brandId?: string | null; limit?: number }) => d)
+  .inputValidator((d: { brandId?: string | null; limit?: number; since?: string | null }) => d)
   .handler(async ({ data, context }) => {
+    const since = data.since ?? new Date(Date.now() - 90 * 86400000).toISOString();
     const rows = await fetchAllRows(() => {
       let q = context.supabase.from("sales_invoices")
         .select("id, brand_id, courier_id, product_id, type, qty, total_amount, collected_amount, occurred_at, note, sales_invoice_items(id, product_id, qty, unit_price, subtotal)")
+        .gte("occurred_at", since)
         .order("occurred_at", { ascending: false });
       if (data.brandId) q = q.eq("brand_id", data.brandId);
       return q;
-    });
+    }, { maxRows: data.limit ?? 2000 });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return rows as any[];
   });
