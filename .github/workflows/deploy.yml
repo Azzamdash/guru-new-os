@@ -121,7 +121,7 @@ jobs:
           HEALTH_URL: ${{ secrets.DEPLOY_HEALTH_URL || 'https://egurus.info/' }}
         run: |
           for i in $(seq 1 20); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "$HEALTH_URL" || true)
+            code=$(curl -sS -L --max-redirs 5 -o /dev/null -w '%{http_code}' "$HEALTH_URL" || true)
             echo "attempt $i -> $code"
             if [ "$code" = "200" ]; then exit 0; fi
             sleep 5
