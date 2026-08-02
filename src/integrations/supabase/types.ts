@@ -4571,6 +4571,7 @@ export type Database = {
           product_id: string
         }[]
       }
+      receivables_aging_report: { Args: never; Returns: Json }
       recompute_supplier_invoice_status: {
         Args: { _invoice_id: string }
         Returns: undefined
