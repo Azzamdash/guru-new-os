@@ -359,6 +359,27 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const currentThread = (threads.data ?? []).find((t) => t.id === threadId) ?? null;
+  const linkedOrderId = currentThread?.order_id ?? null;
+
+  const getOrderFn = useServerFn(getOrder);
+  const linkedOrder = useQuery({
+    queryKey: ["orders-center", "wa-linked-order", linkedOrderId],
+    queryFn: () => getOrderFn({ data: { id: linkedOrderId as string } }),
+    enabled: !!linkedOrderId,
+  });
+
+  const linkFn = useServerFn(linkThreadToOrder);
+  const linkMut = useMutation({
+    mutationFn: (orderId: string | null) => linkFn({ data: { threadId, orderId } }),
+    onSuccess: (_r, orderId) => {
+      toast.success(orderId ? "تم ربط المحادثة بالأوردر" : "تم فك الربط");
+      qc.invalidateQueries({ queryKey: ["orders-center", "wa"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
       <Card className="p-3 space-y-3">
