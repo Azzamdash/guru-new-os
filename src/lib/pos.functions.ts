@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
@@ -394,7 +395,7 @@ export const getBranchesReport = createServerFn({ method: "GET" })
     if (!adminR.data && !mgrR.data) throw new Error("Forbidden");
 
     const start = data.startDate ?? new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-    const end = data.endDate ?? new Date().toISOString().slice(0, 10);
+    const end = data.endDate ?? getTodayInBusinessTimezone();
 
     const { data: branches } = await context.supabase
       .from("brands").select("id,name").eq("type", "offline_branch").eq("active", true);

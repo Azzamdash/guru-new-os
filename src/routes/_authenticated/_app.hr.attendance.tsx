@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -439,7 +440,7 @@ function QuickLogForm({ employees, onSave }: {
 }) {
   const [open, setOpen] = useState(false);
   const [employeeId, setEmployeeId] = useState("");
-  const [logDate, setLogDate] = useState(new Date().toISOString().slice(0, 10));
+  const [logDate, setLogDate] = useState(getTodayInBusinessTimezone());
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [note, setNote] = useState("");

@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -40,8 +41,8 @@ function DataEntryPage() {
   const [periodType, setPeriodType] = useState<PeriodType>("monthly");
   const [year, setYear] = useState<number>(now.getFullYear());
   const [month, setMonth] = useState<number>(now.getMonth() + 1);
-  const [periodDate, setPeriodDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [periodEndDate, setPeriodEndDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [periodDate, setPeriodDate] = useState<string>(getTodayInBusinessTimezone());
+  const [periodEndDate, setPeriodEndDate] = useState<string>(getTodayInBusinessTimezone());
 
   useEffect(() => { if (!brandId && brandsQ.data?.[0]) setBrandId(brandsQ.data[0].id); }, [brandsQ.data, brandId]);
 

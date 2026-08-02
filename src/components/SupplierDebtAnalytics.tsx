@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -32,7 +33,7 @@ export function SupplierDebtAnalytics({
   const paysQ = useQuery({ queryKey: ["payments"], queryFn: useServerFn(listPayments) });
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: useServerFn(listBrands) });
 
-  const refDate = asOfDate || new Date().toISOString().slice(0, 10);
+  const refDate = asOfDate || getTodayInBusinessTimezone();
   const paidByInv = useMemo(() => {
     const m = new Map<string, number>();
     for (const p of paysQ.data ?? []) {

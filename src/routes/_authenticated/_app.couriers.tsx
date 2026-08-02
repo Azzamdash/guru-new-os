@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -59,7 +60,7 @@ function CouriersPage() {
 
   const [open, setOpen] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
-  const emptyRate = () => ({ id: undefined as string | undefined, courierId: "", governorate: "", deliveryFee: 0, customerReturnFee: 0, failedDeliveryFee: 0, exchangeFee: 0, effectiveFrom: new Date().toISOString().slice(0, 10) });
+  const emptyRate = () => ({ id: undefined as string | undefined, courierId: "", governorate: "", deliveryFee: 0, customerReturnFee: 0, failedDeliveryFee: 0, exchangeFee: 0, effectiveFrom: getTodayInBusinessTimezone() });
   const [rate, setRate] = useState(emptyRate());
   const [editing, setEditing] = useState<null | { id?: string; name: string; type: "courier_company"|"rep"|"offline_branch"; contact: string; brand_id: string | null; brand_ids: string[]; serves_all_brands: boolean; active: boolean; opening_balance: number }>(null);
 

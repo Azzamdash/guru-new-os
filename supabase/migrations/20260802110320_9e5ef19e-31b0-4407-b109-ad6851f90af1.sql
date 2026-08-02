@@ -1,0 +1,1 @@
+ALTER TABLE public.cash_transactions ALTER COLUMN occurred_at SET DEFAULT (now() AT TIME ZONE 'Africa/Cairo')::date;

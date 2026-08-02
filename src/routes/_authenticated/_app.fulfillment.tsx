@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -39,7 +40,7 @@ function FulfillmentPage() {
 
   const [form, setForm] = useState({
     employee_id: "", employee_name: "", orders_prepared: 0,
-    occurred_at: new Date().toISOString().slice(0, 10),
+    occurred_at: getTodayInBusinessTimezone(),
     brand_id: "" as string | "", note: "",
   });
 

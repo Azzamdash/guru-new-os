@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
@@ -64,7 +65,7 @@ export const upsertCourierRate = createServerFn({ method: "POST" })
       customer_return_fee: data.customerReturnFee,
       failed_delivery_fee: data.failedDeliveryFee,
       exchange_fee: data.exchangeFee,
-      effective_from: data.effectiveFrom ?? new Date().toISOString().slice(0, 10),
+      effective_from: data.effectiveFrom ?? getTodayInBusinessTimezone(),
       effective_to: data.effectiveTo ?? null,
       active: data.active ?? true,
       updated_at: new Date().toISOString(),

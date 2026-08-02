@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/_app/suppliers/payments")(
   component: SupplierPaymentsPage,
 });
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => getTodayInBusinessTimezone();
 const addDays = (d: string, n: number) => { const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().slice(0, 10); };
 const nf = (n: number) => Number(n || 0).toLocaleString("en-US");
 

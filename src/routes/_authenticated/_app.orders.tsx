@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -147,7 +148,7 @@ function OrdersPage() {
     brand_id: "", external_order_number: "", customer_name: "", customer_phone: "",
     shipping_governorate: "", shipping_area: "", shipping_address: "",
     building_number: "", floor_number: "", apartment_number: "",
-    courier_id: "", occurred_at: new Date().toISOString().slice(0, 10),
+    courier_id: "", occurred_at: getTodayInBusinessTimezone(),
     fulfillment_status: "unfulfilled", financial_status: "pending",
     confirmation_status: "pending",
     shipping_amount: 0, discount_amount: 0, note: "",
@@ -253,7 +254,7 @@ function OrdersPage() {
   });
   const [backfillOpen, setBackfillOpen] = useState(false);
   const [backfillFrom, setBackfillFrom] = useState(() => new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10));
-  const [backfillTo, setBackfillTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [backfillTo, setBackfillTo] = useState(() => getTodayInBusinessTimezone());
   const backfill = useMutation({
     mutationFn: () => backfillFn({ data: {
       brandId: brandId === "all" ? null : brandId,

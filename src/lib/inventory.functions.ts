@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -132,7 +133,7 @@ export const addMovement = createServerFn({ method: "POST" })
     const row: Record<string, unknown> = {
       type,
       qty,
-      occurred_at: data.occurred_at ?? new Date().toISOString().slice(0, 10),
+      occurred_at: data.occurred_at ?? getTodayInBusinessTimezone(),
       unit_cost: data.direction === "in" ? (data.unit_cost ?? null) : null,
       reason: data.reason ?? (data.direction === "in" ? "manual_in" : data.direction === "out" ? "manual_out" : "adjustment"),
       source: "manual",

@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -92,7 +93,7 @@ function AssetsPage() {
           <p className="text-muted-foreground text-sm mt-1">إدارة الأصول وحساب القيمة الدفترية بعد الإهلاك السنوي.</p>
         </div>
         {canWrite && (
-          <Button className="gap-2" onClick={() => setEditing({ name: "", cost: 0, purchase_date: new Date().toISOString().slice(0, 10), annual_depreciation_rate: 20, brand_id: null, notes: "" })}>
+          <Button className="gap-2" onClick={() => setEditing({ name: "", cost: 0, purchase_date: getTodayInBusinessTimezone(), annual_depreciation_rate: 20, brand_id: null, notes: "" })}>
             <Plus className="w-4 h-4" /> إضافة أصل
           </Button>
         )}

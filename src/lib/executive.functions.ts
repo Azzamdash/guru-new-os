@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getIncomeStatement } from "@/lib/financials.functions";
@@ -21,7 +22,7 @@ export const getExecutiveSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { from?: string; to?: string; brandId?: string | null } = {}) => d)
   .handler(async ({ data, context }): Promise<ExecutiveSnapshot> => {
-    const to = data.to ?? new Date().toISOString().slice(0, 10);
+    const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? `${new Date(to).getFullYear()}-01-01`;
     const brandId = data.brandId ?? null;
 

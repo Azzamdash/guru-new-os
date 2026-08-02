@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -64,7 +65,7 @@ function PurchasesPage() {
 
   const allRows = (invoicesQ.data ?? []) as Invoice[];
   const [dateFrom, setDateFrom] = useState<string>(() => { const d = new Date(); d.setDate(d.getDate() - 90); return d.toISOString().slice(0, 10); });
-  const [dateTo, setDateTo] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState<string>(getTodayInBusinessTimezone());
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const rows = useMemo(() => allRows.filter((r) => {
     if (dateFrom && r.issued_at < dateFrom) return false;
@@ -74,7 +75,7 @@ function PurchasesPage() {
   }), [allRows, dateFrom, dateTo, supplierFilter]);
 
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInBusinessTimezone();
   
   const report = useMemo(() => {
     const total = rows.reduce((a, r) => a + Number(r.amount || 0), 0);
@@ -108,7 +109,7 @@ function PurchasesPage() {
           <p className="text-muted-foreground text-sm mt-1">فواتير من الموردين بمنتجات أو خامات؛ إجمالي الفاتورة يُحسب من البنود.</p>
         </div>
         {canWrite && (
-          <Button onClick={() => { setEditing({ supplier_id: suppliers[0]?.id ?? "", brand_id: null, issued_at: new Date().toISOString().slice(0,10), due_at: null, status: "open", note: "" }); setOpen(true); }}>
+          <Button onClick={() => { setEditing({ supplier_id: suppliers[0]?.id ?? "", brand_id: null, issued_at: getTodayInBusinessTimezone(), due_at: null, status: "open", note: "" }); setOpen(true); }}>
             <Plus className="w-4 h-4 me-2" /> فاتورة جديدة
           </Button>
         )}

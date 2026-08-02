@@ -1,3 +1,4 @@
+import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -41,7 +42,7 @@ export const getSdOverview = createServerFn({ method: "GET" })
     const tasks = tasksR.data ?? [];
     const revs = revsR.data ?? [];
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getTodayInBusinessTimezone();
     const projInRange = (projects ?? []).filter((p: { started_at: string | null; finished_at: string | null }) =>
       inRange(p.finished_at ?? p.started_at, data.dateFrom, data.dateTo),
     );
@@ -427,7 +428,7 @@ export const createInvoiceFromProject = createServerFn({ method: "POST" })
         type: "sale",
         qty: 1,
         total_amount: data.totalAmount,
-        occurred_at: new Date().toISOString().slice(0, 10),
+        occurred_at: getTodayInBusinessTimezone(),
         customer_name: project.service_clients?.name ?? null,
         note: `Project: ${project.name}`,
       })
