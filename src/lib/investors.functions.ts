@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeBrandNetProfit } from "./profits.shared";
-import { revenueByBrandSince } from "./revenue.server";
+import { revenueByBrandSince, trailing12mStart } from "./revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
