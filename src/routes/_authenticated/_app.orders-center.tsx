@@ -383,7 +383,9 @@ function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
   );
 }
 
-function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, governorates, onOpen }: {
+export type OrdersListFilter = { status: string; courier: string; gov: string };
+
+function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, governorates, onOpen, filter, setFilter }: {
   dateFrom: string;
   dateTo: string;
   brandId: string;
@@ -391,10 +393,13 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
   couriers: string[];
   governorates: string[];
   onOpen: (target: "ops" | "timeline", row: OrderRow) => void;
+  filter: OrdersListFilter;
+  setFilter: (next: OrdersListFilter) => void;
 }) {
-  const [status, setStatus] = useState("all");
-  const [courier, setCourier] = useState("all");
-  const [gov, setGov] = useState("all");
+  const { status, courier, gov } = filter;
+  const setStatus = (v: string) => setFilter({ ...filter, status: v });
+  const setCourier = (v: string) => setFilter({ ...filter, courier: v });
+  const setGov = (v: string) => setFilter({ ...filter, gov: v });
   const [page, setPage] = useState(0);
   const [cursors, setCursors] = useState<Array<{ occurredAt: string; id: string } | null>>([null]);
   const pageSize = 25;
