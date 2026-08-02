@@ -51,6 +51,7 @@ function Kpi({ label, value, hint, icon: Icon }: { label: string; value: string;
 }
 
 function OrdersCenterPage() {
+  const qc = useQueryClient();
   const [period, setPeriod] = usePersistedPeriod("orders-center");
   const resolved = useMemo(() => resolvePeriod(period), [period]);
   const [brandId, setBrandId] = useState<string>("all");
