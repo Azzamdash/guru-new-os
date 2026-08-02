@@ -59,6 +59,14 @@ function OrdersCenterPage() {
   const [tab, setTab] = useState("kpis");
   const [activeOrder, setActiveOrder] = useState("");
   const [activeRow, setActiveRow] = useState<OrderRow | null>(null);
+  const [ordersFilter, setOrdersFilter] = useState<OrdersListFilter>({ status: "all", courier: "all", gov: "all" });
+  const ordersTabRef = useRef<HTMLDivElement | null>(null);
+
+  const drillTo = (patch: Partial<OrdersListFilter>) => {
+    setOrdersFilter({ status: "all", courier: "all", gov: "all", ...patch });
+    setTab("orders");
+    setTimeout(() => ordersTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
 
   const openOrderIn = (target: "ops" | "timeline", row: OrderRow) => {
     setActiveOrder(row.id);
