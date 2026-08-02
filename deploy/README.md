@@ -15,13 +15,24 @@ Settings → Secrets and variables → Actions:
 المفتاح الخاص يُكتب في `~/.ssh` داخل الرَنر فقط، و`StrictHostKeyChecking=yes` مفعّل عبر `DEPLOY_KNOWN_HOSTS` لمنع MITM.
 
 ## 2) تجهيز السيرفر مرة واحدة
+
+المستخدم واحد بس لكل حاجة: **`egurus`** — هو اللي بيتسجل دخول عبر SSH من GitHub Actions،
+وهو اللي بيشغّل `/usr/local/bin/deploy-guru-recall`، وهو نفسه `User=egurus` في
+`deploy/egurus-os.service`. مفيش مستخدم اسمه `deploy`.
+
 ```bash
-adduser --system --group --home /srv/egurus-os egurus
+# مستخدم النشر/التشغيل — محتاج شِل عشان SSH يقدر ينفّذ الأوامر
+adduser --system --group --home /srv/egurus-os --shell /bin/bash egurus
 mkdir -p /srv/egurus-os/{releases,repo}
 chown -R egurus:egurus /srv/egurus-os
 
-# متغيرات التشغيل (سرّية)
-install -m 600 /dev/null /etc/egurus-os.env
+# مفتاح SSH العام الخاص بالنشر (المقابل لـ DEPLOY_SSH_KEY)
+install -d -m 700 -o egurus -g egurus /srv/egurus-os/.ssh
+install -m 600 -o egurus -g egurus /dev/null /srv/egurus-os/.ssh/authorized_keys
+# الصق فيه المفتاح العام ed25519
+
+# متغيرات التشغيل (سرّية) — لازم egurus يقدر يقراها لأن السكربت بيعمل لها source
+install -m 640 -o root -g egurus /dev/null /etc/egurus-os.env
 # أضف بداخله: VITE_SUPABASE_URL=..., VITE_SUPABASE_PUBLISHABLE_KEY=...,
 #              VITE_SUPABASE_PROJECT_ID=..., SUPABASE_SERVICE_ROLE_KEY=...,
 #              SUPABASE_URL=... (نفس قيمة VITE_SUPABASE_URL)
@@ -34,10 +45,35 @@ install -m 644 deploy/egurus-os.service /etc/systemd/system/egurus-os.service
 systemctl daemon-reload
 systemctl enable egurus-os
 ```
-امنح مستخدم النشر صلاحية إعادة التشغيل فقط عبر sudoers:
+
+### صلاحية `systemctl restart` بدون كلمة سر لمستخدم `egurus`
+سكربت النشر بينادي `systemctl restart egurus-os` **مباشرة بدون `sudo`**، فالطريقة المطابقة
+للسلوك ده هي قاعدة polkit تسمح لمستخدم `egurus` بإدارة الوحدة دي بس:
+
+```bash
+cat >/etc/polkit-1/rules.d/49-egurus-os.rules <<'EOF'
+polkit.addRule(function(action, subject) {
+  if (action.id == "org.freedesktop.systemd1.manage-units" &&
+      action.lookup("unit") == "egurus-os.service" &&
+      subject.user == "egurus") {
+    return polkit.Result.YES;
+  }
+});
+EOF
+systemctl restart polkit
 ```
-deploy ALL=(root) NOPASSWD: /usr/local/bin/deploy-guru-recall
+
+تحقّق: `sudo -u egurus systemctl restart egurus-os` لازم يرجع بدون ما يطلب كلمة سر.
+
+**بديل بـ sudoers** (لو polkit مش متاح): اسمح للأمر المحدد فقط…
+
 ```
+egurus ALL=(root) NOPASSWD: /bin/systemctl restart egurus-os, /bin/systemctl is-active egurus-os
+```
+
+…وفي الحالة دي لازم تعدّل `deploy/deploy-guru-recall.sh` عشان ينادي `sudo systemctl restart`
+بدل `systemctl restart`، وإلا الاستدعاء المباشر هيفشل بصلاحيات.
+
 
 ## 3) ترتيب الاختبارات قبل systemd
 1. **verify job** على GitHub: `npm ci` → `lint` → build بـ `NITRO_PRESET=node-server` → تشغيل `.output/server/index.mjs` والتأكد أنه يرد 200.
