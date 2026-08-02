@@ -24,6 +24,8 @@ chown -R egurus:egurus /srv/egurus-os
 install -m 600 /dev/null /etc/egurus-os.env
 # أضف بداخله: VITE_SUPABASE_URL=..., VITE_SUPABASE_PUBLISHABLE_KEY=...,
 #              VITE_SUPABASE_PROJECT_ID=..., SUPABASE_SERVICE_ROLE_KEY=...,
+#              SUPABASE_URL=... (نفس قيمة VITE_SUPABASE_URL)
+#              SUPABASE_PUBLISHABLE_KEY=... (نفس قيمة VITE_SUPABASE_PUBLISHABLE_KEY)
 #              BOSTA_RECALL_SECRET=... (نفس القيمة المخزّنة في Vault باسم bosta_recall_secret), PORT=3000
 
 # سكربت النشر + خدمة systemd
@@ -46,3 +48,16 @@ deploy ALL=(root) NOPASSWD: /usr/local/bin/deploy-guru-recall
 
 ## 4) تشغيل يدوي
 Actions → Deploy to DigitalOcean → Run workflow.
+
+## 5) متغيرات Supabase على السيرفر
+كود السيرفر (auth middleware + admin client) بيقرأ `SUPABASE_URL` و`SUPABASE_PUBLISHABLE_KEY`
+بدون بادئة `VITE_`. ملف `src/start.ts` بيعمل fallback تلقائي: لو الاسمين دول مش موجودين
+بياخد القيم من `VITE_SUPABASE_URL` و`VITE_SUPABASE_PUBLISHABLE_KEY` (و`VITE_SUPABASE_PROJECT_ID`).
+
+الأفضل ضبط الاسمين معًا في `/etc/egurus-os.env` وفي `.do/app.yaml`:
+
+| المتغير | الاستخدام |
+| --- | --- |
+| `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` | البناء والمتصفح |
+| `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` | السيرفر (وإلا يعتمد على fallback الكود) |
+| `SUPABASE_SERVICE_ROLE_KEY` | عمليات الأدمن على السيرفر فقط |

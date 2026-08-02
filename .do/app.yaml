@@ -28,6 +28,14 @@ spec:
         - key: VITE_SUPABASE_PROJECT_ID
           scope: BUILD_AND_RUN_TIME
           value: REPLACE_ME
+        # Server-side names used by the generated Supabase server helpers.
+        # src/start.ts falls back to the VITE_* values, but setting both is safer.
+        - key: SUPABASE_URL
+          scope: RUN_TIME
+          value: REPLACE_ME
+        - key: SUPABASE_PUBLISHABLE_KEY
+          scope: RUN_TIME
+          value: REPLACE_ME
         - key: SUPABASE_SERVICE_ROLE_KEY
           scope: RUN_TIME
           type: SECRET
