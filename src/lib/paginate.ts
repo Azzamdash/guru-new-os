@@ -7,6 +7,16 @@
  *   const rows = await fetchAllRows<Row>(() =>
  *     supabase.from("orders").select("id, total").eq("brand_id", id));
  */
+/**
+ * Escape a user-supplied search term for safe interpolation into a PostgREST
+ * `.or("col.ilike.%value%,...")` filter string. Strips comma/parenthesis
+ * (which delimit/group conditions in the filter grammar) so free-text search
+ * input can't alter or break the intended filter.
+ */
+export function sanitizeOrFilterValue(value: string): string {
+  return value.replace(/[,()]/g, "");
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function fetchAllRows<T = any>(builder: () => any, options?: { maxRows?: number }): Promise<T[]> {
   const PAGE = 1000;
