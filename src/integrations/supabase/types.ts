@@ -4507,6 +4507,10 @@ export type Database = {
         Args: { _section: string; _user_id: string }
         Returns: boolean
       }
+      invoke_public_hook: {
+        Args: { _body?: Json; _path: string }
+        Returns: number
+      }
       is_global_reader: { Args: { _user_id: string }; Returns: boolean }
       is_investor_of_brand: {
         Args: { _brand_id: string; _user_id: string }
