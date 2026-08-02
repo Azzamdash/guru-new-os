@@ -32,3 +32,8 @@ spec:
           scope: RUN_TIME
           type: SECRET
           value: REPLACE_ME
+        - key: BOSTA_RECALL_SECRET
+          scope: RUN_TIME
+          type: SECRET
+          value: REPLACE_ME
+
