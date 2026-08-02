@@ -54,7 +54,7 @@ export const upsertProductionTask = createServerFn({ method: "POST" })
   }) => d)
   .handler(async ({ data, context }) => {
     const manager = await isProdManager(context);
-    if (!manager && !data.id) throw new Error("Forbidden: production managers only");
+    if (!manager) throw new Error("Forbidden: production managers only");
     const base = {
       title: data.title,
       description: data.description ?? null,
@@ -82,6 +82,18 @@ export const updateProductionTaskStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string; status: "todo" | "in_progress" | "done" }) => d)
   .handler(async ({ data, context }) => {
+    const manager = await isProdManager(context);
+    if (!manager) {
+      const { data: task, error: taskError } = await context.supabase
+        .from("production_tasks")
+        .select("assignee_id")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (taskError) throw taskError;
+      if (!task || task.assignee_id !== context.userId) {
+        throw new Error("Forbidden: only the assignee or a production manager can update this task's status");
+      }
+    }
     const { error } = await context.supabase
       .from("production_tasks")
       .update({ status: data.status })
