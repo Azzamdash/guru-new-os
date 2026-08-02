@@ -19,6 +19,8 @@ import {
   getOrdersOverview, getOrderTimeline, addShipmentAttempt, recordCollection,
   listWhatsappThreads, getWhatsappThread, sendWhatsappMessage, startWhatsappThread,
 } from "@/lib/orders-management.functions";
+import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
+
 
 export const Route = createFileRoute("/_authenticated/_app/orders-center")({
   head: () => ({ meta: [
