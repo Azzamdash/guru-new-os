@@ -84,18 +84,43 @@ export const setInvestorShares = createServerFn({ method: "POST" })
   }) => d)
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    await context.supabase.from("investor_brand_shares").delete().eq("investor_id", data.investor_id);
     const rows = data.shares
       .filter((s) => s.brand_id && s.share_percentage > 0 && s.share_percentage <= 100)
       .map((s) => ({
         investor_id: data.investor_id,
         brand_id: s.brand_id,
-        share_percentage: s.share_percentage,
+        share_percentage: Number(s.share_percentage),
       }));
+
+    // Guard: total share per brand (other investors + incoming) must not exceed 100%
+    const brandIds = [...new Set(rows.map((r) => r.brand_id))];
+    if (brandIds.length) {
+      const { data: existing, error: exErr } = await context.supabase
+        .from("investor_brand_shares")
+        .select("brand_id, share_percentage, investor_id")
+        .in("brand_id", brandIds)
+        .neq("investor_id", data.investor_id);
+      if (exErr) throw exErr;
+      const others = new Map<string, number>();
+      for (const e of (existing ?? []) as Array<{ brand_id: string; share_percentage: number }>) {
+        others.set(e.brand_id, (others.get(e.brand_id) ?? 0) + (Number(e.share_percentage) || 0));
+      }
+      const incoming = new Map<string, number>();
+      for (const r of rows) incoming.set(r.brand_id, (incoming.get(r.brand_id) ?? 0) + r.share_percentage);
+      for (const bid of brandIds) {
+        const total = (others.get(bid) ?? 0) + (incoming.get(bid) ?? 0);
+        if (total > 100.0001) {
+          throw new Error(`إجمالي حصص هذا البراند سيتجاوز 100% (الإجمالي: ${total.toFixed(2)}%)`);
+        }
+      }
+    }
+
+    await context.supabase.from("investor_brand_shares").delete().eq("investor_id", data.investor_id);
     if (rows.length) {
       const { error } = await context.supabase.from("investor_brand_shares").insert(rows);
       if (error) throw error;
     }
+
     return { ok: true };
   });
 
