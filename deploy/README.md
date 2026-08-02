@@ -6,7 +6,7 @@ Settings → Secrets and variables → Actions:
 | Secret | القيمة |
 | --- | --- |
 | `DEPLOY_HOST` | IP الدروبلت |
-| `DEPLOY_USER` | مستخدم النشر (مثلاً `deploy`) |
+| `DEPLOY_USER` | مستخدم SSH اللي بيشغّل سكربت النشر = **`egurus`** (نفس مستخدم الخدمة في `egurus-os.service`) |
 | `DEPLOY_SSH_KEY` | المفتاح الخاص (ed25519) بالكامل |
 | `DEPLOY_KNOWN_HOSTS` | ناتج `ssh-keyscan -H <IP>` |
 | `VITE_SUPABASE_URL` / `VITE_SUPABASE_PUBLISHABLE_KEY` / `VITE_SUPABASE_PROJECT_ID` | إعدادات الباك إند |
