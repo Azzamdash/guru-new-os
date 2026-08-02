@@ -289,6 +289,8 @@ function OrdersCenterPage() {
             couriers={(o?.byCourier ?? []).map((r) => r.name)}
             governorates={(o?.byGovernorate ?? []).map((r) => r.name)}
             onOpen={openOrderIn}
+            filter={ordersFilter}
+            setFilter={setOrdersFilter}
           />
         </TabsContent>
 
