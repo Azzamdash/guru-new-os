@@ -342,7 +342,75 @@ function AttendancePage() {
             </div>
           </Card>
         </TabsContent>
+
+        {/* USER LINKS */}
+        <TabsContent value="links" className="space-y-4 mt-4">
+          <Card className="card-gradient overflow-hidden">
+            <div className="p-4 border-b border-border font-semibold flex items-center gap-2">
+              <LinkIcon className="w-4 h-4" /> ربط الموظفين بحسابات المستخدمين
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-right border-b border-border">
+                    <th className="p-3">الموظف</th>
+                    <th className="p-3">الوظيفة</th>
+                    <th className="p-3">حساب المستخدم (الإيميل)</th>
+                    <th className="p-3 text-center">الحالة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employees.map((e) => {
+                    const linkedUser = users.find((u) => u.id === e.user_id);
+                    return (
+                      <tr key={e.id} className="border-b border-border/50">
+                        <td className="p-3 font-medium">{e.name}</td>
+                        <td className="p-3 text-muted-foreground text-xs">{e.position ?? "—"}</td>
+                        <td className="p-3">
+                          <Select
+                            value={e.user_id ?? "none"}
+                            disabled={!canWrite || usersQ.isLoading}
+                            onValueChange={(v) =>
+                              linkUser.mutate({ employeeId: e.id, userId: v === "none" ? null : v })
+                            }
+                          >
+                            <SelectTrigger className="w-64"><SelectValue placeholder="غير مرتبط" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">غير مرتبط</SelectItem>
+                              {users.map((u) => (
+                                <SelectItem
+                                  key={u.id}
+                                  value={u.id}
+                                  disabled={!!u.linkedEmployeeId && u.linkedEmployeeId !== e.id}
+                                >
+                                  {u.email}
+                                  {u.linkedEmployeeId && u.linkedEmployeeId !== e.id ? " (مرتبط بموظف آخر)" : ""}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="p-3 text-center">
+                          {e.user_id
+                            ? <Badge variant="secondary">{linkedUser?.email ?? "مرتبط"}</Badge>
+                            : <Badge variant="outline">غير مرتبط</Badge>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {employees.length === 0 && (
+                    <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا يوجد موظفون.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-muted-foreground p-3 border-t border-border">
+              * الربط بيخلي الموظف يقدر يقدّم طلبات سلف وإجازات من حسابه، وتظهر بياناته في الحضور والتقارير.
+            </p>
+          </Card>
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }
