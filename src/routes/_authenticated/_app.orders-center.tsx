@@ -229,7 +229,7 @@ function TimelinePanel() {
 
 function ShipmentsPanel() {
   const qc = useQueryClient();
-  const [orderId, setOrderId] = useState("");
+  
   const [active, setActive] = useState("");
   const [tracking, setTracking] = useState("");
   const [amount, setAmount] = useState("");
