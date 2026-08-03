@@ -2,7 +2,6 @@ import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { LoginScreen, safeNextPath } from "@/components/auth/LoginScreen";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
     next: safeNextPath(s.next),
   }),

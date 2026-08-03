@@ -5,7 +5,6 @@ const TITLE = "تسجيل الدخول — e-GURUS Dashboard";
 const DESCRIPTION = "سجّل الدخول لإدارة براندك وعرض لوحة التحكم المالية والتشغيلية.";
 
 export const Route = createFileRoute("/")({
-  ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
     next: safeNextPath(s.next),
   }),
