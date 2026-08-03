@@ -124,14 +124,14 @@ export const HUBS: Hub[] = [
     en: "Tasks & Missions",
     icon: CheckSquare,
     accent: "from-cyan-500/40 to-primary/20",
-    group: "management",
+    group: "operations",
     descAr: "المهام، مهام الإنتاج، تحضير الأوردرات وطباعة الفواتير",
     descEn: "Tasks, production tasks, order prep & invoice printing",
   },
   {
     key: "sales",
-    ar: "إدارة الأوردرات",
-    en: "Order Management",
+    ar: "Sales & Orders",
+    en: "Sales & Orders",
     icon: ShoppingBag,
     accent: "from-emerald-500/40 to-primary/20",
     group: "operations",
@@ -141,7 +141,7 @@ export const HUBS: Hub[] = [
 
   {
     key: "invoicing",
-    ar: "الفواتير والمالية",
+    ar: "Invoicing & Finance",
     en: "Invoicing & Finance",
     icon: Receipt,
     accent: "from-amber-500/40 to-orange-500/20",
@@ -171,8 +171,8 @@ export const HUBS: Hub[] = [
   },
   {
     key: "inventory",
-    ar: "إدارة المخزون",
-    en: "Inventory Management",
+    ar: "Inventory & Purchasing",
+    en: "Inventory & Purchasing",
     icon: Boxes,
     accent: "from-indigo-500/40 to-primary/20",
     group: "operations",
@@ -191,8 +191,8 @@ export const HUBS: Hub[] = [
   },
   {
     key: "fulfillment",
-    ar: "Fulfillment",
-    en: "Fulfillment",
+    ar: "Fulfillment & Couriers",
+    en: "Fulfillment & Couriers",
     icon: Truck,
     accent: "from-orange-500/40 to-red-500/20",
     group: "operations",
@@ -202,8 +202,8 @@ export const HUBS: Hub[] = [
 
   {
     key: "investors",
-    ar: "المستثمرون",
-    en: "Investors",
+    ar: "Investors Reporting",
+    en: "Investors Reporting",
     icon: HandCoins,
     accent: "from-yellow-500/40 to-amber-500/20",
     group: "management",
@@ -212,8 +212,8 @@ export const HUBS: Hub[] = [
   },
   {
     key: "hr",
-    ar: "الموارد البشرية",
-    en: "HR",
+    ar: "HR & Payroll",
+    en: "HR & Payroll",
     icon: UserCheck,
     accent: "from-teal-500/40 to-emerald-500/20",
     group: "management",
@@ -222,8 +222,8 @@ export const HUBS: Hub[] = [
   },
   {
     key: "settings",
-    ar: "الإعدادات",
-    en: "Settings",
+    ar: "Settings & Access",
+    en: "Settings & Access",
     icon: ShieldCheck,
     accent: "from-slate-500/40 to-zinc-500/20",
     group: "system",
