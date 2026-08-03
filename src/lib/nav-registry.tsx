@@ -124,14 +124,14 @@ export const HUBS: Hub[] = [
     en: "Tasks & Missions",
     icon: CheckSquare,
     accent: "from-cyan-500/40 to-primary/20",
-    group: "management",
+    group: "operations",
     descAr: "المهام، مهام الإنتاج، تحضير الأوردرات وطباعة الفواتير",
     descEn: "Tasks, production tasks, order prep & invoice printing",
   },
   {
     key: "sales",
     ar: "إدارة الأوردرات",
-    en: "Order Management",
+    en: "Sales & Orders",
     icon: ShoppingBag,
     accent: "from-emerald-500/40 to-primary/20",
     group: "operations",
@@ -172,7 +172,7 @@ export const HUBS: Hub[] = [
   {
     key: "inventory",
     ar: "إدارة المخزون",
-    en: "Inventory Management",
+    en: "Inventory & Purchasing",
     icon: Boxes,
     accent: "from-indigo-500/40 to-primary/20",
     group: "operations",
@@ -192,7 +192,7 @@ export const HUBS: Hub[] = [
   {
     key: "fulfillment",
     ar: "Fulfillment",
-    en: "Fulfillment",
+    en: "Fulfillment & Couriers",
     icon: Truck,
     accent: "from-orange-500/40 to-red-500/20",
     group: "operations",
@@ -203,7 +203,7 @@ export const HUBS: Hub[] = [
   {
     key: "investors",
     ar: "المستثمرون",
-    en: "Investors",
+    en: "Investors Reporting",
     icon: HandCoins,
     accent: "from-yellow-500/40 to-amber-500/20",
     group: "management",
@@ -213,7 +213,7 @@ export const HUBS: Hub[] = [
   {
     key: "hr",
     ar: "الموارد البشرية",
-    en: "HR",
+    en: "HR & Payroll",
     icon: UserCheck,
     accent: "from-teal-500/40 to-emerald-500/20",
     group: "management",
@@ -223,7 +223,7 @@ export const HUBS: Hub[] = [
   {
     key: "settings",
     ar: "الإعدادات",
-    en: "Settings",
+    en: "Settings & Access",
     icon: ShieldCheck,
     accent: "from-slate-500/40 to-zinc-500/20",
     group: "system",
@@ -1007,7 +1007,6 @@ export function pageAccessLevel(p: NavPage, ctx: RoleCtx): PageAccessLevel {
 
   return "hidden";
 }
-
 
 export function canSeePage(p: NavPage, ctx: RoleCtx): boolean {
   return pageAccessLevel(p, ctx) !== "hidden";

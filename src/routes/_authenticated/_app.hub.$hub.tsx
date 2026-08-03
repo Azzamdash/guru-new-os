@@ -6,10 +6,21 @@ import { HubPage } from "@/components/HubPage";
 import { HUB_BY_KEY, type HubKey, type RoleCtx } from "@/lib/nav-registry";
 import { getMyRole } from "@/lib/admin.functions";
 import { getMyAccess } from "@/lib/permissions.functions";
+import { useLang } from "@/lib/i18n";
 
 const HUB_KEYS: HubKey[] = [
-  "overview", "missions", "sales", "invoicing", "catalog", "offline", "inventory", "services",
-  "investors", "hr", "settings", "fulfillment",
+  "overview",
+  "missions",
+  "sales",
+  "invoicing",
+  "catalog",
+  "offline",
+  "inventory",
+  "services",
+  "investors",
+  "hr",
+  "settings",
+  "fulfillment",
 ];
 
 export const Route = createFileRoute("/_authenticated/_app/hub/$hub")({
@@ -34,6 +45,7 @@ export const Route = createFileRoute("/_authenticated/_app/hub/$hub")({
 
 function HubRoute() {
   const { hub } = Route.useParams();
+  const { lang } = useLang();
   const getMyRoleFn = useServerFn(getMyRole);
   const getAccessFn = useServerFn(getMyAccess);
   const roleQ = useQuery({ queryKey: ["my-role"], queryFn: () => getMyRoleFn() });
@@ -56,7 +68,11 @@ function HubRoute() {
   }, [roleQ.data, accessQ.data]);
 
   if (roleQ.isLoading || accessQ.isLoading) {
-    return <div className="p-8 text-muted-foreground">جاري التحميل...</div>;
+    return (
+      <div className="p-8 text-muted-foreground">
+        {lang === "ar" ? "جاري التحميل..." : "Loading..."}
+      </div>
+    );
   }
 
   return <HubPage hub={hub as HubKey} ctx={ctx} />;

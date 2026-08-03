@@ -6,9 +6,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PackageX, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useLang } from "@/lib/i18n";
 import { listBrands } from "@/lib/internal.functions";
 import { advanceReturn, createReturn, listReturns } from "@/lib/orders-ops.functions";
 import { RETURN_STATUS_LABELS } from "@/lib/orders-ops.shared";
@@ -17,7 +24,10 @@ export const Route = createFileRoute("/_authenticated/_app/order-returns")({
   head: () => ({
     meta: [
       { title: "المرتجعات والاستبدال — e-GURUS" },
-      { name: "description", content: "دورة كاملة للمرتجعات: طلب، استلام، إرجاع للمخزون، ورد المبلغ للعميل." },
+      {
+        name: "description",
+        content: "دورة كاملة للمرتجعات: طلب، استلام، إرجاع للمخزون، ورد المبلغ للعميل.",
+      },
       { property: "og:title", content: "المرتجعات والاستبدال — e-GURUS" },
       { property: "og:description", content: "إدارة مرتجعات واستبدالات الأوردرات." },
       { property: "og:type", content: "website" },
@@ -27,9 +37,10 @@ export const Route = createFileRoute("/_authenticated/_app/order-returns")({
   component: OrderReturnsPage,
 });
 
-const money = (n: number) => `${Math.round(n).toLocaleString("ar-EG")} ج`;
-
 function OrderReturnsPage() {
+  const { lang } = useLang();
+  const money = (n: number) =>
+    `${Math.round(n).toLocaleString("en-US")} ${lang === "ar" ? "ج" : "EGP"}`;
   const qc = useQueryClient();
   const brandsFn = useServerFn(listBrands);
   const listFn = useServerFn(listReturns);
@@ -55,7 +66,7 @@ function OrderReturnsPage() {
     mutationFn: (kind: "return" | "exchange") =>
       createFn({ data: { orderId: newOrderId.trim(), kind } }),
     onSuccess: () => {
-      toast.success("تم فتح طلب المرتجع");
+      toast.success(lang === "ar" ? "تم فتح طلب المرتجع" : "Return request opened");
       setNewOrderId("");
       invalidate();
     },
@@ -63,10 +74,13 @@ function OrderReturnsPage() {
   });
 
   const advanceM = useMutation({
-    mutationFn: (v: { returnId: string; action: "receive" | "restock" | "refund" | "close" | "cancel"; refundAmount?: number }) =>
-      advanceFn({ data: v }),
+    mutationFn: (v: {
+      returnId: string;
+      action: "receive" | "restock" | "refund" | "close" | "cancel";
+      refundAmount?: number;
+    }) => advanceFn({ data: v }),
     onSuccess: () => {
-      toast.success("تم تحديث حالة المرتجع");
+      toast.success(lang === "ar" ? "تم تحديث حالة المرتجع" : "Return status updated");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -78,29 +92,38 @@ function OrderReturnsPage() {
     <div className="space-y-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 text-xl font-bold">
-          <PackageX className="h-5 w-5 text-primary" /> المرتجعات والاستبدال
+          <PackageX className="h-5 w-5 text-primary" />{" "}
+          {lang === "ar" ? "المرتجعات والاستبدال" : "Returns & Exchanges"}
         </h1>
         <Button variant="outline" size="sm" onClick={() => listQ.refetch()}>
-          <RefreshCw className="ml-1 h-4 w-4" /> تحديث
+          <RefreshCw className="ml-1 h-4 w-4" /> {lang === "ar" ? "تحديث" : "Refresh"}
         </Button>
       </div>
 
       <Card className="flex flex-wrap items-end gap-2 p-3">
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="البراند" /></SelectTrigger>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder={lang === "ar" ? "البراند" : "Brand"} />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل البراندات</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل البراندات" : "All Brands"}</SelectItem>
             {(brandsQ.data ?? []).map((b: { id: string; name: string }) => (
-              <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">{lang === "ar" ? "كل الحالات" : "All Statuses"}</SelectItem>
             {Object.entries(RETURN_STATUS_LABELS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
+              <SelectItem key={k} value={k}>
+                {v}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -108,47 +131,92 @@ function OrderReturnsPage() {
           <Input
             value={newOrderId}
             onChange={(e) => setNewOrderId(e.target.value)}
-            placeholder="معرّف الأوردر (UUID)"
+            placeholder={lang === "ar" ? "معرّف الأوردر (UUID)" : "Order ID (UUID)"}
             className="w-64"
           />
-          <Button size="sm" disabled={!newOrderId.trim() || createM.isPending} onClick={() => createM.mutate("return")}>
-            مرتجع
+          <Button
+            size="sm"
+            disabled={!newOrderId.trim() || createM.isPending}
+            onClick={() => createM.mutate("return")}
+          >
+            {lang === "ar" ? "مرتجع" : "Return"}
           </Button>
-          <Button size="sm" variant="outline" disabled={!newOrderId.trim() || createM.isPending} onClick={() => createM.mutate("exchange")}>
-            استبدال
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!newOrderId.trim() || createM.isPending}
+            onClick={() => createM.mutate("exchange")}
+          >
+            {lang === "ar" ? "استبدال" : "Exchange"}
           </Button>
         </div>
       </Card>
 
       <div className="space-y-2">
-        {listQ.isLoading && <Card className="p-6 text-center text-muted-foreground">جارِ التحميل…</Card>}
+        {listQ.isLoading && (
+          <Card className="p-6 text-center text-muted-foreground">
+            {lang === "ar" ? "جارِ التحميل…" : "Loading…"}
+          </Card>
+        )}
         {!listQ.isLoading && rows.length === 0 && (
-          <Card className="p-6 text-center text-muted-foreground">لا توجد مرتجعات</Card>
+          <Card className="p-6 text-center text-muted-foreground">
+            {lang === "ar" ? "لا توجد مرتجعات" : "No returns found"}
+          </Card>
         )}
         {rows.map((r) => (
           <Card key={r.id} className="space-y-2 p-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Link to="/order-view/$id" params={{ id: r.order_id }} className="font-semibold text-primary hover:underline">
+              <Link
+                to="/order-view/$id"
+                params={{ id: r.order_id }}
+                className="font-semibold text-primary hover:underline"
+              >
                 #{r.order_number ?? r.order_id.slice(0, 8)}
               </Link>
-              <Badge variant="outline">{r.kind === "exchange" ? "استبدال" : "مرتجع"}</Badge>
+              <Badge variant="outline">
+                {r.kind === "exchange"
+                  ? lang === "ar"
+                    ? "استبدال"
+                    : "Exchange"
+                  : lang === "ar"
+                    ? "مرتجع"
+                    : "Return"}
+              </Badge>
               <Badge>{RETURN_STATUS_LABELS[r.status] ?? r.status}</Badge>
               <span className="text-sm">{r.customer_name ?? "—"}</span>
-              <span className="text-sm text-muted-foreground">قيمة الأوردر: {money(r.order_total)}</span>
-              {r.restocked && <Badge variant="secondary">رجع للمخزون</Badge>}
-              {r.refund_amount > 0 && <Badge variant="secondary">استرداد {money(r.refund_amount)}</Badge>}
+              <span className="text-sm text-muted-foreground">
+                {lang === "ar" ? "قيمة الأوردر:" : "Order value:"} {money(r.order_total)}
+              </span>
+              {r.restocked && (
+                <Badge variant="secondary">{lang === "ar" ? "رجع للمخزون" : "Restocked"}</Badge>
+              )}
+              {r.refund_amount > 0 && (
+                <Badge variant="secondary">
+                  {lang === "ar" ? "استرداد" : "Refund"} {money(r.refund_amount)}
+                </Badge>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="outline" disabled={r.status !== "requested"} onClick={() => advanceM.mutate({ returnId: r.id, action: "receive" })}>
-                استلام
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={r.status !== "requested"}
+                onClick={() => advanceM.mutate({ returnId: r.id, action: "receive" })}
+              >
+                {lang === "ar" ? "استلام" : "Receive"}
               </Button>
-              <Button size="sm" variant="outline" disabled={r.restocked || r.status === "requested"} onClick={() => advanceM.mutate({ returnId: r.id, action: "restock" })}>
-                إرجاع للمخزون
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={r.restocked || r.status === "requested"}
+                onClick={() => advanceM.mutate({ returnId: r.id, action: "restock" })}
+              >
+                {lang === "ar" ? "إرجاع للمخزون" : "Restock"}
               </Button>
               <Input
                 className="w-32"
                 type="number"
-                placeholder="مبلغ الاسترداد"
+                placeholder={lang === "ar" ? "مبلغ الاسترداد" : "Refund amount"}
                 value={refundInputs[r.id] ?? ""}
                 onChange={(e) => setRefundInputs((p) => ({ ...p, [r.id]: e.target.value }))}
               />
@@ -156,15 +224,31 @@ function OrderReturnsPage() {
                 size="sm"
                 variant="outline"
                 disabled={!Number(refundInputs[r.id] ?? 0)}
-                onClick={() => advanceM.mutate({ returnId: r.id, action: "refund", refundAmount: Number(refundInputs[r.id]) })}
+                onClick={() =>
+                  advanceM.mutate({
+                    returnId: r.id,
+                    action: "refund",
+                    refundAmount: Number(refundInputs[r.id]),
+                  })
+                }
               >
-                تسجيل استرداد
+                {lang === "ar" ? "تسجيل استرداد" : "Record Refund"}
               </Button>
-              <Button size="sm" variant="secondary" disabled={r.status === "closed"} onClick={() => advanceM.mutate({ returnId: r.id, action: "close" })}>
-                إقفال
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={r.status === "closed"}
+                onClick={() => advanceM.mutate({ returnId: r.id, action: "close" })}
+              >
+                {lang === "ar" ? "إقفال" : "Close"}
               </Button>
-              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => advanceM.mutate({ returnId: r.id, action: "cancel" })}>
-                إلغاء
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive"
+                onClick={() => advanceM.mutate({ returnId: r.id, action: "cancel" })}
+              >
+                {lang === "ar" ? "إلغاء" : "Cancel"}
               </Button>
             </div>
           </Card>

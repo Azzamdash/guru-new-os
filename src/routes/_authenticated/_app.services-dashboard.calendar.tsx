@@ -9,10 +9,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Trash2, Pencil } from "lucide-react";
-import { listSdEvents, upsertSdEvent, deleteSdEvent, listSdProjects } from "@/lib/servicesDashboard.functions";
+import {
+  listSdEvents,
+  upsertSdEvent,
+  deleteSdEvent,
+  listSdProjects,
+} from "@/lib/servicesDashboard.functions";
 import { listBrands } from "@/lib/internal.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/services-dashboard/calendar")({
@@ -27,14 +45,24 @@ const KIND_TONE: Record<string, string> = {
 };
 
 type SdEvent = {
-  id: string; brand_id: string; project_id: string | null; kind: string;
-  title: string; resource: string | null; starts_at: string; ends_at: string | null;
+  id: string;
+  brand_id: string;
+  project_id: string | null;
+  kind: string;
+  title: string;
+  resource: string | null;
+  starts_at: string;
+  ends_at: string | null;
   notes: string | null;
 };
 
 function CalendarPage() {
   const s = useSearch({ from: "/_authenticated/_app/services-dashboard" });
-  const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d;
+  });
   const [editEvent, setEditEvent] = useState<SdEvent | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const qc = useQueryClient();
@@ -45,17 +73,28 @@ function CalendarPage() {
   const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
   const q = useQuery({
     queryKey: ["sd-events", s.brandId, monthStart.toISOString()],
-    queryFn: () => listFn({ data: { brandId: s.brandId ?? null, from: monthStart.toISOString(), to: new Date(monthEnd.getTime()+86400000).toISOString() } }),
+    queryFn: () =>
+      listFn({
+        data: {
+          brandId: s.brandId ?? null,
+          from: monthStart.toISOString(),
+          to: new Date(monthEnd.getTime() + 86400000).toISOString(),
+        },
+      }),
   });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["sd-events"] });
-  const openEdit = (e: SdEvent) => { setEditEvent(e); setEditOpen(true); };
+  const openEdit = (e: SdEvent) => {
+    setEditEvent(e);
+    setEditOpen(true);
+  };
 
   const days = useMemo(() => {
     const first = monthStart.getDay();
     const total = monthEnd.getDate();
     const cells: Array<{ date: Date | null }> = [];
     for (let i = 0; i < first; i++) cells.push({ date: null });
-    for (let i = 1; i <= total; i++) cells.push({ date: new Date(cursor.getFullYear(), cursor.getMonth(), i) });
+    for (let i = 1; i <= total; i++)
+      cells.push({ date: new Date(cursor.getFullYear(), cursor.getMonth(), i) });
     return cells;
   }, [cursor, monthStart, monthEnd]);
 
@@ -74,27 +113,49 @@ function CalendarPage() {
       <SdCard>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}>‹</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
+            >
+              ‹
+            </Button>
             <div className="font-bold text-lg min-w-[160px] text-center">
               {cursor.toLocaleString("en-US", { month: "long", year: "numeric" })}
             </div>
-            <Button size="sm" variant="outline" onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}>›</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
+            >
+              ›
+            </Button>
           </div>
           <EventDialog brandId={s.brandId ?? ""} onSaved={invalidate}>
-            <Button size="sm"><Plus className="w-4 h-4 mr-2" />New Event</Button>
+            <Button size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              New Event
+            </Button>
           </EventDialog>
         </div>
 
         <div className="grid grid-cols-7 gap-1 mt-4 text-center text-[10px] uppercase text-muted-foreground">
-          {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => <div key={d}>{d}</div>)}
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            <div key={d}>{d}</div>
+          ))}
         </div>
         <div className="grid grid-cols-7 gap-1 mt-1">
           {days.map((c, i) => {
             const key = c.date?.toISOString().slice(0, 10);
             const list = key ? (eventsByDay.get(key) ?? []) : [];
             return (
-              <div key={i} className={`min-h-[100px] rounded-lg p-1 border ${c.date ? "bg-background/40 border-border/40" : "bg-transparent border-transparent"}`}>
-                {c.date && <div className="text-[10px] text-muted-foreground mb-1">{c.date.getDate()}</div>}
+              <div
+                key={i}
+                className={`min-h-[100px] rounded-lg p-1 border ${c.date ? "bg-background/40 border-border/40" : "bg-transparent border-transparent"}`}
+              >
+                {c.date && (
+                  <div className="text-[10px] text-muted-foreground mb-1">{c.date.getDate()}</div>
+                )}
                 <div className="space-y-1">
                   {list.map((e) => (
                     <button
@@ -125,12 +186,18 @@ function CalendarPage() {
               <div className="flex items-center gap-2 min-w-0">
                 <Badge className={KIND_TONE[e.kind] ?? ""}>{e.kind}</Badge>
                 <span className="text-sm truncate">{e.title}</span>
-                {e.resource && <span className="text-xs text-muted-foreground truncate">• {e.resource}</span>}
+                {e.resource && (
+                  <span className="text-xs text-muted-foreground truncate">• {e.resource}</span>
+                )}
               </div>
-              <span className="text-xs text-muted-foreground shrink-0">{new Date(e.starts_at).toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {new Date(e.starts_at).toLocaleString("en-GB")}
+              </span>
             </button>
           ))}
-          {q.data?.length === 0 && <div className="text-sm text-muted-foreground">No events in this range.</div>}
+          {q.data?.length === 0 && (
+            <div className="text-sm text-muted-foreground">No events in this range.</div>
+          )}
         </div>
       </SdCard>
 
@@ -142,8 +209,14 @@ function CalendarPage() {
         onSaved={invalidate}
         onDelete={async (id) => {
           if (!confirm("Delete this event?")) return;
-          try { await delFn({ data: { id } }); toast.success("Deleted"); setEditOpen(false); invalidate(); }
-          catch (err) { toast.error(err instanceof Error ? err.message : "Failed"); }
+          try {
+            await delFn({ data: { id } });
+            toast.success("Deleted");
+            setEditOpen(false);
+            invalidate();
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed");
+          }
         }}
       />
     </div>
@@ -154,11 +227,17 @@ function toLocalInput(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function EventDialog({
-  brandId, onSaved, children, event, open: openProp, onOpenChange, onDelete,
+  brandId,
+  onSaved,
+  children,
+  event,
+  open: openProp,
+  onOpenChange,
+  onDelete,
 }: {
   brandId: string;
   onSaved: () => void;
@@ -186,13 +265,18 @@ function EventDialog({
   });
   const [form, setForm] = useState(initialForm);
   // Reset form whenever the dialog opens or the target event changes
-  useMemo(() => { if (open) setForm(initialForm()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [open, event?.id]);
+  useMemo(() => {
+    if (open) setForm(initialForm()); /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [open, event?.id]);
 
   const listProjectsFn = useServerFn(listSdProjects);
   const listBrandsFn = useServerFn(listBrands);
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => listBrandsFn(), enabled: open });
-  const projQ = useQuery({ queryKey: ["sd-projects-for-event", form.brand_id || s.brandId], enabled: open,
-    queryFn: () => listProjectsFn({ data: { brandId: form.brand_id || s.brandId || null } }) });
+  const projQ = useQuery({
+    queryKey: ["sd-projects-for-event", form.brand_id || s.brandId],
+    enabled: open,
+    queryFn: () => listProjectsFn({ data: { brandId: form.brand_id || s.brandId || null } }),
+  });
   const save = useServerFn(upsertSdEvent);
   const serviceBrands = (brandsQ.data ?? []).filter((b) => b.type === "service" && b.active);
   const submit = async () => {
@@ -210,51 +294,118 @@ function EventDialog({
       };
       if (isEdit && event) payload.id = event.id;
       await save({ data: payload });
-      toast.success("Saved"); setOpen(false); onSaved();
-    } catch (e) { toast.error(e instanceof Error ? e.message : String(e)); }
+      toast.success("Saved");
+      setOpen(false);
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e));
+    }
   };
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (v && !isEdit && !form.brand_id && brandId) setForm((f) => ({ ...f, brand_id: brandId })); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (v && !isEdit && !form.brand_id && brandId)
+          setForm((f) => ({ ...f, brand_id: brandId }));
+      }}
+    >
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent>
-        <DialogHeader><DialogTitle>{isEdit ? "Event Details" : "New Event"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Event Details" : "New Event"}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
-          <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-          <div><Label>Brand *</Label>
-            <Select value={form.brand_id} onValueChange={(v) => setForm({ ...form, brand_id: v, project_id: "" })}>
-              <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
-              <SelectContent>{serviceBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
-            </Select>
+          <div>
+            <Label>Title *</Label>
+            <Input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Kind</Label>
-              <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["shoot","delivery","booking","other"].map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div><Label>Resource</Label><Input value={form.resource} onChange={(e) => setForm({ ...form, resource: e.target.value })} placeholder="Studio A, Camera 3…" /></div>
-          </div>
-          <div><Label>Project (optional)</Label>
-            <Select value={form.project_id || "__none__"} onValueChange={(v) => {
-              if (v === "__none__") return setForm({ ...form, project_id: "" });
-              const p = (projQ.data ?? []).find((x: { id: string }) => x.id === v);
-              setForm((f) => ({ ...f, project_id: v, brand_id: p?.brand_id ?? f.brand_id }));
-            }}>
-              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+          <div>
+            <Label>Brand *</Label>
+            <Select
+              value={form.brand_id}
+              onValueChange={(v) => setForm({ ...form, brand_id: v, project_id: "" })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select brand" />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">None</SelectItem>
-                {(projQ.data ?? []).map((p: { id: string; name: string; brand_id: string }) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                {serviceBrands.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Starts *</Label><Input type="datetime-local" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} /></div>
-            <div><Label>Ends</Label><Input type="datetime-local" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} /></div>
+            <div>
+              <Label>Kind</Label>
+              <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["shoot", "delivery", "booking", "other"].map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {v}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Resource</Label>
+              <Input
+                value={form.resource}
+                onChange={(e) => setForm({ ...form, resource: e.target.value })}
+                placeholder="Studio A, Camera 3…"
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Project (optional)</Label>
+            <Select
+              value={form.project_id || "__none__"}
+              onValueChange={(v) => {
+                if (v === "__none__") return setForm({ ...form, project_id: "" });
+                const p = (projQ.data ?? []).find((x: { id: string }) => x.id === v);
+                setForm((f) => ({ ...f, project_id: v, brand_id: p?.brand_id ?? f.brand_id }));
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">None</SelectItem>
+                {(projQ.data ?? []).map((p: { id: string; name: string; brand_id: string }) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Starts *</Label>
+              <Input
+                type="datetime-local"
+                value={form.starts_at}
+                onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Ends</Label>
+              <Input
+                type="datetime-local"
+                value={form.ends_at}
+                onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
+              />
+            </div>
           </div>
           <div>
             <Label>Description / Notes</Label>
@@ -269,11 +420,21 @@ function EventDialog({
         <DialogFooter className="gap-2 sm:justify-between">
           {isEdit && event && onDelete ? (
             <Button variant="destructive" size="sm" onClick={() => onDelete(event.id)}>
-              <Trash2 className="w-4 h-4 mr-2" />Delete
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
             </Button>
-          ) : <span />}
+          ) : (
+            <span />
+          )}
           <Button onClick={submit}>
-            {isEdit ? <><Pencil className="w-4 h-4 mr-2" />Update</> : "Save"}
+            {isEdit ? (
+              <>
+                <Pencil className="w-4 h-4 mr-2" />
+                Update
+              </>
+            ) : (
+              "Save"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

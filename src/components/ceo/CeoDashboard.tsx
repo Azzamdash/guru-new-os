@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 
 import { usePersistedPeriod } from "@/lib/global-period";
+import { useLang } from "@/lib/i18n";
 import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
 import { getInternalDashboard } from "@/lib/internal.functions";
 import { getIncomeStatement } from "@/lib/financials.functions";
@@ -69,7 +70,24 @@ const MONTHS_AR = [
   "ديس",
 ];
 
+const MONTHS_EN = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 export function CeoDashboard() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const [period, setPeriod] = usePersistedPeriod("ceo-dashboard");
   const resolved = useMemo(() => resolvePeriod(period), [period]);
   const year = resolved.year;
@@ -160,14 +178,14 @@ export function CeoDashboard() {
   const growthSeries = useMemo(
     () =>
       monthly.map((m, i) => ({
-        label: MONTHS_AR[i],
+        label: lang === "ar" ? MONTHS_AR[i] : MONTHS_EN[i],
         revenue: Math.round(m.revenue),
         profit: Math.round(m.netProfit),
         orders: m.ordersTotal,
         cogs: Math.round(m.cogs),
         expenses: Math.round(m.expenses),
       })),
-    [monthly],
+    [monthly, lang],
   );
 
   // Growth deltas (last month vs previous month with data)
@@ -198,10 +216,10 @@ export function CeoDashboard() {
     lowStockCount: dash?.inventory.lowStock.length ?? 0,
   });
   const healthStatusLabel = {
-    healthy: "صحي",
-    watch: "يحتاج متابعة",
-    critical: "خطر",
-    insufficient: "بيانات غير كافية",
+    healthy: T("صحي", "Healthy"),
+    watch: T("يحتاج متابعة", "Needs attention"),
+    critical: T("خطر", "Critical"),
+    insufficient: T("بيانات غير كافية", "Insufficient data"),
   }[healthScore.status];
   const aov = ordersTotal > 0 ? dash!.totals.revenue / ordersTotal : 0;
   const marketingSpend = dash?.marketing.total ?? 0;
@@ -229,13 +247,13 @@ export function CeoDashboard() {
   const topCustomers = cust?.top ?? [];
 
   const failedQueries = [
-    { label: "مؤشرات الفترة", q: dashQ },
-    { label: "قائمة الدخل", q: isQ },
-    { label: "التقييم", q: valQ },
-    { label: "الأصول", q: assetsQ },
-    { label: "الخزنة", q: cashQ },
-    { label: "أعمار الديون", q: agingQ },
-    { label: "العملاء", q: custQ },
+    { label: T("مؤشرات الفترة", "Period KPIs"), q: dashQ },
+    { label: T("قائمة الدخل", "Income statement"), q: isQ },
+    { label: T("التقييم", "Valuation"), q: valQ },
+    { label: T("الأصول", "Assets"), q: assetsQ },
+    { label: T("الخزنة", "Cash/Treasury"), q: cashQ },
+    { label: T("أعمار الديون", "Receivables aging"), q: agingQ },
+    { label: T("العملاء", "Customers"), q: custQ },
   ].filter((x) => x.q.isError);
 
   return (
@@ -249,11 +267,16 @@ export function CeoDashboard() {
             <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <div className="space-y-1">
               <p className="font-semibold text-destructive">
-                تعذّر تحميل بعض بيانات اللوحة، جرّب تحديث الصفحة
+                {T(
+                  "تعذّر تحميل بعض بيانات اللوحة، جرّب تحديث الصفحة",
+                  "Some dashboard data failed to load — try refreshing the page",
+                )}
               </p>
               <p className="text-xs text-muted-foreground">
-                الأقسام المتأثرة: {failedQueries.map((x) => x.label).join("، ")} — الأرقام الظاهرة
-                فيها غير مكتملة (ليست صفرًا فعليًا).
+                {T(
+                  `الأقسام المتأثرة: ${failedQueries.map((x) => x.label).join("، ")} — الأرقام الظاهرة فيها غير مكتملة (ليست صفرًا فعليًا).`,
+                  `Affected sections: ${failedQueries.map((x) => x.label).join(", ")} — the numbers shown there are incomplete (not actually zero).`,
+                )}
               </p>
             </div>
           </div>
@@ -267,61 +290,66 @@ export function CeoDashboard() {
                 onClick={() => void x.q.refetch()}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${x.q.isFetching ? "animate-spin" : ""}`} />
-                إعادة المحاولة — {x.label}
+                {T(`إعادة المحاولة — ${x.label}`, `Retry — ${x.label}`)}
               </Button>
             ))}
           </div>
         </div>
       )}
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card/60 p-3">
-        <span className="text-xs text-muted-foreground me-1">فترة لوحة الـCEO</span>
+        <span className="text-xs text-muted-foreground me-1">
+          {T("فترة لوحة الـCEO", "CEO dashboard period")}
+        </span>
         <PeriodFilter value={period} onChange={setPeriod} />
       </div>
       {/* A — Financial */}
-      <SectionCard title="الملخّص المالي" subtitle={`${from} → ${to}`}>
+      <SectionCard title={T("الملخّص المالي", "Financial summary")} subtitle={`${from} → ${to}`}>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiTile
-            label="الإيراد الصافي"
+            label={T("الإيراد الصافي", "Net revenue")}
             value={egp(is?.netRevenue ?? 0)}
             hint={egpFull(is?.netRevenue ?? 0)}
             icon={<Banknote className="w-4 h-4" />}
           />
           <KpiTile
-            label="تكلفة البضاعة (COGS)"
+            label={T("تكلفة البضاعة (COGS)", "Cost of goods (COGS)")}
             value={egp(is?.cogs ?? 0)}
             hint={egpFull(is?.cogs ?? 0)}
             tone="warning"
             icon={<Boxes className="w-4 h-4" />}
           />
           <KpiTile
-            label="مجمل الربح"
+            label={T("مجمل الربح", "Gross profit")}
             value={egp(is?.grossProfit ?? 0)}
-            hint={`هامش ${nfPct(is?.grossMargin ?? 0)}`}
+            hint={T(`هامش ${nfPct(is?.grossMargin ?? 0)}`, `Margin ${nfPct(is?.grossMargin ?? 0)}`)}
             icon={<TrendingUp className="w-4 h-4" />}
           />
           <KpiTile
-            label="المصروفات التشغيلية"
+            label={T("المصروفات التشغيلية", "Operating expenses")}
             value={egp(is?.operatingExpensesTotal ?? 0)}
             tone="warning"
             icon={<Wallet className="w-4 h-4" />}
           />
           <KpiTile
-            label="صافي الربح"
+            label={T("صافي الربح", "Net profit")}
             value={egp(is?.netProfit ?? 0)}
             tone={(is?.netProfit ?? 0) >= 0 ? "positive" : "negative"}
             icon={<Target className="w-4 h-4" />}
           />
           <KpiTile
-            label="هامش الصافي"
+            label={T("هامش الصافي", "Net margin")}
             value={nfPct(is?.netMargin ?? 0)}
             tone={(is?.netMargin ?? 0) >= 0.05 ? "positive" : "warning"}
           />
         </div>
         <div className="mt-3 max-w-sm">
           <KpiTile
-            label="صحة النشاط"
+            label={T("صحة النشاط", "Business health")}
             value={healthScore.status === "insufficient" ? "—" : `${healthScore.score}/100`}
-            hint={`${healthStatusLabel} · اكتمال البيانات ${healthScore.coverage}%`}
+            hint={T(
+              `${healthStatusLabel} · اكتمال البيانات ${healthScore.coverage}%`,
+              `${healthStatusLabel} · Data coverage ${healthScore.coverage}%`,
+            )}
             tone={
               healthScore.status === "healthy"
                 ? "positive"
@@ -345,7 +373,9 @@ export function CeoDashboard() {
                 >
                   <div className="text-xs text-muted-foreground truncate">{e.name}</div>
                   <div className="font-bold">{egp(e.amount)}</div>
-                  <div className="text-xs text-muted-foreground">{nfPct(pct)} من المصروفات</div>
+                  <div className="text-xs text-muted-foreground">
+                    {T(`${nfPct(pct)} من المصروفات`, `${nfPct(pct)} of expenses`)}
+                  </div>
                 </div>
               );
             })}
@@ -355,72 +385,91 @@ export function CeoDashboard() {
       </SectionCard>
 
       {/* B — Operations */}
-      <SectionCard title="العمليات" subtitle="الاوردرات وحالتها خلال الفترة">
+      <SectionCard
+        title={T("العمليات", "Operations")}
+        subtitle={T("الاوردرات وحالتها خلال الفترة", "Orders and their status during the period")}
+      >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiTile
-            label="إجمالي الاوردرات"
+            label={T("إجمالي الاوردرات", "Total orders")}
             value={nf0.format(ordersTotal)}
             icon={<ShoppingCart className="w-4 h-4" />}
           />
           <KpiTile
-            label="نسبة التأكيد"
+            label={T("نسبة التأكيد", "Confirmation rate")}
             value={nfPct(confirmedRate)}
             hint={nf0.format(dash?.totals.ordersConfirmed ?? 0)}
             tone={confirmedRate >= 0.7 ? "positive" : "warning"}
           />
           <KpiTile
-            label="نسبة التسليم"
+            label={T("نسبة التسليم", "Delivery rate")}
             value={nfPct(deliveredRate)}
             hint={nf0.format(dash?.totals.ordersDelivered ?? 0)}
             tone={deliveredRate >= 0.6 ? "positive" : "warning"}
           />
           <KpiTile
-            label="نسبة الارتجاع"
+            label={T("نسبة الارتجاع", "Return rate")}
             value={nfPct(returnedRate)}
             hint={nf0.format(dash?.totals.ordersReturned ?? 0)}
             tone={returnedRate <= 0.1 ? "positive" : "negative"}
           />
           <KpiTile
-            label="متوسط قيمة الاوردر (AOV)"
+            label={T("متوسط قيمة الاوردر (AOV)", "Average order value (AOV)")}
             value={egp(aov)}
             icon={<Truck className="w-4 h-4" />}
           />
           <KpiTile
-            label="مُحضَّر (Fulfillment)"
+            label={T("مُحضَّر (Fulfillment)", "Prepared (Fulfillment)")}
             value={nf0.format(dash?.fulfillment.totalPrepared ?? 0)}
-            hint={`${dash?.fulfillment.employees.length ?? 0} موظف`}
+            hint={T(
+              `${dash?.fulfillment.employees.length ?? 0} موظف`,
+              `${dash?.fulfillment.employees.length ?? 0} employees`,
+            )}
           />
         </div>
       </SectionCard>
 
       {/* C — Valuation */}
-      <SectionCard title="التقييم والقيمة الدفترية" subtitle="الأصول + النقد + المديونيات">
+      <SectionCard
+        title={T("التقييم والقيمة الدفترية", "Valuation & book value")}
+        subtitle={T("الأصول + النقد + المديونيات", "Assets + cash + debts")}
+      >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <KpiTile
-            label="الأصول (التكلفة)"
+            label={T("الأصول (التكلفة)", "Assets (cost)")}
             value={egp(assetsCost)}
             icon={<Building2 className="w-4 h-4" />}
           />
-          <KpiTile label="الأصول (القيمة الدفترية)" value={egp(assetsNet)} hint="بعد الإهلاك" />
           <KpiTile
-            label="النقدية في الخزنة"
+            label={T("الأصول (القيمة الدفترية)", "Assets (book value)")}
+            value={egp(assetsNet)}
+            hint={T("بعد الإهلاك", "After depreciation")}
+          />
+          <KpiTile
+            label={T("النقدية في الخزنة", "Cash in treasury")}
             value={egp(cashBalance)}
             tone={cashBalance >= 0 ? "positive" : "negative"}
             icon={<Wallet className="w-4 h-4" />}
           />
           <KpiTile
-            label="مستحقات على العملاء"
+            label={T("مستحقات على العملاء", "Customer receivables")}
             value={egp(receivables)}
-            hint={`${aging?.byCustomer.length ?? 0} عميل`}
+            hint={T(
+              `${aging?.byCustomer.length ?? 0} عميل`,
+              `${aging?.byCustomer.length ?? 0} customers`,
+            )}
           />
           <KpiTile
-            label="مديونيات الموردين"
+            label={T("مديونيات الموردين", "Supplier debts")}
             value={egp(payables)}
             tone={payables > 0 ? "warning" : "default"}
-            hint={`${dash?.supplierDebt.overdueCount ?? 0} متأخرة`}
+            hint={T(
+              `${dash?.supplierDebt.overdueCount ?? 0} متأخرة`,
+              `${dash?.supplierDebt.overdueCount ?? 0} overdue`,
+            )}
           />
           <KpiTile
-            label="القيمة الدفترية (Equity)"
+            label={T("القيمة الدفترية (Equity)", "Book value (Equity)")}
             value={egp(bookValue)}
             tone={bookValue >= 0 ? "positive" : "negative"}
             icon={<Landmark className="w-4 h-4" />}
@@ -429,35 +478,47 @@ export function CeoDashboard() {
         <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="text-xs text-muted-foreground">
-              تقييم الشركة التقديري (إيراد آخر ١٢ شهر × 1.5 + صافي الأصول)
+              {T(
+                "تقييم الشركة التقديري (إيراد آخر ١٢ شهر × 1.5 + صافي الأصول)",
+                "Estimated company valuation (last 12 months' revenue × 1.5 + net assets)",
+              )}
             </div>
             <div className="text-2xl font-black text-primary">{egpFull(enterpriseVal)}</div>
           </div>
           <div className="text-xs text-muted-foreground max-w-xs">
-            تقييم إرشادي، وليس تقييمًا اكتواريًا. للتفاصيل حسب البراند: تقرير التقييم في المستثمرين.
+            {T(
+              "تقييم إرشادي، وليس تقييمًا اكتواريًا. للتفاصيل حسب البراند: تقرير التقييم في المستثمرين.",
+              "An indicative estimate, not an actuarial valuation. For a per-brand breakdown, see the valuation report under Investors.",
+            )}
           </div>
         </div>
       </SectionCard>
 
       {/* D — Growth */}
-      <SectionCard title="النمو" subtitle="الاتجاه الشهري خلال السنة والمعدل الشهري">
+      <SectionCard
+        title={T("النمو", "Growth")}
+        subtitle={T(
+          "الاتجاه الشهري خلال السنة والمعدل الشهري",
+          "Monthly trend across the year and month-over-month rate",
+        )}
+      >
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           <KpiTile
-            label="نمو الإيراد الشهري"
+            label={T("نمو الإيراد الشهري", "Monthly revenue growth")}
             value={growthDeltas.revenue == null ? "—" : `${growthDeltas.revenue.toFixed(1)}%`}
             tone={(growthDeltas.revenue ?? 0) >= 0 ? "positive" : "negative"}
             delta={growthDeltas.revenue}
             deltaSuffix="pt"
           />
           <KpiTile
-            label="نمو صافي الربح"
+            label={T("نمو صافي الربح", "Net profit growth")}
             value={growthDeltas.profit == null ? "—" : `${growthDeltas.profit.toFixed(1)}%`}
             tone={(growthDeltas.profit ?? 0) >= 0 ? "positive" : "negative"}
             delta={growthDeltas.profit}
             deltaSuffix="pt"
           />
           <KpiTile
-            label="نمو عدد الاوردرات"
+            label={T("نمو عدد الاوردرات", "Order count growth")}
             value={growthDeltas.orders == null ? "—" : `${growthDeltas.orders.toFixed(1)}%`}
             tone={(growthDeltas.orders ?? 0) >= 0 ? "positive" : "negative"}
             delta={growthDeltas.orders}
@@ -467,7 +528,7 @@ export function CeoDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="h-64 rounded-xl border border-border/60 p-3">
             <div className="text-xs text-muted-foreground mb-2">
-              الإيراد مقابل التكلفة والمصروفات
+              {T("الإيراد مقابل التكلفة والمصروفات", "Revenue vs. cost and expenses")}
             </div>
             <ResponsiveContainer width="100%" height="90%">
               <AreaChart data={growthSeries}>
@@ -489,7 +550,7 @@ export function CeoDashboard() {
                   dataKey="revenue"
                   stroke="hsl(var(--primary))"
                   fill="url(#rev)"
-                  name="الإيراد"
+                  name={T("الإيراد", "Revenue")}
                 />
                 <Line
                   type="monotone"
@@ -502,7 +563,7 @@ export function CeoDashboard() {
                   type="monotone"
                   dataKey="expenses"
                   stroke="hsl(var(--muted-foreground))"
-                  name="مصروفات"
+                  name={T("مصروفات", "Expenses")}
                   dot={false}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -510,7 +571,9 @@ export function CeoDashboard() {
             </ResponsiveContainer>
           </div>
           <div className="h-64 rounded-xl border border-border/60 p-3">
-            <div className="text-xs text-muted-foreground mb-2">صافي الربح والاوردرات</div>
+            <div className="text-xs text-muted-foreground mb-2">
+              {T("صافي الربح والاوردرات", "Net profit and orders")}
+            </div>
             <ResponsiveContainer width="100%" height="90%">
               <BarChart data={growthSeries}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -526,7 +589,7 @@ export function CeoDashboard() {
                   yAxisId="l"
                   dataKey="profit"
                   fill="hsl(var(--primary))"
-                  name="صافي الربح"
+                  name={T("صافي الربح", "Net profit")}
                   radius={[6, 6, 0, 0]}
                 />
                 <Line
@@ -534,7 +597,7 @@ export function CeoDashboard() {
                   type="monotone"
                   dataKey="orders"
                   stroke="hsl(var(--destructive))"
-                  name="اوردرات"
+                  name={T("اوردرات", "Orders")}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
               </BarChart>
@@ -544,12 +607,15 @@ export function CeoDashboard() {
       </SectionCard>
 
       {/* E — Analytics */}
-      <SectionCard title="تحليلات" subtitle="موردين، تسويق، عمال وبائعين">
+      <SectionCard
+        title={T("تحليلات", "Analytics")}
+        subtitle={T("موردين، تسويق، عمال وبائعين", "Suppliers, marketing, workers and salespeople")}
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Supplier debts */}
           <div className="rounded-xl border border-border/60 p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="font-bold">أعلى مديونيات الموردين</div>
+              <div className="font-bold">{T("أعلى مديونيات الموردين", "Top supplier debts")}</div>
               <AlertTriangle className="w-4 h-4 text-amber-500" />
             </div>
             <div className="space-y-2">
@@ -560,7 +626,9 @@ export function CeoDashboard() {
                 </div>
               ))}
               {(!dash || dash.supplierDebt.topSuppliers.length === 0) && (
-                <div className="text-xs text-muted-foreground">لا توجد مديونيات مفتوحة.</div>
+                <div className="text-xs text-muted-foreground">
+                  {T("لا توجد مديونيات مفتوحة.", "No open debts.")}
+                </div>
               )}
             </div>
           </div>
@@ -568,9 +636,14 @@ export function CeoDashboard() {
           {/* Marketing */}
           <div className="rounded-xl border border-border/60 p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="font-bold">التسويق (Spend vs Revenue)</div>
+              <div className="font-bold">
+                {T("التسويق (Spend vs Revenue)", "Marketing (Spend vs Revenue)")}
+              </div>
               <div className="text-xs text-muted-foreground">
-                ROAS إجمالي {marketingRoas.toFixed(2)}×
+                {T(
+                  `ROAS إجمالي ${marketingRoas.toFixed(2)}×`,
+                  `Overall ROAS ${marketingRoas.toFixed(2)}×`,
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -589,18 +662,23 @@ export function CeoDashboard() {
                 </div>
               ))}
               {(!dash || dash.marketing.byPlatform.length === 0) && (
-                <div className="text-xs text-muted-foreground">لا توجد مصروفات تسويق مسجّلة.</div>
+                <div className="text-xs text-muted-foreground">
+                  {T("لا توجد مصروفات تسويق مسجّلة.", "No marketing spend recorded.")}
+                </div>
               )}
             </div>
             <div className="mt-3 text-xs text-muted-foreground">
-              إجمالي الإنفاق: {egpFull(marketingSpend)}
+              {T(
+                `إجمالي الإنفاق: ${egpFull(marketingSpend)}`,
+                `Total spend: ${egpFull(marketingSpend)}`,
+              )}
             </div>
           </div>
 
           {/* Top workers */}
           <div className="rounded-xl border border-border/60 p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="font-bold">إنتاجية العمال</div>
+              <div className="font-bold">{T("إنتاجية العمال", "Worker productivity")}</div>
               <Package className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="space-y-2">
@@ -608,13 +686,19 @@ export function CeoDashboard() {
                 <div key={w.name} className="flex items-center justify-between text-sm">
                   <div className="truncate">{w.name}</div>
                   <div className="font-mono shrink-0">
-                    {nf0.format(w.produced)} قطعة · {w.productCount} منتج
+                    {T(
+                      `${nf0.format(w.produced)} قطعة · ${w.productCount} منتج`,
+                      `${nf0.format(w.produced)} pcs · ${w.productCount} products`,
+                    )}
                   </div>
                 </div>
               ))}
               {(!dash || dash.workers.length === 0) && (
                 <div className="text-xs text-muted-foreground">
-                  لا توجد بيانات إنتاج خلال هذه الفترة.
+                  {T(
+                    "لا توجد بيانات إنتاج خلال هذه الفترة.",
+                    "No production data for this period.",
+                  )}
                 </div>
               )}
             </div>
@@ -623,7 +707,9 @@ export function CeoDashboard() {
           {/* Salespeople / fulfillment */}
           <div className="rounded-xl border border-border/60 p-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="font-bold">إنتاجية البائعين / التحضير</div>
+              <div className="font-bold">
+                {T("إنتاجية البائعين / التحضير", "Salespeople / fulfillment productivity")}
+              </div>
               <Users className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="space-y-2">
@@ -634,13 +720,19 @@ export function CeoDashboard() {
                 >
                   <div className="truncate">{e.name}</div>
                   <div className="font-mono shrink-0">
-                    {nf0.format(e.prepared)} اوردر · {e.avgPerDay.toFixed(1)}/يوم
+                    {T(
+                      `${nf0.format(e.prepared)} اوردر · ${e.avgPerDay.toFixed(1)}/يوم`,
+                      `${nf0.format(e.prepared)} orders · ${e.avgPerDay.toFixed(1)}/day`,
+                    )}
                   </div>
                 </div>
               ))}
               {topSales.length === 0 && (
                 <div className="text-xs text-muted-foreground">
-                  لا توجد بيانات تحضير خلال هذه الفترة.
+                  {T(
+                    "لا توجد بيانات تحضير خلال هذه الفترة.",
+                    "No fulfillment data for this period.",
+                  )}
                 </div>
               )}
             </div>
@@ -650,7 +742,9 @@ export function CeoDashboard() {
         {/* Receivables aging + reorder */}
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="rounded-xl border border-border/60 p-4">
-            <div className="font-bold mb-3">مستحقات على العملاء (Aging)</div>
+            <div className="font-bold mb-3">
+              {T("مستحقات على العملاء (Aging)", "Customer receivables (Aging)")}
+            </div>
             <div className="grid grid-cols-4 gap-2 text-center">
               {(["b0_30", "b31_60", "b61_90", "b90_plus"] as const).map((b) => {
                 const val = aging?.totals[b] ?? 0;
@@ -662,7 +756,9 @@ export function CeoDashboard() {
                 };
                 return (
                   <div key={b} className="rounded-lg bg-muted/30 p-2">
-                    <div className="text-[10px] text-muted-foreground">{labels[b]} يوم</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {T(`${labels[b]} يوم`, `${labels[b]} days`)}
+                    </div>
                     <div className="text-sm font-bold">{egp(val)}</div>
                   </div>
                 );
@@ -670,7 +766,9 @@ export function CeoDashboard() {
             </div>
           </div>
           <div className="rounded-xl border border-border/60 p-4">
-            <div className="font-bold mb-3">إعادة الطلب / نقص المخزون</div>
+            <div className="font-bold mb-3">
+              {T("إعادة الطلب / نقص المخزون", "Reorder / low stock")}
+            </div>
             <div className="space-y-2">
               {(dash?.inventory.lowStock ?? []).slice(0, 5).map((p) => (
                 <div
@@ -681,13 +779,19 @@ export function CeoDashboard() {
                   <div
                     className={`font-mono shrink-0 ${p.stock <= 0 ? "text-destructive" : "text-amber-600 dark:text-amber-400"}`}
                   >
-                    {nf0.format(p.stock)} / حد {nf0.format(p.reorderPoint)}
+                    {T(
+                      `${nf0.format(p.stock)} / حد ${nf0.format(p.reorderPoint)}`,
+                      `${nf0.format(p.stock)} / threshold ${nf0.format(p.reorderPoint)}`,
+                    )}
                   </div>
                 </div>
               ))}
               {(!dash || dash.inventory.lowStock.length === 0) && (
                 <div className="text-xs text-muted-foreground">
-                  لا توجد منتجات تحت حد إعادة الطلب.
+                  {T(
+                    "لا توجد منتجات تحت حد إعادة الطلب.",
+                    "No products under the reorder threshold.",
+                  )}
                 </div>
               )}
             </div>
@@ -696,27 +800,35 @@ export function CeoDashboard() {
       </SectionCard>
 
       {/* F — Customers */}
-      <SectionCard title="العملاء" subtitle="القيمة، الاحتفاظ، والأعلى إنفاقًا">
+      <SectionCard
+        title={T("العملاء", "Customers")}
+        subtitle={T("القيمة، الاحتفاظ، والأعلى إنفاقًا", "Value, retention, and top spenders")}
+      >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <KpiTile
-            label="إجمالي العملاء"
+            label={T("إجمالي العملاء", "Total customers")}
             value={nf0.format(totalCustomers)}
             icon={<Users className="w-4 h-4" />}
           />
-          <KpiTile label="متوسط قيمة العميل (LTV)" value={egp(cust?.avgLtv ?? 0)} />
           <KpiTile
-            label="نسبة العملاء المتكررين"
+            label={T("متوسط قيمة العميل (LTV)", "Average customer value (LTV)")}
+            value={egp(cust?.avgLtv ?? 0)}
+          />
+          <KpiTile
+            label={T("نسبة العملاء المتكررين", "Repeat customer rate")}
             value={nfPct(repeatRate)}
             tone={repeatRate >= 0.2 ? "positive" : "warning"}
           />
           <KpiTile
-            label="عملاء غير نشطين (90 يوم+)"
+            label={T("عملاء غير نشطين (90 يوم+)", "Inactive customers (90 days+)")}
             value={nf0.format(atRisk)}
             tone={atRisk > totalCustomers * 0.4 ? "warning" : "default"}
           />
         </div>
         <div className="rounded-xl border border-border/60 p-4">
-          <div className="font-bold mb-3">أعلى العملاء إنفاقًا</div>
+          <div className="font-bold mb-3">
+            {T("أعلى العملاء إنفاقًا", "Top spending customers")}
+          </div>
           <div className="space-y-2">
             {topCustomers.map((c) => (
               <div
@@ -725,13 +837,15 @@ export function CeoDashboard() {
               >
                 <div className="truncate">{c.name}</div>
                 <div className="font-mono text-muted-foreground shrink-0">
-                  {nf0.format(c.orders)} اوردر
+                  {T(`${nf0.format(c.orders)} اوردر`, `${nf0.format(c.orders)} orders`)}
                 </div>
                 <div className="font-mono font-bold shrink-0">{egp(c.ltv)}</div>
               </div>
             ))}
             {topCustomers.length === 0 && (
-              <div className="text-xs text-muted-foreground">لا توجد بيانات عملاء بعد.</div>
+              <div className="text-xs text-muted-foreground">
+                {T("لا توجد بيانات عملاء بعد.", "No customer data yet.")}
+              </div>
             )}
           </div>
         </div>

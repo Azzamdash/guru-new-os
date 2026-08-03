@@ -45,6 +45,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { getUserAccess, setUserAccess, ALL_SECTIONS } from "@/lib/permissions.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { HUBS, pagesForHub } from "@/lib/nav-registry";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/admin")({
   component: AdminPage,
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/_authenticated/_app/admin")({
 
 function AdminPage() {
   const navigate = useNavigate();
+  const { lang } = useLang();
   const getMyRoleFn = useServerFn(getMyRole);
   const listUsersFn = useServerFn(listUsers);
 
@@ -66,10 +68,10 @@ function AdminPage() {
 
   useEffect(() => {
     if (roleQuery.data && !roleQuery.data.isAdmin) {
-      toast.error("هذه الصفحة للمشرفين فقط");
+      toast.error(lang === "ar" ? "هذه الصفحة للمشرفين فقط" : "This page is for admins only");
       navigate({ to: "/dashboard" });
     }
-  }, [roleQuery.data, navigate]);
+  }, [roleQuery.data, navigate, lang]);
 
   const usersQuery = useQuery({
     queryKey: ["admin-users"],
@@ -78,7 +80,11 @@ function AdminPage() {
   });
 
   if (roleQuery.isLoading || !roleQuery.data?.isAdmin) {
-    return <div className="p-8 text-muted-foreground">جاري التحقق من الصلاحيات...</div>;
+    return (
+      <div className="p-8 text-muted-foreground">
+        {lang === "ar" ? "جاري التحقق من الصلاحيات..." : "Checking permissions..."}
+      </div>
+    );
   }
 
   return (
@@ -87,10 +93,12 @@ function AdminPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <ShieldCheck className="w-7 h-7 text-primary" />
-            إدارة المستخدمين
+            {lang === "ar" ? "إدارة المستخدمين" : "User Management"}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            إنشاء المستخدمين، تعيين الأدوار، إعادة تعيين كلمات المرور وإيقاف الحسابات
+            {lang === "ar"
+              ? "إنشاء المستخدمين، تعيين الأدوار، إعادة تعيين كلمات المرور وإيقاف الحسابات"
+              : "Create users, assign roles, reset passwords and ban accounts"}
           </p>
         </div>
         <CreateUserDialog />
@@ -100,18 +108,22 @@ function AdminPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-right">البريد الإلكتروني</TableHead>
-              <TableHead className="text-right">الدور</TableHead>
-              <TableHead className="text-right">الحالة</TableHead>
-              <TableHead className="text-right">آخر دخول</TableHead>
-              <TableHead className="text-right">إجراءات</TableHead>
+              <TableHead className="text-right">
+                {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+              </TableHead>
+              <TableHead className="text-right">{lang === "ar" ? "الدور" : "Role"}</TableHead>
+              <TableHead className="text-right">{lang === "ar" ? "الحالة" : "Status"}</TableHead>
+              <TableHead className="text-right">
+                {lang === "ar" ? "آخر دخول" : "Last Login"}
+              </TableHead>
+              <TableHead className="text-right">{lang === "ar" ? "إجراءات" : "Actions"}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {usersQuery.isLoading && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  جاري التحميل...
+                  {lang === "ar" ? "جاري التحميل..." : "Loading..."}
                 </TableCell>
               </TableRow>
             )}
@@ -126,12 +138,14 @@ function AdminPage() {
 }
 
 type Role = "admin" | "member";
-const ROLE_OPTIONS: { v: Role; l: string }[] = [
-  { v: "admin", l: "مشرف (Admin)" },
-  { v: "member", l: "مستخدم (User)" },
+const ROLE_OPTIONS: { v: Role; ar: string; en: string }[] = [
+  { v: "admin", ar: "مشرف (Admin)", en: "Admin" },
+  { v: "member", ar: "مستخدم (User)", en: "User" },
 ];
-const roleLabel = (v: string) =>
-  ROLE_OPTIONS.find((r) => r.v === v)?.l ?? (v === "admin" ? "مشرف" : "مستخدم");
+const roleLabel = (v: string, lang: "ar" | "en" = "ar") =>
+  lang === "ar"
+    ? (ROLE_OPTIONS.find((r) => r.v === v)?.ar ?? (v === "admin" ? "مشرف" : "مستخدم"))
+    : (ROLE_OPTIONS.find((r) => r.v === v)?.en ?? (v === "admin" ? "Admin" : "User"));
 
 type UserRow = {
   id: string;
@@ -143,6 +157,7 @@ type UserRow = {
 };
 
 function UserRow({ user }: { user: UserRow }) {
+  const { lang } = useLang();
   const qc = useQueryClient();
   const setRoleFn = useServerFn(setUserRole);
   const setBannedFn = useServerFn(setUserBanned);
@@ -156,28 +171,38 @@ function UserRow({ user }: { user: UserRow }) {
   const roleMut = useMutation({
     mutationFn: (role: Role) => setRoleFn({ data: { userId: user.id, role } }),
     onSuccess: () => {
-      toast.success("تم تحديث الدور");
+      toast.success(lang === "ar" ? "تم تحديث الدور" : "Role updated");
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
+    onError: (e: any) =>
+      toast.error(e.message ?? (lang === "ar" ? "فشل التحديث" : "Update failed")),
   });
 
   const banMut = useMutation({
     mutationFn: () => setBannedFn({ data: { userId: user.id, banned: !isBanned } }),
     onSuccess: () => {
-      toast.success(isBanned ? "تم تفعيل الحساب" : "تم إيقاف الحساب");
+      toast.success(
+        isBanned
+          ? lang === "ar"
+            ? "تم تفعيل الحساب"
+            : "Account activated"
+          : lang === "ar"
+            ? "تم إيقاف الحساب"
+            : "Account suspended",
+      );
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
+    onError: (e: any) =>
+      toast.error(e.message ?? (lang === "ar" ? "فشل التحديث" : "Update failed")),
   });
 
   const delMut = useMutation({
     mutationFn: () => deleteFn({ data: { userId: user.id } }),
     onSuccess: () => {
-      toast.success("تم حذف المستخدم");
+      toast.success(lang === "ar" ? "تم حذف المستخدم" : "User deleted");
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل الحذف"),
+    onError: (e: any) => toast.error(e.message ?? (lang === "ar" ? "فشل الحذف" : "Delete failed")),
   });
 
   return (
@@ -193,7 +218,7 @@ function UserRow({ user }: { user: UserRow }) {
           <SelectContent>
             {ROLE_OPTIONS.map((r) => (
               <SelectItem key={r.v} value={r.v}>
-                {r.l}
+                {lang === "ar" ? r.ar : r.en}
               </SelectItem>
             ))}
           </SelectContent>
@@ -201,10 +226,10 @@ function UserRow({ user }: { user: UserRow }) {
       </TableCell>
       <TableCell>
         {isBanned ? (
-          <Badge variant="destructive">موقوف</Badge>
+          <Badge variant="destructive">{lang === "ar" ? "موقوف" : "Suspended"}</Badge>
         ) : (
           <Badge variant="secondary" className="bg-green-500/15 text-green-500">
-            نشط
+            {lang === "ar" ? "نشط" : "Active"}
           </Badge>
         )}
       </TableCell>
@@ -227,7 +252,12 @@ function UserRow({ user }: { user: UserRow }) {
             size="sm"
             variant="destructive"
             onClick={() => {
-              if (confirm(`حذف المستخدم ${user.email}؟`)) delMut.mutate();
+              if (
+                confirm(
+                  lang === "ar" ? `حذف المستخدم ${user.email}؟` : `Delete user ${user.email}?`,
+                )
+              )
+                delMut.mutate();
             }}
             disabled={delMut.isPending}
           >
@@ -240,17 +270,19 @@ function UserRow({ user }: { user: UserRow }) {
 }
 
 function ResetPasswordDialog({ userId, email }: { userId: string; email: string }) {
+  const { lang } = useLang();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const updateFn = useServerFn(updateUserPassword);
   const mut = useMutation({
     mutationFn: () => updateFn({ data: { userId, password } }),
     onSuccess: () => {
-      toast.success("تم تحديث كلمة المرور");
+      toast.success(lang === "ar" ? "تم تحديث كلمة المرور" : "Password updated");
       setOpen(false);
       setPassword("");
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
+    onError: (e: any) =>
+      toast.error(e.message ?? (lang === "ar" ? "فشل التحديث" : "Update failed")),
   });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -261,28 +293,28 @@ function ResetPasswordDialog({ userId, email }: { userId: string; email: string 
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>تغيير كلمة المرور</DialogTitle>
+          <DialogTitle>{lang === "ar" ? "تغيير كلمة المرور" : "Change Password"}</DialogTitle>
           <DialogDescription dir="ltr" className="text-right">
             {email}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="pw">كلمة المرور الجديدة</Label>
+          <Label htmlFor="pw">{lang === "ar" ? "كلمة المرور الجديدة" : "New Password"}</Label>
           <Input
             id="pw"
             type="text"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="6 أحرف على الأقل"
+            placeholder={lang === "ar" ? "6 أحرف على الأقل" : "At least 6 characters"}
             dir="ltr"
           />
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
-            إلغاء
+            {lang === "ar" ? "إلغاء" : "Cancel"}
           </Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending || password.length < 6}>
-            حفظ
+            {lang === "ar" ? "حفظ" : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -291,6 +323,7 @@ function ResetPasswordDialog({ userId, email }: { userId: string; email: string 
 }
 
 function CreateUserDialog() {
+  const { lang } = useLang();
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -300,30 +333,31 @@ function CreateUserDialog() {
   const mut = useMutation({
     mutationFn: () => createFn({ data: { email, password, role } }),
     onSuccess: () => {
-      toast.success("تم إنشاء المستخدم");
+      toast.success(lang === "ar" ? "تم إنشاء المستخدم" : "User created");
       setOpen(false);
       setEmail("");
       setPassword("");
       setRole("member");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل الإنشاء"),
+    onError: (e: any) =>
+      toast.error(e.message ?? (lang === "ar" ? "فشل الإنشاء" : "Creation failed")),
   });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="w-4 h-4 ml-2" />
-          مستخدم جديد
+          {lang === "ar" ? "مستخدم جديد" : "New User"}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>إنشاء مستخدم جديد</DialogTitle>
+          <DialogTitle>{lang === "ar" ? "إنشاء مستخدم جديد" : "Create New User"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Label htmlFor="email">{lang === "ar" ? "البريد الإلكتروني" : "Email"}</Label>
             <Input
               id="email"
               type="email"
@@ -333,18 +367,18 @@ function CreateUserDialog() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="npw">كلمة المرور</Label>
+            <Label htmlFor="npw">{lang === "ar" ? "كلمة المرور" : "Password"}</Label>
             <Input
               id="npw"
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               dir="ltr"
-              placeholder="6 أحرف على الأقل"
+              placeholder={lang === "ar" ? "6 أحرف على الأقل" : "At least 6 characters"}
             />
           </div>
           <div className="space-y-2">
-            <Label>الدور</Label>
+            <Label>{lang === "ar" ? "الدور" : "Role"}</Label>
             <Select value={role} onValueChange={(v) => setRole(v as Role)}>
               <SelectTrigger>
                 <SelectValue />
@@ -352,26 +386,27 @@ function CreateUserDialog() {
               <SelectContent>
                 {ROLE_OPTIONS.map((r) => (
                   <SelectItem key={r.v} value={r.v}>
-                    {r.l}
+                    {lang === "ar" ? r.ar : r.en}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              مشرف: صلاحيات كاملة على كل شيء · مستخدم: يفتح فقط الصفحات التي تسمح له بها، وأنت تحدد
-              إن كان يستطيع إدخال بيانات أم مشاهدة فقط.
+              {lang === "ar"
+                ? "مشرف: صلاحيات كاملة على كل شيء · مستخدم: يفتح فقط الصفحات التي تسمح له بها، وأنت تحدد إن كان يستطيع إدخال بيانات أم مشاهدة فقط."
+                : "Admin: full permissions on everything · User: only opens pages you grant, and you decide whether they can enter data or just view."}
             </p>
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
-            إلغاء
+            {lang === "ar" ? "إلغاء" : "Cancel"}
           </Button>
           <Button
             onClick={() => mut.mutate()}
             disabled={mut.isPending || !email || password.length < 6}
           >
-            إنشاء
+            {lang === "ar" ? "إنشاء" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -382,26 +417,27 @@ function CreateUserDialog() {
 // used in table header row (kept exported for reference)
 export { roleLabel };
 
-const SECTION_LABELS: Record<string, string> = {
-  dashboard: "لوحة التحكم",
-  data_entry: "إدخال البيانات",
-  expenses: "المصروفات",
-  sales: "فواتير المبيعات",
-  production: "الإنتاج والمخزون",
-  couriers: "الشحن والمناديب",
-  fulfillment: "تحضير الأوردرات",
-  suppliers: "الموردين",
-  catalog: "الكتالوج",
-  marketing: "التسويق",
-  reports_marketing: "تقارير التسويق",
-  reports_production: "تقارير الإنتاج",
-  reports_sales: "تقارير المبيعات",
-  reports_fulfillment: "تقارير Fulfillment",
-  reports_attendance: "تقارير انتظام الموظفين",
-  tasks: "المهام",
+const SECTION_LABELS: Record<string, { ar: string; en: string }> = {
+  dashboard: { ar: "لوحة التحكم", en: "Dashboard" },
+  data_entry: { ar: "إدخال البيانات", en: "Data Entry" },
+  expenses: { ar: "المصروفات", en: "Expenses" },
+  sales: { ar: "فواتير المبيعات", en: "Sales Invoices" },
+  production: { ar: "الإنتاج والمخزون", en: "Production & Inventory" },
+  couriers: { ar: "الشحن والمناديب", en: "Shipping & Couriers" },
+  fulfillment: { ar: "تحضير الأوردرات", en: "Order Prep" },
+  suppliers: { ar: "الموردين", en: "Suppliers" },
+  catalog: { ar: "الكتالوج", en: "Catalog" },
+  marketing: { ar: "التسويق", en: "Marketing" },
+  reports_marketing: { ar: "تقارير التسويق", en: "Marketing Reports" },
+  reports_production: { ar: "تقارير الإنتاج", en: "Production Reports" },
+  reports_sales: { ar: "تقارير المبيعات", en: "Sales Reports" },
+  reports_fulfillment: { ar: "تقارير Fulfillment", en: "Fulfillment Reports" },
+  reports_attendance: { ar: "تقارير انتظام الموظفين", en: "Attendance Reports" },
+  tasks: { ar: "المهام", en: "Tasks" },
 };
 
 function PermissionsDialog({ userId, email }: { userId: string; email: string }) {
+  const { lang } = useLang();
   const [open, setOpen] = useState(false);
   const getAccessFn = useServerFn(getUserAccess);
   const setAccessFn = useServerFn(setUserAccess);
@@ -428,7 +464,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
       await setAccessFn({ data: { userId, sections, brandIds } });
     },
     onSuccess: () => {
-      toast.success("تم حفظ الصلاحيات");
+      toast.success(lang === "ar" ? "تم حفظ الصلاحيات" : "Permissions saved");
       qc.invalidateQueries({ queryKey: ["user-access", userId] });
 
       setOpen(false);
@@ -452,7 +488,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
       (key) => key !== `deny:${route}` && key !== `page:${route}` && key !== `write:${route}`,
     );
   const setPageLevel = (page: (typeof allPages)[number], level: PageLevel) => {
-    let next = clearPageKeys(sections, page.to);
+    const next = clearPageKeys(sections, page.to);
     if (level === "read") next.push(`page:${page.to}`);
     else if (level === "write") next.push(`write:${page.to}`);
     else next.push(`deny:${page.to}`);
@@ -460,7 +496,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
   };
   const setPagesLevel = (pages: typeof allPages, level: PageLevel) => {
     const routes = new Set(pages.map((page) => page.to));
-    let next = sections.filter((key) => {
+    const next = sections.filter((key) => {
       if (key.startsWith("deny:") || key.startsWith("page:") || key.startsWith("write:")) {
         return !routes.has(key.slice(key.indexOf(":") + 1));
       }
@@ -471,33 +507,36 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
     setSections(Array.from(new Set(next)));
   };
 
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" title="صلاحيات">
+        <Button size="sm" variant="outline" title={lang === "ar" ? "صلاحيات" : "Permissions"}>
           <Lock className="w-4 h-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            الصلاحيات — <span dir="ltr">{email}</span>
+            {lang === "ar" ? "الصلاحيات" : "Permissions"} — <span dir="ltr">{email}</span>
           </DialogTitle>
           <DialogDescription>
-            المستخدم لا يرى أي صفحة إلا ما تحدده هنا صراحةً، ولكل صفحة تختار: مخفي / مشاهدة فقط /
-            تعديل.
+            {lang === "ar"
+              ? "المستخدم لا يرى أي صفحة إلا ما تحدده هنا صراحةً، ولكل صفحة تختار: مخفي / مشاهدة فقط / تعديل."
+              : "The user sees no page except what you explicitly grant here. For each page you choose: Hidden / View only / Edit."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
-            لا توجد صلاحيات افتراضية: أي صفحة غير محددة تكون مخفية. «مشاهدة فقط» تمنع الإضافة
-            والتعديل والحذف على مستوى السيرفر.
+            {lang === "ar"
+              ? "لا توجد صلاحيات افتراضية: أي صفحة غير محددة تكون مخفية. «مشاهدة فقط» تمنع الإضافة والتعديل والحذف على مستوى السيرفر."
+              : 'There are no default permissions: any page not specified stays hidden. "View only" blocks adding, editing and deleting at the server level.'}
           </div>
 
           <div className="space-y-4">
-            <div className="text-sm font-semibold">صلاحيات الصفحات</div>
+            <div className="text-sm font-semibold">
+              {lang === "ar" ? "صلاحيات الصفحات" : "Page Permissions"}
+            </div>
             {pagesByHub.map(({ hub, pages }) => {
               return (
                 <div key={hub.key} className="rounded-xl border border-border/60 bg-card/40 p-3">
@@ -506,7 +545,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                       <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
                         <hub.icon className="w-4 h-4 text-primary" />
                       </div>
-                      <div className="text-sm font-semibold">{hub.ar}</div>
+                      <div className="text-sm font-semibold">{lang === "ar" ? hub.ar : hub.en}</div>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
@@ -515,7 +554,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         className="text-xs h-7"
                         onClick={() => setPagesLevel(pages, "none")}
                       >
-                        إخفاء الكل
+                        {lang === "ar" ? "إخفاء الكل" : "Hide All"}
                       </Button>
                       <Button
                         size="sm"
@@ -523,7 +562,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         className="text-xs h-7"
                         onClick={() => setPagesLevel(pages, "read")}
                       >
-                        مشاهدة الكل
+                        {lang === "ar" ? "مشاهدة الكل" : "View All"}
                       </Button>
                       <Button
                         size="sm"
@@ -531,7 +570,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         className="text-xs h-7"
                         onClick={() => setPagesLevel(pages, "write")}
                       >
-                        تعديل الكل
+                        {lang === "ar" ? "تعديل الكل" : "Edit All"}
                       </Button>
                     </div>
                   </div>
@@ -540,9 +579,9 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                     {pages.map((p) => {
                       const level = pageLevel(p);
                       const opts: { key: "none" | "read" | "write"; label: string }[] = [
-                        { key: "none", label: "مخفي" },
-                        { key: "read", label: "مشاهدة" },
-                        { key: "write", label: "تعديل" },
+                        { key: "none", label: lang === "ar" ? "مخفي" : "Hidden" },
+                        { key: "read", label: lang === "ar" ? "مشاهدة" : "View" },
+                        { key: "write", label: lang === "ar" ? "تعديل" : "Edit" },
                       ];
                       return (
                         <div
@@ -550,7 +589,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                           className="flex items-center gap-2 rounded-md border border-border/40 bg-background/40 px-2 py-1.5 text-xs"
                         >
                           <p.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                          <span className="truncate flex-1">{p.ar}</span>
+                          <span className="truncate flex-1">{lang === "ar" ? p.ar : p.en}</span>
                           <div className="flex rounded-md border border-border/60 overflow-hidden shrink-0">
                             {opts.map((o) => (
                               <button
@@ -572,7 +611,6 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                       );
                     })}
                   </div>
-
                 </div>
               );
             })}
@@ -591,7 +629,9 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
               if (extra.length === 0) return null;
               return (
                 <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-                  <div className="text-sm font-semibold mb-2">أقسام عامة إضافية</div>
+                  <div className="text-sm font-semibold mb-2">
+                    {lang === "ar" ? "أقسام عامة إضافية" : "Additional General Sections"}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {extra.map((s) => (
                       <label
@@ -602,7 +642,11 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                           checked={sections.includes(s)}
                           onCheckedChange={() => toggle(sections, setSections, s)}
                         />
-                        <span>{SECTION_LABELS[s] ?? s}</span>
+                        <span>
+                          {lang === "ar"
+                            ? (SECTION_LABELS[s]?.ar ?? s)
+                            : (SECTION_LABELS[s]?.en ?? s)}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -613,9 +657,13 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
 
           {/* Brand access */}
           <div>
-            <div className="font-semibold text-sm mb-2">البراندات المسموحة</div>
+            <div className="font-semibold text-sm mb-2">
+              {lang === "ar" ? "البراندات المسموحة" : "Allowed Brands"}
+            </div>
             <p className="text-xs text-muted-foreground mb-2">
-              لا تحدد أي براند = وصول لكل البراندات.
+              {lang === "ar"
+                ? "لا تحدد أي براند = وصول لكل البراندات."
+                : "Select no brand = access to all brands."}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
               {(brandsQ.data ?? []).map((b) => (
@@ -633,10 +681,10 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
-            إلغاء
+            {lang === "ar" ? "إلغاء" : "Cancel"}
           </Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
-            حفظ
+            {lang === "ar" ? "حفظ" : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

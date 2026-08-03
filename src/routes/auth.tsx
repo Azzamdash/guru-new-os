@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { LineChart, BarChart3, PieChart, TrendingUp } from "lucide-react";
 import logoAsset from "@/assets/egurus-logo.asset.json";
+import { useLang } from "@/lib/i18n";
 
 /** Only allow same-origin absolute paths: "/x". Rejects "//host", "/\host", and any "scheme://". */
 function safeNextPath(value: unknown): string {
@@ -50,6 +51,8 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const navigate = useNavigate();
   const { next } = Route.useSearch();
   const goNext = () => {
@@ -77,7 +80,11 @@ function AuthPage() {
       if (error) throw error;
       goNext();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "بيانات الدخول غير صحيحة");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : T("بيانات الدخول غير صحيحة", "Invalid login credentials"),
+      );
     } finally {
       setLoading(false);
     }
@@ -103,26 +110,30 @@ function AuthPage() {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold text-gradient-primary leading-none">e-Gurus</span>
+                <span className="text-2xl font-bold text-gradient-primary leading-none">
+                  e-Gurus
+                </span>
                 <span className="text-xs text-muted-foreground mt-1">Dashboard</span>
               </div>
             </Link>
 
             <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-              حوّل بياناتك إلى
+              {T("حوّل بياناتك إلى", "Turn your data into a")}
               <br />
-              <span className="text-gradient-primary">لوحة تحكم حية</span>
+              <span className="text-gradient-primary">{T("لوحة تحكم حية", "live dashboard")}</span>
             </h1>
             <p className="text-muted-foreground text-base md:text-lg">
-              اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في
-              رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.
+              {T(
+                "اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.",
+                "Connect your stores or business, and see revenue, net profit, and cash position for every branch in interactive charts — no formulas, no copy-paste.",
+              )}
             </p>
             <div className="grid grid-cols-2 gap-3 mt-2">
               {[
-                { icon: TrendingUp, label: "مؤشرات KPI مباشرة" },
-                { icon: LineChart, label: "اتجاهات شهرية" },
-                { icon: BarChart3, label: "مقارنة الفروع" },
-                { icon: PieChart, label: "توزيع المصروفات" },
+                { icon: TrendingUp, label: T("مؤشرات KPI مباشرة", "Live KPI indicators") },
+                { icon: LineChart, label: T("اتجاهات شهرية", "Monthly trends") },
+                { icon: BarChart3, label: T("مقارنة الفروع", "Branch comparison") },
+                { icon: PieChart, label: T("توزيع المصروفات", "Expense breakdown") },
               ].map((f) => (
                 <div
                   key={f.label}
@@ -148,15 +159,18 @@ function AuthPage() {
             </div>
 
             <div className="relative">
-              <h2 className="text-2xl font-bold">تسجيل الدخول</h2>
+              <h2 className="text-2xl font-bold">{T("تسجيل الدخول", "Sign in")}</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                أدخل بريدك وكلمة المرور للمتابعة. الحسابات يُنشئها المشرف فقط.
+                {T(
+                  "أدخل بريدك وكلمة المرور للمتابعة. الحسابات يُنشئها المشرف فقط.",
+                  "Enter your email and password to continue. Accounts are created by an admin only.",
+                )}
               </p>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-4 relative">
               <div className="space-y-2">
-                <Label htmlFor="email">البريد الإلكتروني</Label>
+                <Label htmlFor="email">{T("البريد الإلكتروني", "Email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -168,7 +182,7 @@ function AuthPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">كلمة المرور</Label>
+                <Label htmlFor="password">{T("كلمة المرور", "Password")}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -180,12 +194,15 @@ function AuthPage() {
                 />
               </div>
               <Button type="submit" disabled={loading} className="w-full h-11">
-                {loading ? "..." : "دخول"}
+                {loading ? "..." : T("دخول", "Sign in")}
               </Button>
             </form>
 
             <p className="text-center text-xs text-muted-foreground relative">
-              التسجيل الذاتي مغلق — تواصل مع المشرف لإنشاء حسابك.
+              {T(
+                "التسجيل الذاتي مغلق — تواصل مع المشرف لإنشاء حسابك.",
+                "Self sign-up is disabled — contact an admin to create your account.",
+              )}
             </p>
           </Card>
         </div>

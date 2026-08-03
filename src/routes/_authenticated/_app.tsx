@@ -341,7 +341,9 @@ function AppLayout() {
           >
             {isReadOnlyPage && (
               <div className="sticky top-0 z-30 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-xs font-medium text-amber-700 dark:text-amber-300">
-                صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة
+                {lang === "ar"
+                  ? "صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة"
+                  : "View-only access — editing and saving are not allowed on this page"}
               </div>
             )}
             <OrderModuleNav />
