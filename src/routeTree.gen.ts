@@ -40,7 +40,6 @@ import { Route as AuthenticatedAppMaterialsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppMyInvestmentsRouteImport } from './routes/_authenticated/_app.my-investments'
 import { Route as AuthenticatedAppMyPrepRouteImport } from './routes/_authenticated/_app.my-prep'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/_app.operations'
-import { Route as AuthenticatedAppOrderConfirmationRouteImport } from './routes/_authenticated/_app.order-confirmation'
 import { Route as AuthenticatedAppOrderDistributionRouteImport } from './routes/_authenticated/_app.order-distribution'
 import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
 import { Route as AuthenticatedAppOrderReturnsRouteImport } from './routes/_authenticated/_app.order-returns'
@@ -277,12 +276,6 @@ const AuthenticatedAppOperationsRoute =
   AuthenticatedAppOperationsRouteImport.update({
     id: '/operations',
     path: '/operations',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
-const AuthenticatedAppOrderConfirmationRoute =
-  AuthenticatedAppOrderConfirmationRouteImport.update({
-    id: '/order-confirmation',
-    path: '/order-confirmation',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppOrderDistributionRoute =
@@ -695,7 +688,6 @@ export interface FileRoutesByFullPath {
   '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
-  '/order-confirmation': typeof AuthenticatedAppOrderConfirmationRoute
   '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
@@ -791,7 +783,6 @@ export interface FileRoutesByTo {
   '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
-  '/order-confirmation': typeof AuthenticatedAppOrderConfirmationRoute
   '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
@@ -888,7 +879,6 @@ export interface FileRoutesById {
   '/_authenticated/_app/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
   '/_authenticated/_app/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/_authenticated/_app/operations': typeof AuthenticatedAppOperationsRoute
-  '/_authenticated/_app/order-confirmation': typeof AuthenticatedAppOrderConfirmationRoute
   '/_authenticated/_app/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/_authenticated/_app/order-returns': typeof AuthenticatedAppOrderReturnsRoute
@@ -986,7 +976,6 @@ export interface FileRouteTypes {
     | '/my-investments'
     | '/my-prep'
     | '/operations'
-    | '/order-confirmation'
     | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
@@ -1082,7 +1071,6 @@ export interface FileRouteTypes {
     | '/my-investments'
     | '/my-prep'
     | '/operations'
-    | '/order-confirmation'
     | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
@@ -1178,7 +1166,6 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/my-investments'
     | '/_authenticated/_app/my-prep'
     | '/_authenticated/_app/operations'
-    | '/_authenticated/_app/order-confirmation'
     | '/_authenticated/_app/order-distribution'
     | '/_authenticated/_app/order-pipeline'
     | '/_authenticated/_app/order-returns'
@@ -1482,13 +1469,6 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof AuthenticatedAppOperationsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/_app/order-confirmation': {
-      id: '/_authenticated/_app/order-confirmation'
-      path: '/order-confirmation'
-      fullPath: '/order-confirmation'
-      preLoaderRoute: typeof AuthenticatedAppOrderConfirmationRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/order-distribution': {
@@ -2034,7 +2014,6 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppMyInvestmentsRoute: typeof AuthenticatedAppMyInvestmentsRoute
   AuthenticatedAppMyPrepRoute: typeof AuthenticatedAppMyPrepRoute
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
-  AuthenticatedAppOrderConfirmationRoute: typeof AuthenticatedAppOrderConfirmationRoute
   AuthenticatedAppOrderDistributionRoute: typeof AuthenticatedAppOrderDistributionRoute
   AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
   AuthenticatedAppOrderReturnsRoute: typeof AuthenticatedAppOrderReturnsRoute
@@ -2109,8 +2088,6 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppMyInvestmentsRoute: AuthenticatedAppMyInvestmentsRoute,
   AuthenticatedAppMyPrepRoute: AuthenticatedAppMyPrepRoute,
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
-  AuthenticatedAppOrderConfirmationRoute:
-    AuthenticatedAppOrderConfirmationRoute,
   AuthenticatedAppOrderDistributionRoute:
     AuthenticatedAppOrderDistributionRoute,
   AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,

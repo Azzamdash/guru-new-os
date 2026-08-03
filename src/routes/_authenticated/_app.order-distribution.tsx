@@ -216,7 +216,7 @@ function OrderDistributionPage() {
         </Button>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">{T("غير موزّعة", "Unassigned")}</p>
           <p className="text-2xl font-bold">{board?.totals.unassigned ?? 0}</p>
@@ -224,12 +224,6 @@ function OrderDistributionPage() {
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">{T("موزّعة", "Assigned")}</p>
           <p className="text-2xl font-bold">{board?.totals.assigned ?? 0}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">
-            {T("قيمة الأوردرات المفتوحة", "Open Orders Value")}
-          </p>
-          <p className="text-2xl font-bold">{money(board?.totals.openAmount ?? 0)}</p>
         </Card>
       </div>
 
@@ -469,7 +463,6 @@ function OrderDistributionPage() {
                 <tr>
                   <th className="p-2 text-start">{T("شركة الشحن", "Courier")}</th>
                   <th className="p-2 text-start">{T("مفتوحة", "Open")}</th>
-                  <th className="p-2 text-start">{T("قيمة المفتوحة", "Open value")}</th>
                   <th className="p-2 text-start">{T("تم التسليم", "Delivered")}</th>
                   <th className="p-2 text-start">{T("مرتجع", "Returned")}</th>
                   <th className="p-2 text-start">{T("نسبة التسليم", "Delivery rate")}</th>
@@ -481,7 +474,6 @@ function OrderDistributionPage() {
                   <tr key={l.courierId} className="border-t">
                     <td className="p-2 font-medium">{l.name}</td>
                     <td className="p-2">{l.open}</td>
-                    <td className="p-2">{money(l.openAmount)}</td>
                     <td className="p-2">{l.delivered}</td>
                     <td className="p-2">{l.returned}</td>
                     <td className="p-2">{l.deliveryRate.toFixed(1)}%</td>
@@ -490,7 +482,7 @@ function OrderDistributionPage() {
                 ))}
                 {!board?.loads.length && (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
                       {T("لا توجد بيانات", "No data")}
                     </td>
                   </tr>
