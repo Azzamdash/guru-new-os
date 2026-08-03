@@ -18,7 +18,7 @@ export function OrderModuleNav() {
     <div className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
       <div className="flex items-center gap-1 overflow-x-auto px-3 py-2">
         <span className="me-2 shrink-0 text-xs font-semibold text-muted-foreground">
-          إدارة الأوردرات
+          Sales & Orders
         </span>
         {MODULE_PAGES.map((p) => {
           const Icon = p.icon;
