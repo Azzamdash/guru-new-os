@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -65,17 +66,17 @@ export function OrderSearchCombobox({
       </PopoverTrigger>
       <PopoverContent className="w-[380px] p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput value={term} onValueChange={setTerm} placeholder="اسم العميل / تليفون / رقم أوردر" />
+          <CommandInput value={term} onValueChange={setTerm} placeholder={tr("اسم العميل / تليفون / رقم أوردر")} />
           <CommandList>
             {debounced.length < 2 ? (
-              <div className="p-3 text-sm text-muted-foreground">اكتب حرفين على الأقل للبحث…</div>
+              <div className="p-3 text-sm text-muted-foreground">{tr("اكتب حرفين على الأقل للبحث…")}</div>
             ) : q.isFetching ? (
               <div className="p-3 text-sm text-muted-foreground flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> جاري البحث…
+                <Loader2 className="h-4 w-4 animate-spin" /> {tr("جاري البحث…")}
               </div>
             ) : (
               <>
-                <CommandEmpty>لا توجد نتائج مطابقة.</CommandEmpty>
+                <CommandEmpty>{tr("لا توجد نتائج مطابقة.")}</CommandEmpty>
                 <CommandGroup>
                   {rows.map((o) => (
                     <CommandItem
@@ -91,7 +92,7 @@ export function OrderSearchCombobox({
                       {value === o.id ? <Check className="h-4 w-4 mt-1 shrink-0" /> : <span className="w-4 shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium truncate">{o.customer_name ?? "بدون اسم"}</span>
+                          <span className="font-medium truncate">{o.customer_name ?? tr("بدون اسم")}</span>
                           <Badge variant="secondary" className="shrink-0">{o.order_status}</Badge>
                         </div>
                         <div className="text-xs text-muted-foreground truncate" dir="ltr">

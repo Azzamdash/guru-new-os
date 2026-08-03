@@ -8,7 +8,7 @@ import { ClipboardList, ChevronRight, ChevronLeft, X, Printer, Timer } from "luc
 import { getOperationsSnapshot, updateInvoiceStage, STAGES, type Stage, assignInvoicePrep, getInvoiceForPrint } from "@/lib/operations.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { listOrderPrepUsers, getMyRole } from "@/lib/admin.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { toast } from "sonner";
 
 type PrintInvoice = Awaited<ReturnType<typeof getInvoiceForPrint>>;
@@ -112,7 +112,7 @@ function openPrintWindow(inv: PrintInvoice, lang: "ar" | "en") {
 
 export const Route = createFileRoute("/_authenticated/_app/order-pipeline")({
   head: () => ({ meta: [
-    { title: "مهمة تحضير الأوردر — e-GURUS" },
+    { title: tr("مهمة تحضير الأوردر — e-GURUS") },
     { name: "description", content: "خط تجهيز الأوردرات — مراحل SLA وإسناد موظفي التحضير." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

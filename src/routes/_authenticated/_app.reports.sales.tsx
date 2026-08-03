@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -20,7 +21,7 @@ import { ChartFrame } from "@/components/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/sales")({
   head: () => ({ meta: [
-    { title: "تقارير الأوردرات — e-GURUS" },
+    { title: tr("تقارير الأوردرات — e-GURUS") },
     { name: "description", content: "أداء الأوردرات: الأكثر مبيعًا، والإيراد، ومقارنات شهرية/تراكمية." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -103,37 +104,37 @@ function SalesReports() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><ShoppingCart className="w-7 h-7 text-primary" /> تقارير الأوردرات</h1>
-          <p className="text-muted-foreground text-sm mt-1">كل الأوردرات (شوبي فاي واليدوي) — أعلى وأقل المنتجات، والإيراد، ومقارنة شهرية/تراكمية.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><ShoppingCart className="w-7 h-7 text-primary" /> {tr("تقارير الأوردرات")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("كل الأوردرات (شوبي فاي واليدوي) — أعلى وأقل المنتجات، والإيراد، ومقارنة شهرية/تراكمية.")}</p>
           <div className="flex flex-wrap gap-2 mt-3 text-xs">
-            <Link to="/reports/fulfillment" className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:bg-muted"><PackageCheck className="w-3.5 h-3.5" /> تقارير الـ Fulfillment</Link>
-            <Link to="/reports/couriers" className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:bg-muted"><Truck className="w-3.5 h-3.5" /> تقارير شركات الشحن والمناديب</Link>
+            <Link to="/reports/fulfillment" className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:bg-muted"><PackageCheck className="w-3.5 h-3.5" /> {tr("تقارير الـ Fulfillment")}</Link>
+            <Link to="/reports/couriers" className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:bg-muted"><Truck className="w-3.5 h-3.5" /> {tr("تقارير شركات الشحن والمناديب")}</Link>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل البراندات</SelectItem>
+              <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
               {(brandsQ.data ?? []).filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
           <ReportActions
             filename={`sales-report-${resolved.year}.csv`}
-            summaryTitle="تقرير المبيعات"
+            summaryTitle={tr("تقرير المبيعات")}
             summaryText={`الفترة: ${resolved.dateFrom ?? resolved.year}${resolved.dateTo ? ` → ${resolved.dateTo}` : ""} — صافي الإيراد: ${fmt(netRevenue)}`}
             rows={withMoney as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "name", label: "المنتج" },
-              { key: "sold", label: "مباع (قطع)" },
-              { key: "returned", label: "مرتجع" },
-              { key: "stock", label: "المخزون" },
-              { key: "sellPrice", label: "سعر البيع" },
-              { key: "revenue", label: "إجمالي الإيراد" },
-              { key: "returnedValue", label: "قيمة المرتجعات" },
-              { key: "netRevenue", label: "صافي الإيراد" },
-              { key: "produced", label: "إنتاج" },
+              { key: "name", label: tr("المنتج") },
+              { key: "sold", label: tr("مباع (قطع)") },
+              { key: "returned", label: tr("مرتجع") },
+              { key: "stock", label: tr("المخزون") },
+              { key: "sellPrice", label: tr("سعر البيع") },
+              { key: "revenue", label: tr("إجمالي الإيراد") },
+              { key: "returnedValue", label: tr("قيمة المرتجعات") },
+              { key: "netRevenue", label: tr("صافي الإيراد") },
+              { key: "produced", label: tr("إنتاج") },
             ]}
           />
         </div>
@@ -142,20 +143,20 @@ function SalesReports() {
       {/* Money-based KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-gradient p-5 border-primary/30">
-          <div className="text-xs text-muted-foreground">إجمالي الإيراد</div>
+          <div className="text-xs text-muted-foreground">{tr("إجمالي الإيراد")}</div>
           <div className="text-2xl font-bold mt-1 text-primary num">{fmt(totalRevenue)}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">قبل خصم المرتجعات</div>
+          <div className="text-[10px] text-muted-foreground mt-1">{tr("قبل خصم المرتجعات")}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">صافي الإيراد (بعد المرتجعات)</div>
+          <div className="text-xs text-muted-foreground">{tr("صافي الإيراد (بعد المرتجعات)")}</div>
           <div className="text-2xl font-bold mt-1 num text-emerald-500">{fmt(netRevenue)}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">قيمة المرتجعات</div>
+          <div className="text-xs text-muted-foreground">{tr("قيمة المرتجعات")}</div>
           <div className="text-2xl font-bold mt-1 text-amber-500 num">{fmt(totalReturnedValue)}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">متوسط قيمة الأوردر (AOV)</div>
+          <div className="text-xs text-muted-foreground">{tr("متوسط قيمة الأوردر (AOV)")}</div>
           <div className="text-2xl font-bold mt-1 num">{fmt(avgOrderValue)}</div>
         </Card>
       </div>
@@ -163,61 +164,61 @@ function SalesReports() {
       {/* Order-based KPIs (1 فاتورة = 1 أوردر) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">إجمالي الأوردرات</div>
+          <div className="text-xs text-muted-foreground">{tr("إجمالي الأوردرات")}</div>
           <div className="text-2xl font-bold mt-1">{fmt(totalOrders)}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">فاتورة/أوردر واحد لكل صف</div>
+          <div className="text-[10px] text-muted-foreground mt-1">{tr("فاتورة/أوردر واحد لكل صف")}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">مرتجعات (أوردرات)</div>
+          <div className="text-xs text-muted-foreground">{tr("مرتجعات (أوردرات)")}</div>
           <div className="text-2xl font-bold mt-1 text-amber-500">{fmt(totalReturnOrders)}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">نسبة الإرجاع</div>
+          <div className="text-xs text-muted-foreground">{tr("نسبة الإرجاع")}</div>
           <div className="text-2xl font-bold mt-1">{(returnRate * 100).toFixed(1)}%</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">إجمالي القطع المُباعة</div>
+          <div className="text-xs text-muted-foreground">{tr("إجمالي القطع المُباعة")}</div>
           <div className="text-2xl font-bold mt-1">{fmt(totalSold)}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">مؤشر تشغيل فقط — ليس عدد الأوردرات</div>
+          <div className="text-[10px] text-muted-foreground mt-1">{tr("مؤشر تشغيل فقط — ليس عدد الأوردرات")}</div>
         </Card>
       </div>
 
       {/* Orders — monthly & cumulative comparison */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-gradient p-5 border-primary/30">
-          <div className="text-xs text-muted-foreground">أوردرات الشهر الحالي</div>
+          <div className="text-xs text-muted-foreground">{tr("أوردرات الشهر الحالي")}</div>
           <div className="text-2xl font-bold mt-1 num text-primary">{fmt(currentMonthOrders)}</div>
           <div className="text-[10px] text-muted-foreground mt-1">{MONTHS[currentMonthIdx]} {resolved.year}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">الشهر السابق</div>
+          <div className="text-xs text-muted-foreground">{tr("الشهر السابق")}</div>
           <div className="text-2xl font-bold mt-1 num">{fmt(prevMonthOrders)}</div>
           <div className="text-[10px] text-muted-foreground mt-1">{MONTHS[Math.max(0, currentMonthIdx - 1)]}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">التغير الشهري (MoM)</div>
+          <div className="text-xs text-muted-foreground">{tr("التغير الشهري (MoM)")}</div>
           <div className={`text-2xl font-bold mt-1 num flex items-center gap-1 ${momDelta > 0 ? "text-emerald-500" : momDelta < 0 ? "text-red-500" : ""}`}>
             {momDelta > 0 ? <ArrowUp className="w-5 h-5" /> : momDelta < 0 ? <ArrowDown className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
             {momPct >= 0 ? "+" : ""}{momPct.toFixed(1)}%
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1">{momDelta >= 0 ? "+" : ""}{fmt(momDelta)} أوردر</div>
+          <div className="text-[10px] text-muted-foreground mt-1">{momDelta >= 0 ? "+" : ""}{fmt(momDelta)} {tr("أوردر")}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">التراكمي حتى تاريخه (YTD)</div>
+          <div className="text-xs text-muted-foreground">{tr("التراكمي حتى تاريخه (YTD)")}</div>
           <div className="text-2xl font-bold mt-1 num text-emerald-500">{fmt(ytdOrders)}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">من يناير حتى {MONTHS[currentMonthIdx]}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">{tr("من يناير حتى")} {MONTHS[currentMonthIdx]}</div>
         </Card>
       </div>
 
       <Card className="card-gradient p-5">
-        <h3 className="font-semibold mb-4">عدد الأوردرات — شهري وتراكمي</h3>
+        <h3 className="font-semibold mb-4">{tr("عدد الأوردرات — شهري وتراكمي")}</h3>
         <ChartFrame
           isLoading={dashQ.isLoading}
           isError={dashQ.isError}
           error={dashQ.error}
           isEmpty={!dashQ.isLoading && monthlyOrdersCmp.every((m) => m.orders === 0)}
-          emptyTitle="لا أوردرات مسجّلة"
-          emptyDescription="ستظهر المقارنة الشهرية والتراكمية بمجرد تسجيل أوردرات."
+          emptyTitle={tr("لا أوردرات مسجّلة")}
+          emptyDescription={tr("ستظهر المقارنة الشهرية والتراكمية بمجرد تسجيل أوردرات.")}
           onRetry={() => dashQ.refetch()}
           height={280}
         >
@@ -229,8 +230,8 @@ function SalesReports() {
               <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
               <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
               <Legend />
-              <Bar yAxisId="left" dataKey="orders" name="أوردرات الشهر" fill="hsl(var(--primary))" />
-              <Line yAxisId="right" type="monotone" dataKey="cumulative" name="التراكمي (YTD)" stroke="hsl(var(--chart-2, 175 60% 55%))" strokeWidth={2} dot={{ r: 3 }} />
+              <Bar yAxisId="left" dataKey="orders" name={tr("أوردرات الشهر")} fill="hsl(var(--primary))" />
+              <Line yAxisId="right" type="monotone" dataKey="cumulative" name={tr("التراكمي (YTD)")} stroke="hsl(var(--chart-2, 175 60% 55%))" strokeWidth={2} dot={{ r: 3 }} />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartFrame>
@@ -238,14 +239,14 @@ function SalesReports() {
 
 
       <Card className="card-gradient p-5">
-        <h3 className="font-semibold mb-4">أداء المبيعات الشهري</h3>
+        <h3 className="font-semibold mb-4">{tr("أداء المبيعات الشهري")}</h3>
         <ChartFrame
           isLoading={dashQ.isLoading}
           isError={dashQ.isError}
           error={dashQ.error}
           isEmpty={!dashQ.isLoading && monthlySales.every((m) => (m.revenue ?? 0) === 0 && (m.orders ?? 0) === 0)}
-          emptyTitle="لا مبيعات مسجّلة لهذه الفترة"
-          emptyDescription="ابدأ بإضافة فواتير مبيعات ليظهر الأداء الشهري."
+          emptyTitle={tr("لا مبيعات مسجّلة لهذه الفترة")}
+          emptyDescription={tr("ابدأ بإضافة فواتير مبيعات ليظهر الأداء الشهري.")}
           onRetry={() => dashQ.refetch()}
           height={280}
         >
@@ -256,8 +257,8 @@ function SalesReports() {
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
               <Legend />
-              <Bar dataKey="revenue" name="الإيراد" fill="hsl(var(--primary))" />
-              <Bar dataKey="orders" name="الأوردرات" fill="hsl(var(--chart-2, 175 60% 55%))" />
+              <Bar dataKey="revenue" name={tr("الإيراد")} fill="hsl(var(--primary))" />
+              <Bar dataKey="orders" name={tr("الأوردرات")} fill="hsl(var(--chart-2, 175 60% 55%))" />
             </BarChart>
           </ResponsiveContainer>
         </ChartFrame>
@@ -266,11 +267,11 @@ function SalesReports() {
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="card-gradient overflow-hidden">
-          <div className="p-4 border-b border-border font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" /> الأكثر مبيعًا (بالقطع)</div>
+          <div className="p-4 border-b border-border font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" /> {tr("الأكثر مبيعًا (بالقطع)")}</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border text-right text-muted-foreground">
-                <th className="p-3">المنتج</th><th className="p-3">مباع</th><th className="p-3">سعر</th><th className="p-3">إيراد</th>
+                <th className="p-3">{tr("المنتج")}</th><th className="p-3">{tr("مباع")}</th><th className="p-3">{tr("سعر")}</th><th className="p-3">{tr("إيراد")}</th>
               </tr></thead>
               <tbody>
                 {topSellingQty.map((p) => (
@@ -281,18 +282,18 @@ function SalesReports() {
                     <td className="p-3 num text-emerald-500">{fmt(p.sold * p.sellPrice)}</td>
                   </tr>
                 ))}
-                {topSellingQty.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا مبيعات بعد.</td></tr>}
+                {topSellingQty.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{tr("لا مبيعات بعد.")}</td></tr>}
               </tbody>
             </table>
           </div>
         </Card>
 
         <Card className="card-gradient overflow-hidden">
-          <div className="p-4 border-b border-border font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-primary" /> الأكثر مبيعًا (بالفلوس)</div>
+          <div className="p-4 border-b border-border font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-primary" /> {tr("الأكثر مبيعًا (بالفلوس)")}</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border text-right text-muted-foreground">
-                <th className="p-3">المنتج</th><th className="p-3">إيراد</th><th className="p-3">قطع</th><th className="p-3">صافي</th>
+                <th className="p-3">{tr("المنتج")}</th><th className="p-3">{tr("إيراد")}</th><th className="p-3">{tr("قطع")}</th><th className="p-3">{tr("صافي")}</th>
               </tr></thead>
               <tbody>
                 {topSellingMoney.map((p) => (
@@ -303,18 +304,18 @@ function SalesReports() {
                     <td className="p-3 num text-emerald-500">{fmt(p.netRevenue)}</td>
                   </tr>
                 ))}
-                {topSellingMoney.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا مبيعات بعد.</td></tr>}
+                {topSellingMoney.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{tr("لا مبيعات بعد.")}</td></tr>}
               </tbody>
             </table>
           </div>
         </Card>
 
         <Card className="card-gradient overflow-hidden lg:col-span-2">
-          <div className="p-4 border-b border-border font-semibold flex items-center gap-2"><TrendingDown className="w-4 h-4 text-amber-500" /> الأقل مبيعًا</div>
+          <div className="p-4 border-b border-border font-semibold flex items-center gap-2"><TrendingDown className="w-4 h-4 text-amber-500" /> {tr("الأقل مبيعًا")}</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border text-right text-muted-foreground">
-                <th className="p-3">المنتج</th><th className="p-3">مباع</th><th className="p-3">إيراد</th><th className="p-3">المخزون</th>
+                <th className="p-3">{tr("المنتج")}</th><th className="p-3">{tr("مباع")}</th><th className="p-3">{tr("إيراد")}</th><th className="p-3">{tr("المخزون")}</th>
               </tr></thead>
               <tbody>
                 {leastSelling.map((p) => (
@@ -325,7 +326,7 @@ function SalesReports() {
                     <td className="p-3">{fmt(p.stock)}</td>
                   </tr>
                 ))}
-                {leastSelling.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا بيانات.</td></tr>}
+                {leastSelling.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{tr("لا بيانات.")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -335,10 +336,10 @@ function SalesReports() {
 
       {noSales.length > 0 && (
         <Card className="card-gradient overflow-hidden">
-          <div className="p-4 border-b border-border font-semibold text-amber-500">منتجات في المخزون بلا مبيعات</div>
+          <div className="p-4 border-b border-border font-semibold text-amber-500">{tr("منتجات في المخزون بلا مبيعات")}</div>
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border text-right text-muted-foreground">
-              <th className="p-3">المنتج</th><th className="p-3">المخزون</th><th className="p-3">سعر البيع</th>
+              <th className="p-3">{tr("المنتج")}</th><th className="p-3">{tr("المخزون")}</th><th className="p-3">{tr("سعر البيع")}</th>
             </tr></thead>
             <tbody>
               {noSales.map((p) => (

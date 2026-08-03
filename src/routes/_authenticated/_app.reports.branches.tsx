@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
@@ -12,7 +13,7 @@ import { Store, TrendingUp, Wallet, Boxes, Trophy } from "lucide-react";
 import { getBranchesReport } from "@/lib/pos.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/branches")({
-  head: () => ({ meta: [{ title: "تقارير الفروع الأوفلاين — e-GURUS" }, { name: "description", content: "أداء الفروع الأوفلاين وأعلى البائعين" }] }),
+  head: () => ({ meta: [{ title: tr("تقارير الفروع الأوفلاين — e-GURUS") }, { name: "description", content: "أداء الفروع الأوفلاين وأعلى البائعين" }] }),
   component: BranchesReportPage,
 });
 
@@ -35,35 +36,35 @@ function BranchesReportPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Store className="w-7 h-7" /> تقارير الفروع الأوفلاين</h1>
-          <p className="text-muted-foreground text-sm mt-1">إيرادات ومصروفات ومخزون كل فرع + أعلى البائعين.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><Store className="w-7 h-7" /> {tr("تقارير الفروع الأوفلاين")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("إيرادات ومصروفات ومخزون كل فرع + أعلى البائعين.")}</p>
         </div>
         <div className="flex items-end gap-2">
-          <div><Label className="text-xs">من</Label><Input type="date" dir="ltr" value={start} onChange={(e) => setStart(e.target.value)} /></div>
-          <div><Label className="text-xs">إلى</Label><Input type="date" dir="ltr" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
+          <div><Label className="text-xs">{tr("من")}</Label><Input type="date" dir="ltr" value={start} onChange={(e) => setStart(e.target.value)} /></div>
+          <div><Label className="text-xs">{tr("إلى")}</Label><Input type="date" dir="ltr" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi icon={<TrendingUp className="w-5 h-5" />} label="إجمالي الإيرادات" value={totalRev} />
-        <Kpi icon={<Wallet className="w-5 h-5" />} label="إجمالي المصروفات" value={totalExp} />
-        <Kpi icon={<TrendingUp className="w-5 h-5" />} label="صافي (تقريبي)" value={totalRev - totalExp} />
-        <Kpi icon={<Boxes className="w-5 h-5" />} label="قيمة المخزون الحالي" value={totalStock} />
+        <Kpi icon={<TrendingUp className="w-5 h-5" />} label={tr("إجمالي الإيرادات")} value={totalRev} />
+        <Kpi icon={<Wallet className="w-5 h-5" />} label={tr("إجمالي المصروفات")} value={totalExp} />
+        <Kpi icon={<TrendingUp className="w-5 h-5" />} label={tr("صافي (تقريبي)")} value={totalRev - totalExp} />
+        <Kpi icon={<Boxes className="w-5 h-5" />} label={tr("قيمة المخزون الحالي")} value={totalStock} />
       </div>
 
       <Card className="card-gradient overflow-x-auto">
         <table className="w-full text-sm min-w-[720px]">
           <thead>
             <tr className="text-muted-foreground text-right border-b border-border">
-              <th className="p-3">الفرع</th>
-              <th className="p-3">فواتير</th>
-              <th className="p-3">قطع مباعة</th>
-              <th className="p-3">إيرادات</th>
-              <th className="p-3">كاش</th>
-              <th className="p-3">فيزا</th>
-              <th className="p-3">مصروفات</th>
-              <th className="p-3">قطع بالمخزون</th>
-              <th className="p-3">قيمة المخزون</th>
+              <th className="p-3">{tr("الفرع")}</th>
+              <th className="p-3">{tr("فواتير")}</th>
+              <th className="p-3">{tr("قطع مباعة")}</th>
+              <th className="p-3">{tr("إيرادات")}</th>
+              <th className="p-3">{tr("كاش")}</th>
+              <th className="p-3">{tr("فيزا")}</th>
+              <th className="p-3">{tr("مصروفات")}</th>
+              <th className="p-3">{tr("قطع بالمخزون")}</th>
+              <th className="p-3">{tr("قيمة المخزون")}</th>
             </tr>
           </thead>
           <tbody>
@@ -81,22 +82,22 @@ function BranchesReportPage() {
               </tr>
             ))}
             {(data?.branches ?? []).length === 0 && (
-              <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">لا فروع أوفلاين بعد.</td></tr>
+              <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{tr("لا فروع أوفلاين بعد.")}</td></tr>
             )}
           </tbody>
         </table>
       </Card>
 
       <Card className="p-4">
-        <h2 className="font-bold mb-3 flex items-center gap-2"><Trophy className="w-5 h-5 text-primary" /> أعلى البائعين</h2>
+        <h2 className="font-bold mb-3 flex items-center gap-2"><Trophy className="w-5 h-5 text-primary" /> {tr("أعلى البائعين")}</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[500px]">
             <thead>
               <tr className="text-muted-foreground text-right border-b border-border">
-                <th className="p-3">الترتيب</th>
-                <th className="p-3">البائع</th>
-                <th className="p-3">عدد فواتير</th>
-                <th className="p-3">إجمالي المبيعات</th>
+                <th className="p-3">{tr("الترتيب")}</th>
+                <th className="p-3">{tr("البائع")}</th>
+                <th className="p-3">{tr("عدد فواتير")}</th>
+                <th className="p-3">{tr("إجمالي المبيعات")}</th>
               </tr>
             </thead>
             <tbody>
@@ -109,7 +110,7 @@ function BranchesReportPage() {
                 </tr>
               ))}
               {(data?.topSellers ?? []).length === 0 && (
-                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا مبيعات في هذه الفترة.</td></tr>
+                <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{tr("لا مبيعات في هذه الفترة.")}</td></tr>
               )}
             </tbody>
           </table>

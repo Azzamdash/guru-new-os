@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getInventoryValuation } from "@/lib/inventory-valuation.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { listOfflineBranches, listBranchStock, listBranchStockMovements } from "@/lib/branch-stock.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { Layers, AlertTriangle, Store, Package } from "lucide-react";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -23,7 +23,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_authenticated/_app/reports/inventory-valuation")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({ meta: [
-    { title: "تقارير المخزون — e-GURUS" },
+    { title: tr("تقارير المخزون — e-GURUS") },
     { name: "description", content: "قيمة المخزون بمتوسط التكلفة المتحرك (WAC) لكل منتج/براند/فرع." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -98,21 +98,21 @@ function Page() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Layers className="w-7 h-7" />
-          {L("تقارير المخزون", "Inventory Reports")}
+          {L(tr("تقارير المخزون"), "Inventory Reports")}
           {branchName && <span className="text-lg text-muted-foreground">— {branchName}</span>}
           {!branchId && brandName && <span className="text-lg text-muted-foreground">— {brandName}</span>}
           <span className="text-lg text-muted-foreground">· {year}</span>
         </h1>
         {(brandId || branchId) && (
           <Button variant="ghost" size="sm" onClick={() => setSearch({ brandId: "", branchId: "" })}>
-            {L("عرض الكل", "Show all")}
+            {L(tr("عرض الكل"), "Show all")}
           </Button>
         )}
       </div>
 
       <Card className="card-gradient p-4 flex flex-wrap gap-3 items-end">
         <div>
-          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Package className="w-3 h-3" /> {L("البراند", "Brand")}</div>
+          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Package className="w-3 h-3" /> {L(tr("البراند"), "Brand")}</div>
           <Select value={brandId || "all"} onValueChange={(v) => setSearch({ brandId: v === "all" ? "" : v, branchId: "" })}>
             <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -124,11 +124,11 @@ function Page() {
           </Select>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Store className="w-3 h-3" /> {L("الفرع الأوفلاين", "Offline branch")}</div>
+          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Store className="w-3 h-3" /> {L(tr("الفرع الأوفلاين"), "Offline branch")}</div>
           <Select value={branchId || "none"} onValueChange={(v) => setSearch({ branchId: v === "none" ? "" : v, brandId: "" })}>
-            <SelectTrigger className="w-56"><SelectValue placeholder={L("اختر فرع", "Select branch")} /></SelectTrigger>
+            <SelectTrigger className="w-56"><SelectValue placeholder={L(tr("اختر فرع"), "Select branch")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">{L("— بدون فرع —", "— No branch —")}</SelectItem>
+              <SelectItem value="none">{L(tr("— بدون فرع —"), "— No branch —")}</SelectItem>
               {(branchesQ.data ?? []).map((b) => (
                 <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
               ))}
@@ -136,7 +136,7 @@ function Page() {
           </Select>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground mb-1">{L("السنة", "Year")}</div>
+          <div className="text-xs text-muted-foreground mb-1">{L(tr("السنة"), "Year")}</div>
           <Select value={String(year)} onValueChange={(v) => setSearch({ year: Number(v) })}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -145,30 +145,30 @@ function Page() {
           </Select>
         </div>
         <span className="text-xs text-muted-foreground ms-auto">
-          {L("تُحدَّث تلقائيًا مع كل حركة مخزون.", "Auto-updated on every stock movement.")}
+          {L(tr("تُحدَّث تلقائيًا مع كل حركة مخزون."), "Auto-updated on every stock movement.")}
         </span>
       </Card>
 
       {branchId ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Kpi label={L("عدد المنتجات", "Products")} value={nf(branchItems.length)} />
-            <Kpi label={L("عدد الوحدات", "Units on hand")} value={nf(branchTotals.units)} />
-            <Kpi label={L("قيمة المخزون", "Inventory Value")} value={nf(branchTotals.value)} />
-            <Kpi label={L("الإيراد المحتمل", "Potential Revenue")} value={nf(branchTotals.potential_revenue)} tone="text-emerald-500" />
+            <Kpi label={L(tr("عدد المنتجات"), "Products")} value={nf(branchItems.length)} />
+            <Kpi label={L(tr("عدد الوحدات"), "Units on hand")} value={nf(branchTotals.units)} />
+            <Kpi label={L(tr("قيمة المخزون"), "Inventory Value")} value={nf(branchTotals.value)} />
+            <Kpi label={L(tr("الإيراد المحتمل"), "Potential Revenue")} value={nf(branchTotals.potential_revenue)} tone="text-emerald-500" />
           </div>
 
           <Card className="card-gradient p-5">
-            <h3 className="font-semibold mb-3">{L("منتجات الفرع", "Branch Products")}</h3>
+            <h3 className="font-semibold mb-3">{L(tr("منتجات الفرع"), "Branch Products")}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{L("المنتج", "Product")}</th>
+                  <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
                   <th className="p-2 text-start">SKU</th>
-                  <th className="p-2 text-end">{L("الرصيد", "Qty")}</th>
-                  <th className="p-2 text-end">{L("متوسط التكلفة", "Avg Cost")}</th>
-                  <th className="p-2 text-end">{L("قيمة المخزون", "Inv. Value")}</th>
-                  <th className="p-2 text-end">{L("سعر البيع", "Sell Price")}</th>
+                  <th className="p-2 text-end">{L(tr("الرصيد"), "Qty")}</th>
+                  <th className="p-2 text-end">{L(tr("متوسط التكلفة"), "Avg Cost")}</th>
+                  <th className="p-2 text-end">{L(tr("قيمة المخزون"), "Inv. Value")}</th>
+                  <th className="p-2 text-end">{L(tr("سعر البيع"), "Sell Price")}</th>
                 </tr></thead>
                 <tbody>
                   {branchItems.map((p) => {
@@ -185,7 +185,7 @@ function Page() {
                       </tr>
                     );
                   })}
-                  {branchItems.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{L("لا توجد بيانات", "No data")}</td></tr>}
+                  {branchItems.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد بيانات"), "No data")}</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -199,10 +199,10 @@ function Page() {
             <div className="overflow-x-auto max-h-96">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{L("التاريخ", "Date")}</th>
-                  <th className="p-2 text-start">{L("المنتج", "Product")}</th>
-                  <th className="p-2">{L("النوع", "Type")}</th>
-                  <th className="p-2 text-end">{L("الكمية", "Qty")}</th>
+                  <th className="p-2 text-start">{L(tr("التاريخ"), "Date")}</th>
+                  <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
+                  <th className="p-2">{L(tr("النوع"), "Type")}</th>
+                  <th className="p-2 text-end">{L(tr("الكمية"), "Qty")}</th>
                 </tr></thead>
                 <tbody>
                   {movesForYear.map((m) => (
@@ -213,7 +213,7 @@ function Page() {
                       <td className="p-2 num text-end">{nf(Number(m.qty))}</td>
                     </tr>
                   ))}
-                  {movesForYear.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{L("لا توجد حركات لهذه السنة", "No movements this year")}</td></tr>}
+                  {movesForYear.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد حركات لهذه السنة"), "No movements this year")}</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -222,19 +222,19 @@ function Page() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Kpi label={L("عدد الوحدات", "Units on hand")} value={nf(valQ.data?.totals.units ?? 0)} />
-            <Kpi label={L("قيمة المخزون", "Inventory Value")} value={nf(valQ.data?.totals.value ?? 0)} />
-            <Kpi label={L("الإيراد المحتمل", "Potential Revenue")} value={nf(valQ.data?.totals.potential_revenue ?? 0)} tone="text-emerald-500" />
-            <Kpi label={L("الهامش المحتمل", "Potential Margin")} value={nf(valQ.data?.totals.potential_margin ?? 0)} tone="text-emerald-500" />
+            <Kpi label={L(tr("عدد الوحدات"), "Units on hand")} value={nf(valQ.data?.totals.units ?? 0)} />
+            <Kpi label={L(tr("قيمة المخزون"), "Inventory Value")} value={nf(valQ.data?.totals.value ?? 0)} />
+            <Kpi label={L(tr("الإيراد المحتمل"), "Potential Revenue")} value={nf(valQ.data?.totals.potential_revenue ?? 0)} tone="text-emerald-500" />
+            <Kpi label={L(tr("الهامش المحتمل"), "Potential Margin")} value={nf(valQ.data?.totals.potential_margin ?? 0)} tone="text-emerald-500" />
           </div>
 
           <Card className="card-gradient p-5">
-            <h3 className="font-semibold mb-3">{L("حسب البراند", "By Brand")}</h3>
+            <h3 className="font-semibold mb-3">{L(tr("حسب البراند"), "By Brand")}</h3>
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border text-muted-foreground">
-                <th className="p-2 text-start">{L("البراند", "Brand")}</th>
-                <th className="p-2 text-end">{L("الوحدات", "Units")}</th>
-                <th className="p-2 text-end">{L("القيمة", "Value")}</th>
+                <th className="p-2 text-start">{L(tr("البراند"), "Brand")}</th>
+                <th className="p-2 text-end">{L(tr("الوحدات"), "Units")}</th>
+                <th className="p-2 text-end">{L(tr("القيمة"), "Value")}</th>
                 <th className="p-2 text-end"></th>
               </tr></thead>
               <tbody>
@@ -245,7 +245,7 @@ function Page() {
                     <td className="p-2 num text-end">{nf(b.value)}</td>
                     <td className="p-2 text-end">
                       <Link to="/reports/inventory-valuation" search={{ brandId: b.brand_id, branchId: "", year }} className="text-xs text-primary hover:underline">
-                        {L("عرض", "View")}
+                        {L(tr("عرض"), "View")}
                       </Link>
                     </td>
                   </tr>
@@ -255,18 +255,18 @@ function Page() {
           </Card>
 
           <Card className="card-gradient p-5">
-            <h3 className="font-semibold mb-3">{L("تفصيل المنتجات", "Product Detail")}</h3>
+            <h3 className="font-semibold mb-3">{L(tr("تفصيل المنتجات"), "Product Detail")}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{L("المنتج", "Product")}</th>
-                  <th className="p-2 text-start">{L("البراند", "Brand")}</th>
-                  <th className="p-2 text-end">{L("الرصيد", "Qty")}</th>
-                  <th className="p-2 text-end">{L("متوسط التكلفة", "Avg Cost")}</th>
-                  <th className="p-2 text-end">{L("قيمة المخزون", "Inv. Value")}</th>
-                  <th className="p-2 text-end">{L("سعر البيع", "Sell Price")}</th>
-                  <th className="p-2 text-end">{L("الهامش/وحدة", "Margin/unit")}</th>
-                  <th className="p-2 text-center">{L("تنبيه", "Alert")}</th>
+                  <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
+                  <th className="p-2 text-start">{L(tr("البراند"), "Brand")}</th>
+                  <th className="p-2 text-end">{L(tr("الرصيد"), "Qty")}</th>
+                  <th className="p-2 text-end">{L(tr("متوسط التكلفة"), "Avg Cost")}</th>
+                  <th className="p-2 text-end">{L(tr("قيمة المخزون"), "Inv. Value")}</th>
+                  <th className="p-2 text-end">{L(tr("سعر البيع"), "Sell Price")}</th>
+                  <th className="p-2 text-end">{L(tr("الهامش/وحدة"), "Margin/unit")}</th>
+                  <th className="p-2 text-center">{L(tr("تنبيه"), "Alert")}</th>
                 </tr></thead>
                 <tbody>
                   {(valQ.data?.items ?? []).map((i) => (
@@ -279,11 +279,11 @@ function Page() {
                       <td className="p-2 num text-end text-muted-foreground">{nf(i.sell_price)}</td>
                       <td className="p-2 num text-end text-emerald-500">{nf(i.sell_price - i.moving_avg_cost)}</td>
                       <td className="p-2 text-center">
-                        {i.low_stock ? <span className="inline-flex items-center gap-1 text-destructive"><AlertTriangle className="w-4 h-4" />{L("منخفض", "Low")}</span> : <span className="text-muted-foreground">—</span>}
+                        {i.low_stock ? <span className="inline-flex items-center gap-1 text-destructive"><AlertTriangle className="w-4 h-4" />{L(tr("منخفض"), "Low")}</span> : <span className="text-muted-foreground">—</span>}
                       </td>
                     </tr>
                   ))}
-                  {(valQ.data?.items ?? []).length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">{L("لا توجد بيانات", "No data")}</td></tr>}
+                  {(valQ.data?.items ?? []).length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد بيانات"), "No data")}</td></tr>}
                 </tbody>
               </table>
             </div>

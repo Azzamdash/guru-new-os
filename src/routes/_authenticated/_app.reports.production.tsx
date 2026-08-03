@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -16,7 +17,7 @@ import { ChartFrame } from "@/components/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/production")({
   head: () => ({ meta: [
-    { title: "تقارير الإنتاج — e-GURUS" },
+    { title: tr("تقارير الإنتاج — e-GURUS") },
     { name: "description", content: "أداء العمال والمنتجات الأكثر إنتاجًا." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -50,28 +51,28 @@ function ProductionReports() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><BarChart3 className="w-7 h-7 text-primary" /> تقارير الإنتاج</h1>
-          <p className="text-muted-foreground text-sm mt-1">أداء العمال والموظفين والمنتجات الأكثر إنتاجًا.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><BarChart3 className="w-7 h-7 text-primary" /> {tr("تقارير الإنتاج")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("أداء العمال والموظفين والمنتجات الأكثر إنتاجًا.")}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل البراندات</SelectItem>
+              <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
               {(brandsQ.data ?? []).filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
           <ReportActions
             filename={`production-report-${resolved.year}.csv`}
-            summaryTitle="تقرير الإنتاج"
+            summaryTitle={tr("تقرير الإنتاج")}
             summaryText={`الفترة: ${resolved.dateFrom ?? resolved.year}${resolved.dateTo ? ` → ${resolved.dateTo}` : ""}`}
             rows={workers.map((w) => ({ ...w, share: totalProduced > 0 ? (w.produced / totalProduced) : 0 })) as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "name", label: "العامل" },
-              { key: "produced", label: "إجمالي الإنتاج" },
-              { key: "productCount", label: "عدد المنتجات" },
-              { key: "share", label: "نصيبه %", fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
+              { key: "name", label: tr("العامل") },
+              { key: "produced", label: tr("إجمالي الإنتاج") },
+              { key: "productCount", label: tr("عدد المنتجات") },
+              { key: "share", label: tr("نصيبه %"), fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
             ]}
           />
         </div>
@@ -79,33 +80,33 @@ function ProductionReports() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground flex items-center gap-1"><Factory className="w-3.5 h-3.5" /> إجمالي الإنتاج</div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1"><Factory className="w-3.5 h-3.5" /> {tr("إجمالي الإنتاج")}</div>
           <div className="text-2xl font-bold mt-1">{fmt(totalProduced)}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground flex items-center gap-1"><Users className="w-3.5 h-3.5" /> عدد العمال النشطين</div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {tr("عدد العمال النشطين")}</div>
           <div className="text-2xl font-bold mt-1">{workers.length}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground flex items-center gap-1"><Package className="w-3.5 h-3.5" /> منتجات مُنتجة</div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1"><Package className="w-3.5 h-3.5" /> {tr("منتجات مُنتجة")}</div>
           <div className="text-2xl font-bold mt-1">{topProduced.length}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">متوسط إنتاج العامل</div>
+          <div className="text-xs text-muted-foreground">{tr("متوسط إنتاج العامل")}</div>
           <div className="text-2xl font-bold mt-1">{workers.length > 0 ? fmt(totalProduced / workers.length) : 0}</div>
         </Card>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-4">أفضل العمال إنتاجًا</h3>
+          <h3 className="font-semibold mb-4">{tr("أفضل العمال إنتاجًا")}</h3>
           <ChartFrame
             isLoading={dashQ.isLoading}
             isError={dashQ.isError}
             error={dashQ.error}
             isEmpty={!dashQ.isLoading && workers.length === 0}
-            emptyTitle="لا بيانات عمال بعد"
-            emptyDescription="سجّل حركات الإنتاج لتظهر أسماء العمال وأداؤهم."
+            emptyTitle={tr("لا بيانات عمال بعد")}
+            emptyDescription={tr("سجّل حركات الإنتاج لتظهر أسماء العمال وأداؤهم.")}
             onRetry={() => dashQ.refetch()}
             height={280}
           >
@@ -116,21 +117,21 @@ function ProductionReports() {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <Bar dataKey="produced" name="إنتاج" fill="hsl(var(--primary))" />
+                <Bar dataKey="produced" name={tr("إنتاج")} fill="hsl(var(--primary))" />
               </BarChart>
             </ResponsiveContainer>
           </ChartFrame>
         </Card>
 
         <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-4">أكثر المنتجات إنتاجًا</h3>
+          <h3 className="font-semibold mb-4">{tr("أكثر المنتجات إنتاجًا")}</h3>
           <ChartFrame
             isLoading={dashQ.isLoading}
             isError={dashQ.isError}
             error={dashQ.error}
             isEmpty={!dashQ.isLoading && topProduced.length === 0}
-            emptyTitle="لا حركات إنتاج بعد"
-            emptyDescription="سجّل إنتاج المنتجات من صفحة الإنتاج."
+            emptyTitle={tr("لا حركات إنتاج بعد")}
+            emptyDescription={tr("سجّل إنتاج المنتجات من صفحة الإنتاج.")}
             onRetry={() => dashQ.refetch()}
             height={280}
           >
@@ -140,7 +141,7 @@ function ProductionReports() {
                 <XAxis type="number" tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Bar dataKey="produced" name="إنتاج" fill="hsl(var(--chart-2, 175 60% 55%))" />
+                <Bar dataKey="produced" name={tr("إنتاج")} fill="hsl(var(--chart-2, 175 60% 55%))" />
               </BarChart>
             </ResponsiveContainer>
           </ChartFrame>
@@ -149,10 +150,10 @@ function ProductionReports() {
 
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">تفاصيل العمال</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("تفاصيل العمال")}</div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">العامل</th><th className="p-3">إجمالي الإنتاج</th><th className="p-3">عدد المنتجات</th><th className="p-3">نصيبه %</th>
+            <th className="p-3">{tr("العامل")}</th><th className="p-3">{tr("إجمالي الإنتاج")}</th><th className="p-3">{tr("عدد المنتجات")}</th><th className="p-3">{tr("نصيبه %")}</th>
           </tr></thead>
           <tbody>
             {workers.map((w) => (
@@ -163,16 +164,16 @@ function ProductionReports() {
                 <td className="p-3">{totalProduced > 0 ? ((w.produced / totalProduced) * 100).toFixed(1) : 0}%</td>
               </tr>
             ))}
-            {workers.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا بيانات.</td></tr>}
+            {workers.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{tr("لا بيانات.")}</td></tr>}
           </tbody>
         </table>
       </Card>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">أكثر المنتجات إنتاجًا</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("أكثر المنتجات إنتاجًا")}</div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">المنتج</th><th className="p-3">إنتاج</th><th className="p-3">مباع</th><th className="p-3">مرتجع</th><th className="p-3">المخزون</th>
+            <th className="p-3">{tr("المنتج")}</th><th className="p-3">{tr("إنتاج")}</th><th className="p-3">{tr("مباع")}</th><th className="p-3">{tr("مرتجع")}</th><th className="p-3">{tr("المخزون")}</th>
           </tr></thead>
           <tbody>
             {topProduced.map((p) => (
@@ -184,7 +185,7 @@ function ProductionReports() {
                 <td className="p-3">{fmt(p.stock)}</td>
               </tr>
             ))}
-            {topProduced.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا منتجات مُنتجة بعد.</td></tr>}
+            {topProduced.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{tr("لا منتجات مُنتجة بعد.")}</td></tr>}
           </tbody>
         </table>
       </Card>

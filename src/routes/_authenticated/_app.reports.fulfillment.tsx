@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -126,88 +127,88 @@ function FulfillmentReports() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2" dir="ltr"><Truck className="w-7 h-7 text-primary" /> Operation &amp; Fulfillment</h1>
-          <p className="text-muted-foreground text-sm mt-1">شركات الشحن، المناديب، معدلات التأكيد والتسليم، التحصيل، وأداء موظفي تحضير الأوردرات.</p>
+          <p className="text-muted-foreground text-sm mt-1">{tr("شركات الشحن، المناديب، معدلات التأكيد والتسليم، التحصيل، وأداء موظفي تحضير الأوردرات.")}</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل البراندات</SelectItem>
+              <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
               {(brandsQ.data ?? []).filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={confirm} onValueChange={setConfirm}>
             <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل حالات الأوردر</SelectItem>
-              <SelectItem value="pending">بانتظار التأكيد</SelectItem>
-              <SelectItem value="confirmed">مؤكد</SelectItem>
-              <SelectItem value="cancelled">ملغي</SelectItem>
+              <SelectItem value="all">{tr("كل حالات الأوردر")}</SelectItem>
+              <SelectItem value="pending">{tr("بانتظار التأكيد")}</SelectItem>
+              <SelectItem value="confirmed">{tr("مؤكد")}</SelectItem>
+              <SelectItem value="cancelled">{tr("ملغي")}</SelectItem>
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
           <ReportActions
             filename={`fulfillment-report-${resolved.year}.csv`}
-            summaryTitle="تقرير Fulfillment"
+            summaryTitle={tr("تقرير Fulfillment")}
             summaryText={summaryText}
             rows={couriers as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "name", label: "الاسم" },
-              { key: "type", label: "النوع", fmt: (v) => TYPE_LABEL[String(v)] ?? String(v) },
-              { key: "delivered", label: "مُسلَّم" },
-              { key: "returned", label: "مُرتجع" },
-              { key: "collected", label: "التحصيل" },
-              { key: "deliveryRate", label: "معدل التسليم %", fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
+              { key: "name", label: tr("الاسم") },
+              { key: "type", label: tr("النوع"), fmt: (v) => TYPE_LABEL[String(v)] ?? String(v) },
+              { key: "delivered", label: tr("مُسلَّم") },
+              { key: "returned", label: tr("مُرتجع") },
+              { key: "collected", label: tr("التحصيل") },
+              { key: "deliveryRate", label: tr("معدل التسليم %"), fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
             ]}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi icon={Package} label="الأوردرات" value={fmtNum(totalOrdersCouriers)} />
-        <Kpi icon={PackageCheck} label="المُؤكَّد" value={fmtNum(totalConfirmed)} />
-        <Kpi icon={Package} label="المُسلَّم" value={fmtNum(totalDelivered)} delta={p ? pctDelta(totalDelivered, prevDelivered).label : null} />
-        <Kpi icon={RotateCcw} label="المُرتجع" value={fmtNum(totalReturned)} tone="warn" delta={p ? pctDelta(totalReturned, prevReturned).label : null} />
-        <Kpi icon={Wallet} label="التحصيل" value={`${fmtNum(totalCollected)} ج`} delta={p ? pctDelta(totalCollected, prevCollected).label : null} />
+        <Kpi icon={Package} label={tr("الأوردرات")} value={fmtNum(totalOrdersCouriers)} />
+        <Kpi icon={PackageCheck} label={tr("المُؤكَّد")} value={fmtNum(totalConfirmed)} />
+        <Kpi icon={Package} label={tr("المُسلَّم")} value={fmtNum(totalDelivered)} delta={p ? pctDelta(totalDelivered, prevDelivered).label : null} />
+        <Kpi icon={RotateCcw} label={tr("المُرتجع")} value={fmtNum(totalReturned)} tone="warn" delta={p ? pctDelta(totalReturned, prevReturned).label : null} />
+        <Kpi icon={Wallet} label={tr("التحصيل")} value={`${fmtNum(totalCollected)} ج`} delta={p ? pctDelta(totalCollected, prevCollected).label : null} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi icon={PackageCheck} label="تحضير الأوردرات" value={fmtNum(totalPrepared)} delta={p ? pctDelta(totalPrepared, prevPrepared).label : null} />
-        <Kpi icon={Clock} label="متوسط وقت التجهيز" value={`${weightedAvgLead.toFixed(1)}h`} />
+        <Kpi icon={PackageCheck} label={tr("تحضير الأوردرات")} value={fmtNum(totalPrepared)} delta={p ? pctDelta(totalPrepared, prevPrepared).label : null} />
+        <Kpi icon={Clock} label={tr("متوسط وقت التجهيز")} value={`${weightedAvgLead.toFixed(1)}h`} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="card-gradient p-5">
           <div className="text-xs text-muted-foreground">Confirmation Rate</div>
           <div className="text-2xl font-bold mt-1 text-primary">{(overallConfirmation * 100).toFixed(1)}%</div>
-          <div className="text-[11px] text-muted-foreground mt-1">المؤكَّد ÷ إجمالي الأوردرات</div>
+          <div className="text-[11px] text-muted-foreground mt-1">{tr("المؤكَّد ÷ إجمالي الأوردرات")}</div>
         </Card>
         <Card className="card-gradient p-5">
           <div className="text-xs text-muted-foreground">Delivery Rate</div>
           <div className="text-2xl font-bold mt-1 text-emerald-500">{(overallDelivery * 100).toFixed(1)}%</div>
-          <div className="text-[11px] text-muted-foreground mt-1">المُسلَّم ÷ المُؤكَّد</div>
+          <div className="text-[11px] text-muted-foreground mt-1">{tr("المُسلَّم ÷ المُؤكَّد")}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground flex items-center gap-1"><Users className="w-3.5 h-3.5" /> عدد المناديب/الشركات النشطة</div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {tr("عدد المناديب/الشركات النشطة")}</div>
           <div className="text-2xl font-bold mt-1">{couriers.length}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">عدد موظفي التحضير</div>
+          <div className="text-xs text-muted-foreground">{tr("عدد موظفي التحضير")}</div>
           <div className="text-2xl font-bold mt-1">{prepQ.data?.prepStaffCount ?? prepRows.length}</div>
-          <div className="text-[11px] text-muted-foreground mt-1">حسب المستخدمين بدور "موظف تحضير أوردرات"</div>
+          <div className="text-[11px] text-muted-foreground mt-1">{tr("حسب المستخدمين بدور \"موظف تحضير أوردرات\"")}</div>
         </Card>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-4">أداء أعلى 10 مناديب/شركات</h3>
+          <h3 className="font-semibold mb-4">{tr("أداء أعلى 10 مناديب/شركات")}</h3>
           <ChartFrame
             isLoading={dashQ.isLoading}
             isError={dashQ.isError}
             error={dashQ.error}
             isEmpty={!dashQ.isLoading && chartData.length === 0}
-            emptyTitle="لا بيانات شحن لهذه الفترة"
-            emptyDescription="أضف حركات مناديب أو شركات شحن لتظهر النتائج."
+            emptyTitle={tr("لا بيانات شحن لهذه الفترة")}
+            emptyDescription={tr("أضف حركات مناديب أو شركات شحن لتظهر النتائج.")}
             onRetry={() => dashQ.refetch()}
             height={320}
           >
@@ -218,22 +219,22 @@ function FulfillmentReports() {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <Bar dataKey="delivered" name="مُسلَّم" fill="hsl(var(--primary))" />
-                <Bar dataKey="returned" name="مُرتجع" fill="hsl(var(--destructive))" />
+                <Bar dataKey="delivered" name={tr("مُسلَّم")} fill="hsl(var(--primary))" />
+                <Bar dataKey="returned" name={tr("مُرتجع")} fill="hsl(var(--destructive))" />
               </BarChart>
             </ResponsiveContainer>
           </ChartFrame>
         </Card>
         <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-1">أعلى موظفي التحضير</h3>
-          <p className="text-xs text-muted-foreground mb-3">يُحتسب تلقائياً بمجرد تسليم الأوردر للمندوب من خط تجهيز الأوردرات.</p>
+          <h3 className="font-semibold mb-1">{tr("أعلى موظفي التحضير")}</h3>
+          <p className="text-xs text-muted-foreground mb-3">{tr("يُحتسب تلقائياً بمجرد تسليم الأوردر للمندوب من خط تجهيز الأوردرات.")}</p>
           <ChartFrame
             isLoading={dashQ.isLoading}
             isError={dashQ.isError}
             error={dashQ.error}
             isEmpty={!dashQ.isLoading && fulfillChart.length === 0}
-            emptyTitle="لا يوجد أوردرات مُكتملة بعد"
-            emptyDescription='يتم احتساب الترتيب تلقائياً من "مهمة تحضير الأوردر" حسب عدد الأوردرات المُسلَّمة لكل موظف.'
+            emptyTitle={tr("لا يوجد أوردرات مُكتملة بعد")}
+            emptyDescription={tr("يتم احتساب الترتيب تلقائياً من \"مهمة تحضير الأوردر\" حسب عدد الأوردرات المُسلَّمة لكل موظف.")}
             onRetry={() => dashQ.refetch()}
             height={320}
           >
@@ -244,8 +245,8 @@ function FulfillmentReports() {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <Bar dataKey="handedOff" name="مُسلَّم للمندوب" fill="hsl(var(--primary))" />
-                <Bar dataKey="total" name="إجمالي المُسنَد" fill="hsl(var(--muted-foreground))" />
+                <Bar dataKey="handedOff" name={tr("مُسلَّم للمندوب")} fill="hsl(var(--primary))" />
+                <Bar dataKey="total" name={tr("إجمالي المُسنَد")} fill="hsl(var(--muted-foreground))" />
               </BarChart>
             </ResponsiveContainer>
           </ChartFrame>
@@ -254,13 +255,13 @@ function FulfillmentReports() {
 
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">تفاصيل المناديب وشركات الشحن</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("تفاصيل المناديب وشركات الشحن")}</div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">الاسم</th><th className="p-3">النوع</th>
-            <th className="p-3">مُسلَّم</th><th className="p-3">مُرتجع</th>
-            <th className="p-3">معدل التسليم</th><th className="p-3">معدل الإرجاع</th>
-            <th className="p-3">التحصيل</th>
+            <th className="p-3">{tr("الاسم")}</th><th className="p-3">{tr("النوع")}</th>
+            <th className="p-3">{tr("مُسلَّم")}</th><th className="p-3">{tr("مُرتجع")}</th>
+            <th className="p-3">{tr("معدل التسليم")}</th><th className="p-3">{tr("معدل الإرجاع")}</th>
+            <th className="p-3">{tr("التحصيل")}</th>
           </tr></thead>
           <tbody>
             {couriers.map((c) => (
@@ -274,22 +275,22 @@ function FulfillmentReports() {
                 <td className="p-3">{fmtNum(c.collected)}</td>
               </tr>
             ))}
-            {couriers.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">لا بيانات لهذه الفترة.</td></tr>}
+            {couriers.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{tr("لا بيانات لهذه الفترة.")}</td></tr>}
           </tbody>
         </table>
       </Card>
 
       <Card className="card-gradient overflow-hidden">
         <div className="p-4 border-b border-border font-semibold flex items-center gap-2">
-          <PackageCheck className="w-4 h-4 text-primary" /> أداء موظفي التحضير
+          <PackageCheck className="w-4 h-4 text-primary" /> {tr("أداء موظفي التحضير")}
         </div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">الموظف</th>
-            <th className="p-3">إجمالي التحضير</th>
-            <th className="p-3">أيام العمل</th>
-            <th className="p-3">متوسط/يوم</th>
-            <th className="p-3">نصيبه %</th>
+            <th className="p-3">{tr("الموظف")}</th>
+            <th className="p-3">{tr("إجمالي التحضير")}</th>
+            <th className="p-3">{tr("أيام العمل")}</th>
+            <th className="p-3">{tr("متوسط/يوم")}</th>
+            <th className="p-3">{tr("نصيبه %")}</th>
           </tr></thead>
           <tbody>
             {fulfillment.map((f) => (
@@ -301,30 +302,30 @@ function FulfillmentReports() {
                 <td className="p-3">{totalPrepared > 0 ? ((f.prepared / totalPrepared) * 100).toFixed(1) : 0}%</td>
               </tr>
             ))}
-            {fulfillment.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا بيانات تحضير. سجّل من صفحة "تحضير الأوردرات".</td></tr>}
+            {fulfillment.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{tr("لا بيانات تحضير. سجّل من صفحة \"تحضير الأوردرات\".")}</td></tr>}
           </tbody>
         </table>
       </Card>
 
       <Card className="card-gradient overflow-hidden">
         <div className="p-4 border-b border-border font-semibold flex items-center gap-2">
-          <PackageCheck className="w-4 h-4 text-primary" /> أداء موظفي تحضير الأوردرات (من خط التجهيز)
+          <PackageCheck className="w-4 h-4 text-primary" /> {tr("أداء موظفي تحضير الأوردرات (من خط التجهيز)")}
         </div>
         <p className="p-3 text-xs text-muted-foreground border-b border-border/50">
-          يعتمد على الأوردرات المُسنَدة لكل موظف داخل خط تجهيز الأوردرات — عدد الأوردرات، المُسلَّم، المتأخر عن SLA، ومتوسط وقت التجهيز.
+          {tr("يعتمد على الأوردرات المُسنَدة لكل موظف داخل خط تجهيز الأوردرات — عدد الأوردرات، المُسلَّم، المتأخر عن SLA، ومتوسط وقت التجهيز.")}
         </p>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">الموظف</th>
-            <th className="p-3">إجمالي الأوردرات</th>
-            <th className="p-3">مُسلَّم للمندوب</th>
-            <th className="p-3">تم تسليمه للعميل</th>
-            <th className="p-3">قيد التجهيز</th>
-            <th className="p-3">متأخر SLA</th>
-            <th className="p-3">ملغي</th>
-            <th className="p-3">معدل الإنجاز</th>
-            <th className="p-3">متوسط وقت التجهيز</th>
-            <th className="p-3">قيمة الأوردرات</th>
+            <th className="p-3">{tr("الموظف")}</th>
+            <th className="p-3">{tr("إجمالي الأوردرات")}</th>
+            <th className="p-3">{tr("مُسلَّم للمندوب")}</th>
+            <th className="p-3">{tr("تم تسليمه للعميل")}</th>
+            <th className="p-3">{tr("قيد التجهيز")}</th>
+            <th className="p-3">{tr("متأخر SLA")}</th>
+            <th className="p-3">{tr("ملغي")}</th>
+            <th className="p-3">{tr("معدل الإنجاز")}</th>
+            <th className="p-3">{tr("متوسط وقت التجهيز")}</th>
+            <th className="p-3">{tr("قيمة الأوردرات")}</th>
           </tr></thead>
           <tbody>
             {(prepQ.data?.rows ?? []).map((r) => (
@@ -338,10 +339,10 @@ function FulfillmentReports() {
                 <td className="p-3 text-amber-500">{fmtNum(r.cancelled)}</td>
                 <td className="p-3 font-semibold">{(r.deliveryRate * 100).toFixed(1)}%</td>
                 <td className="p-3">{r.avgLeadHours.toFixed(1)}h</td>
-                <td className="p-3">{fmtNum(Math.round(r.revenue))} ج</td>
+                <td className="p-3">{fmtNum(Math.round(r.revenue))} {tr("ج")}</td>
               </tr>
             ))}
-            {(prepQ.data?.rows ?? []).length === 0 && <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">لا يوجد موظفو تحضير مسجَّلون بعد.</td></tr>}
+            {(prepQ.data?.rows ?? []).length === 0 && <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">{tr("لا يوجد موظفو تحضير مسجَّلون بعد.")}</td></tr>}
           </tbody>
         </table>
       </Card>
@@ -355,7 +356,7 @@ function Kpi({ icon: Icon, label, value, delta, tone }: { icon: typeof Package; 
     <Card className="card-gradient p-5">
       <div className="text-xs text-muted-foreground flex items-center gap-1"><Icon className="w-3.5 h-3.5" /> {label}</div>
       <div className={`text-2xl font-bold mt-1 ${color}`}>{value}</div>
-      {delta != null && <div className="text-[11px] mt-1 text-muted-foreground">مقارنة بالفترة السابقة: <span className="font-semibold">{delta}</span></div>}
+      {delta != null && <div className="text-[11px] mt-1 text-muted-foreground">{tr("مقارنة بالفترة السابقة:")} <span className="font-semibold">{delta}</span></div>}
     </Card>
   );
 }

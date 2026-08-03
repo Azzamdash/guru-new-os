@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -56,7 +57,7 @@ function HubRoute() {
   }, [roleQ.data, accessQ.data]);
 
   if (roleQ.isLoading || accessQ.isLoading) {
-    return <div className="p-8 text-muted-foreground">جاري التحميل...</div>;
+    return <div className="p-8 text-muted-foreground">{tr("جاري التحميل...")}</div>;
   }
 
   return <HubPage hub={hub as HubKey} ctx={ctx} />;

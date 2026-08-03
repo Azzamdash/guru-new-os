@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -17,7 +18,7 @@ import { CONFIRMATION_OUTCOMES } from "@/lib/orders-ops.shared";
 export const Route = createFileRoute("/_authenticated/_app/order-confirmation")({
   head: () => ({
     meta: [
-      { title: "تأكيد الأوردرات — e-GURUS" },
+      { title: tr("تأكيد الأوردرات — e-GURUS") },
       { name: "description", content: "طابور تأكيد الأوردرات بالمكالمات والواتساب قبل الشحن مع تسجيل أسباب الإلغاء." },
       { property: "og:title", content: "تأكيد الأوردرات — e-GURUS" },
       { property: "og:description", content: "طابور تأكيد الأوردرات قبل الشحن." },
@@ -58,7 +59,7 @@ function OrderConfirmationPage() {
     mutationFn: (v: { orderId: string; outcome: "confirmed" | "cancelled" | "unreachable" | "postponed" }) =>
       recordFn({ data: { ...v, reason: reason.trim() || null, channel: "call" } }),
     onSuccess: () => {
-      toast.success("تم تسجيل نتيجة التأكيد");
+      toast.success(tr("تم تسجيل نتيجة التأكيد"));
       setReason("");
       setActiveId(null);
       qc.invalidateQueries({ queryKey: ["confirmation-queue"] });
@@ -72,18 +73,18 @@ function OrderConfirmationPage() {
     <div className="space-y-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 text-xl font-bold">
-          <PhoneCall className="h-5 w-5 text-primary" /> تأكيد الأوردرات
+          <PhoneCall className="h-5 w-5 text-primary" /> {tr("تأكيد الأوردرات")}
         </h1>
         <Button variant="outline" size="sm" onClick={() => queueQ.refetch()}>
-          <RefreshCw className="ml-1 h-4 w-4" /> تحديث
+          <RefreshCw className="ml-1 h-4 w-4" /> {tr("تحديث")}
         </Button>
       </div>
 
       <Card className="flex flex-wrap items-center gap-2 p-3">
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="البراند" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder={tr("البراند")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل البراندات</SelectItem>
+            <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
             {(brandsQ.data ?? []).map((b: { id: string; name: string }) => (
               <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
             ))}
@@ -92,25 +93,25 @@ function OrderConfirmationPage() {
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="queue">طابور التأكيد</SelectItem>
-            <SelectItem value="pending">جديد</SelectItem>
-            <SelectItem value="unreachable">لا يرد</SelectItem>
-            <SelectItem value="postponed">مؤجل</SelectItem>
-            <SelectItem value="confirmed">مؤكد</SelectItem>
-            <SelectItem value="all">الكل</SelectItem>
+            <SelectItem value="queue">{tr("طابور التأكيد")}</SelectItem>
+            <SelectItem value="pending">{tr("جديد")}</SelectItem>
+            <SelectItem value="unreachable">{tr("لا يرد")}</SelectItem>
+            <SelectItem value="postponed">{tr("مؤجل")}</SelectItem>
+            <SelectItem value="confirmed">{tr("مؤكد")}</SelectItem>
+            <SelectItem value="all">{tr("الكل")}</SelectItem>
           </SelectContent>
         </Select>
         <div className="relative flex-1 min-w-48">
           <Search className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="رقم الأوردر / العميل / الهاتف" className="pr-8" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr("رقم الأوردر / العميل / الهاتف")} className="pr-8" />
         </div>
-        <Badge variant="secondary">{rows.length} أوردر</Badge>
+        <Badge variant="secondary">{rows.length} {tr("أوردر")}</Badge>
       </Card>
 
       <div className="space-y-2">
-        {queueQ.isLoading && <Card className="p-6 text-center text-muted-foreground">جارِ التحميل…</Card>}
+        {queueQ.isLoading && <Card className="p-6 text-center text-muted-foreground">{tr("جارِ التحميل…")}</Card>}
         {!queueQ.isLoading && rows.length === 0 && (
-          <Card className="p-6 text-center text-muted-foreground">لا توجد أوردرات في الطابور</Card>
+          <Card className="p-6 text-center text-muted-foreground">{tr("لا توجد أوردرات في الطابور")}</Card>
         )}
         {rows.map((o) => (
           <Card key={o.id} className="p-3">
@@ -120,21 +121,21 @@ function OrderConfirmationPage() {
               </Link>
               <span className="text-sm">{o.customer_name ?? "—"}</span>
               <span dir="ltr" className="text-sm text-muted-foreground">{o.customer_phone ?? "—"}</span>
-              <Badge variant="outline">{o.governorate ?? "بدون محافظة"}</Badge>
+              <Badge variant="outline">{o.governorate ?? tr("بدون محافظة")}</Badge>
               <Badge>{money(o.total_amount)}</Badge>
-              {o.attempts > 0 && <Badge variant="secondary">محاولات: {o.attempts}</Badge>}
+              {o.attempts > 0 && <Badge variant="secondary">{tr("محاولات:")} {o.attempts}</Badge>}
               <Badge variant={o.confirmation_status === "confirmed" ? "default" : "outline"}>
                 {o.confirmation_status}
               </Badge>
               <div className="ms-auto flex gap-1">
                 <Button size="sm" variant={activeId === o.id ? "secondary" : "outline"} onClick={() => setActiveId(activeId === o.id ? null : o.id)}>
-                  تسجيل نتيجة
+                  {tr("تسجيل نتيجة")}
                 </Button>
               </div>
             </div>
             {activeId === o.id && (
               <div className="mt-3 space-y-2 border-t pt-3">
-                <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="السبب / ملاحظة (اختياري)" rows={2} />
+                <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder={tr("السبب / ملاحظة (اختياري)")} rows={2} />
                 <div className="flex flex-wrap gap-2">
                   {CONFIRMATION_OUTCOMES.map((oc) => (
                     <Button

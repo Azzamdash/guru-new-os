@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ import { listCourierRates, upsertCourierRate } from "@/lib/courier-config.functi
 
 export const Route = createFileRoute("/_authenticated/_app/couriers")({
   head: () => ({ meta: [
-    { title: "المناديب وشركات الشحن — e-GURUS" },
+    { title: tr("المناديب وشركات الشحن — e-GURUS") },
     { name: "description", content: "إدارة المناديب وشركات الشحن ومتابعة أدائها لكل براند." },
   ]}),
   component: CouriersPage,
@@ -66,7 +67,7 @@ function CouriersPage() {
 
   const save = useMutation({
     mutationFn: (v: NonNullable<typeof editing>) => upC({ data: { ...v, contact: v.contact || null } }),
-    onSuccess: () => { toast.success("تم"); qc.invalidateQueries({ queryKey: ["couriers"] }); setOpen(false); },
+    onSuccess: () => { toast.success(tr("تم")); qc.invalidateQueries({ queryKey: ["couriers"] }); setOpen(false); },
     onError: (e: Error) => toast.error(e.message),
   });
   const remove = useMutation({
@@ -76,7 +77,7 @@ function CouriersPage() {
   const saveRateMutation = useMutation({
     mutationFn: () => saveRate({ data: rate }),
     onSuccess: () => {
-      toast.success("تم حفظ أسعار شركة الشحن");
+      toast.success(tr("تم حفظ أسعار شركة الشحن"));
       qc.invalidateQueries({ queryKey: ["courier-rates"] });
       setRateOpen(false);
     },
@@ -95,11 +96,11 @@ function CouriersPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">المناديب وشركات الشحن</h1>
-          <p className="text-muted-foreground text-sm mt-1">إضافة وإدارة المناديب وشركات الشحن. للتقارير والأداء راجع «لوحة شركات الشحن».</p>
+          <h1 className="text-3xl font-bold">{tr("المناديب وشركات الشحن")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("إضافة وإدارة المناديب وشركات الشحن. للتقارير والأداء راجع «لوحة شركات الشحن».")}</p>
         </div>
         <Button onClick={() => { setEditing({ name: "", type: "courier_company", contact: "", brand_id: null, brand_ids: [], serves_all_brands: true, active: true, opening_balance: 0 }); setOpen(true); }}>
-          <Plus className="w-4 h-4 me-2" /> إضافة
+          <Plus className="w-4 h-4 me-2" /> {tr("إضافة")}
         </Button>
       </div>
 
@@ -111,33 +112,33 @@ function CouriersPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold text-lg">{c.name}</h3>
                     <Badge variant="outline">{TYPE_LABEL[c.type]}</Badge>
-                    {!c.active && <Badge variant="secondary">معطّل</Badge>}
+                    {!c.active && <Badge variant="secondary">{tr("معطّل")}</Badge>}
                   </div>
                   {c.contact && <p className="text-xs text-muted-foreground mt-1" dir="ltr">{c.contact}</p>}
-                  <p className="text-xs text-muted-foreground">يخدم: {courierBrandsLabel(c)}</p>
+                  <p className="text-xs text-muted-foreground">{tr("يخدم:")} {courierBrandsLabel(c)}</p>
                   {Number(c.opening_balance ?? 0) !== 0 && (
                     <p className="text-xs mt-1">
-                      رصيد افتتاحي: <span className={`num font-semibold ${Number(c.opening_balance) > 0 ? "text-emerald-600" : "text-destructive"}`}>{Number(c.opening_balance).toLocaleString("en-US")}</span>
+                      {tr("رصيد افتتاحي:")} <span className={`num font-semibold ${Number(c.opening_balance) > 0 ? "text-emerald-600" : "text-destructive"}`}>{Number(c.opening_balance).toLocaleString("en-US")}</span>
                     </p>
                   )}
                 </div>
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" onClick={() => { setEditing({ id: c.id, name: c.name, type: c.type, contact: c.contact ?? "", brand_id: c.brand_id, brand_ids: c.brand_ids ?? (c.brand_id ? [c.brand_id] : []), serves_all_brands: c.serves_all_brands, active: c.active, opening_balance: Number(c.opening_balance ?? 0) }); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => { if (confirm("حذف؟")) remove.mutate(c.id); }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => { if (confirm(tr("حذف؟"))) remove.mutate(c.id); }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </div>
               </div>
             </Card>
         ))}
-        {(couriersQ.data ?? []).length === 0 && <p className="text-sm text-muted-foreground col-span-full">لا يوجد. اضغط "إضافة".</p>}
+        {(couriersQ.data ?? []).length === 0 && <p className="text-sm text-muted-foreground col-span-full">{tr("لا يوجد. اضغط \"إضافة\".")}</p>}
       </div>
 
       <Card className="card-gradient p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold text-lg flex items-center gap-2">
-              <Truck className="w-5 h-5" /> أسعار خدمات شركات الشحن
+              <Truck className="w-5 h-5" /> {tr("أسعار خدمات شركات الشحن")}
             </h2>
-            <p className="text-xs text-muted-foreground">أربع أسعار مستقلة لكل شركة ومحافظة وتاريخ سريان.</p>
+            <p className="text-xs text-muted-foreground">{tr("أربع أسعار مستقلة لكل شركة ومحافظة وتاريخ سريان.")}</p>
           </div>
           <Button
             variant="outline"
@@ -147,25 +148,25 @@ function CouriersPage() {
               setRateOpen(true);
             }}
           >
-            <Plus className="w-4 h-4 me-2" /> إضافة سعر
+            <Plus className="w-4 h-4 me-2" /> {tr("إضافة سعر")}
           </Button>
         </div>
 
         {ratesQ.data && !ratesQ.data.ready ? (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
-            التصميم جاهز محليًا، وسيظهر جدول الأسعار بعد اعتماد وتطبيق migration قاعدة البيانات.
+            {tr("التصميم جاهز محليًا، وسيظهر جدول الأسعار بعد اعتماد وتطبيق migration قاعدة البيانات.")}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b text-muted-foreground">
-                <th className="p-2 text-start">شركة الشحن</th>
-                <th className="p-2 text-start">المحافظة</th>
-                <th className="p-2 text-start">التسليم</th>
-                <th className="p-2 text-start">إرجاع بعد الاستلام</th>
-                <th className="p-2 text-start">فشل التوصيل</th>
-                <th className="p-2 text-start">الاستبدال</th>
-                <th className="p-2 text-start">تعديل</th>
+                <th className="p-2 text-start">{tr("شركة الشحن")}</th>
+                <th className="p-2 text-start">{tr("المحافظة")}</th>
+                <th className="p-2 text-start">{tr("التسليم")}</th>
+                <th className="p-2 text-start">{tr("إرجاع بعد الاستلام")}</th>
+                <th className="p-2 text-start">{tr("فشل التوصيل")}</th>
+                <th className="p-2 text-start">{tr("الاستبدال")}</th>
+                <th className="p-2 text-start">{tr("تعديل")}</th>
               </tr></thead>
               <tbody>
                 {(ratesQ.data?.rates ?? []).map((item: CourierRateRow) => (
@@ -187,27 +188,27 @@ function CouriersPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل" : "إضافة"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? tr("تعديل") : tr("إضافة")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
-              <div><Label>الاسم</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
+              <div><Label>{tr("الاسم")}</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
               <div>
-                <Label>النوع</Label>
+                <Label>{tr("النوع")}</Label>
                 <Select value={editing.type} onValueChange={(v) => setEditing({ ...editing, type: v as typeof editing.type })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="courier_company">شركة شحن</SelectItem>
-                    <SelectItem value="rep">مندوب</SelectItem>
-                    <SelectItem value="offline_branch">فرع أوفلاين</SelectItem>
+                    <SelectItem value="courier_company">{tr("شركة شحن")}</SelectItem>
+                    <SelectItem value="rep">{tr("مندوب")}</SelectItem>
+                    <SelectItem value="offline_branch">{tr("فرع أوفلاين")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>وسيلة التواصل</Label><Input value={editing.contact} onChange={(e) => setEditing({ ...editing, contact: e.target.value })} /></div>
+              <div><Label>{tr("وسيلة التواصل")}</Label><Input value={editing.contact} onChange={(e) => setEditing({ ...editing, contact: e.target.value })} /></div>
               <div className="space-y-2">
-                <Label>البراندات التي تخدمها الشركة</Label>
+                <Label>{tr("البراندات التي تخدمها الشركة")}</Label>
                 <label className="flex items-center gap-2 rounded border p-2 text-sm">
                   <input type="checkbox" checked={editing.serves_all_brands} onChange={(event) => setEditing({ ...editing, serves_all_brands: event.target.checked, brand_ids: event.target.checked ? [] : editing.brand_ids })} />
-                  كل البراندات
+                  {tr("كل البراندات")}
                 </label>
                 {!editing.serves_all_brands && <div className="grid grid-cols-2 gap-2 rounded border p-2">
                   {brands.filter((b) => b.active).map((brand) => <label key={brand.id} className="flex items-center gap-2 text-sm">
@@ -217,27 +218,27 @@ function CouriersPage() {
                 </div>}
               </div>
               <div>
-                <Label>الرصيد الافتتاحي (موجب = مستحق لنا عنده، سالب = له عندنا)</Label>
+                <Label>{tr("الرصيد الافتتاحي (موجب = مستحق لنا عنده، سالب = له عندنا)")}</Label>
                 <Input type="number" dir="ltr" className="text-left" value={editing.opening_balance}
                   onChange={(e) => setEditing({ ...editing, opening_balance: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
-            <Button onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.name}>حفظ</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{tr("إلغاء")}</Button>
+            <Button onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.name}>{tr("حفظ")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={rateOpen} onOpenChange={setRateOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>إضافة سعر شحن</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{tr("إضافة سعر شحن")}</DialogTitle></DialogHeader>
           <div className="grid gap-3">
             <div>
-              <Label>شركة الشحن</Label>
+              <Label>{tr("شركة الشحن")}</Label>
               <Select value={rate.courierId} onValueChange={(value) => setRate({ ...rate, courierId: value })}>
-                <SelectTrigger><SelectValue placeholder="اختر شركة الشحن" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر شركة الشحن")} /></SelectTrigger>
                 <SelectContent>
                   {(couriersQ.data ?? []).filter((courier) => courier.active && courier.type === "courier_company").map((courier) => (
                     <SelectItem key={courier.id} value={courier.id}>{courier.name}</SelectItem>
@@ -246,25 +247,25 @@ function CouriersPage() {
               </Select>
             </div>
             <div>
-              <Label>المحافظة</Label>
+              <Label>{tr("المحافظة")}</Label>
               <Select disabled={!!rate.id} value={rate.governorate} onValueChange={(value) => setRate({ ...rate, governorate: value })}>
-                <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر المحافظة")} /></SelectTrigger>
                 <SelectContent className="max-h-72">
                   {GOVERNORATES.map((governorate) => <SelectItem key={governorate} value={governorate}>{governorate}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>سعر التسليم</Label><Input type="number" min="0" value={rate.deliveryFee} onChange={(event) => setRate({ ...rate, deliveryFee: Number(event.target.value) })} /></div>
-              <div><Label>إرجاع بعد استلام العميل</Label><Input type="number" min="0" value={rate.customerReturnFee} onChange={(event) => setRate({ ...rate, customerReturnFee: Number(event.target.value) })} /></div>
-              <div><Label>فشل التوصيل والرجوع</Label><Input type="number" min="0" value={rate.failedDeliveryFee} onChange={(event) => setRate({ ...rate, failedDeliveryFee: Number(event.target.value) })} /></div>
-              <div><Label>الاستبدال</Label><Input type="number" min="0" value={rate.exchangeFee} onChange={(event) => setRate({ ...rate, exchangeFee: Number(event.target.value) })} /></div>
+              <div><Label>{tr("سعر التسليم")}</Label><Input type="number" min="0" value={rate.deliveryFee} onChange={(event) => setRate({ ...rate, deliveryFee: Number(event.target.value) })} /></div>
+              <div><Label>{tr("إرجاع بعد استلام العميل")}</Label><Input type="number" min="0" value={rate.customerReturnFee} onChange={(event) => setRate({ ...rate, customerReturnFee: Number(event.target.value) })} /></div>
+              <div><Label>{tr("فشل التوصيل والرجوع")}</Label><Input type="number" min="0" value={rate.failedDeliveryFee} onChange={(event) => setRate({ ...rate, failedDeliveryFee: Number(event.target.value) })} /></div>
+              <div><Label>{tr("الاستبدال")}</Label><Input type="number" min="0" value={rate.exchangeFee} onChange={(event) => setRate({ ...rate, exchangeFee: Number(event.target.value) })} /></div>
             </div>
-            <div><Label>ساري من</Label><Input disabled={!!rate.id} type="date" value={rate.effectiveFrom} onChange={(event) => setRate({ ...rate, effectiveFrom: event.target.value })} /></div>
+            <div><Label>{tr("ساري من")}</Label><Input disabled={!!rate.id} type="date" value={rate.effectiveFrom} onChange={(event) => setRate({ ...rate, effectiveFrom: event.target.value })} /></div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setRateOpen(false)}>إلغاء</Button>
-            <Button disabled={!rate.courierId || !rate.governorate || saveRateMutation.isPending} onClick={() => saveRateMutation.mutate()}>حفظ</Button>
+            <Button variant="ghost" onClick={() => setRateOpen(false)}>{tr("إلغاء")}</Button>
+            <Button disabled={!rate.courierId || !rate.governorate || saveRateMutation.isPending} onClick={() => saveRateMutation.mutate()}>{tr("حفظ")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

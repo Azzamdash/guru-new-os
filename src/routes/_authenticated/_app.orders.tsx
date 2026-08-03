@@ -17,7 +17,7 @@ import { listOrders, getOrdersFilterSummary, getOrdersSummary, runShopifySyncNow
 import { dispatchOrderToBestCourier, recommendCourierForOrder } from "@/lib/couriers.functions";
 import { sendBostaShipment, pullBostaShipmentStatus, syncAllBostaShipments, attachBostaTracking } from "@/lib/integrations.functions";
 import { listBrands, listProducts, listCouriers } from "@/lib/internal.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { toast } from "sonner";
 import { PaginationBar } from "@/components/PaginationBar";
 import { TableSkeleton } from "@/components/TableSkeleton";
@@ -39,7 +39,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/_app/orders")({
   head: () => ({ meta: [
-    { title: "الأوردرات — e-GURUS" },
+    { title: tr("الأوردرات — e-GURUS") },
     { name: "description", content: "قائمة موحّدة بكل الأوردرات (Shopify + يدوي) لكل البراندات: قيمة، تكلفة، شحن، حالة." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -59,9 +59,9 @@ const FIN: Array<{ v: string; k: string }> = [
   { v: "refunded", k: "fin_refunded" }, { v: "voided", k: "fin_voided" },
 ];
 const CONFIRM: Array<{ v: string; labelAr: string; labelEn: string; tone: "muted"|"success"|"destructive" }> = [
-  { v: "pending", labelAr: "بانتظار التأكيد", labelEn: "Pending", tone: "muted" },
-  { v: "confirmed", labelAr: "مؤكد", labelEn: "Confirmed", tone: "success" },
-  { v: "cancelled", labelAr: "ملغي", labelEn: "Cancelled", tone: "destructive" },
+  { v: "pending", labelAr: tr("بانتظار التأكيد"), labelEn: "Pending", tone: "muted" },
+  { v: "confirmed", labelAr: tr("مؤكد"), labelEn: "Confirmed", tone: "success" },
+  { v: "cancelled", labelAr: tr("ملغي"), labelEn: "Cancelled", tone: "destructive" },
 ];
 const ORDER_STATUS_LABELS_EN: Record<OrderWorkflowStatus, string> = {
   new: "New",
@@ -289,7 +289,7 @@ function OrdersPage() {
       } catch {
         consecutiveFailuresRef.current += 1;
         if (consecutiveFailuresRef.current >= 3 && !hasWarnedRef.current) {
-          toast.warning("تعذّرت مزامنة Shopify، تحقق من الاتصال");
+          toast.warning(tr("تعذّرت مزامنة Shopify، تحقق من الاتصال"));
           hasWarnedRef.current = true;
         }
       }
@@ -1157,7 +1157,7 @@ function DispatchDialog(props: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{AR ? "اختر شركة شحن أو مندوب" : "Choose courier / rep"}</DialogTitle>
+          <DialogTitle>{AR ? tr("اختر شركة شحن أو مندوب") : "Choose courier / rep"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="text-xs text-muted-foreground">
@@ -1165,7 +1165,7 @@ function DispatchDialog(props: {
           </div>
           {list.length === 0 && (
             <div className="text-sm text-muted-foreground p-4 text-center border border-dashed rounded">
-              {AR ? "لا يوجد مندوبين/شركات شحن لهذا البراند. أضِف واحدًا من صفحة المندوبين." : "No couriers for this brand. Add one from the Couriers page."}
+              {AR ? tr("لا يوجد مندوبين/شركات شحن لهذا البراند. أضِف واحدًا من صفحة المندوبين.") : "No couriers for this brand. Add one from the Couriers page."}
             </div>
           )}
           <div className="max-h-72 overflow-y-auto space-y-1.5">
@@ -1182,11 +1182,11 @@ function DispatchDialog(props: {
                   <div className="flex items-center gap-2">
                     <div className="text-sm font-medium">{c.name}</div>
                     <Badge variant="outline" className="text-[10px]">
-                      {c.type === "rep" ? (AR ? "مندوب" : "Rep") : (AR ? "شركة شحن" : "Courier")}
+                      {c.type === "rep" ? (AR ? tr("مندوب") : "Rep") : (AR ? tr("شركة شحن") : "Courier")}
                     </Badge>
                     {isRec && (
                       <Badge className="text-[10px] bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
-                        {AR ? "الموصى به" : "Recommended"}
+                        {AR ? tr("الموصى به") : "Recommended"}
                       </Badge>
                     )}
                   </div>
@@ -1204,12 +1204,12 @@ function DispatchDialog(props: {
           </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{AR ? "إلغاء" : "Cancel"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{AR ? tr("إلغاء") : "Cancel"}</Button>
           <Button
             disabled={pending || !picked || list.length === 0}
             onClick={() => onConfirm(picked)}
           >
-            {pending ? (AR ? "جاري..." : "Sending…") : (AR ? "تأكيد الإسناد" : "Confirm dispatch")}
+            {pending ? (AR ? tr("جاري...") : "Sending…") : (AR ? tr("تأكيد الإسناد") : "Confirm dispatch")}
           </Button>
         </DialogFooter>
       </DialogContent>

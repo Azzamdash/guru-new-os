@@ -21,11 +21,11 @@ import { listTasks, upsertTask, deleteTask, updateTaskStatus } from "@/lib/tasks
 import { listUsers } from "@/lib/admin.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { getMyRole } from "@/lib/admin.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/tasks")({
   head: () => ({ meta: [
-    { title: "المهام — e-GURUS" },
+    { title: tr("المهام — e-GURUS") },
     { name: "description", content: "إدارة المهام وتعيينها للفريق." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

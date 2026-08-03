@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,7 +16,7 @@ import { getOrdersRadar, saveSlaRule } from "@/lib/orders-ops.functions";
 export const Route = createFileRoute("/_authenticated/_app/orders-radar")({
   head: () => ({
     meta: [
-      { title: "رادار الأوردرات — تنبيهات SLA والمخاطر — e-GURUS" },
+      { title: tr("رادار الأوردرات — تنبيهات SLA والمخاطر — e-GURUS") },
       { name: "description", content: "متابعة الأوردرات المتأخرة عن مدة المرحلة والأوردرات عالية المخاطر قبل الشحن." },
       { property: "og:title", content: "رادار الأوردرات — e-GURUS" },
       { property: "og:description", content: "تنبيهات SLA وكشف الأوردرات المشكوك فيها." },
@@ -27,11 +28,11 @@ export const Route = createFileRoute("/_authenticated/_app/orders-radar")({
 });
 
 const STAGES = [
-  { key: "new", label: "جديد" },
-  { key: "confirmation", label: "تأكيد" },
-  { key: "preparation", label: "تحضير" },
-  { key: "shipping", label: "شحن" },
-  { key: "collection", label: "تحصيل" },
+  { key: "new", label: tr("جديد") },
+  { key: "confirmation", label: tr("تأكيد") },
+  { key: "preparation", label: tr("تحضير") },
+  { key: "shipping", label: tr("شحن") },
+  { key: "collection", label: tr("تحصيل") },
 ];
 
 function OrdersRadarPage() {
@@ -58,7 +59,7 @@ function OrdersRadarPage() {
   const saveRule = async () => {
     try {
       await saveRuleFn({ data: { stage: ruleStage, maxHours: Number(ruleHours) } });
-      toast.success("تم حفظ قاعدة الـ SLA");
+      toast.success(tr("تم حفظ قاعدة الـ SLA"));
       radarQ.refetch();
     } catch (e) {
       toast.error((e as Error).message);
@@ -69,24 +70,24 @@ function OrdersRadarPage() {
     <div className="space-y-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 text-xl font-bold">
-          <AlertTriangle className="h-5 w-5 text-primary" /> رادار الأوردرات
+          <AlertTriangle className="h-5 w-5 text-primary" /> {tr("رادار الأوردرات")}
         </h1>
         <Button variant="outline" size="sm" onClick={() => radarQ.refetch()}>
-          <RefreshCw className="ml-1 h-4 w-4" /> تحديث
+          <RefreshCw className="ml-1 h-4 w-4" /> {tr("تحديث")}
         </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <Card className="p-3"><div className="text-xs text-muted-foreground">إجمالي المفتوح</div><div className="text-2xl font-bold">{orders.length}</div></Card>
-        <Card className="p-3"><div className="text-xs text-muted-foreground">تجاوز SLA</div><div className="text-2xl font-bold text-destructive">{breached}</div></Card>
-        <Card className="p-3"><div className="text-xs text-muted-foreground">مخاطر مرتفعة</div><div className="text-2xl font-bold">{risky}</div></Card>
+        <Card className="p-3"><div className="text-xs text-muted-foreground">{tr("إجمالي المفتوح")}</div><div className="text-2xl font-bold">{orders.length}</div></Card>
+        <Card className="p-3"><div className="text-xs text-muted-foreground">{tr("تجاوز SLA")}</div><div className="text-2xl font-bold text-destructive">{breached}</div></Card>
+        <Card className="p-3"><div className="text-xs text-muted-foreground">{tr("مخاطر مرتفعة")}</div><div className="text-2xl font-bold">{risky}</div></Card>
       </div>
 
       <Card className="flex flex-wrap items-center gap-2 p-3">
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="البراند" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder={tr("البراند")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل البراندات</SelectItem>
+            <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
             {(brandsQ.data ?? []).map((b: { id: string; name: string }) => (
               <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
             ))}
@@ -95,13 +96,13 @@ function OrdersRadarPage() {
         <Select value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">الكل</SelectItem>
-            <SelectItem value="sla">متأخر عن SLA</SelectItem>
-            <SelectItem value="risk">مخاطر فقط</SelectItem>
+            <SelectItem value="all">{tr("الكل")}</SelectItem>
+            <SelectItem value="sla">{tr("متأخر عن SLA")}</SelectItem>
+            <SelectItem value="risk">{tr("مخاطر فقط")}</SelectItem>
           </SelectContent>
         </Select>
         <div className="ms-auto flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">قاعدة SLA:</span>
+          <span className="text-xs text-muted-foreground">{tr("قاعدة SLA:")}</span>
           <Select value={ruleStage} onValueChange={setRuleStage}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -109,7 +110,7 @@ function OrdersRadarPage() {
             </SelectContent>
           </Select>
           <Input type="number" value={ruleHours} onChange={(e) => setRuleHours(e.target.value)} className="w-20" />
-          <Button size="sm" variant="outline" onClick={saveRule}>حفظ</Button>
+          <Button size="sm" variant="outline" onClick={saveRule}>{tr("حفظ")}</Button>
         </div>
       </Card>
 
@@ -117,11 +118,11 @@ function OrdersRadarPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs">
             <tr>
-              <th className="p-2 text-right">الأوردر</th>
-              <th className="p-2 text-right">العميل</th>
-              <th className="p-2 text-right">المرحلة</th>
-              <th className="p-2 text-right">مدة الانتظار</th>
-              <th className="p-2 text-right">المخاطر</th>
+              <th className="p-2 text-right">{tr("الأوردر")}</th>
+              <th className="p-2 text-right">{tr("العميل")}</th>
+              <th className="p-2 text-right">{tr("المرحلة")}</th>
+              <th className="p-2 text-right">{tr("مدة الانتظار")}</th>
+              <th className="p-2 text-right">{tr("المخاطر")}</th>
             </tr>
           </thead>
           <tbody>
@@ -136,7 +137,7 @@ function OrdersRadarPage() {
                 <td className="p-2"><Badge variant="outline">{STAGES.find((s) => s.key === o.stage)?.label ?? o.stage}</Badge></td>
                 <td className="p-2">
                   <Badge variant={o.sla_breached ? "destructive" : "secondary"}>
-                    {Math.round(o.hours_in_stage)} س{o.sla_hours ? ` / ${o.sla_hours}` : ""}
+                    {Math.round(o.hours_in_stage)} {tr("س")}{o.sla_hours ? ` / ${o.sla_hours}` : ""}
                   </Badge>
                 </td>
                 <td className="p-2">
@@ -148,7 +149,7 @@ function OrdersRadarPage() {
               </tr>
             ))}
             {!radarQ.isLoading && orders.length === 0 && (
-              <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا توجد تنبيهات</td></tr>
+              <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{tr("لا توجد تنبيهات")}</td></tr>
             )}
           </tbody>
         </table>

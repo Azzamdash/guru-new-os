@@ -8,12 +8,12 @@ import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/
 import { usePersistedPeriod } from "@/lib/global-period";
 import { getCourierReconciliation } from "@/lib/reconciliation.functions";
 import { listBrands } from "@/lib/internal.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { Scale, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/reconciliation")({
   head: () => ({ meta: [
-    { title: "تسوية شركات الشحن (COD) — e-GURUS" },
+    { title: tr("تسوية شركات الشحن (COD) — e-GURUS") },
     { name: "description", content: "مطابقة المحصّل الفعلي مع المودَع في الخزنة لكل شركة شحن." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -39,7 +39,7 @@ function Page() {
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <h1 className="text-3xl font-bold flex items-center gap-2"><Scale className="w-7 h-7" /> {L("تسوية شركات الشحن (COD)", "Courier COD Reconciliation")}</h1>
+      <h1 className="text-3xl font-bold flex items-center gap-2"><Scale className="w-7 h-7" /> {L(tr("تسوية شركات الشحن (COD)"), "Courier COD Reconciliation")}</h1>
       <Card className="card-gradient p-4 flex flex-wrap gap-3 items-center">
         <PeriodFilter value={period} onChange={setPeriod} />
         <Select value={brandId} onValueChange={setBrandId}>
@@ -52,25 +52,25 @@ function Page() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Kpi label={L("المتوقع تحصيله", "Expected COD")} value={nf(d?.totals.expected_cod ?? 0)} />
-        <Kpi label={L("المودَع فعليًا", "Actually Deposited")} value={nf(d?.totals.deposited ?? 0)} tone="text-emerald-500" />
-        <Kpi label={L("الفرق", "Variance")} value={nf(d?.totals.variance ?? 0)} tone={(d?.totals.variance ?? 0) === 0 ? "text-emerald-500" : "text-destructive"} />
-        <Kpi label={L("نسبة الفرق", "Variance %")} value={pct(d?.totals.variance_pct ?? 0)} tone={(d?.totals.variance_pct ?? 0) === 0 ? "text-emerald-500" : "text-destructive"} />
+        <Kpi label={L(tr("المتوقع تحصيله"), "Expected COD")} value={nf(d?.totals.expected_cod ?? 0)} />
+        <Kpi label={L(tr("المودَع فعليًا"), "Actually Deposited")} value={nf(d?.totals.deposited ?? 0)} tone="text-emerald-500" />
+        <Kpi label={L(tr("الفرق"), "Variance")} value={nf(d?.totals.variance ?? 0)} tone={(d?.totals.variance ?? 0) === 0 ? "text-emerald-500" : "text-destructive"} />
+        <Kpi label={L(tr("نسبة الفرق"), "Variance %")} value={pct(d?.totals.variance_pct ?? 0)} tone={(d?.totals.variance_pct ?? 0) === 0 ? "text-emerald-500" : "text-destructive"} />
       </div>
 
       <Card className="card-gradient p-5">
-        <h3 className="font-semibold mb-3">{L("تفصيل حسب شركة الشحن", "By Courier")}</h3>
+        <h3 className="font-semibold mb-3">{L(tr("تفصيل حسب شركة الشحن"), "By Courier")}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border text-muted-foreground">
-              <th className="p-2 text-start">{L("شركة الشحن", "Courier")}</th>
-              <th className="p-2 text-end">{L("مسلَّم", "Delivered")}</th>
-              <th className="p-2 text-end">{L("مرتجع", "Returned")}</th>
-              <th className="p-2 text-end">{L("المتوقع", "Expected")}</th>
-              <th className="p-2 text-end">{L("المودَع", "Deposited")}</th>
-              <th className="p-2 text-end">{L("الفرق", "Variance")}</th>
+              <th className="p-2 text-start">{L(tr("شركة الشحن"), "Courier")}</th>
+              <th className="p-2 text-end">{L(tr("مسلَّم"), "Delivered")}</th>
+              <th className="p-2 text-end">{L(tr("مرتجع"), "Returned")}</th>
+              <th className="p-2 text-end">{L(tr("المتوقع"), "Expected")}</th>
+              <th className="p-2 text-end">{L(tr("المودَع"), "Deposited")}</th>
+              <th className="p-2 text-end">{L(tr("الفرق"), "Variance")}</th>
               <th className="p-2 text-end">%</th>
-              <th className="p-2 text-center">{L("الحالة", "Status")}</th>
+              <th className="p-2 text-center">{L(tr("الحالة"), "Status")}</th>
             </tr></thead>
             <tbody>
               {(d?.rows ?? []).map((r) => {
@@ -86,21 +86,21 @@ function Page() {
                     <td className={`p-2 num text-end ${ok ? "text-muted-foreground" : "text-destructive"}`}>{pct(r.variance_pct)}</td>
                     <td className="p-2 text-center">
                       {ok
-                        ? <span className="inline-flex items-center gap-1 text-emerald-500"><CheckCircle2 className="w-4 h-4" />{L("مطابق", "Matched")}</span>
-                        : <span className="inline-flex items-center gap-1 text-destructive"><AlertTriangle className="w-4 h-4" />{L("فرق", "Variance")}</span>}
+                        ? <span className="inline-flex items-center gap-1 text-emerald-500"><CheckCircle2 className="w-4 h-4" />{L(tr("مطابق"), "Matched")}</span>
+                        : <span className="inline-flex items-center gap-1 text-destructive"><AlertTriangle className="w-4 h-4" />{L(tr("فرق"), "Variance")}</span>}
                     </td>
                   </tr>
                 );
               })}
               {(d?.rows ?? []).length === 0 && (
-                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">{L("لا توجد بيانات", "No data")}</td></tr>
+                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد بيانات"), "No data")}</td></tr>
               )}
             </tbody>
           </table>
         </div>
         <p className="text-xs text-muted-foreground mt-3">
           {L(
-            "المتوقع = مجموع فواتير المبيعات المُسلَّمة (Delivered) لكل شركة شحن. المودَع = مجموع تحصيلات الخزنة من نوع «تحصيل» المسجَّلة على شركة الشحن.",
+            tr("المتوقع = مجموع فواتير المبيعات المُسلَّمة (Delivered) لكل شركة شحن. المودَع = مجموع تحصيلات الخزنة من نوع «تحصيل» المسجَّلة على شركة الشحن."),
             "Expected = total of delivered sales invoices per courier. Deposited = sum of treasury 'collection' entries recorded against that courier.",
           )}
         </p>

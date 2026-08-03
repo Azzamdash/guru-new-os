@@ -14,12 +14,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ArrowLeft, Trash2, MessageSquare, Pencil, History as HistoryIcon, ShoppingBag, CreditCard, Undo2, Search } from "lucide-react";
 import { getCustomerProfile, addCustomerNote, deleteCustomerNote, updateCustomer } from "@/lib/customers.functions";
 import { listBrands } from "@/lib/internal.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/customers/$id")({
   head: () => ({ meta: [
-    { title: "ملف العميل — e-GURUS" },
+    { title: tr("ملف العميل — e-GURUS") },
     { name: "description", content: "ملف عميل موحّد عبر كل البراندات مع سجل الطلبات والملاحظات." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

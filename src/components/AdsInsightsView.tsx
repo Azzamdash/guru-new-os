@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -88,7 +89,7 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
   const testM = useMutation({
     mutationFn: () => testFn({ data: { brand_id: activeBrand } }),
     onSuccess: () => {
-      toast.success("الاتصال يعمل");
+      toast.success(tr("الاتصال يعمل"));
       qc.invalidateQueries({ queryKey: ["integrations"] });
       qc.invalidateQueries({ queryKey: ["ads-insights", provider, activeBrand] });
     },
@@ -103,7 +104,7 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">{meta.name}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            سحب لايف من {meta.name} — Spend, Impressions, Clicks, CTR, CPC, CPM, Conversions, ROAS.
+            {tr("سحب لايف من")} {meta.name} — Spend, Impressions, Clicks, CTR, CPC, CPM, Conversions, ROAS.
           </p>
         </div>
         <a href={meta.docsUrl} target="_blank" rel="noreferrer" className="text-xs text-primary inline-flex items-center gap-1">
@@ -114,22 +115,22 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
       <Card className="card-gradient p-4 md:p-5">
         <div className="grid md:grid-cols-4 gap-3 items-end">
           <div className="md:col-span-2">
-            <Label>البراند</Label>
+            <Label>{tr("البراند")}</Label>
             <Select value={activeBrand} onValueChange={setBrandId}>
-              <SelectTrigger><SelectValue placeholder="اختر براند" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={tr("اختر براند")} /></SelectTrigger>
               <SelectContent>
                 {productBrands.map((b) => (<SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>))}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>الفترة</Label>
+            <Label>{tr("الفترة")}</Label>
             <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">آخر 7 أيام</SelectItem>
-                <SelectItem value="30">آخر 30 يوم</SelectItem>
-                <SelectItem value="90">آخر 90 يوم</SelectItem>
+                <SelectItem value="7">{tr("آخر 7 أيام")}</SelectItem>
+                <SelectItem value="30">{tr("آخر 30 يوم")}</SelectItem>
+                <SelectItem value="90">{tr("آخر 90 يوم")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -139,13 +140,13 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
               className="flex-1"
               onClick={() => {
                 if (!activeBrand) {
-                  toast.error(productBrands.length === 0 ? "لا توجد براندات نشطة. أضف براند أولاً." : "اختر براند أولاً");
+                  toast.error(productBrands.length === 0 ? tr("لا توجد براندات نشطة. أضف براند أولاً.") : tr("اختر براند أولاً"));
                   return;
                 }
                 setConfigOpen(true);
               }}
             >
-              <Settings2 className="w-4 h-4 me-1" /> {connected ? "تعديل" : "ربط"}
+              <Settings2 className="w-4 h-4 me-1" /> {connected ? tr("تعديل") : tr("ربط")}
             </Button>
             {connected && (
               <Button variant="outline" onClick={() => testM.mutate()} disabled={testM.isPending || !activeBrand}>
@@ -165,32 +166,32 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
           {integration ? (
             <>
               {integration.status === "connected" ? (
-                <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30"><CheckCircle2 className="w-3 h-3 me-1" />متصل</Badge>
+                <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30"><CheckCircle2 className="w-3 h-3 me-1" />{tr("متصل")}</Badge>
               ) : integration.status === "error" ? (
-                <Badge variant="destructive"><AlertCircle className="w-3 h-3 me-1" />خطأ</Badge>
+                <Badge variant="destructive"><AlertCircle className="w-3 h-3 me-1" />{tr("خطأ")}</Badge>
               ) : (
-                <Badge variant="outline">غير متصل</Badge>
+                <Badge variant="outline">{tr("غير متصل")}</Badge>
               )}
               {integration.last_sync_at && (
-                <span className="text-muted-foreground">آخر مزامنة: {new Date(integration.last_sync_at).toLocaleString("en-US")}</span>
+                <span className="text-muted-foreground">{tr("آخر مزامنة:")} {new Date(integration.last_sync_at).toLocaleString("en-US")}</span>
               )}
               {integration.last_error && <span className="text-destructive truncate max-w-full">{integration.last_error}</span>}
             </>
           ) : (
-            <Badge variant="outline">لم يتم الربط بعد</Badge>
+            <Badge variant="outline">{tr("لم يتم الربط بعد")}</Badge>
           )}
         </div>
       </Card>
 
       {!connected && (
         <Card className="p-6 text-center text-sm text-muted-foreground">
-          اربط حساب {meta.name} لهذا البراند لعرض الأرقام مباشرة من الاد أكونت.
+          {tr("اربط حساب")} {meta.name} {tr("لهذا البراند لعرض الأرقام مباشرة من الاد أكونت.")}
         </Card>
       )}
 
-      {connected && insightsQ.isLoading && <Card className="p-8 text-center text-muted-foreground">جاري تحميل الأرقام...</Card>}
+      {connected && insightsQ.isLoading && <Card className="p-8 text-center text-muted-foreground">{tr("جاري تحميل الأرقام...")}</Card>}
       {connected && insightsQ.isError && (
-        <Card className="p-6 text-sm text-destructive">فشل السحب: {String((insightsQ.error as Error)?.message ?? insightsQ.error)}</Card>
+        <Card className="p-6 text-sm text-destructive">{tr("فشل السحب:")} {String((insightsQ.error as Error)?.message ?? insightsQ.error)}</Card>
       )}
 
       {data && (
@@ -210,8 +211,8 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
 
           <Card className="card-gradient p-4 md:p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">الأداء اليومي</h3>
-              <span className="text-xs text-muted-foreground">آخر {days} يوم</span>
+              <h3 className="font-semibold">{tr("الأداء اليومي")}</h3>
+              <span className="text-xs text-muted-foreground">{tr("آخر")} {days} {tr("يوم")}</span>
             </div>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -231,7 +232,7 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
           </Card>
 
           <Card className="card-gradient p-4 md:p-5">
-            <h3 className="font-semibold mb-3">أعلى الحملات أداءً</h3>
+            <h3 className="font-semibold mb-3">{tr("أعلى الحملات أداءً")}</h3>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -260,7 +261,7 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
                     </TableRow>
                   ))}
                   {data.topCampaigns.length === 0 && (
-                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">لا توجد حملات في هذه الفترة</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">{tr("لا توجد حملات في هذه الفترة")}</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -317,13 +318,13 @@ function ConfigDialog({ provider, brand_id, brand_name, current, onClose, onSave
         },
       });
     },
-    onSuccess: () => { toast.success("تم الحفظ"); onSaved(); onClose(); },
+    onSuccess: () => { toast.success(tr("تم الحفظ")); onSaved(); onClose(); },
     onError: (e) => toast.error(String(e)),
   });
 
   const delM = useMutation({
     mutationFn: () => del({ data: { brand_id, provider } }),
-    onSuccess: () => { toast.success("تم فصل الاتصال"); onSaved(); onClose(); },
+    onSuccess: () => { toast.success(tr("تم فصل الاتصال")); onSaved(); onClose(); },
     onError: (e) => toast.error(String(e)),
   });
 
@@ -342,16 +343,16 @@ function ConfigDialog({ provider, brand_id, brand_name, current, onClose, onSave
             <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder={meta.tokenPlaceholder} />
             <p className="text-[11px] text-muted-foreground mt-1">{meta.tokenHint}</p>
           </div>
-          <p className="text-[11px] text-muted-foreground">التوكن يُخزّن مشفّرًا (AES-256-GCM) ولا يظهر مرة أخرى.</p>
+          <p className="text-[11px] text-muted-foreground">{tr("التوكن يُخزّن مشفّرًا (AES-256-GCM) ولا يظهر مرة أخرى.")}</p>
         </div>
         <DialogFooter className="gap-2">
           {current && (
-            <Button variant="ghost" className="text-destructive" onClick={() => { if (confirm("فصل هذا الاتصال؟")) delM.mutate(); }}>
-              فصل
+            <Button variant="ghost" className="text-destructive" onClick={() => { if (confirm(tr("فصل هذا الاتصال؟"))) delM.mutate(); }}>
+              {tr("فصل")}
             </Button>
           )}
-          <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>حفظ</Button>
+          <Button variant="outline" onClick={onClose}>{tr("إلغاء")}</Button>
+          <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>{tr("حفظ")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

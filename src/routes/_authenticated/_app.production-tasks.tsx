@@ -23,12 +23,12 @@ import {
 import { listUsers } from "@/lib/admin.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { getMyRole } from "@/lib/admin.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { KanbanBoard } from "@/components/pages/KanbanBoard";
 
 export const Route = createFileRoute("/_authenticated/_app/production-tasks")({
   head: () => ({ meta: [
-    { title: "مهام الإنتاج — e-GURUS" },
+    { title: tr("مهام الإنتاج — e-GURUS") },
     { name: "description", content: "توزيع مهام الإنتاج على العمال ومتابعتها." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

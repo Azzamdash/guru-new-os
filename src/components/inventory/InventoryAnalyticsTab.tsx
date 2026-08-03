@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -66,8 +67,8 @@ export function InventoryAnalyticsTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">تحليلات المخزون</h2>
-          <p className="text-muted-foreground text-sm mt-1">قيمة المخزون الحالية، ومعدل الاستهلاك خلال الفترة المختارة.</p>
+          <h2 className="text-2xl font-bold">{tr("تحليلات المخزون")}</h2>
+          <p className="text-muted-foreground text-sm mt-1">{tr("قيمة المخزون الحالية، ومعدل الاستهلاك خلال الفترة المختارة.")}</p>
         </div>
         <div className="flex items-center gap-2">
           <PeriodFilter value={period} onChange={setPeriod} />
@@ -75,7 +76,7 @@ export function InventoryAnalyticsTab() {
             type="button"
             onClick={() => { valuationQ.refetch(); reportsQ.refetch(); }}
             className="inline-flex items-center justify-center rounded-md border border-border h-9 w-9 hover:bg-muted"
-            aria-label="تحديث"
+            aria-label={tr("تحديث")}
           >
             <RefreshCw className="h-4 w-4" />
           </button>
@@ -83,35 +84,35 @@ export function InventoryAnalyticsTab() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="إجمالي قيمة المخزون" value={money(valuation?.totals.value ?? 0)} icon={Wallet} />
-        <Kpi label="إجمالي الأصناف" value={nf(valuation?.items.length ?? 0)} icon={Boxes} />
-        <Kpi label="متوسط مستوى المخزون" value={nf(avgStockLevel)} icon={Gauge} hint="وحدة لكل صنف بالمتوسط" />
-        <Kpi label="تحت حد إعادة الطلب" value={nf(valuation?.totals.low_stock_count ?? 0)} icon={AlertTriangle} />
+        <Kpi label={tr("إجمالي قيمة المخزون")} value={money(valuation?.totals.value ?? 0)} icon={Wallet} />
+        <Kpi label={tr("إجمالي الأصناف")} value={nf(valuation?.items.length ?? 0)} icon={Boxes} />
+        <Kpi label={tr("متوسط مستوى المخزون")} value={nf(avgStockLevel)} icon={Gauge} hint={tr("وحدة لكل صنف بالمتوسط")} />
+        <Kpi label={tr("تحت حد إعادة الطلب")} value={nf(valuation?.totals.low_stock_count ?? 0)} icon={AlertTriangle} />
       </div>
 
       <Card className="p-4 space-y-1">
         <div className="flex items-center justify-between text-muted-foreground text-sm">
-          <span>معدل دوران المخزون (خلال الفترة المختارة)</span>
+          <span>{tr("معدل دوران المخزون (خلال الفترة المختارة)")}</span>
           <Gauge className="h-4 w-4" />
         </div>
         <div className="text-2xl font-bold tabular-nums">{turnover.toFixed(2)}×</div>
         <div className="text-xs text-muted-foreground">
-          إجمالي قيمة الصادر خلال الفترة ÷ قيمة المخزون الحالية. رقم أعلى = مخزون بيتحرك أسرع.
+          {tr("إجمالي قيمة الصادر خلال الفترة ÷ قيمة المخزون الحالية. رقم أعلى = مخزون بيتحرك أسرع.")}
         </div>
       </Card>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">تحليل إعادة الطلب</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("تحليل إعادة الطلب")}</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-muted-foreground text-right border-b border-border">
-                <th className="p-3">الصنف</th>
-                <th className="p-3">البراند</th>
-                <th className="p-3 text-left">الرصيد الحالي</th>
-                <th className="p-3 text-left">حد إعادة الطلب</th>
-                <th className="p-3 text-left">متوسط الاستهلاك اليومي</th>
-                <th className="p-3 text-left">أيام متبقية تقريبًا</th>
+                <th className="p-3">{tr("الصنف")}</th>
+                <th className="p-3">{tr("البراند")}</th>
+                <th className="p-3 text-left">{tr("الرصيد الحالي")}</th>
+                <th className="p-3 text-left">{tr("حد إعادة الطلب")}</th>
+                <th className="p-3 text-left">{tr("متوسط الاستهلاك اليومي")}</th>
+                <th className="p-3 text-left">{tr("أيام متبقية تقريبًا")}</th>
               </tr>
             </thead>
             <tbody>
@@ -126,7 +127,7 @@ export function InventoryAnalyticsTab() {
                 </tr>
               ))}
               {reorderAnalysis.length === 0 && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">لا بيانات كافية.</td></tr>
+                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{tr("لا بيانات كافية.")}</td></tr>
               )}
             </tbody>
           </table>

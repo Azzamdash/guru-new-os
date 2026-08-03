@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -13,7 +14,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { RefreshCw, ShoppingBag, DollarSign, PackageCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/shopify")({
-  head: () => ({ meta: [{ title: "تقارير Shopify — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("تقارير Shopify — e-GURUS") }] }),
   component: ShopifyReportPage,
 });
 
@@ -61,12 +62,12 @@ function ShopifyReportPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><ShoppingBag className="w-7 h-7 text-primary" /> تقارير Shopify</h1>
-          <p className="text-muted-foreground text-sm mt-1">أوردرات مباشرة من متجر Shopify للبراند المختار.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><ShoppingBag className="w-7 h-7 text-primary" /> {tr("تقارير Shopify")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("أوردرات مباشرة من متجر Shopify للبراند المختار.")}</p>
         </div>
         <div className="flex gap-2 items-center">
           <Select value={effectiveBrand} onValueChange={setBrandId}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="اختر البراند" /></SelectTrigger>
+            <SelectTrigger className="w-48"><SelectValue placeholder={tr("اختر البراند")} /></SelectTrigger>
             <SelectContent>
               {options.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
@@ -74,13 +75,13 @@ function ShopifyReportPage() {
           <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">7 أيام</SelectItem>
-              <SelectItem value="30">30 يوم</SelectItem>
-              <SelectItem value="60">60 يوم</SelectItem>
-              <SelectItem value="90">90 يوم</SelectItem>
+              <SelectItem value="7">{tr("7 أيام")}</SelectItem>
+              <SelectItem value="30">{tr("30 يوم")}</SelectItem>
+              <SelectItem value="60">{tr("60 يوم")}</SelectItem>
+              <SelectItem value="90">{tr("90 يوم")}</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={() => { ordersQ.refetch(); toast.info("جاري التحديث..."); }} disabled={!effectiveBrand}>
+          <Button variant="outline" onClick={() => { ordersQ.refetch(); toast.info(tr("جاري التحديث...")); }} disabled={!effectiveBrand}>
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
@@ -89,23 +90,23 @@ function ShopifyReportPage() {
       {options.length === 0 ? (
         <EmptyState
           icon="warn"
-          title="لا توجد براندات مربوطة بـ Shopify"
-          description="اربط أولاً حساب Shopify من صفحة التكاملات لأي براند من نوع منتجات."
+          title={tr("لا توجد براندات مربوطة بـ Shopify")}
+          description={tr("اربط أولاً حساب Shopify من صفحة التكاملات لأي براند من نوع منتجات.")}
         />
       ) : ordersQ.isError ? (
         <EmptyState
           icon="warn"
-          title="تعذر جلب بيانات Shopify"
-          description={ordersQ.error instanceof Error ? ordersQ.error.message : "خطأ غير معروف"}
-          action={{ label: "إعادة المحاولة", onClick: () => ordersQ.refetch() }}
+          title={tr("تعذر جلب بيانات Shopify")}
+          description={ordersQ.error instanceof Error ? ordersQ.error.message : tr("خطأ غير معروف")}
+          action={{ label: tr("إعادة المحاولة"), onClick: () => ordersQ.refetch() }}
         />
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Kpi icon={ShoppingBag} label="عدد الأوردرات" value={orders.length.toString()} />
-            <Kpi icon={DollarSign} label="إجمالي الإيرادات" value={`${totalRevenue.toFixed(2)} ${currency}`} />
-            <Kpi icon={PackageCheck} label="مدفوعة" value={`${paid} / ${orders.length}`} />
-            <Kpi icon={PackageCheck} label="تم الشحن" value={`${fulfilled} / ${orders.length}`} />
+            <Kpi icon={ShoppingBag} label={tr("عدد الأوردرات")} value={orders.length.toString()} />
+            <Kpi icon={DollarSign} label={tr("إجمالي الإيرادات")} value={`${totalRevenue.toFixed(2)} ${currency}`} />
+            <Kpi icon={PackageCheck} label={tr("مدفوعة")} value={`${paid} / ${orders.length}`} />
+            <Kpi icon={PackageCheck} label={tr("تم الشحن")} value={`${fulfilled} / ${orders.length}`} />
           </div>
 
           <Card className="card-gradient overflow-hidden">
@@ -113,22 +114,22 @@ function ShopifyReportPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">الرقم</th>
-                    <th className="p-3">التاريخ</th>
-                    <th className="p-3">العميل</th>
-                    <th className="p-3">المنتج</th>
-                    <th className="p-3">القطع</th>
-                    <th className="p-3">الإجمالي</th>
-                    <th className="p-3">الدفع</th>
-                    <th className="p-3">الشحن</th>
+                    <th className="p-3">{tr("الرقم")}</th>
+                    <th className="p-3">{tr("التاريخ")}</th>
+                    <th className="p-3">{tr("العميل")}</th>
+                    <th className="p-3">{tr("المنتج")}</th>
+                    <th className="p-3">{tr("القطع")}</th>
+                    <th className="p-3">{tr("الإجمالي")}</th>
+                    <th className="p-3">{tr("الدفع")}</th>
+                    <th className="p-3">{tr("الشحن")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ordersQ.isLoading && (
-                    <tr><td colSpan={8} className="p-8 text-center text-sm text-muted-foreground">جاري التحميل...</td></tr>
+                    <tr><td colSpan={8} className="p-8 text-center text-sm text-muted-foreground">{tr("جاري التحميل...")}</td></tr>
                   )}
                   {!ordersQ.isLoading && orders.length === 0 && (
-                    <tr><td colSpan={8} className="p-8 text-center text-sm text-muted-foreground">لا أوردرات في الفترة المختارة.</td></tr>
+                    <tr><td colSpan={8} className="p-8 text-center text-sm text-muted-foreground">{tr("لا أوردرات في الفترة المختارة.")}</td></tr>
                   )}
                   {orders.map((o) => (
                     <tr key={o.id} className="border-b border-border/50">

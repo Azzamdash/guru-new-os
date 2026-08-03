@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { listAuditLog } from "@/lib/audit.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { ShieldAlert, Plus, Pencil, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/audit")({
   head: () => ({ meta: [
-    { title: "سجل التدقيق المالي — e-GURUS" },
+    { title: tr("سجل التدقيق المالي — e-GURUS") },
     { name: "description", content: "سجل كامل بكل التعديلات على الفواتير والمصروفات والمعاملات النقدية." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -77,41 +77,41 @@ function Page() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       <h1 className="text-3xl font-bold flex items-center gap-2">
-        <ShieldAlert className="w-7 h-7" /> {L("سجل التدقيق المالي", "Financial Audit Log")}
+        <ShieldAlert className="w-7 h-7" /> {L(tr("سجل التدقيق المالي"), "Financial Audit Log")}
       </h1>
       <Card className="card-gradient p-4 flex flex-wrap gap-3 items-end">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">{L("الجدول", "Table")}</label>
+          <label className="text-xs text-muted-foreground block mb-1">{L(tr("الجدول"), "Table")}</label>
           <Select value={tableName} onValueChange={(v) => { setTableName(v); setPage(1); }}>
             <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{L("الكل", "All")}</SelectItem>
+              <SelectItem value="all">{L(tr("الكل"), "All")}</SelectItem>
               {TABLES.map((t) => <SelectItem key={t.v} value={t.v}>{L(t.ar, t.en)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">{L("العملية", "Operation")}</label>
+          <label className="text-xs text-muted-foreground block mb-1">{L(tr("العملية"), "Operation")}</label>
           <Select value={operation} onValueChange={(v) => { setOperation(v); setPage(1); }}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{L("الكل", "All")}</SelectItem>
-              <SelectItem value="INSERT">{L("إضافة", "Insert")}</SelectItem>
-              <SelectItem value="UPDATE">{L("تعديل", "Update")}</SelectItem>
-              <SelectItem value="DELETE">{L("حذف", "Delete")}</SelectItem>
+              <SelectItem value="all">{L(tr("الكل"), "All")}</SelectItem>
+              <SelectItem value="INSERT">{L(tr("إضافة"), "Insert")}</SelectItem>
+              <SelectItem value="UPDATE">{L(tr("تعديل"), "Update")}</SelectItem>
+              <SelectItem value="DELETE">{L(tr("حذف"), "Delete")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">{L("من", "From")}</label>
+          <label className="text-xs text-muted-foreground block mb-1">{L(tr("من"), "From")}</label>
           <Input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} className="w-40" />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">{L("إلى", "To")}</label>
+          <label className="text-xs text-muted-foreground block mb-1">{L(tr("إلى"), "To")}</label>
           <Input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} className="w-40" />
         </div>
         <Button variant="outline" onClick={() => { setTableName("all"); setOperation("all"); setFrom(""); setTo(""); setPage(1); }}>
-          {L("مسح الفلاتر", "Clear")}
+          {L(tr("مسح الفلاتر"), "Clear")}
         </Button>
       </Card>
 
@@ -119,11 +119,11 @@ function Page() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border text-muted-foreground">
-              <th className="p-2 text-start">{L("التاريخ", "When")}</th>
-              <th className="p-2 text-start">{L("المستخدم", "User")}</th>
-              <th className="p-2 text-start">{L("الجدول", "Table")}</th>
-              <th className="p-2 text-center">{L("العملية", "Op")}</th>
-              <th className="p-2 text-start">{L("الحقول المتغيرة", "Changed fields")}</th>
+              <th className="p-2 text-start">{L(tr("التاريخ"), "When")}</th>
+              <th className="p-2 text-start">{L(tr("المستخدم"), "User")}</th>
+              <th className="p-2 text-start">{L(tr("الجدول"), "Table")}</th>
+              <th className="p-2 text-center">{L(tr("العملية"), "Op")}</th>
+              <th className="p-2 text-start">{L(tr("الحقول المتغيرة"), "Changed fields")}</th>
               <th className="p-2"></th>
             </tr></thead>
             <tbody>
@@ -147,7 +147,7 @@ function Page() {
                       </td>
                       <td className="p-2 text-end">
                         <Button size="sm" variant="ghost" onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
-                          {expanded === r.id ? L("إخفاء", "Hide") : L("عرض", "View")}
+                          {expanded === r.id ? L(tr("إخفاء"), "Hide") : L(tr("عرض"), "View")}
                         </Button>
                       </td>
                     </tr>
@@ -168,32 +168,32 @@ function Page() {
                 );
               })}
               {!q.isLoading && (q.data?.rows ?? []).length === 0 && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{L("لا توجد سجلات", "No records")}</td></tr>
+                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد سجلات"), "No records")}</td></tr>
               )}
             </tbody>
           </table>
         </div>
         <div className="mt-4 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <div className="tabular-nums">{L("الإجمالي", "Total")}: {q.data?.total ?? 0}</div>
+          <div className="tabular-nums">{L(tr("الإجمالي"), "Total")}: {q.data?.total ?? 0}</div>
           <Input
-            placeholder={L("ابحث داخل التغييرات (اسم الحقل أو القيمة)…", "Search inside changes (field or value)…")}
+            placeholder={L(tr("ابحث داخل التغييرات (اسم الحقل أو القيمة)…"), "Search inside changes (field or value)…")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs h-8"
           />
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="h-7" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              {L("السابق", "Prev")}
+              {L(tr("السابق"), "Prev")}
             </Button>
             <span className="tabular-nums min-w-[70px] text-center">{page} / {totalPages}</span>
             <Button variant="outline" size="sm" className="h-7" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
-              {L("التالي", "Next")}
+              {L(tr("التالي"), "Next")}
             </Button>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-3">
           {L(
-            "يتم تسجيل كل إضافة أو تعديل أو حذف على الجداول المالية تلقائيًا. السجلات غير قابلة للتعديل أو الحذف.",
+            tr("يتم تسجيل كل إضافة أو تعديل أو حذف على الجداول المالية تلقائيًا. السجلات غير قابلة للتعديل أو الحذف."),
             "Every insert/update/delete on financial tables is auto-recorded. Records are immutable.",
           )}
         </p>
@@ -242,7 +242,7 @@ function DiffView({
     });
 
   if (rows.length === 0) {
-    return <div className="text-xs text-muted-foreground">{L("لا يوجد اختلاف مطابق للبحث", "No matching differences")}</div>;
+    return <div className="text-xs text-muted-foreground">{L(tr("لا يوجد اختلاف مطابق للبحث"), "No matching differences")}</div>;
   }
 
   return (
@@ -250,9 +250,9 @@ function DiffView({
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border/50 text-muted-foreground">
-            <th className="p-1.5 text-start w-1/4">{L("الحقل", "Field")}</th>
-            <th className="p-1.5 text-start w-3/8">{L("قبل", "Before")}</th>
-            <th className="p-1.5 text-start w-3/8">{L("بعد", "After")}</th>
+            <th className="p-1.5 text-start w-1/4">{L(tr("الحقل"), "Field")}</th>
+            <th className="p-1.5 text-start w-3/8">{L(tr("قبل"), "Before")}</th>
+            <th className="p-1.5 text-start w-3/8">{L(tr("بعد"), "After")}</th>
           </tr>
         </thead>
         <tbody>

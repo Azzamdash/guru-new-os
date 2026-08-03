@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Boxes, Plus, Minus, AlertTriangle, Search, TrendingUp, Activity, Settings2 } from "lucide-react";
 import { toast } from "sonner";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import {
   listStock, addMovement, listMovements, getInventoryReports, setReorderPoint,
   type StockItem, type MovementRow,
@@ -24,7 +24,7 @@ import {
 export const Route = createFileRoute("/_authenticated/_app/inventory")({
   head: () => ({
     meta: [
-      { title: "إدارة المخزون — e-GURUS" },
+      { title: tr("إدارة المخزون — e-GURUS") },
       { name: "description", content: "دورة حياة المخزون كاملة: الخامات والمنتجات، الحركات، التنبيهات والتقارير." },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -87,28 +87,28 @@ function InventoryPage() {
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Boxes className="w-7 h-7 text-primary" />
-          {T("إدارة المخزون", "Inventory Management")}
+          {T(tr("إدارة المخزون"), "Inventory Management")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
           {T(
-            "الخامات والمنتجات النهائية — حركات، تنبيهات وتقارير مربوطة تلقائيًا بالمشتريات والإنتاج والأوردرات.",
+            tr("الخامات والمنتجات النهائية — حركات، تنبيهات وتقارير مربوطة تلقائيًا بالمشتريات والإنتاج والأوردرات."),
             "Raw materials & finished goods — movements, alerts & reports auto-linked to purchases, production and orders.",
           )}
         </p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi label={T("عدد الأصناف", "Items")} value={String(totals.count)} />
-        <Kpi label={T("إجمالي القطع", "Total units")} value={num(totals.units)} />
-        <Kpi label={T("قيمة المخزون", "Stock value")} value={`${money(totals.value)} EGP`} />
-        <Kpi label={T("تحت الحد الأدنى", "Below minimum")} value={String(totals.low)} danger={totals.low > 0} />
+        <Kpi label={T(tr("عدد الأصناف"), "Items")} value={String(totals.count)} />
+        <Kpi label={T(tr("إجمالي القطع"), "Total units")} value={num(totals.units)} />
+        <Kpi label={T(tr("قيمة المخزون"), "Stock value")} value={`${money(totals.value)} EGP`} />
+        <Kpi label={T(tr("تحت الحد الأدنى"), "Below minimum")} value={String(totals.low)} danger={totals.low > 0} />
       </div>
 
       {lowItems.length > 0 && (
         <Card className="p-4 border-destructive/40 bg-destructive/5">
           <div className="flex items-center gap-2 font-semibold text-destructive mb-2">
             <AlertTriangle className="w-4 h-4" />
-            {T("تنبيهات نقص المخزون", "Low stock alerts")} ({lowItems.length})
+            {T(tr("تنبيهات نقص المخزون"), "Low stock alerts")} ({lowItems.length})
           </div>
           <div className="flex flex-wrap gap-2">
             {lowItems.slice(0, 30).map((i) => (
@@ -122,9 +122,9 @@ function InventoryPage() {
 
       <Tabs defaultValue="stock" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="stock">{T("المخزون", "Stock")}</TabsTrigger>
-          <TabsTrigger value="movements">{T("الحركات", "Movements")}</TabsTrigger>
-          <TabsTrigger value="reports">{T("التقارير", "Reports")}</TabsTrigger>
+          <TabsTrigger value="stock">{T(tr("المخزون"), "Stock")}</TabsTrigger>
+          <TabsTrigger value="movements">{T(tr("الحركات"), "Movements")}</TabsTrigger>
+          <TabsTrigger value="reports">{T(tr("التقارير"), "Reports")}</TabsTrigger>
         </TabsList>
 
         {/* STOCK */}
@@ -134,24 +134,24 @@ function InventoryPage() {
               <Search className="w-4 h-4 absolute top-3 start-2 text-muted-foreground" />
               <Input
                 className="ps-8 w-64"
-                placeholder={T("بحث بالاسم أو SKU", "Search name or SKU")}
+                placeholder={T(tr("بحث بالاسم أو SKU"), "Search name or SKU")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div>
-              <Label className="text-xs">{T("النوع", "Type")}</Label>
+              <Label className="text-xs">{T(tr("النوع"), "Type")}</Label>
               <Select value={kind} onValueChange={(v) => setKind(v as typeof kind)}>
                 <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{T("الكل", "All")}</SelectItem>
-                  <SelectItem value="product">{T("منتجات نهائية", "Finished products")}</SelectItem>
-                  <SelectItem value="material">{T("مواد خام", "Raw materials")}</SelectItem>
+                  <SelectItem value="all">{T(tr("الكل"), "All")}</SelectItem>
+                  <SelectItem value="product">{T(tr("منتجات نهائية"), "Finished products")}</SelectItem>
+                  <SelectItem value="material">{T(tr("مواد خام"), "Raw materials")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <Button variant={lowOnly ? "default" : "outline"} size="sm" onClick={() => setLowOnly((v) => !v)}>
-              <AlertTriangle className="w-4 h-4 me-1" /> {T("تحت الحد الأدنى فقط", "Low stock only")}
+              <AlertTriangle className="w-4 h-4 me-1" /> {T(tr("تحت الحد الأدنى فقط"), "Low stock only")}
             </Button>
           </Card>
 
@@ -159,15 +159,15 @@ function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{T("الصنف", "Item")}</th>
+                  <th className="p-2 text-start">{T(tr("الصنف"), "Item")}</th>
                   <th className="p-2 text-start">SKU</th>
-                  <th className="p-2">{T("النوع", "Type")}</th>
-                  <th className="p-2">{T("الكمية الحالية", "On hand")}</th>
-                  <th className="p-2">{T("الحد الأدنى", "Minimum")}</th>
-                  <th className="p-2">{T("تكلفة الوحدة", "Unit cost")}</th>
-                  <th className="p-2">{T("القيمة الإجمالية", "Total value")}</th>
-                  <th className="p-2">{T("آخر تحديث", "Last update")}</th>
-                  <th className="p-2 text-end">{T("إجراء", "Action")}</th>
+                  <th className="p-2">{T(tr("النوع"), "Type")}</th>
+                  <th className="p-2">{T(tr("الكمية الحالية"), "On hand")}</th>
+                  <th className="p-2">{T(tr("الحد الأدنى"), "Minimum")}</th>
+                  <th className="p-2">{T(tr("تكلفة الوحدة"), "Unit cost")}</th>
+                  <th className="p-2">{T(tr("القيمة الإجمالية"), "Total value")}</th>
+                  <th className="p-2">{T(tr("آخر تحديث"), "Last update")}</th>
+                  <th className="p-2 text-end">{T(tr("إجراء"), "Action")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,7 +179,7 @@ function InventoryPage() {
                     </td>
                     <td className="p-2 font-mono text-xs">{i.sku || "—"}</td>
                     <td className="p-2 text-center">
-                      <Badge variant="outline">{i.kind === "product" ? T("منتج", "Product") : T("خامة", "Material")}</Badge>
+                      <Badge variant="outline">{i.kind === "product" ? T(tr("منتج"), "Product") : T(tr("خامة"), "Material")}</Badge>
                     </td>
                     <td className="p-2 text-center">
                       <Badge variant={i.low_stock ? "destructive" : "secondary"}>{num(i.on_hand_qty)} {i.unit}</Badge>
@@ -198,7 +198,7 @@ function InventoryPage() {
                         <Button size="sm" variant="outline" onClick={() => setDialog({ item: i, direction: "out" })}>
                           <Minus className="w-3.5 h-3.5" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setRpItem(i)} title={T("الحد الأدنى", "Minimum")}>
+                        <Button size="sm" variant="ghost" onClick={() => setRpItem(i)} title={T(tr("الحد الأدنى"), "Minimum")}>
                           <Settings2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
@@ -206,7 +206,7 @@ function InventoryPage() {
                   </tr>
                 ))}
                 {items.length === 0 && (
-                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{T("لا توجد أصناف.", "No items.")}</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{T(tr("لا توجد أصناف."), "No items.")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -220,15 +220,15 @@ function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{T("التاريخ", "Date")}</th>
-                  <th className="p-2 text-start">{T("الصنف", "Item")}</th>
-                  <th className="p-2">{T("الحركة", "Direction")}</th>
-                  <th className="p-2">{T("الكمية", "Qty")}</th>
-                  <th className="p-2">{T("تكلفة الوحدة", "Unit cost")}</th>
-                  <th className="p-2">{T("السبب", "Reason")}</th>
-                  <th className="p-2">{T("المصدر", "Source")}</th>
-                  <th className="p-2 text-start">{T("المستخدم", "User")}</th>
-                  <th className="p-2 text-start">{T("ملاحظة", "Note")}</th>
+                  <th className="p-2 text-start">{T(tr("التاريخ"), "Date")}</th>
+                  <th className="p-2 text-start">{T(tr("الصنف"), "Item")}</th>
+                  <th className="p-2">{T(tr("الحركة"), "Direction")}</th>
+                  <th className="p-2">{T(tr("الكمية"), "Qty")}</th>
+                  <th className="p-2">{T(tr("تكلفة الوحدة"), "Unit cost")}</th>
+                  <th className="p-2">{T(tr("السبب"), "Reason")}</th>
+                  <th className="p-2">{T(tr("المصدر"), "Source")}</th>
+                  <th className="p-2 text-start">{T(tr("المستخدم"), "User")}</th>
+                  <th className="p-2 text-start">{T(tr("ملاحظة"), "Note")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,12 +243,12 @@ function InventoryPage() {
                     <td className="p-2">
                       {m.item_name}
                       <span className="text-xs text-muted-foreground ms-1">
-                        ({m.kind === "product" ? T("منتج", "Product") : T("خامة", "Material")})
+                        ({m.kind === "product" ? T(tr("منتج"), "Product") : T(tr("خامة"), "Material")})
                       </span>
                     </td>
                     <td className="p-2 text-center">
                       <Badge variant={m.direction === "in" ? "secondary" : "outline"}>
-                        {m.direction === "in" ? T("دخول", "In") : T("خروج", "Out")}
+                        {m.direction === "in" ? T(tr("دخول"), "In") : T(tr("خروج"), "Out")}
                       </Badge>
                     </td>
                     <td className="p-2 text-center">{num(m.qty)}</td>
@@ -260,7 +260,7 @@ function InventoryPage() {
                   </tr>
                 ))}
                 {(movesQ.data ?? []).length === 0 && (
-                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{T("لا توجد حركات في الفترة.", "No movements in period.")}</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{T(tr("لا توجد حركات في الفترة."), "No movements in period.")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -271,25 +271,25 @@ function InventoryPage() {
         <TabsContent value="reports" className="space-y-4">
           <PeriodBar from={from} to={to} setFrom={setFrom} setTo={setTo} T={T} />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Kpi label={T("إجمالي الداخل", "Total in")} value={num(reportsQ.data?.totals.in_qty ?? 0)} />
-            <Kpi label={T("قيمة الداخل", "In value")} value={`${money(reportsQ.data?.totals.in_value ?? 0)} EGP`} />
-            <Kpi label={T("إجمالي الخارج", "Total out")} value={num(reportsQ.data?.totals.out_qty ?? 0)} />
-            <Kpi label={T("عدد الأيام", "Days")} value={String(reportsQ.data?.days ?? 0)} />
+            <Kpi label={T(tr("إجمالي الداخل"), "Total in")} value={num(reportsQ.data?.totals.in_qty ?? 0)} />
+            <Kpi label={T(tr("قيمة الداخل"), "In value")} value={`${money(reportsQ.data?.totals.in_value ?? 0)} EGP`} />
+            <Kpi label={T(tr("إجمالي الخارج"), "Total out")} value={num(reportsQ.data?.totals.out_qty ?? 0)} />
+            <Kpi label={T(tr("عدد الأيام"), "Days")} value={String(reportsQ.data?.days ?? 0)} />
           </div>
 
           <Card className="card-gradient p-4 md:p-5 space-y-3 overflow-x-auto">
             <h3 className="font-semibold flex items-center gap-2">
-              <Activity className="w-4 h-4" /> {T("تقرير الاستهلاك ومعدلاته", "Consumption report")}
+              <Activity className="w-4 h-4" /> {T(tr("تقرير الاستهلاك ومعدلاته"), "Consumption report")}
             </h3>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{T("الصنف", "Item")}</th>
-                  <th className="p-2">{T("داخل", "In")}</th>
-                  <th className="p-2">{T("خارج", "Out")}</th>
-                  <th className="p-2">{T("الصافي", "Net")}</th>
-                  <th className="p-2">{T("متوسط الاستهلاك اليومي", "Avg daily use")}</th>
-                  <th className="p-2">{T("عدد الحركات", "Movements")}</th>
+                  <th className="p-2 text-start">{T(tr("الصنف"), "Item")}</th>
+                  <th className="p-2">{T(tr("داخل"), "In")}</th>
+                  <th className="p-2">{T(tr("خارج"), "Out")}</th>
+                  <th className="p-2">{T(tr("الصافي"), "Net")}</th>
+                  <th className="p-2">{T(tr("متوسط الاستهلاك اليومي"), "Avg daily use")}</th>
+                  <th className="p-2">{T(tr("عدد الحركات"), "Movements")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -304,7 +304,7 @@ function InventoryPage() {
                   </tr>
                 ))}
                 {(reportsQ.data?.items ?? []).length === 0 && (
-                  <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{T("لا توجد بيانات.", "No data.")}</td></tr>
+                  <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{T(tr("لا توجد بيانات."), "No data.")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -312,16 +312,16 @@ function InventoryPage() {
 
           <Card className="card-gradient p-4 md:p-5 space-y-3 overflow-x-auto">
             <h3 className="font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" /> {T("تحليل التكاليف والأسعار", "Cost & price analysis")}
+              <TrendingUp className="w-4 h-4" /> {T(tr("تحليل التكاليف والأسعار"), "Cost & price analysis")}
             </h3>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{T("الصنف", "Item")}</th>
-                  <th className="p-2">{T("أول تكلفة", "First cost")}</th>
-                  <th className="p-2">{T("آخر تكلفة", "Last cost")}</th>
-                  <th className="p-2">{T("التغير %", "Change %")}</th>
-                  <th className="p-2">{T("قيمة المشتريات", "Purchased value")}</th>
+                  <th className="p-2 text-start">{T(tr("الصنف"), "Item")}</th>
+                  <th className="p-2">{T(tr("أول تكلفة"), "First cost")}</th>
+                  <th className="p-2">{T(tr("آخر تكلفة"), "Last cost")}</th>
+                  <th className="p-2">{T(tr("التغير %"), "Change %")}</th>
+                  <th className="p-2">{T(tr("قيمة المشتريات"), "Purchased value")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -341,13 +341,13 @@ function InventoryPage() {
           </Card>
 
           <Card className="card-gradient p-4 md:p-5 space-y-3">
-            <h3 className="font-semibold">{T("الحركات حسب المصدر", "Movements by source")}</h3>
+            <h3 className="font-semibold">{T(tr("الحركات حسب المصدر"), "Movements by source")}</h3>
             <div className="flex flex-wrap gap-3">
               {(reportsQ.data?.bySource ?? []).map((s) => (
                 <div key={s.source} className="rounded-lg border border-border p-3 min-w-[180px]">
                   <div className="text-sm font-medium">{sourceLabel(s.source, T)}</div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {T("داخل", "In")}: {num(s.in_qty)} · {T("خارج", "Out")}: {num(s.out_qty)} · {s.count} {T("حركة", "moves")}
+                    {T(tr("داخل"), "In")}: {num(s.in_qty)} · {T(tr("خارج"), "Out")}: {num(s.out_qty)} · {s.count} {T(tr("حركة"), "moves")}
                   </div>
                 </div>
               ))}
@@ -386,11 +386,11 @@ function PeriodBar({
   return (
     <Card className="card-gradient p-4 flex flex-wrap gap-3 items-end">
       <div>
-        <Label className="text-xs">{T("من", "From")}</Label>
+        <Label className="text-xs">{T(tr("من"), "From")}</Label>
         <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-44" />
       </div>
       <div>
-        <Label className="text-xs">{T("إلى", "To")}</Label>
+        <Label className="text-xs">{T(tr("إلى"), "To")}</Label>
         <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-44" />
       </div>
     </Card>
@@ -438,7 +438,7 @@ function MoveDialog({
       occurred_at: date,
       note: note || null,
     } }),
-    onSuccess: () => { toast.success(T("تم تسجيل الحركة", "Movement saved")); onDone(); },
+    onSuccess: () => { toast.success(T(tr("تم تسجيل الحركة"), "Movement saved")); onDone(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -447,36 +447,36 @@ function MoveDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {direction === "in" ? T("دخول مخزون", "Stock in") : T("خروج مخزون", "Stock out")} — {item.name}
+            {direction === "in" ? T(tr("دخول مخزون"), "Stock in") : T(tr("خروج مخزون"), "Stock out")} — {item.name}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>{T("الكمية", "Quantity")} ({item.unit})</Label>
+            <Label>{T(tr("الكمية"), "Quantity")} ({item.unit})</Label>
             <Input type="number" min={0} step="any" value={qty} onChange={(e) => setQty(e.target.value)} autoFocus />
           </div>
           {direction === "in" && (
             <div>
-              <Label>{T("تكلفة الوحدة (اختياري)", "Unit cost (optional)")}</Label>
+              <Label>{T(tr("تكلفة الوحدة (اختياري)"), "Unit cost (optional)")}</Label>
               <Input type="number" min={0} step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} />
               <p className="text-xs text-muted-foreground mt-1">
-                {T("لو دخلت التكلفة هيتحدث متوسط التكلفة تلقائيًا.", "Updates the weighted-average cost automatically.")}
+                {T(tr("لو دخلت التكلفة هيتحدث متوسط التكلفة تلقائيًا."), "Updates the weighted-average cost automatically.")}
               </p>
             </div>
           )}
           <div>
-            <Label>{T("التاريخ", "Date")}</Label>
+            <Label>{T(tr("التاريخ"), "Date")}</Label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div>
-            <Label>{T("السبب / ملاحظة", "Reason / note")}</Label>
+            <Label>{T(tr("السبب / ملاحظة"), "Reason / note")}</Label>
             <Textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>{T("إلغاء", "Cancel")}</Button>
+          <Button variant="ghost" onClick={onClose}>{T(tr("إلغاء"), "Cancel")}</Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending || !qty || Number(qty) <= 0}>
-            {T("حفظ", "Save")}
+            {T(tr("حفظ"), "Save")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -491,17 +491,17 @@ function ReorderDialog({ item, onClose, onDone }: { item: StockItem; onClose: ()
   const fn = useServerFn(setReorderPoint);
   const mut = useMutation({
     mutationFn: () => fn({ data: { kind: item.kind, id: item.id, reorder_point: Number(val || 0) } }),
-    onSuccess: () => { toast.success(T("تم الحفظ", "Saved")); onDone(); },
+    onSuccess: () => { toast.success(T(tr("تم الحفظ"), "Saved")); onDone(); },
     onError: (e: Error) => toast.error(e.message),
   });
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>{T("الحد الأدنى للمخزون", "Minimum stock")} — {item.name}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{T(tr("الحد الأدنى للمخزون"), "Minimum stock")} — {item.name}</DialogTitle></DialogHeader>
         <Input type="number" min={0} step="any" value={val} onChange={(e) => setVal(e.target.value)} />
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>{T("إلغاء", "Cancel")}</Button>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>{T("حفظ", "Save")}</Button>
+          <Button variant="ghost" onClick={onClose}>{T(tr("إلغاء"), "Cancel")}</Button>
+          <Button onClick={() => mut.mutate()} disabled={mut.isPending}>{T(tr("حفظ"), "Save")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

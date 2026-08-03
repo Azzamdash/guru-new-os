@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -15,7 +16,7 @@ import { listMaterials, upsertMaterial, deleteMaterial, listBrands } from "@/lib
 
 export const Route = createFileRoute("/_authenticated/_app/materials")({
   head: () => ({ meta: [
-    { title: "الخامات — e-GURUS" },
+    { title: tr("الخامات — e-GURUS") },
     { name: "description", content: "إدارة الخامات ووحداتها." },
   ]}),
   component: MaterialsPage,
@@ -42,7 +43,7 @@ function MaterialsPage() {
   const [editing, setEditing] = useState<null | { id?: string; name: string; unit: string; unit_cost: number; active: boolean; brand_ids: string[] }>(null);
   const save = useMutation({
     mutationFn: (v: NonNullable<typeof editing>) => upFn({ data: v }),
-    onSuccess: () => { toast.success("تم الحفظ"); qc.invalidateQueries({ queryKey: ["materials"] }); setOpen(false); },
+    onSuccess: () => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["materials"] }); setOpen(false); },
     onError: (e: Error) => toast.error(e.message),
   });
   const remove = useMutation({
@@ -60,18 +61,18 @@ function MaterialsPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">الخامات</h1>
-          <p className="text-muted-foreground text-sm mt-1">قائمة الخامات، الوحدة، وسعر الوحدة.</p>
+          <h1 className="text-3xl font-bold">{tr("الخامات")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("قائمة الخامات، الوحدة، وسعر الوحدة.")}</p>
         </div>
         <Button onClick={() => { setEditing({ name: "", unit: "piece", unit_cost: 0, active: true, brand_ids: [] }); setOpen(true); }}>
-          <Plus className="w-4 h-4 me-2" /> خامة جديدة
+          <Plus className="w-4 h-4 me-2" /> {tr("خامة جديدة")}
         </Button>
       </div>
       <Card className="card-gradient overflow-hidden">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">الاسم</th><th className="p-3">الوحدة</th>
-            <th className="p-3 text-left">سعر الوحدة</th><th className="p-3">البراندات</th><th className="p-3">الحالة</th><th className="p-3"></th>
+            <th className="p-3">{tr("الاسم")}</th><th className="p-3">{tr("الوحدة")}</th>
+            <th className="p-3 text-left">{tr("سعر الوحدة")}</th><th className="p-3">{tr("البراندات")}</th><th className="p-3">{tr("الحالة")}</th><th className="p-3"></th>
           </tr></thead>
           <tbody>
             {(q.data ?? []).map((m) => (
@@ -85,35 +86,35 @@ function MaterialsPage() {
                     {(m.brand_ids ?? []).map((bid) => <Badge key={bid} variant="outline">{brandName(bid)}</Badge>)}
                   </div>
                 </td>
-                <td className="p-3">{m.active ? <Badge>مفعّل</Badge> : <Badge variant="secondary">معطّل</Badge>}</td>
+                <td className="p-3">{m.active ? <Badge>{tr("مفعّل")}</Badge> : <Badge variant="secondary">{tr("معطّل")}</Badge>}</td>
                 <td className="p-3 flex gap-2 justify-end">
                   <Button size="icon" variant="ghost" onClick={() => { setEditing({ id: m.id, name: m.name, unit: m.unit, unit_cost: m.unit_cost, active: m.active, brand_ids: m.brand_ids ?? [] }); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => { if (confirm("حذف؟")) remove.mutate(m.id); }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => { if (confirm(tr("حذف؟"))) remove.mutate(m.id); }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </td>
               </tr>
             ))}
-            {(q.data ?? []).length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">لا خامات.</td></tr>}
+            {(q.data ?? []).length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{tr("لا خامات.")}</td></tr>}
           </tbody>
         </table>
       </Card>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل خامة" : "خامة جديدة"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? tr("تعديل خامة") : tr("خامة جديدة")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
-              <div><Label>الاسم</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
+              <div><Label>{tr("الاسم")}</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>الوحدة</Label>
+                  <Label>{tr("الوحدة")}</Label>
                   <Select value={editing.unit} onValueChange={(v) => setEditing({ ...editing, unit: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{UNITS.map((u) => <SelectItem key={u.v} value={u.v}>{u.l}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>سعر الوحدة</Label><Input type="number" value={editing.unit_cost} onChange={(e) => setEditing({ ...editing, unit_cost: parseFloat(e.target.value) || 0 })} /></div>
+                <div><Label>{tr("سعر الوحدة")}</Label><Input type="number" value={editing.unit_cost} onChange={(e) => setEditing({ ...editing, unit_cost: parseFloat(e.target.value) || 0 })} /></div>
               </div>
               <div>
-                <Label>البراندات المرتبطة</Label>
+                <Label>{tr("البراندات المرتبطة")}</Label>
                 <div className="flex flex-wrap gap-2 mt-2 border rounded-md p-2 max-h-48 overflow-y-auto">
                   {brands.filter((b) => b.active).map((b) => {
                     const on = editing.brand_ids.includes(b.id);
@@ -124,15 +125,15 @@ function MaterialsPage() {
                       </button>
                     );
                   })}
-                  {brands.length === 0 && <span className="text-xs text-muted-foreground">لا براندات.</span>}
+                  {brands.length === 0 && <span className="text-xs text-muted-foreground">{tr("لا براندات.")}</span>}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">يمكن ربط الخامة بأكثر من براند (منتج / خدمي / فرع أوفلاين).</p>
+                <p className="text-xs text-muted-foreground mt-1">{tr("يمكن ربط الخامة بأكثر من براند (منتج / خدمي / فرع أوفلاين).")}</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
-            <Button onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.name}>حفظ</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{tr("إلغاء")}</Button>
+            <Button onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.name}>{tr("حفظ")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

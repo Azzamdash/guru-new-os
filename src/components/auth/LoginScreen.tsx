@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +50,7 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
       if (error) throw error;
       goNext();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "بيانات الدخول غير صحيحة");
+      toast.error(err instanceof Error ? err.message : tr("بيانات الدخول غير صحيحة"));
     } finally {
       setLoading(false);
     }
@@ -80,20 +81,19 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
           </Link>
 
           <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-            حوّل بياناتك إلى
+            {tr("حوّل بياناتك إلى")}
             <br />
-            <span className="text-gradient-primary">لوحة تحكم حية</span>
+            <span className="text-gradient-primary">{tr("لوحة تحكم حية")}</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg">
-            اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في
-            رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.
+            {tr("اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في\n            رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.")}
           </p>
           <div className="grid grid-cols-2 gap-3 mt-2">
             {[
-              { icon: TrendingUp, label: "مؤشرات KPI مباشرة" },
-              { icon: LineChart, label: "اتجاهات شهرية" },
-              { icon: BarChart3, label: "مقارنة الفروع" },
-              { icon: PieChart, label: "توزيع المصروفات" },
+              { icon: TrendingUp, label: tr("مؤشرات KPI مباشرة") },
+              { icon: LineChart, label: tr("اتجاهات شهرية") },
+              { icon: BarChart3, label: tr("مقارنة الفروع") },
+              { icon: PieChart, label: tr("توزيع المصروفات") },
             ].map((f) => (
               <div
                 key={f.label}
@@ -119,15 +119,15 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
           </div>
 
           <div className="relative">
-            <h2 className="text-2xl font-bold">تسجيل الدخول</h2>
+            <h2 className="text-2xl font-bold">{tr("تسجيل الدخول")}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              أدخل بريدك وكلمة المرور للمتابعة. الحسابات يُنشئها المشرف فقط.
+              {tr("أدخل بريدك وكلمة المرور للمتابعة. الحسابات يُنشئها المشرف فقط.")}
             </p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4 relative">
             <div className="space-y-2">
-              <Label htmlFor="email">البريد الإلكتروني</Label>
+              <Label htmlFor="email">{tr("البريد الإلكتروني")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -139,7 +139,7 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
+              <Label htmlFor="password">{tr("كلمة المرور")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -151,12 +151,12 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
               />
             </div>
             <Button type="submit" disabled={loading} className="w-full h-11">
-              {loading ? "..." : "دخول"}
+              {loading ? "..." : tr("دخول")}
             </Button>
           </form>
 
           <p className="text-center text-xs text-muted-foreground relative">
-            التسجيل الذاتي مغلق — تواصل مع المشرف لإنشاء حسابك.
+            {tr("التسجيل الذاتي مغلق — تواصل مع المشرف لإنشاء حسابك.")}
           </p>
         </Card>
       </div>

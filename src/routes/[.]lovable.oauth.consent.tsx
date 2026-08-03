@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,7 +45,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   errorComponent: ({ error }) => (
     <main className="p-8 max-w-lg mx-auto">
       <Card className="p-6">
-        <p>تعذّر تحميل طلب الصلاحية: {String((error as Error)?.message ?? error)}</p>
+        <p>{tr("تعذّر تحميل طلب الصلاحية:")} {String((error as Error)?.message ?? error)}</p>
       </Card>
     </main>
   ),
@@ -81,9 +82,9 @@ function Consent() {
   return (
     <main className="min-h-screen flex items-center justify-center p-4" dir="rtl">
       <Card className="p-8 max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-bold">ربط {clientName} بحسابك</h1>
+        <h1 className="text-2xl font-bold">{tr("ربط")} {clientName} {tr("بحسابك")}</h1>
         <p className="text-muted-foreground">
-          سيسمح هذا لـ {clientName} باستخدام تطبيق e-GURUS بالنيابة عنك، مع احترام صلاحياتك على البراندات والأقسام.
+          {tr("سيسمح هذا لـ")} {clientName} {tr("باستخدام تطبيق e-GURUS بالنيابة عنك، مع احترام صلاحياتك على البراندات والأقسام.")}
         </p>
         {details?.scopes && details.scopes.length > 0 && (
           <ul className="text-sm list-disc pr-5 space-y-1">
@@ -92,8 +93,8 @@ function Consent() {
         )}
         {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
         <div className="flex gap-3 pt-2">
-          <Button disabled={busy} onClick={() => decide(true)}>موافقة</Button>
-          <Button variant="outline" disabled={busy} onClick={() => decide(false)}>رفض</Button>
+          <Button disabled={busy} onClick={() => decide(true)}>{tr("موافقة")}</Button>
+          <Button variant="outline" disabled={busy} onClick={() => decide(false)}>{tr("رفض")}</Button>
         </div>
       </Card>
     </main>

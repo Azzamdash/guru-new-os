@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,7 +33,7 @@ import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/_app/treasury")({
   head: () => ({ meta: [
-    { title: "الخزنة — التحصيلات والسحوبات" },
+    { title: tr("الخزنة — التحصيلات والسحوبات") },
     { name: "description", content: "تسجيل تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات مع رصيد الخزنة الحيّ." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -161,24 +162,24 @@ function TreasuryPage() {
     } }),
 
     onSuccess: () => {
-      toast.success(form.id ? "تم التعديل" : "تم الحفظ");
+      toast.success(form.id ? tr("تم التعديل") : tr("تم الحفظ"));
       setForm(initialForm());
       qc.invalidateQueries({ queryKey: ["cash-txns"] });
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحفظ")),
   });
 
   const delMut = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
     onSuccess: () => {
-      toast.success("تم الحذف");
+      toast.success(tr("تم الحذف"));
       qc.invalidateQueries({ queryKey: ["cash-txns"] });
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحذف"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحذف")),
   });
 
   const couriersMap = useMemo(() => {
@@ -212,11 +213,11 @@ function TreasuryPage() {
     <div className="p-6 md:p-8 space-y-6" dir="rtl">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Wallet className="w-7 h-7 text-primary" /> الخزنة</h1>
-          <p className="text-muted-foreground text-sm mt-1">تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><Wallet className="w-7 h-7 text-primary" /> {tr("الخزنة")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات.")}</p>
         </div>
         {!canWrite && (
-          <Badge variant="outline" className="gap-1"><Lock className="w-3 h-3" /> عرض فقط</Badge>
+          <Badge variant="outline" className="gap-1"><Lock className="w-3 h-3" /> {tr("عرض فقط")}</Badge>
         )}
       </div>
 
@@ -224,32 +225,32 @@ function TreasuryPage() {
       <Card className="p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <Label className="text-xs sm:text-sm">من</Label>
+            <Label className="text-xs sm:text-sm">{tr("من")}</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1" />
           </div>
           <div>
-            <Label className="text-xs sm:text-sm">إلى</Label>
+            <Label className="text-xs sm:text-sm">{tr("إلى")}</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1" />
           </div>
           <div>
-            <Label className="text-xs sm:text-sm">النوع</Label>
+            <Label className="text-xs sm:text-sm">{tr("النوع")}</Label>
             <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as "all" | CashTxnType)}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="collection">تحصيلات</SelectItem>
-                <SelectItem value="personal_withdrawal">سحوبات شخصية</SelectItem>
-                <SelectItem value="deposit">إيداعات</SelectItem>
-                <SelectItem value="other_out">مصروفات نقدية</SelectItem>
+                <SelectItem value="all">{tr("الكل")}</SelectItem>
+                <SelectItem value="collection">{tr("تحصيلات")}</SelectItem>
+                <SelectItem value="personal_withdrawal">{tr("سحوبات شخصية")}</SelectItem>
+                <SelectItem value="deposit">{tr("إيداعات")}</SelectItem>
+                <SelectItem value="other_out">{tr("مصروفات نقدية")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs sm:text-sm">المندوب</Label>
+            <Label className="text-xs sm:text-sm">{tr("المندوب")}</Label>
             <Select value={courierFilter} onValueChange={setCourierFilter}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="all">{tr("الكل")}</SelectItem>
                 {(couriersQ.data ?? []).map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                 ))}
@@ -262,24 +263,24 @@ function TreasuryPage() {
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">الرصيد المتاح في الخزنة</div>
+          <div className="text-xs text-muted-foreground">{tr("الرصيد المتاح في الخزنة")}</div>
           <div className={`text-xl sm:text-2xl font-bold mt-1 ${(s?.balance ?? 0) < 0 ? "text-destructive" : "text-primary"}`}>{fmt(s?.balance ?? 0)}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">داخل خلال الفترة</div>
+          <div className="text-xs text-muted-foreground">{tr("داخل خلال الفترة")}</div>
           <div className="text-xl sm:text-2xl font-bold mt-1 text-emerald-500">{fmt(s?.periodIn ?? 0)}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">خارج خلال الفترة</div>
+          <div className="text-xs text-muted-foreground">{tr("خارج خلال الفترة")}</div>
           <div className="text-xl sm:text-2xl font-bold mt-1 text-destructive">{fmt(s?.periodOut ?? 0)}</div>
         </Card>
         <Card className="p-4">
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <User className="w-3 h-3" /> سحوبات مالك/مستثمر {onlyMinePersonal ? "(أنا)" : "(الكل)"}
+            <User className="w-3 h-3" /> {tr("سحوبات مالك/مستثمر")} {onlyMinePersonal ? tr("(أنا)") : tr("(الكل)")}
           </div>
           <div className="text-xl sm:text-2xl font-bold mt-1">{fmt(s?.personalTotal ?? 0)}</div>
           <button className="text-xs text-primary underline mt-1" onClick={() => setOnlyMinePersonal((v) => !v)}>
-            {onlyMinePersonal ? "عرض كل المستخدمين" : "خصني بس"}
+            {onlyMinePersonal ? tr("عرض كل المستخدمين") : tr("خصني بس")}
           </button>
         </Card>
       </div>
@@ -289,13 +290,13 @@ function TreasuryPage() {
       {/* Actor filter */}
       {canPickActor && (actorsQ.data ?? []).length > 0 && (
         <Card className="p-4">
-          <Label className="text-xs sm:text-sm">مالك / مستثمر (فلترة السحوبات)</Label>
+          <Label className="text-xs sm:text-sm">{tr("مالك / مستثمر (فلترة السحوبات)")}</Label>
           <Select value={actorFilter} onValueChange={setActorFilter}>
             <SelectTrigger className="mt-1 w-full sm:max-w-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="all">{tr("الكل")}</SelectItem>
               {(actorsQ.data ?? []).map((a) => (
-                <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? "· مستثمر" : "· مالك"}</SelectItem>
+                <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? tr("· مستثمر") : tr("· مالك")}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -305,28 +306,28 @@ function TreasuryPage() {
       {/* Add/Edit form */}
       {canWrite && (
         <Card className="p-4 space-y-4">
-          <div className="flex items-center gap-2 font-semibold"><Plus className="w-4 h-4" /> {form.id ? "تعديل عملية" : "إضافة عملية"}</div>
+          <div className="flex items-center gap-2 font-semibold"><Plus className="w-4 h-4" /> {form.id ? tr("تعديل عملية") : tr("إضافة عملية")}</div>
           <Tabs value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as CashTxnType, courier_id: v === "collection" ? f.courier_id : "" }))}>
             <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0">
-              <TabsTrigger value="collection" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><HandCoins className="w-4 h-4 ml-1" /> تحصيل</TabsTrigger>
-              <TabsTrigger value="personal_withdrawal" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><ArrowUpFromLine className="w-4 h-4 ml-1" /> سحب مالك/مستثمر</TabsTrigger>
-              <TabsTrigger value="deposit" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><ArrowDownToLine className="w-4 h-4 ml-1" /> إيداع</TabsTrigger>
+              <TabsTrigger value="collection" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><HandCoins className="w-4 h-4 ml-1" /> {tr("تحصيل")}</TabsTrigger>
+              <TabsTrigger value="personal_withdrawal" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><ArrowUpFromLine className="w-4 h-4 ml-1" /> {tr("سحب مالك/مستثمر")}</TabsTrigger>
+              <TabsTrigger value="deposit" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><ArrowDownToLine className="w-4 h-4 ml-1" /> {tr("إيداع")}</TabsTrigger>
             </TabsList>
             <TabsContent value={form.type} className="mt-4">
               <div className="grid md:grid-cols-4 gap-3">
                 <div>
-                  <Label>المبلغ</Label>
+                  <Label>{tr("المبلغ")}</Label>
                   <Input type="number" min="0" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value) }))} />
                 </div>
                 <div>
-                  <Label>التاريخ</Label>
+                  <Label>{tr("التاريخ")}</Label>
                   <Input type="date" value={form.occurred_at} onChange={(e) => setForm((f) => ({ ...f, occurred_at: e.target.value }))} />
                 </div>
                 {form.type === "collection" && (
                   <div>
-                    <Label>المندوب / شركة الشحن *</Label>
+                    <Label>{tr("المندوب / شركة الشحن *")}</Label>
                     <Select value={form.courier_id} onValueChange={(v) => setForm((f) => ({ ...f, courier_id: v }))}>
-                      <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
                       <SelectContent>
                         {(couriersQ.data ?? []).map((c) => (
                           <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -337,12 +338,12 @@ function TreasuryPage() {
                 )}
                 {form.type === "personal_withdrawal" && canPickActor && (
                   <div>
-                    <Label>مالك / مستثمر *</Label>
+                    <Label>{tr("مالك / مستثمر *")}</Label>
                     <Select value={form.for_user_id} onValueChange={(v) => setForm((f) => ({ ...f, for_user_id: v }))}>
-                      <SelectTrigger><SelectValue placeholder="اختر الشخص" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={tr("اختر الشخص")} /></SelectTrigger>
                       <SelectContent>
                         {(actorsQ.data ?? []).map((a) => (
-                          <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? "· مستثمر" : "· مالك"}</SelectItem>
+                          <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? tr("· مستثمر") : tr("· مالك")}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -350,9 +351,9 @@ function TreasuryPage() {
                 )}
                 {form.type === "other_out" && (
                   <div>
-                    <Label>بند المصروف *</Label>
+                    <Label>{tr("بند المصروف *")}</Label>
                     <Select value={form.category_id} onValueChange={(v) => setForm((f) => ({ ...f, category_id: v, platform: "", attributed_revenue: 0, supplier_id: "" }))}>
-                      <SelectTrigger><SelectValue placeholder="اختر البند" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder={tr("اختر البند")} /></SelectTrigger>
                       <SelectContent>
                         {(categoriesQ.data ?? []).filter((c) => c.active && c.slug !== "supplier_payments").map((c) => (
                           <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -364,9 +365,9 @@ function TreasuryPage() {
                 {form.type === "other_out" && isMarketingCat && (
                   <>
                     <div>
-                      <Label>المنصة *</Label>
+                      <Label>{tr("المنصة *")}</Label>
                       <Select value={form.platform} onValueChange={(v) => setForm((f) => ({ ...f, platform: v }))}>
-                        <SelectTrigger><SelectValue placeholder="اختر المنصة" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={tr("اختر المنصة")} /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="tiktok">TikTok</SelectItem>
                           <SelectItem value="meta">Meta</SelectItem>
@@ -374,15 +375,15 @@ function TreasuryPage() {
                           <SelectItem value="snapchat">Snapchat</SelectItem>
                           <SelectItem value="whatsapp">WhatsApp</SelectItem>
                           <SelectItem value="sms">SMS</SelectItem>
-                          <SelectItem value="influencer">انفلونسر</SelectItem>
+                          <SelectItem value="influencer">{tr("انفلونسر")}</SelectItem>
                           <SelectItem value="ugc">UGC</SelectItem>
                           <SelectItem value="media_production">Media Production</SelectItem>
-                          <SelectItem value="other">أخرى</SelectItem>
+                          <SelectItem value="other">{tr("أخرى")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>الإيراد المنسوب</Label>
+                      <Label>{tr("الإيراد المنسوب")}</Label>
                       <Input type="number" min="0" value={form.attributed_revenue} onChange={(e) => setForm((f) => ({ ...f, attributed_revenue: Number(e.target.value) }))} />
                     </div>
                   </>
@@ -390,28 +391,28 @@ function TreasuryPage() {
                 {form.type === "other_out" && isPurchasesCat && (
                   <>
                     <div>
-                      <Label>المورد *</Label>
+                      <Label>{tr("المورد *")}</Label>
                       <Select value={form.supplier_id} onValueChange={(v) => setForm((f) => ({ ...f, supplier_id: v }))}>
-                        <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={tr("اختر المورد")} /></SelectTrigger>
                         <SelectContent>
                           {brandSuppliers.filter((s) => s.active).map((s) => (
                             <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                           ))}
-                          {brandSuppliers.length === 0 && <SelectItem value="__none" disabled>لا يوجد موردون لهذا البراند</SelectItem>}
+                          {brandSuppliers.length === 0 && <SelectItem value="__none" disabled>{tr("لا يوجد موردون لهذا البراند")}</SelectItem>}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="flex items-end">
                       <Link to="/purchases" className="text-xs text-primary underline hover:no-underline">
-                        فتح فواتير المشتريات لإدخال الأصناف بالتفصيل ↗
+                        {tr("فتح فواتير المشتريات لإدخال الأصناف بالتفصيل ↗")}
                       </Link>
                     </div>
                   </>
                 )}
                 <div>
-                  <Label>البراند *</Label>
+                  <Label>{tr("البراند *")}</Label>
                   <Select value={form.brand_id} onValueChange={(v) => setForm((f) => ({ ...f, brand_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder="اختر البراند" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={tr("اختر البراند")} /></SelectTrigger>
                     <SelectContent>
                       {(brandsQ.data ?? []).map((b) => (
                         <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
@@ -421,9 +422,9 @@ function TreasuryPage() {
                 </div>
 
                 <div>
-                  <Label>المحفظة / الخزنة</Label>
+                  <Label>{tr("المحفظة / الخزنة")}</Label>
                   <Select value={form.wallet_id} onValueChange={(v) => setForm((f) => ({ ...f, wallet_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder="افتراضي" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={tr("افتراضي")} /></SelectTrigger>
                     <SelectContent>
                       {(walletsQ.data ?? []).filter((w) => w.active).map((w) => (
                         <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
@@ -433,8 +434,8 @@ function TreasuryPage() {
                 </div>
 
                 <div className="md:col-span-4">
-                  <Label>ملاحظة</Label>
-                  <Input value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} placeholder="اختياري" />
+                  <Label>{tr("ملاحظة")}</Label>
+                  <Input value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} placeholder={tr("اختياري")} />
                 </div>
               </div>
 
@@ -443,24 +444,24 @@ function TreasuryPage() {
               {selectedCourierDebt && (
                 <div className="mt-4 p-3 rounded-md border bg-muted/30 text-sm grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div>
-                    <div className="text-xs text-muted-foreground">إجمالي المستحق</div>
+                    <div className="text-xs text-muted-foreground">{tr("إجمالي المستحق")}</div>
                     <div className="font-semibold">{fmt(selectedCourierDebt.totalOwed)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground">محصَّل سابقاً</div>
+                    <div className="text-xs text-muted-foreground">{tr("محصَّل سابقاً")}</div>
                     <div className="font-semibold text-emerald-500">{fmt(selectedCourierDebt.totalCollected)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground">المتبقي حالياً</div>
+                    <div className="text-xs text-muted-foreground">{tr("المتبقي حالياً")}</div>
                     <div className={`font-semibold ${selectedCourierDebt.remaining > 0 ? "text-destructive" : "text-emerald-500"}`}>{fmt(selectedCourierDebt.remaining)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground">المتبقي بعد هذا التحصيل</div>
+                    <div className="text-xs text-muted-foreground">{tr("المتبقي بعد هذا التحصيل")}</div>
                     <div className={`font-semibold ${(remainingAfter ?? 0) > 0 ? "text-destructive" : "text-emerald-500"}`}>{fmt(remainingAfter ?? 0)}</div>
                   </div>
                   {(Number(form.amount) || 0) > selectedCourierDebt.remaining && selectedCourierDebt.remaining > 0 && (
                     <div className="md:col-span-4 text-xs text-amber-600">
-                      المبلغ أكبر من المتبقي — سيسجَّل كتحصيل زائد (رصيد للمندوب).
+                      {tr("المبلغ أكبر من المتبقي — سيسجَّل كتحصيل زائد (رصيد للمندوب).")}
                     </div>
                   )}
                 </div>
@@ -468,9 +469,9 @@ function TreasuryPage() {
 
               <div className="flex gap-2 mt-4">
                 <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending || form.amount <= 0 || !form.brand_id || (form.type === "collection" && !form.courier_id) || (form.type === "personal_withdrawal" && canPickActor && !form.for_user_id) || (form.type === "other_out" && !form.category_id) || (form.type === "other_out" && isMarketingCat && !form.platform) || (form.type === "other_out" && isPurchasesCat && !form.supplier_id)}>
-                  {saveMut.isPending ? "..." : (form.id ? "حفظ التعديل" : "حفظ")}
+                  {saveMut.isPending ? "..." : (form.id ? tr("حفظ التعديل") : tr("حفظ"))}
                 </Button>
-                {form.id && <Button variant="outline" onClick={() => setForm(initialForm())}>إلغاء</Button>}
+                {form.id && <Button variant="outline" onClick={() => setForm(initialForm())}>{tr("إلغاء")}</Button>}
               </div>
             </TabsContent>
           </Tabs>
@@ -481,13 +482,13 @@ function TreasuryPage() {
       {/* Withdrawals per person */}
       {canPickActor && (s?.byUser ?? []).length > 0 && (
         <Card className="p-4">
-          <div className="font-semibold mb-3 flex items-center gap-2"><User className="w-4 h-4" /> سحوبات المالك / المستثمرين خلال الفترة</div>
+          <div className="font-semibold mb-3 flex items-center gap-2"><User className="w-4 h-4" /> {tr("سحوبات المالك / المستثمرين خلال الفترة")}</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground border-b">
                 <tr>
-                  <th className="p-2 text-right">الشخص</th>
-                  <th className="p-2 text-right">إجمالي السحوبات</th>
+                  <th className="p-2 text-right">{tr("الشخص")}</th>
+                  <th className="p-2 text-right">{tr("إجمالي السحوبات")}</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
@@ -498,7 +499,7 @@ function TreasuryPage() {
                     <td className="p-2 font-semibold text-destructive">{fmt(u.total)}</td>
                     <td className="p-2">
                       <Button size="sm" variant="outline" onClick={() => { setActorFilter(u.userId); setTypeFilter("personal_withdrawal"); }}>
-                        عرض التفاصيل
+                        {tr("عرض التفاصيل")}
                       </Button>
                     </td>
                   </tr>
@@ -511,14 +512,14 @@ function TreasuryPage() {
 
       {/* Courier debts */}
       <Card className="p-4">
-        <div className="font-semibold mb-3 flex items-center gap-2"><Truck className="w-4 h-4" /> مديونيات المناديب / شركات الشحن</div>
+        <div className="font-semibold mb-3 flex items-center gap-2"><Truck className="w-4 h-4" /> {tr("مديونيات المناديب / شركات الشحن")}</div>
         {(s?.courierDebts ?? []).length === 0 ? (
-          <div className="text-sm text-muted-foreground">لا توجد بيانات.</div>
+          <div className="text-sm text-muted-foreground">{tr("لا توجد بيانات.")}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground border-b">
-                <tr><th className="p-2 text-right">المندوب</th><th className="p-2 text-right">إجمالي مستحق</th><th className="p-2 text-right">محصَّل</th><th className="p-2 text-right">المتبقي</th><th className="p-2"></th></tr>
+                <tr><th className="p-2 text-right">{tr("المندوب")}</th><th className="p-2 text-right">{tr("إجمالي مستحق")}</th><th className="p-2 text-right">{tr("محصَّل")}</th><th className="p-2 text-right">{tr("المتبقي")}</th><th className="p-2"></th></tr>
               </thead>
               <tbody>
                 {(s?.courierDebts ?? []).filter((c) => c.remaining !== 0 || c.totalOwed !== 0).map((c) => (
@@ -530,7 +531,7 @@ function TreasuryPage() {
                     <td className="p-2">
                       {canWrite && c.remaining > 0 && (
                         <Button size="sm" variant="outline" onClick={() => setForm({ ...initialForm(), type: "collection", courier_id: c.id, brand_id: c.brand_id ?? "", amount: c.remaining })}>
-                          تحصيل الكل
+                          {tr("تحصيل الكل")}
                         </Button>
                       )}
                     </td>
@@ -544,23 +545,23 @@ function TreasuryPage() {
 
       {/* Transactions list */}
       <Card className="p-4">
-        <div className="font-semibold mb-3">العمليات ({(listQ.data ?? []).length})</div>
+        <div className="font-semibold mb-3">{tr("العمليات (")}{(listQ.data ?? []).length})</div>
         {listQ.isLoading ? (
-          <div className="text-sm text-muted-foreground">جاري التحميل...</div>
+          <div className="text-sm text-muted-foreground">{tr("جاري التحميل...")}</div>
         ) : (listQ.data ?? []).length === 0 ? (
-          <div className="text-sm text-muted-foreground">لا توجد عمليات في هذه الفترة.</div>
+          <div className="text-sm text-muted-foreground">{tr("لا توجد عمليات في هذه الفترة.")}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground border-b">
                 <tr>
-                  <th className="p-2 text-right">التاريخ</th>
-                  <th className="p-2 text-right">النوع</th>
-                  <th className="p-2 text-right">المبلغ</th>
-                  <th className="p-2 text-right">المندوب</th>
-                  <th className="p-2 text-right">البراند</th>
-                  <th className="p-2 text-right">الشخص</th>
-                  <th className="p-2 text-right">ملاحظة</th>
+                  <th className="p-2 text-right">{tr("التاريخ")}</th>
+                  <th className="p-2 text-right">{tr("النوع")}</th>
+                  <th className="p-2 text-right">{tr("المبلغ")}</th>
+                  <th className="p-2 text-right">{tr("المندوب")}</th>
+                  <th className="p-2 text-right">{tr("البراند")}</th>
+                  <th className="p-2 text-right">{tr("الشخص")}</th>
+                  <th className="p-2 text-right">{tr("ملاحظة")}</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
@@ -574,12 +575,12 @@ function TreasuryPage() {
                   return (
                     <tr key={r.id} className="border-b last:border-0">
                       <td className="p-2">{r.occurred_at}</td>
-                      <td className="p-2"><span className="inline-flex items-center gap-1"><Icon className="w-3 h-3" /> {isTransfer ? "تحويل بين المحافظ" : TYPE_LABEL[r.type]}</span></td>
+                      <td className="p-2"><span className="inline-flex items-center gap-1"><Icon className="w-3 h-3" /> {isTransfer ? tr("تحويل بين المحافظ") : TYPE_LABEL[r.type]}</span></td>
                       <td className={`p-2 font-semibold ${isTransfer ? "text-amber-500" : (isIn ? "text-emerald-500" : "text-destructive")}`}>{isIn ? "+" : "-"}{fmt(Number(r.amount))}</td>
                       <td className="p-2">{r.courier_id ? couriersMap.get(r.courier_id) ?? "—" : "—"}</td>
                       <td className="p-2">{r.brand_id ? brandsMap.get(r.brand_id) ?? "—" : "—"}</td>
                       <td className="p-2">{r.for_user_id ? (actorNameById.get(r.for_user_id) ?? r.for_user_id.slice(0, 6)) : "—"}</td>
-                      <td className="p-2 text-muted-foreground">{r.note ?? "—"}{isSupplierPay && <span className="ms-1 text-[10px] text-amber-500">(دفعة مورد — تُدار من صفحة دفعات الموردين)</span>}</td>
+                      <td className="p-2 text-muted-foreground">{r.note ?? "—"}{isSupplierPay && <span className="ms-1 text-[10px] text-amber-500">{tr("(دفعة مورد — تُدار من صفحة دفعات الموردين)")}</span>}</td>
                       <td className="p-2">
                         {canWrite && !isSupplierPay && r.type !== "other_out" && !isTransfer && (
                           <div className="flex gap-1">
@@ -588,7 +589,7 @@ function TreasuryPage() {
                               occurred_at: r.occurred_at, brand_id: r.brand_id ?? "",
                               courier_id: r.courier_id ?? "", for_user_id: r.for_user_id ?? "",
                               category_id: r.category_id ?? "", platform: "", attributed_revenue: 0, supplier_id: "", wallet_id: r.wallet_id ?? "", note: r.note ?? "",
-                            })}>تعديل</Button>
+                            })}>{tr("تعديل")}</Button>
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -596,22 +597,22 @@ function TreasuryPage() {
                               </AlertDialogTrigger>
                               <AlertDialogContent dir="rtl">
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>حذف العملية</AlertDialogTitle>
-                                  <AlertDialogDescription>هل أنت متأكد؟ لا يمكن التراجع.</AlertDialogDescription>
+                                  <AlertDialogTitle>{tr("حذف العملية")}</AlertDialogTitle>
+                                  <AlertDialogDescription>{tr("هل أنت متأكد؟ لا يمكن التراجع.")}</AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => delMut.mutate(r.id)}>حذف</AlertDialogAction>
+                                  <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => delMut.mutate(r.id)}>{tr("حذف")}</AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
                           </div>
                         )}
                         {r.type === "other_out" && !isTransfer && (
-                          <span className="text-[10px] text-muted-foreground">تُدار من صفحة المصروفات</span>
+                          <span className="text-[10px] text-muted-foreground">{tr("تُدار من صفحة المصروفات")}</span>
                         )}
                         {isTransfer && (
-                          <span className="text-[10px] text-muted-foreground">تُدار من لوحة المحافظ</span>
+                          <span className="text-[10px] text-muted-foreground">{tr("تُدار من لوحة المحافظ")}</span>
                         )}
                       </td>
                     </tr>

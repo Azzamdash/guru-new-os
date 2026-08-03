@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -37,7 +38,7 @@ export function StockTransfersTab() {
   const submit = useMutation({
     mutationFn: () => transferFn({ data: { fromProductId: fromProduct, toProductId: toProduct, qty, note: note || null } }),
     onSuccess: () => {
-      toast.success("تم تنفيذ النقل");
+      toast.success(tr("تم تنفيذ النقل"));
       setFromProduct(""); setToProduct(""); setQty(1); setNote("");
       qc.invalidateQueries({ queryKey: ["inventory-mgmt"] });
       qc.invalidateQueries({ queryKey: ["products"] });
@@ -53,43 +54,43 @@ export function StockTransfersTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">نقل المخزون</h2>
-        <p className="text-muted-foreground text-sm mt-1">نقل كمية من منتج لمنتج تاني — بين براندين مختلفين أو بين فرعين لنفس البراند.</p>
+        <h2 className="text-2xl font-bold">{tr("نقل المخزون")}</h2>
+        <p className="text-muted-foreground text-sm mt-1">{tr("نقل كمية من منتج لمنتج تاني — بين براندين مختلفين أو بين فرعين لنفس البراند.")}</p>
       </div>
 
       <Card className="p-5 space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-3 p-3 rounded-md border border-border/50">
-            <div className="text-sm font-semibold">من (المصدر)</div>
+            <div className="text-sm font-semibold">{tr("من (المصدر)")}</div>
             <div>
-              <Label>البراند</Label>
+              <Label>{tr("البراند")}</Label>
               <Select value={fromBrand} onValueChange={(v) => { setFromBrand(v); setFromProduct(""); }}>
-                <SelectTrigger><SelectValue placeholder="اختر البراند" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر البراند")} /></SelectTrigger>
                 <SelectContent>{brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <Label>المنتج</Label>
+              <Label>{tr("المنتج")}</Label>
               <Select value={fromProduct} onValueChange={setFromProduct} disabled={!fromBrand}>
-                <SelectTrigger><SelectValue placeholder="اختر المنتج" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر المنتج")} /></SelectTrigger>
                 <SelectContent>{fromProducts.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ""}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-3 p-3 rounded-md border border-border/50">
-            <div className="text-sm font-semibold">إلى (الوجهة)</div>
+            <div className="text-sm font-semibold">{tr("إلى (الوجهة)")}</div>
             <div>
-              <Label>البراند</Label>
+              <Label>{tr("البراند")}</Label>
               <Select value={toBrand} onValueChange={(v) => { setToBrand(v); setToProduct(""); }}>
-                <SelectTrigger><SelectValue placeholder="اختر البراند" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر البراند")} /></SelectTrigger>
                 <SelectContent>{brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <Label>المنتج المقابل</Label>
+              <Label>{tr("المنتج المقابل")}</Label>
               <Select value={toProduct} onValueChange={setToProduct} disabled={!toBrand}>
-                <SelectTrigger><SelectValue placeholder="اختر المنتج" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر المنتج")} /></SelectTrigger>
                 <SelectContent>{toProducts.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} {p.sku ? `(${p.sku})` : ""}</SelectItem>)}</SelectContent>
               </Select>
             </div>
@@ -97,28 +98,28 @@ export function StockTransfersTab() {
         </div>
 
         <div className="grid md:grid-cols-[160px_1fr_auto] gap-3 items-end">
-          <div><Label>الكمية</Label><Input type="number" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} /></div>
-          <div><Label>ملاحظة (اختياري)</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
+          <div><Label>{tr("الكمية")}</Label><Input type="number" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} /></div>
+          <div><Label>{tr("ملاحظة (اختياري)")}</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
           <Button onClick={() => submit.mutate()} disabled={!canSubmit || submit.isPending} className="gap-2">
-            <ArrowLeftRight className="w-4 h-4" /> تنفيذ النقل
+            <ArrowLeftRight className="w-4 h-4" /> {tr("تنفيذ النقل")}
           </Button>
         </div>
         {fromProduct && fromProduct === toProduct && (
-          <p className="text-xs text-destructive">المصدر والوجهة لازم يكونوا منتجين مختلفين.</p>
+          <p className="text-xs text-destructive">{tr("المصدر والوجهة لازم يكونوا منتجين مختلفين.")}</p>
         )}
       </Card>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">آخر عمليات النقل</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("آخر عمليات النقل")}</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-muted-foreground text-right border-b border-border">
-                <th className="p-3">التاريخ</th>
-                <th className="p-3">من</th>
-                <th className="p-3">إلى</th>
-                <th className="p-3 text-left">الكمية</th>
-                <th className="p-3">ملاحظة</th>
+                <th className="p-3">{tr("التاريخ")}</th>
+                <th className="p-3">{tr("من")}</th>
+                <th className="p-3">{tr("إلى")}</th>
+                <th className="p-3 text-left">{tr("الكمية")}</th>
+                <th className="p-3">{tr("ملاحظة")}</th>
               </tr>
             </thead>
             <tbody>
@@ -132,7 +133,7 @@ export function StockTransfersTab() {
                 </tr>
               ))}
               {(transfersQ.data ?? []).length === 0 && (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا عمليات نقل مسجّلة بعد.</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{tr("لا عمليات نقل مسجّلة بعد.")}</td></tr>
               )}
             </tbody>
           </table>
