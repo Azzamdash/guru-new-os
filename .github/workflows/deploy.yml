@@ -1,5 +1,4 @@
 name: Deploy to Servers
-
 on:
   workflow_run:
     workflows: ["Build & Push Image"]
@@ -16,7 +15,7 @@ on:
         type: string
 
 jobs:
-   check:
+  check:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
@@ -70,27 +69,26 @@ jobs:
       SSH_USER: ${{ secrets.SSH_USERNAME }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Add host key
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "$TARGET_IP" >> ~/.ssh/known_hosts
-
       - name: Sync compose files
         run: |
           ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/app"
           scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/app/"
-
+      - name: Lowercase repository name
+        id: repo
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
       - name: Write env and deploy
         run: |
           ssh "$SSH_USER@$TARGET_IP" bash -s -- <<EOF
             set -e
             cat > /opt/app/.env <<ENV
-            GITHUB_REPOSITORY=${{ github.repository }}
+            GITHUB_REPOSITORY=${{ steps.repo.outputs.repo }}
             VERSION=$VERSION
             DOMAIN=${{ secrets.DOMAIN }}
             SUPABASE_SERVICE_ROLE=${{ secrets.SUPABASE_SERVICE_ROLE }}
