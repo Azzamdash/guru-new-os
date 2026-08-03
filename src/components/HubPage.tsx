@@ -35,9 +35,7 @@ export function HubPage({ hub, ctx }: { hub: HubKey; ctx: RoleCtx }) {
             <HubIcon className="w-7 h-7 text-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">
-              {lang === "ar" ? meta.ar : meta.en}
-            </h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">{meta.en}</h1>
             <p className="text-sm text-muted-foreground">
               {lang === "ar" ? meta.descAr : meta.descEn}
             </p>
