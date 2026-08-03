@@ -45,7 +45,8 @@ export type HubKey =
   | "services"
   | "investors"
   | "hr"
-  | "settings";
+  | "settings"
+  | "fulfillment";
 
 export type NavPage = {
   to: string;
@@ -187,6 +188,16 @@ export const HUBS: Hub[] = [
     group: "operations",
     descAr: "لوحة براندات الخدمات: مشاريع، مهام، ملفات، تقويم",
     descEn: "Projects, tasks, files, calendar & KPIs",
+  },
+  {
+    key: "fulfillment",
+    ar: "Fulfillment",
+    en: "Fulfillment",
+    icon: Truck,
+    accent: "from-orange-500/40 to-red-500/20",
+    group: "operations",
+    descAr: "أداء شركات الشحن وتقارير التنفيذ",
+    descEn: "Courier performance & fulfillment reports",
   },
 
   {
@@ -385,7 +396,7 @@ export const NAV_PAGES: NavPage[] = [
     ar: "كشوف تحصيل الشحن",
     en: "Courier Settlements",
     icon: HandCoins,
-    hub: "sales",
+    hub: "invoicing",
     requiresWrite: true,
     extraRoles: ["operation_manager"],
     descAr: "رفع كشوف شركات الشحن ومطابقة التحصيل",
@@ -396,7 +407,7 @@ export const NAV_PAGES: NavPage[] = [
     ar: "قوالب واتساب",
     en: "WhatsApp Templates",
     icon: Megaphone,
-    hub: "sales",
+    hub: "settings",
     requiresWrite: true,
     extraRoles: ["customer_service", "operation_manager"],
     descAr: "قوالب الرسائل التلقائية لأحداث الأوردر",
@@ -407,7 +418,7 @@ export const NAV_PAGES: NavPage[] = [
     ar: "إعدادات واتساب",
     en: "WhatsApp Settings",
     icon: Plug,
-    hub: "sales",
+    hub: "settings",
     requiresWrite: true,
     descAr: "مفاتيح WhatsApp Cloud API وحالة الاتصال والـ Webhook",
     descEn: "WhatsApp Cloud API keys, connection status and webhook",
@@ -750,13 +761,11 @@ export const NAV_PAGES: NavPage[] = [
     ar: "لوحة شركات الشحن",
     en: "Couriers Dashboard",
     icon: Truck,
-    hub: "overview",
-    alsoInHubs: ["sales"],
+    hub: "fulfillment",
     section: "couriers",
     privilegedOnly: true,
     descAr: "أداء شركات الشحن",
     descEn: "Couriers performance",
-    group: "audit",
   },
   {
     to: "/reports/revenue-comparison",
@@ -774,12 +783,11 @@ export const NAV_PAGES: NavPage[] = [
     ar: "تقارير Fulfillment",
     en: "Fulfillment Reports",
     icon: PackageCheck,
-    hub: "overview",
+    hub: "fulfillment",
     section: "reports_fulfillment",
     privilegedOnly: true,
     descAr: "أداء التنفيذ والتسليم",
     descEn: "Fulfilment perf.",
-    group: "audit",
   },
   {
     to: "/reports/shopify",

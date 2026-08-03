@@ -154,9 +154,10 @@ describe("nav-registry: main sections", () => {
 });
 
 describe("nav-registry: orders and tasks placement", () => {
-  it("shows the couriers dashboard in both CEO Dashboard and Orders", () => {
-    expect(pagesForHub("overview").some((page) => page.to === "/reports/couriers")).toBe(true);
-    expect(pagesForHub("sales").some((page) => page.to === "/reports/couriers")).toBe(true);
+  it("shows the couriers dashboard only in the Fulfillment hub", () => {
+    expect(pagesForHub("fulfillment").some((page) => page.to === "/reports/couriers")).toBe(true);
+    expect(pagesForHub("overview").some((page) => page.to === "/reports/couriers")).toBe(false);
+    expect(pagesForHub("sales").some((page) => page.to === "/reports/couriers")).toBe(false);
   });
 
   it("moves fulfillment from Orders to Tasks & Missions", () => {

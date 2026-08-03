@@ -9,7 +9,7 @@ import { getMyAccess } from "@/lib/permissions.functions";
 
 const HUB_KEYS: HubKey[] = [
   "overview", "missions", "sales", "invoicing", "catalog", "offline", "inventory", "services",
-  "investors", "hr", "settings",
+  "investors", "hr", "settings", "fulfillment",
 ];
 
 export const Route = createFileRoute("/_authenticated/_app/hub/$hub")({
