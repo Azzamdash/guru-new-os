@@ -318,8 +318,22 @@ const DICT: Dict = {
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof typeof DICT | string) => string; toggle: () => void };
 const LangCtx = createContext<Ctx | null>(null);
 
+/**
+ * Current language, mirrored at module scope so `tr()` can translate inline
+ * Arabic UI copy without every component needing the hook.
+ */
+let currentLang: Lang = "ar";
+
+/** Translate an inline Arabic UI string to English when the app is in English. */
+export function tr(ar: string): string {
+  if (currentLang !== "en") return ar;
+  return AR_EN[ar] ?? ar;
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("ar");
+  currentLang = lang;
+
 
   useEffect(() => {
     try {
