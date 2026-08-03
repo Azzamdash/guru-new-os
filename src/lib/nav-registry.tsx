@@ -161,7 +161,7 @@ export const HUBS: Hub[] = [
   },
   {
     key: "offline",
-    ar: "الفروع الأوفلاين",
+    ar: "Offline Stores",
     en: "Offline Stores",
     icon: Store,
     accent: "from-sky-500/40 to-cyan-500/20",
@@ -181,7 +181,7 @@ export const HUBS: Hub[] = [
   },
   {
     key: "services",
-    ar: "براندات الخدمات",
+    ar: "Services Brands",
     en: "Services Brands",
     icon: Briefcase,
     accent: "from-primary/40 to-emerald-500/20",
