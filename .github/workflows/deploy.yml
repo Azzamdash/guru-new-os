@@ -1,4 +1,4 @@
-name: Deploy to Servers
+name: Deploy to Server
 on:
   workflow_run:
     workflows: ["Build & Push Image"]
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       target_ip:
-        description: 'Single target IP (overrides SERVER_IPS)'
+        description: 'Override target IP'
         required: false
         type: string
       release_version:
@@ -20,26 +20,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.gate.outputs.should_deploy }}
-      servers: ${{ steps.gate.outputs.servers }}
+      target_ip: ${{ steps.gate.outputs.target_ip }}
       version: ${{ steps.gate2.outputs.version }}
     steps:
-      - name: Resolve targets
+      - name: Resolve target
         id: gate
         env:
-          SERVER_IPS: ${{ secrets.SERVER_IPS }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
           MANUAL_IP: ${{ inputs.target_ip }}
         run: |
-          if [[ -n "$MANUAL_IP" ]]; then
-            echo "servers=[\"$MANUAL_IP\"]" >> "$GITHUB_OUTPUT"
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-          elif [[ -n "$SERVER_IPS" ]]; then
-            JSON=$(echo "$SERVER_IPS" | tr ',' '\n' | sed '/^$/d' | jq -R . | jq -sc .)
-            echo "servers=$JSON" >> "$GITHUB_OUTPUT"
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "No SERVER_IPS secret configured — skipping deploy."
-            echo "servers=[]" >> "$GITHUB_OUTPUT"
+          IP="${MANUAL_IP:-$SERVER_IP}"
+          if [[ -z "$IP" ]]; then
+            echo "No SERVER_IP secret configured and no target_ip provided — skipping deploy."
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "target_ip=$IP" >> "$GITHUB_OUTPUT"
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Determine version
         id: ver
@@ -59,30 +55,31 @@ jobs:
     needs: check
     if: needs.check.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target_ip: ${{ fromJson(needs.check.outputs.servers) }}
-      fail-fast: false
     env:
       VERSION: ${{ needs.check.outputs.version }}
-      TARGET_IP: ${{ matrix.target_ip }}
+      TARGET_IP: ${{ needs.check.outputs.target_ip }}
       SSH_USER: ${{ secrets.SSH_USERNAME }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Add host key
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "$TARGET_IP" >> ~/.ssh/known_hosts
+
       - name: Sync compose files
         run: |
           ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/app"
           scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/app/"
+
       - name: Lowercase repository name
         id: repo
         run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
       - name: Write env and deploy
         run: |
           ssh "$SSH_USER@$TARGET_IP" bash -s -- <<EOF
