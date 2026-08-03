@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ import { RefreshCw, ShoppingBag, DollarSign, PackageCheck } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/shopify")({
-  head: () => ({ meta: [{ title: "تقارير Shopify — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("تقارير Shopify — e-GURUS") }] }),
   component: ShopifyReportPage,
 });
 

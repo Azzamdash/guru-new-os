@@ -11,12 +11,12 @@ import { usePersistedPeriod } from "@/lib/global-period";
 import { ReportActions } from "@/components/ReportActions";
 import { EmptyState } from "@/components/EmptyState";
 import { PiggyBank, DollarSign, Receipt, TrendingUp } from "lucide-react";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/profits")({
   head: () => ({
     meta: [
-      { title: "تقرير الأرباح — e-GURUS" },
+      { title: tr("تقرير الأرباح — e-GURUS") },
       { name: "description", content: "الأرباح لكل براند = الإيرادات − تكلفة البضاعة − المصاريف (مرتبات، إعلانات، تشغيل…)." },
       { name: "robots", content: "noindex, nofollow" },
     ],

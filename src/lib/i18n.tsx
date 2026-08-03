@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { AR_EN } from "./i18n-ar-en";
+
 
 export type Lang = "ar" | "en";
 
@@ -27,7 +29,7 @@ const DICT: Dict = {
   nav_couriers: { ar: "الشحن والمناديب", en: "Shipping & Couriers" },
   nav_tasks: { ar: "المهام", en: "Tasks" },
   nav_invoices_dashboard: { ar: "داش بورد الفواتير", en: "Invoices Dashboard" },
-  nav_services: { ar: "براندات الخدمات", en: "Service Brands" },
+  nav_services: { ar: "Services Brands", en: "Services Brands" },
   nav_reports_sales: { ar: "تقارير الأوردرات", en: "Orders Reports" },
   nav_reports_marketing: { ar: "تقارير التسويق", en: "Marketing Reports" },
   nav_reports_production: { ar: "تقارير الإنتاج", en: "Production Reports" },
@@ -316,8 +318,22 @@ const DICT: Dict = {
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof typeof DICT | string) => string; toggle: () => void };
 const LangCtx = createContext<Ctx | null>(null);
 
+/**
+ * Current language, mirrored at module scope so `tr()` can translate inline
+ * Arabic UI copy without every component needing the hook.
+ */
+let currentLang: Lang = "ar";
+
+/** Translate an inline Arabic UI string to English when the app is in English. */
+export function tr(ar: string): string {
+  if (currentLang !== "en") return ar;
+  return AR_EN[ar] ?? ar;
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("ar");
+  currentLang = lang;
+
 
   useEffect(() => {
     try {

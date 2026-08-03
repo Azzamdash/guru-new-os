@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/_app/investors")({
   component: InvestorsPage,
   head: () => ({
     meta: [
-      { title: "المستثمرون | e-GURUS" },
+      { title: tr("المستثمرون | e-GURUS") },
       { name: "description", content: "إدارة المستثمرين ونسبهم في البراندات" },
       { name: "robots", content: "noindex, nofollow" },
     ],

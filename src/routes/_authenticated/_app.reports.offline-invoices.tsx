@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";

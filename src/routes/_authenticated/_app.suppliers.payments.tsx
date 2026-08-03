@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

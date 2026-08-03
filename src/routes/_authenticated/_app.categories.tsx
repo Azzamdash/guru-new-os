@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -16,7 +17,7 @@ import { Plus, Trash2, Lock, Pencil } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/categories")({
-  head: () => ({ meta: [{ title: "بنود المصروفات — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("بنود المصروفات — e-GURUS") }] }),
   component: CategoriesPage,
 });
 

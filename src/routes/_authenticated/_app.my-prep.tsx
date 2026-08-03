@@ -5,12 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Activity, ChevronRight, ChevronLeft, AlertTriangle } from "lucide-react";
 import { getMyPrepPipeline, updateInvoiceStage, STAGES, type Stage } from "@/lib/operations.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/my-prep")({
   head: () => ({ meta: [
-    { title: "أوردراتي — تحضير — e-GURUS" },
+    { title: tr("أوردراتي — تحضير — e-GURUS") },
     { name: "description", content: "الأوردرات المُسندة إليّ فقط عبر خط تجهيز الأوردرات." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -58,16 +58,16 @@ function MyPrepPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Activity className="w-7 h-7 text-primary" /> {AR ? "أوردراتي — التحضير" : "My prep orders"}
+          <Activity className="w-7 h-7 text-primary" /> {AR ? tr("أوردراتي — التحضير") : "My prep orders"}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {AR ? "الأوردرات المُسندة إليك فقط. حرّك كل أوردر بين المراحل حتى التسليم." : "Only orders assigned to you. Move each order through the stages."}
+          {AR ? tr("الأوردرات المُسندة إليك فقط. حرّك كل أوردر بين المراحل حتى التسليم.") : "Only orders assigned to you. Move each order through the stages."}
         </p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi label={AR ? "المُسند إليّ" : "Assigned to me"} value={String(d?.kpis.totalAssigned ?? 0)} />
-        <Kpi label={AR ? "متأخر عن الـ SLA" : "SLA breached"} value={String(d?.kpis.breachedCount ?? 0)} tone="danger" />
+        <Kpi label={AR ? tr("المُسند إليّ") : "Assigned to me"} value={String(d?.kpis.totalAssigned ?? 0)} />
+        <Kpi label={AR ? tr("متأخر عن الـ SLA") : "SLA breached"} value={String(d?.kpis.breachedCount ?? 0)} tone="danger" />
       </div>
 
       <Card className="card-gradient p-5">
@@ -80,7 +80,7 @@ function MyPrepPage() {
               </div>
               <div className="text-[11px] text-muted-foreground mb-3">
                 {col.slaHours !== null ? `SLA: ${col.slaHours < 1 ? `${col.slaHours * 60}m` : `${col.slaHours}h`}` : "—"}
-                {col.breached > 0 && <span className="text-destructive font-semibold ms-2">· {col.breached} {AR ? "متأخر" : "late"}</span>}
+                {col.breached > 0 && <span className="text-destructive font-semibold ms-2">· {col.breached} {AR ? tr("متأخر") : "late"}</span>}
               </div>
               <div className="flex-1 space-y-1.5">
                 {col.items.map((it) => (
@@ -97,14 +97,14 @@ function MyPrepPage() {
                       {prevStage(col.stage as Stage) && (
                         <Button size="icon" variant="ghost" className="h-6 w-6"
                           onClick={() => advance.mutate({ id: it.id, stage: prevStage(col.stage as Stage)! })}
-                          title={AR ? "رجوع" : "Back"}>
+                          title={AR ? tr("رجوع") : "Back"}>
                           <PrevIcon className="w-3.5 h-3.5" />
                         </Button>
                       )}
                       {nextStage(col.stage as Stage) && (
                         <Button size="icon" variant="ghost" className="h-6 w-6"
                           onClick={() => advance.mutate({ id: it.id, stage: nextStage(col.stage as Stage)! })}
-                          title={AR ? "التالي" : "Next"}>
+                          title={AR ? tr("التالي") : "Next"}>
                           <NextIcon className="w-3.5 h-3.5" />
                         </Button>
                       )}
@@ -119,7 +119,7 @@ function MyPrepPage() {
         {(d?.kpis.totalAssigned ?? 0) === 0 && (
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            {AR ? "لا توجد أوردرات مُسندة إليك حاليًا." : "No orders assigned to you right now."}
+            {AR ? tr("لا توجد أوردرات مُسندة إليك حاليًا.") : "No orders assigned to you right now."}
           </div>
         )}
       </Card>

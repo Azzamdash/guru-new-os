@@ -27,6 +27,7 @@ function NotFoundComponent() {
         <div className="mt-6">
           <Link
             to="/"
+            search={{ next: "" }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Go home
@@ -104,7 +105,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
       },
-      { rel: "icon", href: "/favicon-egurus.png", type: "image/png" },
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", href: "/favicon-egurus.png", type: "image/png", sizes: "512x512" },
+      { rel: "shortcut icon", href: "/favicon-egurus.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/favicon-egurus.png" },
     ],
   }),

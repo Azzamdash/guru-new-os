@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -29,7 +30,7 @@ import {
 import { Plus, Trash2, Lock, Pencil, Layers } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/brands")({
-  head: () => ({ meta: [{ title: "البراندات — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("البراندات — e-GURUS") }] }),
   component: BrandsPage,
 });
 

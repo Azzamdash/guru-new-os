@@ -57,7 +57,7 @@ import {
   attachBostaTracking,
 } from "@/lib/integrations.functions";
 import { listBrands, listProducts, listCouriers } from "@/lib/internal.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { toast } from "sonner";
 import { PaginationBar } from "@/components/PaginationBar";
 import { TableSkeleton } from "@/components/TableSkeleton";
@@ -1811,7 +1811,7 @@ function DispatchDialog(props: {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{AR ? "اختر شركة شحن أو مندوب" : "Choose courier / rep"}</DialogTitle>
+          <DialogTitle>{AR ? tr("اختر شركة شحن أو مندوب") : "Choose courier / rep"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="text-xs text-muted-foreground">
@@ -1844,7 +1844,7 @@ function DispatchDialog(props: {
                     </Badge>
                     {isRec && (
                       <Badge className="text-[10px] bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
-                        {AR ? "الموصى به" : "Recommended"}
+                        {AR ? tr("الموصى به") : "Recommended"}
                       </Badge>
                     )}
                   </div>

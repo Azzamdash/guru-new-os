@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/_app/my-investments")({
   component: MyInvestments,
   head: () => ({
     meta: [
-      { title: "استثماراتي | e-GURUS" },
+      { title: tr("استثماراتي | e-GURUS") },
       { name: "description", content: "نصيبك من أرباح البراندات المستثمر فيها" },
       { name: "robots", content: "noindex, nofollow" },
     ],

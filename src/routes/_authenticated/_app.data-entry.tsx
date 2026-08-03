@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +22,7 @@ import { Save, Lock } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/data-entry")({
-  head: () => ({ meta: [{ title: "إدخال البيانات — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("إدخال البيانات — e-GURUS") }] }),
   component: DataEntryPage,
 });
 

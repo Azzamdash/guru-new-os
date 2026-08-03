@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,7 +15,7 @@ import { useLang } from "@/lib/i18n";
 export const Route = createFileRoute("/_authenticated/_app/reports/valuation")({
   head: () => ({
     meta: [
-      { title: "تقييم الشركات — e-GURUS" },
+      { title: tr("تقييم الشركات — e-GURUS") },
       { name: "description", content: "تقييم كل براند بناءً على إيرادات آخر ١٢ شهر والأصول." },
     ],
   }),

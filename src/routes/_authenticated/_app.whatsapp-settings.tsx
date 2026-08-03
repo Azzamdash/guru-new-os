@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -19,7 +20,7 @@ import {
 export const Route = createFileRoute("/_authenticated/_app/whatsapp-settings")({
   head: () => ({
     meta: [
-      { title: "إعدادات واتساب — e-GURUS" },
+      { title: tr("إعدادات واتساب — e-GURUS") },
       {
         name: "description",
         content: "إدارة مفاتيح WhatsApp Cloud API وحالة الاتصال و Webhook الخاص بمركز الأوردرات.",

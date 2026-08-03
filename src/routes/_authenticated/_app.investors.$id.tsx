@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/_app/investors/$id")({
   component: InvestorDashboard,
   head: () => ({
     meta: [
-      { title: "داش بورد المستثمر | e-GURUS" },
+      { title: tr("داش بورد المستثمر | e-GURUS") },
       { name: "description", content: "نصيب المستثمر من أرباح البراندات" },
       { name: "robots", content: "noindex, nofollow" },
     ],

@@ -21,11 +21,11 @@ import {
   minRequestDate, type EmployeeRequest,
 } from "@/lib/hr.functions";
 import { getMyRole, listUsers } from "@/lib/admin.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/hr/requests")({
   head: () => ({ meta: [
-    { title: "طلبات الموظفين — e-GURUS" },
+    { title: tr("طلبات الموظفين — e-GURUS") },
     { name: "description", content: "طلبات الإجازة والسلفة ومراجعتها من HR." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -74,11 +74,11 @@ function RequestsPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <CalendarDays className="w-7 h-7 text-primary" />
-            {T("طلبات الإجازة والسلفة", "Leave & Advance Requests")}
+            {T(tr("طلبات الإجازة والسلفة"), "Leave & Advance Requests")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             {T(
-              "قدّم طلب إجازة أو سلفة. لازم التاريخ بعد يومين على الأقل من تاريخ اليوم.",
+              tr("قدّم طلب إجازة أو سلفة. لازم التاريخ بعد يومين على الأقل من تاريخ اليوم."),
               "Submit a leave or salary-advance request. Date must be at least 2 days from today.",
             )}
           </p>
@@ -87,16 +87,16 @@ function RequestsPage() {
       </div>
 
       <Card className="card-gradient p-4 md:p-5 space-y-3">
-        <h3 className="font-semibold">{T("طلباتي", "My requests")}</h3>
+        <h3 className="font-semibold">{T(tr("طلباتي"), "My requests")}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-right text-muted-foreground">
-                <th className="p-2">{T("النوع", "Type")}</th>
-                <th className="p-2">{T("التاريخ", "Date")}</th>
-                <th className="p-2">{T("المبلغ", "Amount")}</th>
-                <th className="p-2">{T("ملاحظة", "Note")}</th>
-                <th className="p-2">{T("الحالة", "Status")}</th>
+                <th className="p-2">{T(tr("النوع"), "Type")}</th>
+                <th className="p-2">{T(tr("التاريخ"), "Date")}</th>
+                <th className="p-2">{T(tr("المبلغ"), "Amount")}</th>
+                <th className="p-2">{T(tr("ملاحظة"), "Note")}</th>
+                <th className="p-2">{T(tr("الحالة"), "Status")}</th>
                 <th className="p-2"></th>
               </tr>
             </thead>
@@ -110,7 +110,7 @@ function RequestsPage() {
                   <td className="p-2"><Badge className={statusColor(r.status)} variant="secondary">{statusLabel(r.status)}</Badge></td>
                   <td className="p-2 text-end">
                     {r.status === "pending" && (
-                      <Button size="icon" variant="ghost" onClick={() => { if (confirm(T("إلغاء الطلب؟","Cancel this request?"))) cancelMut.mutate(r.id); }}>
+                      <Button size="icon" variant="ghost" onClick={() => { if (confirm(T(tr("إلغاء الطلب؟"),"Cancel this request?"))) cancelMut.mutate(r.id); }}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     )}
@@ -118,7 +118,7 @@ function RequestsPage() {
                 </tr>
               ))}
               {(mineQ.data ?? []).length === 0 && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{T("لا توجد طلبات.", "No requests.")}</td></tr>
+                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{T(tr("لا توجد طلبات."), "No requests.")}</td></tr>
               )}
             </tbody>
           </table>
@@ -127,17 +127,17 @@ function RequestsPage() {
 
       {isHR && (
         <Card className="card-gradient p-4 md:p-5 space-y-3">
-          <h3 className="font-semibold">{T("جميع الطلبات (HR/المدير)", "All requests (HR / Manager)")}</h3>
+          <h3 className="font-semibold">{T(tr("جميع الطلبات (HR/المدير)"), "All requests (HR / Manager)")}</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-right text-muted-foreground">
-                  <th className="p-2">{T("الموظف", "Employee")}</th>
-                  <th className="p-2">{T("النوع", "Type")}</th>
-                  <th className="p-2">{T("التاريخ", "Date")}</th>
-                  <th className="p-2">{T("المبلغ", "Amount")}</th>
-                  <th className="p-2">{T("ملاحظة", "Note")}</th>
-                  <th className="p-2">{T("الحالة", "Status")}</th>
+                  <th className="p-2">{T(tr("الموظف"), "Employee")}</th>
+                  <th className="p-2">{T(tr("النوع"), "Type")}</th>
+                  <th className="p-2">{T(tr("التاريخ"), "Date")}</th>
+                  <th className="p-2">{T(tr("المبلغ"), "Amount")}</th>
+                  <th className="p-2">{T(tr("ملاحظة"), "Note")}</th>
+                  <th className="p-2">{T(tr("الحالة"), "Status")}</th>
                   <th className="p-2 text-end"></th>
                 </tr>
               </thead>
@@ -160,7 +160,7 @@ function RequestsPage() {
                   </tr>
                 ))}
                 {(allQ.data ?? []).length === 0 && (
-                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{T("لا توجد طلبات.", "No requests.")}</td></tr>
+                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{T(tr("لا توجد طلبات."), "No requests.")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -188,50 +188,50 @@ function RequestDialog() {
       amount: type === "advance" ? Number(amount || 0) : null,
       note: note || null,
     }}),
-    onSuccess: () => { toast.success(T("تم إرسال الطلب","Request submitted")); qc.invalidateQueries({ queryKey: ["hr-my-requests"] }); qc.invalidateQueries({ queryKey: ["hr-all-requests"] }); setOpen(false); },
+    onSuccess: () => { toast.success(T(tr("تم إرسال الطلب"),"Request submitted")); qc.invalidateQueries({ queryKey: ["hr-my-requests"] }); qc.invalidateQueries({ queryKey: ["hr-all-requests"] }); setOpen(false); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button><Plus className="w-4 h-4 me-2" />{T("طلب جديد","New request")}</Button>
+        <Button><Plus className="w-4 h-4 me-2" />{T(tr("طلب جديد"),"New request")}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>{T("طلب إجازة أو سلفة","Leave or advance request")}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{T(tr("طلب إجازة أو سلفة"),"Leave or advance request")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>{T("النوع","Type")}</Label>
+            <Label>{T(tr("النوع"),"Type")}</Label>
             <Select value={type} onValueChange={(v) => setType(v as "leave" | "advance")}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="leave">{T("إجازة","Leave")}</SelectItem>
-                <SelectItem value="advance">{T("سلفة","Salary advance")}</SelectItem>
+                <SelectItem value="leave">{T(tr("إجازة"),"Leave")}</SelectItem>
+                <SelectItem value="advance">{T(tr("سلفة"),"Salary advance")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>{T("التاريخ (يومين على الأقل من اليوم)","Date (min 2 days from today)")}</Label>
+            <Label>{T(tr("التاريخ (يومين على الأقل من اليوم)"),"Date (min 2 days from today)")}</Label>
             <Input type="date" min={min} value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           {type === "advance" && (
             <div>
-              <Label>{T("المبلغ","Amount")}</Label>
+              <Label>{T(tr("المبلغ"),"Amount")}</Label>
               <Input type="number" min={0} value={amount} onChange={(e) => setAmount(e.target.value)} />
             </div>
           )}
           <div>
-            <Label>{T("ملاحظة","Note")}</Label>
+            <Label>{T(tr("ملاحظة"),"Note")}</Label>
             <Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>{T("إلغاء","Cancel")}</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>{T(tr("إلغاء"),"Cancel")}</Button>
           <Button
             onClick={() => mut.mutate()}
             disabled={mut.isPending || !date || (type === "advance" && !amount)}
           >
-            {T("إرسال","Submit")}
+            {T(tr("إرسال"),"Submit")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -249,31 +249,31 @@ function ReviewDialog({ req }: { req: EmployeeRequest }) {
   const reviewFn = useServerFn(reviewRequest);
   const mut = useMutation({
     mutationFn: () => reviewFn({ data: { id: req.id, status: action, proof_url: null, review_note: note || null } }),
-    onSuccess: () => { toast.success(T("تم","Done")); qc.invalidateQueries({ queryKey: ["hr-all-requests"] }); qc.invalidateQueries({ queryKey: ["hr-my-requests"] }); setOpen(false); },
+    onSuccess: () => { toast.success(T(tr("تم"),"Done")); qc.invalidateQueries({ queryKey: ["hr-all-requests"] }); qc.invalidateQueries({ queryKey: ["hr-my-requests"] }); setOpen(false); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">{T("مراجعة","Review")}</Button>
+        <Button size="sm" variant="outline">{T(tr("مراجعة"),"Review")}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>{T("مراجعة الطلب","Review request")}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{T(tr("مراجعة الطلب"),"Review request")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div className="flex gap-2">
-            <Button variant={action === "approved" ? "default" : "outline"} onClick={() => setAction("approved")} className="flex-1"><Check className="w-4 h-4 me-1" />{T("قبول","Approve")}</Button>
-            <Button variant={action === "rejected" ? "default" : "outline"} onClick={() => setAction("rejected")} className="flex-1"><XIcon className="w-4 h-4 me-1" />{T("رفض","Reject")}</Button>
+            <Button variant={action === "approved" ? "default" : "outline"} onClick={() => setAction("approved")} className="flex-1"><Check className="w-4 h-4 me-1" />{T(tr("قبول"),"Approve")}</Button>
+            <Button variant={action === "rejected" ? "default" : "outline"} onClick={() => setAction("rejected")} className="flex-1"><XIcon className="w-4 h-4 me-1" />{T(tr("رفض"),"Reject")}</Button>
           </div>
           <div>
-            <Label>{T("ملاحظة المراجعة","Review note")}</Label>
+            <Label>{T(tr("ملاحظة المراجعة"),"Review note")}</Label>
             <Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>{T("إلغاء","Cancel")}</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>{T(tr("إلغاء"),"Cancel")}</Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
-            {T("حفظ","Save")}
+            {T(tr("حفظ"),"Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

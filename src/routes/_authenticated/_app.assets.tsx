@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ import { useLang } from "@/lib/i18n";
 export const Route = createFileRoute("/_authenticated/_app/assets")({
   head: () => ({
     meta: [
-      { title: "أصول الشركة — e-GURUS" },
+      { title: tr("أصول الشركة — e-GURUS") },
       { name: "description", content: "إدارة أصول الشركة والاهلاك السنوي لكل براند." },
     ],
   }),

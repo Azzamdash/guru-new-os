@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -182,7 +183,7 @@ function WhatsappTemplatesPage() {
           rows={4}
           value={draft.body}
           onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-          placeholder="مرحباً {{customer_name}}، أوردرك رقم {{order_number}} خرج للشحن مع {{courier}} — رقم التتبع {{tracking}}."
+          placeholder={tr("مرحباً {{customer_name}}، أوردرك رقم {{order_number}} خرج للشحن مع {{courier}} — رقم التتبع {{tracking}}.")}
         />
         <div className="text-xs text-muted-foreground">
           {T("المتغيرات المتاحة", "Available variables")}:{" "}

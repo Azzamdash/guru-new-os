@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";

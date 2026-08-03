@@ -9,11 +9,11 @@ import { GitCompareArrows } from "lucide-react";
 import { getInternalDashboard, listExpenseEntries, listBrands } from "@/lib/internal.functions";
 import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/brands-comparison")({
   head: () => ({ meta: [
-    { title: "مقارنة أداء البراندات — e-GURUS" },
+    { title: tr("مقارنة أداء البراندات — e-GURUS") },
     { name: "description", content: "قارن هامش الربح والـ ROAS والقرارات المقترحة لكل براند." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

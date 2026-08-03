@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/_authenticated/_app/admin")({
   component: AdminPage,
   head: () => ({
     meta: [
-      { title: "إدارة المستخدمين | e-GURUS" },
+      { title: tr("إدارة المستخدمين | e-GURUS") },
       { name: "description", content: "لوحة تحكم المشرف لإدارة المستخدمين والأدوار وكلمات المرور" },
       { name: "robots", content: "noindex, nofollow" },
     ],

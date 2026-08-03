@@ -20,14 +20,13 @@ function safeNextPath(value: unknown): string {
 }
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
     next: safeNextPath(s.next),
   }),
 
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — e-GURUS Dashboard" },
+      { title: tr("تسجيل الدخول — e-GURUS Dashboard") },
       {
         name: "description",
         content: "سجّل الدخول لإدارة براندك وعرض لوحة التحكم المالية والتشغيلية.",
