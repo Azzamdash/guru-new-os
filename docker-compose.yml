@@ -1,38 +1,34 @@
 services:
   app:
-    image: ghcr.io/azzamdash/guru-new-os:latest
-#    image: gurunewos:latest
-    container_name: guru-new-os
+    image: ghcr.io/${GITHUB_REPOSITORY}:${VERSION}
+    container_name: app-instance
     restart: always
-    env-file:
-      - /etc/secrets/egurus-os.env
     environment:
-      - PORT=${PORT:-3000}
-      - NODE_ENV=${NODE_ENV:-production}
-      - SUPABASE_SERVICE_ROLE_KEY
+      - SUPABASE_SERVICE_ROLE=${SUPABASE_SERVICE_ROLE}
+    expose:
+      - "3000"
     networks:
-      - app-net
+      - web
 
   caddy:
     image: caddy:2-alpine
-    container_name: caddy-proxy
+    container_name: caddy
     restart: always
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-    depends_on:
-      - app
     networks:
-      - app-net
+      - web
+
+networks:
+  web:
 
 volumes:
   caddy_data:
   caddy_config:
-
-networks:
-  app-net:
-    driver: bridge
