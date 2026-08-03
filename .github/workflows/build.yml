@@ -34,6 +34,10 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Release Version: $VERSION"
 
+      - name: Lowercase repository name
+        id: repo
+        run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -47,8 +51,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ steps.repo.outputs.repo }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
