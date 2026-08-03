@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -43,27 +44,27 @@ export function InventoryDashboardTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">نظرة عامة على المخزون</h2>
-        <p className="text-muted-foreground text-sm mt-1">إجمالي الأصناف وحالتها الحالية عبر كل المنتجات والخامات.</p>
+        <h2 className="text-2xl font-bold">{tr("نظرة عامة على المخزون")}</h2>
+        <p className="text-muted-foreground text-sm mt-1">{tr("إجمالي الأصناف وحالتها الحالية عبر كل المنتجات والخامات.")}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="إجمالي الأصناف (SKUs)" value={nf(items.length)} icon={Boxes} />
-        <Kpi label="متوفر" value={nf(inStock)} icon={PackageCheck} />
-        <Kpi label="وشيك على النفاد" value={nf(lowStock)} icon={AlertTriangle} tone="warn" />
-        <Kpi label="نفدت الكمية" value={nf(outOfStock)} icon={PackageX} tone="danger" />
+        <Kpi label={tr("إجمالي الأصناف (SKUs)")} value={nf(items.length)} icon={Boxes} />
+        <Kpi label={tr("متوفر")} value={nf(inStock)} icon={PackageCheck} />
+        <Kpi label={tr("وشيك على النفاد")} value={nf(lowStock)} icon={AlertTriangle} tone="warn" />
+        <Kpi label={tr("نفدت الكمية")} value={nf(outOfStock)} icon={PackageX} tone="danger" />
       </div>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">مقترح إعادة الطلب</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("مقترح إعادة الطلب")}</div>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground text-right border-b border-border">
-              <th className="p-3">الصنف</th>
-              <th className="p-3">البراند</th>
-              <th className="p-3 text-left">الرصيد الحالي</th>
-              <th className="p-3 text-left">حد إعادة الطلب</th>
-              <th className="p-3 text-left">الكمية المقترحة</th>
+              <th className="p-3">{tr("الصنف")}</th>
+              <th className="p-3">{tr("البراند")}</th>
+              <th className="p-3 text-left">{tr("الرصيد الحالي")}</th>
+              <th className="p-3 text-left">{tr("حد إعادة الطلب")}</th>
+              <th className="p-3 text-left">{tr("الكمية المقترحة")}</th>
             </tr>
           </thead>
           <tbody>
@@ -77,15 +78,14 @@ export function InventoryDashboardTab() {
               </tr>
             ))}
             {suggested.length === 0 && (
-              <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا أصناف محتاجة إعادة طلب حاليًا.</td></tr>
+              <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{tr("لا أصناف محتاجة إعادة طلب حاليًا.")}</td></tr>
             )}
           </tbody>
         </table>
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        الكمية المقترحة هنا تقدير أولي بسيط. لتحليل أدق مبني على معدل الاستهلاك الفعلي وفترة التوريد، راجع تاب "الذكاء".
-      </p>
+        الكمية ال{tr("الكمية المقترحة هنا تقدير أولي بسيط. لتحليل أدق مبني على معدل الاستهلاك الفعلي وفترة التوريد، راجع تاب \"الذكاء\".")}p>
     </div>
   );
 }

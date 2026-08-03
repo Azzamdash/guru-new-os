@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -86,35 +87,32 @@ function CourierSettlementsPage() {
   return (
     <div className="space-y-4 p-4">
       <h1 className="flex items-center gap-2 text-xl font-bold">
-        <Banknote className="h-5 w-5 text-primary" /> كشوف تحصيل شركات الشحن
-      </h1>
+        <Banknote className="h-5 w-5 text-primary" /> ك{tr("كشوف تحصيل شركات الشحن")}      </h1>
 
       <Card className="space-y-3 p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Select value={brandId} onValueChange={setBrandId}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="اختر البراند" /></SelectTrigger>
+            <SelectTrigger className="w-44"><SelectValue placeholder={tr("اختر البراند")} /></SelectTrigger>
             <SelectContent>
               {(brandsQ.data ?? []).map((b: { id: string; name: string }) => (
                 <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="رقم الكشف / المرجع" className="w-56" />
+          <Input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={tr("رقم الكشف / المرجع")} className="w-56" />
           <Button size="sm" disabled={!brandId || !csv.trim() || importM.isPending} onClick={() => importM.mutate()}>
-            <Upload className="ml-1 h-4 w-4" /> رفع ومطابقة
-          </Button>
+            <Upload className="ml-1 h-4 w-4" /> ر{tr("رفع ومطابقة")}          </Button>
         </div>
         <Textarea
           dir="ltr"
           rows={6}
           value={csv}
           onChange={(e) => setCsv(e.target.value)}
-          placeholder={"الصق بنود الكشف: رقم التتبع, المبلغ, رسوم الشحن\n12345678, 850, 60"}
+          placeholder={tr("الصق بنود الكشف: رقم التتبع, المبلغ, رسوم الشحن\n12345678, 850, 60")}
           className="font-mono text-xs"
         />
         <p className="text-xs text-muted-foreground">
-          المطابقة بتتم على رقم تتبع بوسطة أو رقم التتبع اليدوي أو رقم الأوردر. البنود المطابقة فقط هي اللي بتترحّل للتحصيل.
-        </p>
+          المطابقة بت{tr("المطابقة بتتم على رقم تتبع بوسطة أو رقم التتبع اليدوي أو رقم الأوردر. البنود المطابقة فقط هي اللي بتترحّل للتحصيل.")}p>
       </Card>
 
       <div className="space-y-2">
@@ -125,7 +123,7 @@ function CourierSettlementsPage() {
               {s.courier_name && <Badge variant="outline">{s.courier_name}</Badge>}
               <Badge>{s.status === "posted" ? "مُرحّل" : "مسودة"}</Badge>
               <span className="text-sm text-muted-foreground">
-                مطابق {s.matched_lines}/{s.lines} — معلن {money(s.declared_total)} — مطابق {money(s.matched_total)}
+                مطابق {s.matched_{tr("مطابق")}}/{s.lines} —{tr("— معلن")}{money(s.declared_total)} —{tr("— مطابق")}{money(s.matched_total)}
               </span>
               <div className="ms-auto flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => setOpenId(openId === s.id ? null : s.id)}>
@@ -133,7 +131,7 @@ function CourierSettlementsPage() {
                 </Button>
                 <Button size="sm" disabled={s.status === "posted" || postM.isPending} onClick={() => postM.mutate(s.id)}>
                   ترحيل المطابق
-                </Button>
+     {tr("ترحيل المطابق")}Button>
               </div>
             </div>
 
@@ -142,21 +140,21 @@ function CourierSettlementsPage() {
                 <Select value={lineFilter} onValueChange={setLineFilter}>
                   <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">كل البنود</SelectItem>
-                    <SelectItem value="matched">مطابق</SelectItem>
-                    <SelectItem value="amount_mismatch">فرق مبلغ</SelectItem>
-                    <SelectItem value="unmatched">غير مطابق</SelectItem>
+                    <SelectItem value="all">{tr("كل البنود")}</SelectItem>
+                    <SelectItem value="matched">{tr("مطابق")}</SelectItem>
+                    <SelectItem value="amount_mismatch">{tr("فرق مبلغ")}</SelectItem>
+                    <SelectItem value="unmatched">{tr("غير مطابق")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="max-h-96 overflow-auto rounded border">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50 text-xs">
                       <tr>
-                        <th className="p-2 text-right">التتبع</th>
-                        <th className="p-2 text-right">الأوردر</th>
-                        <th className="p-2 text-right">الكشف</th>
-                        <th className="p-2 text-right">النظام</th>
-                        <th className="p-2 text-right">الحالة</th>
+                        <th className="p-2 text-right">{tr("التتبع")}</th>
+                        <th className="p-2 text-right">{tr("الأوردر")}</th>
+                        <th className="p-2 text-right">{tr("الكشف")}</th>
+                        <th className="p-2 text-right">{tr("النظام")}</th>
+                        <th className="p-2 text-right">{tr("الحالة")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -187,7 +185,7 @@ function CourierSettlementsPage() {
           </Card>
         ))}
         {!listQ.isLoading && (listQ.data ?? []).length === 0 && (
-          <Card className="p-6 text-center text-muted-foreground">لا توجد كشوف بعد</Card>
+          <Card className="p-6 text-center text-muted-foreground">{tr("لا توجد كشوف بعد")}</Card>
         )}
       </div>
     </div>

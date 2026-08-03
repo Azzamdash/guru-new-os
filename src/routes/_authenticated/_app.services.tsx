@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -77,8 +78,8 @@ function ServicesPage() {
       <div className="p-6 md:p-8">
         <Card className="p-8 text-center card-gradient">
           <Briefcase className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <h2 className="text-xl font-bold mb-2">لا توجد براندات خدمات</h2>
-          <p className="text-sm text-muted-foreground">أضف براندًا من نوع "خدمات" من صفحة البراندات أولاً.</p>
+          <h2 className="text-xl font-bold mb-2">{tr("لا توجد براندات خدمات")}</h2>
+          <p className="text-sm text-muted-foreground">{tr("أضف براندًا من نوع \"خدمات\" من صفحة البراندات أولاً.")}</p>
         </Card>
       </div>
     );
@@ -91,11 +92,11 @@ function ServicesPage() {
     <div className="p-4 md:p-8 space-y-6 max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Briefcase className="w-7 h-7 text-primary" /> براندات الخدمات</h1>
-          <p className="text-muted-foreground text-sm mt-1">عملاء ومشاريع، بدون موردين أو مخزون.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><Briefcase className="w-7 h-7 text-primary" /> ب{tr("براندات الخدمات")}/h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("عملاء ومشاريع، بدون موردين أو مخزون.")}</p>
         </div>
         <Select value={currentBrand} onValueChange={setBrandId}>
-          <SelectTrigger className="w-56"><SelectValue placeholder="اختر البراند" /></SelectTrigger>
+          <SelectTrigger className="w-56"><SelectValue placeholder={tr("اختر البراند")} /></SelectTrigger>
           <SelectContent>
             {serviceBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
           </SelectContent>
@@ -104,29 +105,29 @@ function ServicesPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard icon={DollarSign} label="الإيرادات" value={fmt(kpis?.totalRevenue ?? 0)} sub={`مشاريع: ${fmt(kpis?.projectsRevenue ?? 0)}`} />
-        <KpiCard icon={TrendingDown} label="المصروفات" value={fmt(kpis?.totalExpenses ?? 0)} tone="danger" />
-        <KpiCard icon={Megaphone} label="التسويق" value={fmt(kpis?.marketing ?? 0)} />
-        <KpiCard icon={Users} label="الرواتب" value={fmt(kpis?.salaries ?? 0)} />
-        <KpiCard icon={PiggyBank} label="الأرباح" value={fmt(kpis?.profit ?? 0)} tone={((kpis?.profit ?? 0) >= 0) ? "success" : "danger"} />
-        <KpiCard icon={CheckCircle2} label="عملاء نشطون" value={fmt(kpis?.activeClients ?? 0)} sub={`غير نشط: ${fmt(kpis?.inactiveClients ?? 0)}`} tone="success" />
-        <KpiCard icon={Briefcase} label="إجمالي المشاريع" value={fmt(kpis?.totalProjects ?? 0)} sub={`مكتمل: ${fmt(kpis?.doneProjects ?? 0)}`} />
-        <KpiCard icon={Users} label="إجمالي العملاء" value={fmt(kpis?.totalClients ?? 0)} />
+        <KpiCard icon={DollarSign} label={tr("الإيرادات")} value={fmt(kpis?.totalRevenue ?? 0)} sub={`مشاريع: ${fmt(kpis?.projectsRevenue ?? 0)}`} />
+        <KpiCard icon={TrendingDown} label={tr("المصروفات")} value={fmt(kpis?.totalExpenses ?? 0)} tone="danger" />
+        <KpiCard icon={Megaphone} label={tr("التسويق")} value={fmt(kpis?.marketing ?? 0)} />
+        <KpiCard icon={Users} label={tr("الرواتب")} value={fmt(kpis?.salaries ?? 0)} />
+        <KpiCard icon={PiggyBank} label={tr("الأرباح")} value={fmt(kpis?.profit ?? 0)} tone={((kpis?.profit ?? 0) >= 0) ? "success" : "danger"} />
+        <KpiCard icon={CheckCircle2} label={tr("عملاء نشطون")} value={fmt(kpis?.activeClients ?? 0)} sub={`غير نشط: ${fmt(kpis?.inactiveClients ?? 0)}`} tone="success" />
+        <KpiCard icon={Briefcase} label={tr("إجمالي المشاريع")} value={fmt(kpis?.totalProjects ?? 0)} sub={`مكتمل: ${fmt(kpis?.doneProjects ?? 0)}`} />
+        <KpiCard icon={Users} label={tr("إجمالي العملاء")} value={fmt(kpis?.totalClients ?? 0)} />
       </div>
 
       {/* Clients */}
       <Card className="card-gradient overflow-hidden">
         <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="font-semibold flex items-center gap-2"><Users className="w-4 h-4" /> العملاء</div>
+          <div className="font-semibold flex items-center gap-2"><Users className="w-4 h-4" /> ا{tr("العملاء")}/div>
           <ClientDialog brandId={currentBrand} onSaved={invalidate} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="text-right text-muted-foreground border-b border-border">
-                <th className="p-3">الاسم</th><th className="p-3">جهة الاتصال</th>
-                <th className="p-3">الحالة</th><th className="p-3">المشاريع</th>
-                <th className="p-3">القيمة</th><th className="p-3"></th>
+                <th className="p-3">{tr("الاسم")}</th><th className="p-3">{tr("جهة الاتصال")}</th>
+                <th className="p-3">{tr("الحالة")}</th><th className="p-3">{tr("المشاريع")}</th>
+                <th className="p-3">{tr("القيمة")}</th><th className="p-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -138,8 +139,8 @@ function ServicesPage() {
                     <td className="p-3 text-muted-foreground" dir="ltr">{c.contact ?? "—"}</td>
                     <td className="p-3">
                       {c.status === "active"
-                        ? <Badge>نشط</Badge>
-                        : <Badge variant="secondary">غير نشط</Badge>}
+                        ? <Badge>{tr("نشط")}</Badge>
+                        : <Badge variant="secondary">{tr("غير نشط")}</Badge>}
                     </td>
                     <td className="p-3 num">
                       {s ? `${s.total} (تم ${s.done}${s.in_progress ? ` / جارٍ ${s.in_progress}` : ""})` : "0"}
@@ -147,8 +148,8 @@ function ServicesPage() {
                     <td className="p-3 num">{s ? fmt(s.value) : "0"}</td>
                     <td className="p-3 text-left whitespace-nowrap">
                       <ClientDialog brandId={currentBrand} onSaved={invalidate} existing={c} />
-                      <DeleteBtn label="حذف العميل؟" onConfirm={async () => {
-                        try { await useServerFnWrap(deleteServiceClient)({ data: { id: c.id } }); toast.success("حُذف"); invalidate(); }
+                      <DeleteBtn label={tr("حذف العميل؟")} onConfirm={async () => {
+                        try { await useServerFnWrap(deleteServiceClient)({ data: { id: c.id } }); toast.success(tr("حُذف")); invalidate(); }
                         catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
                       }} />
                     </td>
@@ -156,7 +157,7 @@ function ServicesPage() {
                 );
               })}
               {(clientsQ.data ?? []).length === 0 && (
-                <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">لا عملاء بعد.</td></tr>
+                <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">{tr("لا عملاء بعد.")}</td></tr>
               )}
             </tbody>
           </table>
@@ -166,16 +167,16 @@ function ServicesPage() {
       {/* Projects */}
       <Card className="card-gradient overflow-hidden">
         <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="font-semibold flex items-center gap-2"><Briefcase className="w-4 h-4" /> المشاريع</div>
+          <div className="font-semibold flex items-center gap-2"><Briefcase className="w-4 h-4" /> ا{tr("المشاريع")}/div>
           <ProjectDialog brandId={currentBrand} clients={clientsQ.data ?? []} onSaved={invalidate} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[720px]">
             <thead>
               <tr className="text-right text-muted-foreground border-b border-border">
-                <th className="p-3">المشروع</th><th className="p-3">العميل</th>
-                <th className="p-3">الحالة</th><th className="p-3">التسعير</th>
-                <th className="p-3">القيمة</th><th className="p-3">التاريخ</th><th className="p-3"></th>
+                <th className="p-3">{tr("المشروع")}</th><th className="p-3">{tr("العميل")}</th>
+                <th className="p-3">{tr("الحالة")}</th><th className="p-3">{tr("التسعير")}</th>
+                <th className="p-3">{tr("القيمة")}</th><th className="p-3">{tr("التاريخ")}</th><th className="p-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -198,8 +199,8 @@ function ServicesPage() {
                     </td>
                     <td className="p-3 text-left whitespace-nowrap">
                       <ProjectDialog brandId={currentBrand} clients={clientsQ.data ?? []} onSaved={invalidate} existing={p} />
-                      <DeleteBtn label="حذف المشروع؟" onConfirm={async () => {
-                        try { await useServerFnWrap(deleteServiceProject)({ data: { id: p.id } }); toast.success("حُذف"); invalidate(); }
+                      <DeleteBtn label={tr("حذف المشروع؟")} onConfirm={async () => {
+                        try { await useServerFnWrap(deleteServiceProject)({ data: { id: p.id } }); toast.success(tr("حُذف")); invalidate(); }
                         catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
                       }} />
                     </td>
@@ -207,7 +208,7 @@ function ServicesPage() {
                 );
               })}
               {(projectsQ.data ?? []).length === 0 && (
-                <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">لا مشاريع بعد.</td></tr>
+                <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">{tr("لا مشاريع بعد.")}</td></tr>
               )}
             </tbody>
           </table>
@@ -243,11 +244,11 @@ function DeleteBtn({ label, onConfirm }: { label: string; onConfirm: () => void 
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{label}</AlertDialogTitle>
-          <AlertDialogDescription>لا يمكن التراجع عن هذا الإجراء.</AlertDialogDescription>
+          <AlertDialogDescription>{tr("لا يمكن التراجع عن هذا الإجراء.")}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>إلغاء</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>تأكيد الحذف</AlertDialogAction>
+          <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{tr("تأكيد الحذف")}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -264,40 +265,40 @@ function ClientDialog({ brandId, onSaved, existing }: { brandId: string; onSaved
     notes: existing?.notes ?? "",
   });
   const submit = async () => {
-    if (!form.name.trim()) return toast.error("الاسم مطلوب");
+    if (!form.name.trim()) return toast.error(tr("الاسم مطلوب"));
     try {
       await save({ data: {
         id: existing?.id, brand_id: brandId,
         name: form.name, contact: form.contact || null,
         status: form.status, notes: form.notes || null,
       } });
-      toast.success("تم الحفظ"); onSaved(); setOpen(false);
+      toast.success(tr("تم الحفظ")); onSaved(); setOpen(false);
       if (!existing) setForm({ name: "", contact: "", status: "active", notes: "" });
     } catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button size="sm" variant={existing ? "ghost" : "default"} className="gap-2" onClick={() => setOpen(true)}>
-        {existing ? <Pencil className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> عميل جديد</>}
+        {existing ? <Pencil className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> ع{tr("عميل جديد")}/>}
       </Button>
       <DialogContent>
         <DialogHeader><DialogTitle>{existing ? "تعديل عميل" : "عميل جديد"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>الاسم</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-          <div><Label>جهة اتصال (تليفون/إيميل)</Label><Input dir="ltr" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} /></div>
+          <div><Label>{tr("الاسم")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div><Label>{tr("جهة اتصال (تليفون/إيميل)")}</Label><Input dir="ltr" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} /></div>
           <div>
-            <Label>الحالة</Label>
+            <Label>{tr("الحالة")}</Label>
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as "active" | "inactive" })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">نشط</SelectItem>
-                <SelectItem value="inactive">غير نشط</SelectItem>
+                <SelectItem value="active">{tr("نشط")}</SelectItem>
+                <SelectItem value="inactive">{tr("غير نشط")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div><Label>ملاحظات</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div><Label>{tr("ملاحظات")}</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         </div>
-        <DialogFooter><Button onClick={submit}>حفظ</Button></DialogFooter>
+        <DialogFooter><Button onClick={submit}>{tr("حفظ")}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -318,8 +319,8 @@ function ProjectDialog({ brandId, clients, onSaved, existing }: { brandId: strin
     note: existing?.note ?? "",
   });
   const submit = async () => {
-    if (!form.client_id) return toast.error("اختر العميل");
-    if (!form.name.trim()) return toast.error("اسم المشروع مطلوب");
+    if (!form.client_id) return toast.error(tr("اختر العميل"));
+    if (!form.name.trim()) return toast.error(tr("اسم المشروع مطلوب"));
     try {
       await save({ data: {
         id: existing?.id, brand_id: brandId, client_id: form.client_id, name: form.name,
@@ -328,60 +329,60 @@ function ProjectDialog({ brandId, clients, onSaved, existing }: { brandId: strin
         started_at: form.started_at || null, finished_at: form.finished_at || null,
         note: form.note || null,
       } });
-      toast.success("تم الحفظ"); onSaved(); setOpen(false);
+      toast.success(tr("تم الحفظ")); onSaved(); setOpen(false);
     } catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button size="sm" variant={existing ? "ghost" : "default"} className="gap-2" onClick={() => setOpen(true)}>
-        {existing ? <Pencil className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> مشروع جديد</>}
+        {existing ? <Pencil className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> م{tr("مشروع جديد")}/>}
       </Button>
       <DialogContent>
         <DialogHeader><DialogTitle>{existing ? "تعديل مشروع" : "مشروع جديد"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div>
-            <Label>العميل</Label>
+            <Label>{tr("العميل")}</Label>
             <Select value={form.client_id} onValueChange={(v) => setForm({ ...form, client_id: v })}>
-              <SelectTrigger><SelectValue placeholder="اختر العميل" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={tr("اختر العميل")} /></SelectTrigger>
               <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div><Label>اسم المشروع</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div><Label>{tr("اسم المشروع")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>الحالة</Label>
+              <Label>{tr("الحالة")}</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as ServiceProject["status"] })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">قيد الانتظار</SelectItem>
-                  <SelectItem value="in_progress">جارٍ</SelectItem>
-                  <SelectItem value="done">تم</SelectItem>
-                  <SelectItem value="cancelled">ملغي</SelectItem>
+                  <SelectItem value="pending">{tr("قيد الانتظار")}</SelectItem>
+                  <SelectItem value="in_progress">{tr("جارٍ")}</SelectItem>
+                  <SelectItem value="done">{tr("تم")}</SelectItem>
+                  <SelectItem value="cancelled">{tr("ملغي")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>نوع التسعير</Label>
+              <Label>{tr("نوع التسعير")}</Label>
               <Select value={form.pricing_type} onValueChange={(v) => setForm({ ...form, pricing_type: v as ServiceProject["pricing_type"] })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fixed">تكلفة ثابتة</SelectItem>
-                  <SelectItem value="commission">عمولة</SelectItem>
+                  <SelectItem value="fixed">{tr("تكلفة ثابتة")}</SelectItem>
+                  <SelectItem value="commission">{tr("عمولة")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>التكلفة</Label><Input type="number" dir="ltr" value={form.cost} onChange={(e) => setForm({ ...form, cost: parseFloat(e.target.value) || 0 })} /></div>
-            <div><Label>العمولة</Label><Input type="number" dir="ltr" value={form.commission} onChange={(e) => setForm({ ...form, commission: parseFloat(e.target.value) || 0 })} /></div>
+            <div><Label>{tr("التكلفة")}</Label><Input type="number" dir="ltr" value={form.cost} onChange={(e) => setForm({ ...form, cost: parseFloat(e.target.value) || 0 })} /></div>
+            <div><Label>{tr("العمولة")}</Label><Input type="number" dir="ltr" value={form.commission} onChange={(e) => setForm({ ...form, commission: parseFloat(e.target.value) || 0 })} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>البدء</Label><Input type="date" dir="ltr" value={form.started_at ?? ""} onChange={(e) => setForm({ ...form, started_at: e.target.value })} /></div>
-            <div><Label>الانتهاء</Label><Input type="date" dir="ltr" value={form.finished_at ?? ""} onChange={(e) => setForm({ ...form, finished_at: e.target.value })} /></div>
+            <div><Label>{tr("البدء")}</Label><Input type="date" dir="ltr" value={form.started_at ?? ""} onChange={(e) => setForm({ ...form, started_at: e.target.value })} /></div>
+            <div><Label>{tr("الانتهاء")}</Label><Input type="date" dir="ltr" value={form.finished_at ?? ""} onChange={(e) => setForm({ ...form, finished_at: e.target.value })} /></div>
           </div>
-          <div><Label>ملاحظة</Label><Input value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
+          <div><Label>{tr("ملاحظة")}</Label><Input value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
         </div>
-        <DialogFooter><Button onClick={submit}>حفظ</Button></DialogFooter>
+        <DialogFooter><Button onClick={submit}>{tr("حفظ")}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );

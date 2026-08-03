@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -34,11 +35,11 @@ function MyInvestments() {
     queryFn: () => fn({ data: { from: resolved.dateFrom ?? undefined, to: resolved.dateTo ?? undefined } }),
   });
 
-  if (q.isLoading) return <div className="p-6">جارِ التحميل…</div>;
+  if (q.isLoading) return <div className="p-6">{tr("جارِ التحميل…")}</div>;
   if (!q.data) {
     return (
       <div className="p-6">
-        <EmptyState title="لا يوجد حساب مستثمر مرتبط" description="تواصل مع الإدارة لربط حسابك بملف مستثمر." />
+        <EmptyState title={tr("لا يوجد حساب مستثمر مرتبط")} description={tr("تواصل مع الإدارة لربط حسابك بملف مستثمر.")} />
       </div>
     );
   }
@@ -48,35 +49,34 @@ function MyInvestments() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-primary" /> استثماراتي
-          </h1>
-          <p className="text-sm text-muted-foreground">أهلاً {d.investor?.name}</p>
+            <TrendingUp className="w-6 h-6 text-primary" /> ا{tr("استثماراتي")}          </h1>
+          <p className="text-sm text-muted-foreground">{tr("أهلاً")} {d.investor?.name}</p>
         </div>
         <PeriodFilter value={period} onChange={setPeriod} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi title="الإيرادات" value={fmt(d.totals.revenue)} />
-        <Kpi title="التكاليف" value={fmt(d.totals.costs)} />
-        <Kpi title="صافي الأرباح" value={fmt(d.totals.profit)} />
-        <Kpi title="نصيبك" value={fmt(d.totals.investor_profit)} highlight />
+        <Kpi title={tr("الإيرادات")} value={fmt(d.totals.revenue)} />
+        <Kpi title={tr("التكاليف")} value={fmt(d.totals.costs)} />
+        <Kpi title={tr("صافي الأرباح")} value={fmt(d.totals.profit)} />
+        <Kpi title={tr("نصيبك")} value={fmt(d.totals.investor_profit)} highlight />
       </div>
 
       <Card>
-        <CardHeader><CardTitle>البراندات ونصيبك</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{tr("البراندات ونصيبك")}</CardTitle></CardHeader>
         <CardContent>
           {d.brands.length === 0 ? (
-            <EmptyState title="لا توجد براندات" description="لم يتم تحديد نسب بعد." />
+            <EmptyState title={tr("لا توجد براندات")} description={tr("لم يتم تحديد نسب بعد.")} />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>البراند</TableHead>
-                  <TableHead>نسبتك</TableHead>
-                  <TableHead>الإيرادات</TableHead>
-                  <TableHead>التكاليف</TableHead>
-                  <TableHead>الربح</TableHead>
-                  <TableHead>نصيبك</TableHead>
+                  <TableHead>{tr("البراند")}</TableHead>
+                  <TableHead>{tr("نسبتك")}</TableHead>
+                  <TableHead>{tr("الإيرادات")}</TableHead>
+                  <TableHead>{tr("التكاليف")}</TableHead>
+                  <TableHead>{tr("الربح")}</TableHead>
+                  <TableHead>{tr("نصيبك")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -104,24 +104,24 @@ function MyInvestments() {
       {d.valuation && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> نصيبك من التقييم</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> ن{tr("نصيبك من التقييم")}/CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Kpi title="نصيبك من تقييمات البراندات" value={fmt(d.valuation.brand_totals.investor_valuation)} highlight />
-              <Kpi title="تقييم كامل الشركة" value={fmt(d.valuation.company.total_company_valuation)} />
-              <Kpi title="نسبتك الفعلية من الشركة" value={`${d.valuation.company.effective_ownership_pct.toFixed(2)}%`} />
-              <Kpi title="نصيبك من كامل الشركة" value={fmt(d.valuation.company.investor_company_share)} highlight />
+              <Kpi title={tr("نصيبك من تقييمات البراندات")} value={fmt(d.valuation.brand_totals.investor_valuation)} highlight />
+              <Kpi title={tr("تقييم كامل الشركة")} value={fmt(d.valuation.company.total_company_valuation)} />
+              <Kpi title={tr("نسبتك الفعلية من الشركة")} value={`${d.valuation.company.effective_ownership_pct.toFixed(2)}%`} />
+              <Kpi title={tr("نصيبك من كامل الشركة")} value={fmt(d.valuation.company.investor_company_share)} highlight />
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>البراند</TableHead>
-                  <TableHead>نسبتك</TableHead>
-                  <TableHead>إيرادات سنوية</TableHead>
-                  <TableHead>أصول (صافي)</TableHead>
-                  <TableHead>تقييم البراند</TableHead>
-                  <TableHead>نصيبك</TableHead>
+                  <TableHead>{tr("البراند")}</TableHead>
+                  <TableHead>{tr("نسبتك")}</TableHead>
+                  <TableHead>{tr("إيرادات سنوية")}</TableHead>
+                  <TableHead>{tr("أصول (صافي)")}</TableHead>
+                  <TableHead>{tr("تقييم البراند")}</TableHead>
+                  <TableHead>{tr("نصيبك")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

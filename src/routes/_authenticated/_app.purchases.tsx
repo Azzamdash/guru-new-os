@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
@@ -50,12 +51,12 @@ function PurchasesPage() {
 
   const save = useMutation({
     mutationFn: (v: NonNullable<typeof editing>) => upFn({ data: v }),
-    onSuccess: () => { toast.success("تم الحفظ"); qc.invalidateQueries({ queryKey: ["supplier-invoices"] }); setOpen(false); },
+    onSuccess: () => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["supplier-invoices"] }); setOpen(false); },
     onError: (e: Error) => toast.error(e.message),
   });
   const remove = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
-    onSuccess: () => { toast.success("تم الحذف"); qc.invalidateQueries({ queryKey: ["supplier-invoices"] }); setConfirmDel(null); },
+    onSuccess: () => { toast.success(tr("تم الحذف")); qc.invalidateQueries({ queryKey: ["supplier-invoices"] }); setConfirmDel(null); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -106,26 +107,25 @@ function PurchasesPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">فواتير المشتريات</h1>
-          <p className="text-muted-foreground text-sm mt-1">فواتير من الموردين بمنتجات أو خامات؛ إجمالي الفاتورة يُحسب من البنود.</p>
+          <h1 className="text-3xl font-bold">{tr("فواتير المشتريات")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("فواتير من الموردين بمنتجات أو خامات؛ إجمالي الفاتورة يُحسب من البنود.")}</p>
         </div>
         {canWrite && (
           <Button onClick={() => { setEditing({ supplier_id: suppliers[0]?.id ?? "", brand_id: null, issued_at: getTodayInBusinessTimezone(), due_at: null, status: "open", note: "" }); setOpen(true); }}>
-            <Plus className="w-4 h-4 me-2" /> فاتورة جديدة
-          </Button>
+            <Plus className="w-4 h-4 me-2" /> ف{tr("فاتورة جديدة")}          </Button>
         )}
       </div>
 
       <Card className="p-4">
         <div className="grid md:grid-cols-4 gap-3">
-          <div><Label>من</Label><Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></div>
-          <div><Label>إلى</Label><Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></div>
+          <div><Label>{tr("من")}</Label><Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} /></div>
+          <div><Label>{tr("إلى")}</Label><Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} /></div>
           <div className="md:col-span-2">
-            <Label>المورد</Label>
+            <Label>{tr("المورد")}</Label>
             <Select value={supplierFilter} onValueChange={setSupplierFilter}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">كل الموردين</SelectItem>
+                <SelectItem value="all">{tr("كل الموردين")}</SelectItem>
                 {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -136,21 +136,21 @@ function PurchasesPage() {
       <Card className="card-gradient p-5">
 
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold">تقرير المشتريات</h3>
-          <span className="text-xs text-muted-foreground">{rows.length} فاتورة</span>
+          <h3 className="font-semibold">{tr("تقرير المشتريات")}</h3>
+          <span className="text-xs text-muted-foreground">{rows.length} ف{tr("فاتورة")}/span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <MiniStat label="إجمالي المشتريات" value={nf(report.total)} />
-          <MiniStat label="مدفوعة" value={nf(report.paid)} sub={`${report.statusSplit.paid} فاتورة`} tone="success" />
-          <MiniStat label="آجل" value={nf(report.open)} sub={`${report.statusSplit.open} فاتورة`} />
-          <MiniStat label="متأخرة" value={nf(report.overdueTotal)} sub={`${report.overdueCount} فاتورة`} tone={report.overdueCount > 0 ? "danger" : undefined} />
+          <MiniStat label={tr("إجمالي المشتريات")} value={nf(report.total)} />
+          <MiniStat label={tr("مدفوعة")} value={nf(report.paid)} sub={`${report.statusSplit.paid} فاتورة`} tone="success" />
+          <MiniStat label={tr("آجل")} value={nf(report.open)} sub={`${report.statusSplit.open} فاتورة`} />
+          <MiniStat label={tr("متأخرة")} value={nf(report.overdueTotal)} sub={`${report.overdueCount} فاتورة`} tone={report.overdueCount > 0 ? "danger" : undefined} />
         </div>
         {report.topSuppliers.length > 0 && (
           <div className="mt-4">
-            <div className="text-xs text-muted-foreground mb-2">أعلى 5 موردين</div>
+            <div className="text-xs text-muted-foreground mb-2">{tr("أعلى 5 موردين")}</div>
             <table className="w-full text-xs">
               <thead><tr className="text-muted-foreground text-right border-b border-border">
-                <th className="p-1.5">المورد</th><th className="p-1.5 text-left">الإجمالي</th><th className="p-1.5 text-left">المفتوح</th>
+                <th className="p-1.5">{tr("المورد")}</th><th className="p-1.5 text-left">{tr("الإجمالي")}</th><th className="p-1.5 text-left">{tr("المفتوح")}</th>
               </tr></thead>
               <tbody>
                 {report.topSuppliers.map((s) => (
@@ -171,9 +171,9 @@ function PurchasesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border text-right text-muted-foreground">
-              <th className="p-3">التاريخ</th><th className="p-3">المورد</th><th className="p-3">البراند</th>
-              <th className="p-3 text-left">الإجمالي</th><th className="p-3">الاستحقاق</th>
-              <th className="p-3">الحالة</th><th className="p-3"></th>
+              <th className="p-3">{tr("التاريخ")}</th><th className="p-3">{tr("المورد")}</th><th className="p-3">{tr("البراند")}</th>
+              <th className="p-3 text-left">{tr("الإجمالي")}</th><th className="p-3">{tr("الاستحقاق")}</th>
+              <th className="p-3">{tr("الحالة")}</th><th className="p-3"></th>
             </tr></thead>
             <tbody>
               {rows.map((r) => (
@@ -184,10 +184,10 @@ function PurchasesPage() {
                   <td className="p-3 num text-left">{Number(r.amount).toLocaleString("en-US")}</td>
                   <td className="p-3 num text-muted-foreground" dir="ltr">{r.due_at ?? "—"}</td>
                   <td className="p-3">
-                    {r.status === "paid" ? <Badge>مدفوعة</Badge> : <Badge variant="outline">آجل</Badge>}
+                    {r.status === "paid" ? <Badge>{tr("مدفوعة")}</Badge> : <Badge variant="outline">{tr("آجل")}</Badge>}
                   </td>
                   <td className="p-3 flex gap-1 justify-end">
-                    <Button size="icon" variant="ghost" onClick={() => setItemsFor(r.id)} title="البنود">
+                    <Button size="icon" variant="ghost" onClick={() => setItemsFor(r.id)} title={tr("البنود")}>
                       <PackageIcon className="w-4 h-4" />
                     </Button>
                     {canWrite && (
@@ -203,7 +203,7 @@ function PurchasesPage() {
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">لا فواتير.</td></tr>}
+              {rows.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{tr("لا فواتير.")}</td></tr>}
             </tbody>
           </table>
         </div>
@@ -215,43 +215,43 @@ function PurchasesPage() {
           {editing && (
             <div className="space-y-3">
               <div>
-                <Label>المورد</Label>
+                <Label>{tr("المورد")}</Label>
                 <Select value={editing.supplier_id} onValueChange={(v) => setEditing({ ...editing, supplier_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
                   <SelectContent>{suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>البراند (اختياري)</Label>
+                <Label>{tr("البراند (اختياري)")}</Label>
                 <Select value={editing.brand_id ?? "__none"} onValueChange={(v) => setEditing({ ...editing, brand_id: v === "__none" ? null : v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none">— بدون —</SelectItem>
+                    <SelectItem value="__none">{tr("— بدون —")}</SelectItem>
                     {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>تاريخ الفاتورة</Label><Input type="date" value={editing.issued_at} onChange={(e) => setEditing({ ...editing, issued_at: e.target.value })} /></div>
-                <div><Label>تاريخ الاستحقاق</Label><Input type="date" value={editing.due_at ?? ""} onChange={(e) => setEditing({ ...editing, due_at: e.target.value || null })} /></div>
+                <div><Label>{tr("تاريخ الفاتورة")}</Label><Input type="date" value={editing.issued_at} onChange={(e) => setEditing({ ...editing, issued_at: e.target.value })} /></div>
+                <div><Label>{tr("تاريخ الاستحقاق")}</Label><Input type="date" value={editing.due_at ?? ""} onChange={(e) => setEditing({ ...editing, due_at: e.target.value || null })} /></div>
               </div>
               <div>
-                <Label>الحالة</Label>
+                <Label>{tr("الحالة")}</Label>
                 <Select value={editing.status} onValueChange={(v) => setEditing({ ...editing, status: v as "open"|"paid" })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="open">آجل</SelectItem>
-                    <SelectItem value="paid">مدفوعة</SelectItem>
+                    <SelectItem value="open">{tr("آجل")}</SelectItem>
+                    <SelectItem value="paid">{tr("مدفوعة")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>ملاحظات</Label><Input value={editing.note ?? ""} onChange={(e) => setEditing({ ...editing, note: e.target.value })} /></div>
-              <p className="text-xs text-muted-foreground">الإجمالي يُحسب تلقائياً من البنود بعد الحفظ.</p>
+              <div><Label>{tr("ملاحظات")}</Label><Input value={editing.note ?? ""} onChange={(e) => setEditing({ ...editing, note: e.target.value })} /></div>
+              <p className="text-xs text-muted-foreground">{tr("الإجمالي يُحسب تلقائياً من البنود بعد الحفظ.")}</p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
-            <Button onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.supplier_id || !editing?.issued_at}>حفظ</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{tr("إلغاء")}</Button>
+            <Button onClick={() => editing && save.mutate(editing)} disabled={save.isPending || !editing?.supplier_id || !editing?.issued_at}>{tr("حفظ")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -259,12 +259,12 @@ function PurchasesPage() {
       <AlertDialog open={!!confirmDel} onOpenChange={(o) => !o && setConfirmDel(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-            <AlertDialogDescription>هل تريد حذف الفاتورة وكل بنودها؟ لا يمكن التراجع.</AlertDialogDescription>
+            <AlertDialogTitle>{tr("تأكيد الحذف")}</AlertDialogTitle>
+            <AlertDialogDescription>{tr("هل تريد حذف الفاتورة وكل بنودها؟ لا يمكن التراجع.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmDel && remove.mutate(confirmDel)}>حذف</AlertDialogAction>
+            <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDel && remove.mutate(confirmDel)}>{tr("حذف")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -330,45 +330,45 @@ function ItemsDialog({ invoiceId, onClose, canWrite }: { invoiceId: string | nul
   return (
     <Dialog open={!!invoiceId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl">
-        <DialogHeader><DialogTitle>بنود الفاتورة</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{tr("بنود الفاتورة")}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           {canWrite && (
             <div className="grid grid-cols-[120px_1fr_100px_120px_auto] gap-2 items-end">
               <div>
-                <Label>النوع</Label>
+                <Label>{tr("النوع")}</Label>
                 <Select value={kind} onValueChange={(v) => { setKind(v as "product"|"material"|"other"); setRefId(""); }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="product">منتج</SelectItem>
-                    <SelectItem value="material">خامة</SelectItem>
-                    <SelectItem value="other">أخرى</SelectItem>
+                    <SelectItem value="product">{tr("منتج")}</SelectItem>
+                    <SelectItem value="material">{tr("خامة")}</SelectItem>
+                    <SelectItem value="other">{tr("أخرى")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>{kind === "other" ? "وصف" : "اختر"}</Label>
                 {kind === "other" ? (
-                  <Input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="وصف البند" />
+                  <Input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={tr("وصف البند")} />
                 ) : (
                   <Select value={refId} onValueChange={setRefId}>
-                    <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
                     <SelectContent>
                       {(kind === "product" ? products : materials).map((x) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 )}
               </div>
-              <div><Label>الكمية</Label><Input type="number" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} /></div>
-              <div><Label>سعر الوحدة</Label><Input type="number" value={unitCost} onChange={(e) => setUnitCost(parseFloat(e.target.value) || 0)} /></div>
-              <Button onClick={() => add.mutate()} disabled={!validAdd || qty <= 0}>إضافة</Button>
+              <div><Label>{tr("الكمية")}</Label><Input type="number" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} /></div>
+              <div><Label>{tr("سعر الوحدة")}</Label><Input type="number" value={unitCost} onChange={(e) => setUnitCost(parseFloat(e.target.value) || 0)} /></div>
+              <Button onClick={() => add.mutate()} disabled={!validAdd || qty <= 0}>{tr("إضافة")}</Button>
             </div>
           )}
 
           <table className="w-full text-sm">
             <thead><tr className="text-muted-foreground text-right border-b border-border">
-              <th className="p-2">النوع</th><th className="p-2">البند</th>
-              <th className="p-2 text-left">الكمية</th><th className="p-2 text-left">سعر الوحدة</th>
-              <th className="p-2 text-left">الإجمالي</th><th className="p-2"></th>
+              <th className="p-2">{tr("النوع")}</th><th className="p-2">{tr("البند")}</th>
+              <th className="p-2 text-left">{tr("الكمية")}</th><th className="p-2 text-left">{tr("سعر الوحدة")}</th>
+              <th className="p-2 text-left">{tr("الإجمالي")}</th><th className="p-2"></th>
             </tr></thead>
             <tbody>
               {rows.map((r) => (
@@ -383,10 +383,10 @@ function ItemsDialog({ invoiceId, onClose, canWrite }: { invoiceId: string | nul
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">لا بنود.</td></tr>}
+              {rows.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">{tr("لا بنود.")}</td></tr>}
             </tbody>
             <tfoot>
-              <tr className="font-semibold"><td className="p-2" colSpan={4}>الإجمالي</td><td className="p-2 num text-left" colSpan={2}>{total.toLocaleString("en-US")}</td></tr>
+              <tr className="font-semibold"><td className="p-2" colSpan={4}>{tr("الإجمالي")}</td><td className="p-2 num text-left" colSpan={2}>{total.toLocaleString("en-US")}</td></tr>
             </tfoot>
           </table>
         </div>
@@ -394,12 +394,12 @@ function ItemsDialog({ invoiceId, onClose, canWrite }: { invoiceId: string | nul
         <AlertDialog open={!!confirmDel} onOpenChange={(o) => !o && setConfirmDel(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-              <AlertDialogDescription>هل تريد حذف هذا البند؟</AlertDialogDescription>
+              <AlertDialogTitle>{tr("تأكيد الحذف")}</AlertDialogTitle>
+              <AlertDialogDescription>{tr("هل تريد حذف هذا البند؟")}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>إلغاء</AlertDialogCancel>
-              <AlertDialogAction onClick={() => confirmDel && remove.mutate(confirmDel)}>حذف</AlertDialogAction>
+              <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => confirmDel && remove.mutate(confirmDel)}>{tr("حذف")}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

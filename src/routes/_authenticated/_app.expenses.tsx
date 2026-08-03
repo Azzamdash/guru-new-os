@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -138,7 +139,7 @@ function ExpensesPage() {
   const delMut = useMutation({
     mutationFn: (id: string) => delExpFn({ data: { id } }),
     onSuccess: () => {
-      toast.success("تم الحذف");
+      toast.success(tr("تم الحذف"));
       qc.invalidateQueries({ queryKey: ["expense-entries"] });
       qc.invalidateQueries({ queryKey: ["cash-txns"] });
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
@@ -151,8 +152,8 @@ function ExpensesPage() {
       <div className="p-10 max-w-2xl mx-auto">
         <Card className="p-8 text-center card-gradient">
           <Lock className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <h2 className="text-xl font-bold mb-1">لا تملك صلاحية إدخال المصروفات</h2>
-          <p className="text-sm text-muted-foreground">تواصل مع المشرف.</p>
+          <h2 className="text-xl font-bold mb-1">{tr("لا تملك صلاحية إدخال المصروفات")}</h2>
+          <p className="text-sm text-muted-foreground">{tr("تواصل مع المشرف.")}</p>
         </Card>
       </div>
     );
@@ -201,33 +202,33 @@ function ExpensesPage() {
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-6xl">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2"><Wallet className="w-7 h-7 text-primary" /> المصروفات</h1>
-        <p className="text-muted-foreground text-sm mt-1">إدخال المصروفات بفترات متعددة لكل براند أو لكل البراندات، مع تحديد المنصة والإيراد المنسوب للحملات.</p>
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2"><Wallet className="w-7 h-7 text-primary" /> ا{tr("المصروفات")}/h1>
+        <p className="text-muted-foreground text-sm mt-1">{tr("إدخال المصروفات بفترات متعددة لكل براند أو لكل البراندات، مع تحديد المنصة والإيراد المنسوب للحملات.")}</p>
       </div>
 
       {/* FILTER */}
       <Card className="card-gradient p-5">
         <div className="grid md:grid-cols-6 gap-3">
           <div className="md:col-span-2">
-            <Label>البراند</Label>
+            <Label>{tr("البراند")}</Label>
             <Select value={brandFilter} onValueChange={setBrandFilter}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">كل البراندات</SelectItem>
+                <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
                 {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>الفترة</Label>
+            <Label>{tr("الفترة")}</Label>
             <Select value={filterPeriod} onValueChange={(v) => setFilterPeriod(v as PeriodType)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">يومي</SelectItem>
-                <SelectItem value="weekly">أسبوعي</SelectItem>
-                <SelectItem value="monthly">شهري</SelectItem>
-                <SelectItem value="yearly">سنوي</SelectItem>
-                <SelectItem value="custom">مدة محددة</SelectItem>
+                <SelectItem value="daily">{tr("يومي")}</SelectItem>
+                <SelectItem value="weekly">{tr("أسبوعي")}</SelectItem>
+                <SelectItem value="monthly">{tr("شهري")}</SelectItem>
+                <SelectItem value="yearly">{tr("سنوي")}</SelectItem>
+                <SelectItem value="custom">{tr("مدة محددة")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -239,14 +240,14 @@ function ExpensesPage() {
           )}
           {filterPeriod === "custom" && (
             <>
-              <div><Label>من</Label><Input type="date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} /></div>
-              <div><Label>إلى</Label><Input type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} /></div>
+              <div><Label>{tr("من")}</Label><Input type="date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} /></div>
+              <div><Label>{tr("إلى")}</Label><Input type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} /></div>
             </>
           )}
           {(filterPeriod === "monthly" || filterPeriod === "yearly") && (
             <>
               <div>
-                <Label>السنة</Label>
+                <Label>{tr("السنة")}</Label>
                 <Select value={String(filterYear)} onValueChange={(v) => setFilterYear(parseInt(v, 10))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
@@ -254,7 +255,7 @@ function ExpensesPage() {
               </div>
               {filterPeriod === "monthly" && (
                 <div>
-                  <Label>الشهر</Label>
+                  <Label>{tr("الشهر")}</Label>
                   <Select value={String(filterMonth)} onValueChange={(v) => setFilterMonth(parseInt(v, 10))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
@@ -269,16 +270,16 @@ function ExpensesPage() {
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">إجمالي المصروفات</div>
-          <div className="text-2xl font-bold mt-1">{totalSpend.toLocaleString("en-US")} جنيه</div>
+          <div className="text-xs text-muted-foreground">{tr("إجمالي المصروفات")}</div>
+          <div className="text-2xl font-bold mt-1">{totalSpend.toLocaleString("en-US")} ج{tr("جنيه")}/div>
           <div className="text-xs text-muted-foreground mt-1">{rangeLabel}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">الإيراد المنسوب للحملات</div>
-          <div className="text-2xl font-bold mt-1">{totalAttributed.toLocaleString("en-US")} جنيه</div>
+          <div className="text-xs text-muted-foreground">{tr("الإيراد المنسوب للحملات")}</div>
+          <div className="text-2xl font-bold mt-1">{totalAttributed.toLocaleString("en-US")} ج{tr("جنيه")}/div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">عدد بنود المصروفات</div>
+          <div className="text-xs text-muted-foreground">{tr("عدد بنود المصروفات")}</div>
           <div className="text-2xl font-bold mt-1">{(expQ.data ?? []).length}</div>
         </Card>
       </div>
@@ -288,29 +289,29 @@ function ExpensesPage() {
         <h3 className="font-semibold">{form.id ? "تعديل بند" : "إضافة بند جديد"}</h3>
         <div className="grid md:grid-cols-4 gap-3">
           <div>
-            <Label>البراند *</Label>
+            <Label>{tr("البراند *")}</Label>
             <Select value={form.brand_id} onValueChange={(v) => setForm({ ...form, brand_id: v })}>
-              <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
               <SelectContent>{brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
-            <Label>البند *</Label>
+            <Label>{tr("البند *")}</Label>
             <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v, platform: "", attributed_revenue: 0, supplier_id: "" })}>
-              <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
               <SelectContent>{cats.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
-            <Label>نوع الفترة</Label>
+            <Label>{tr("نوع الفترة")}</Label>
             <Select value={form.period_type} onValueChange={(v) => setForm({ ...form, period_type: v as PeriodType })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">يومي</SelectItem>
-                <SelectItem value="weekly">أسبوعي</SelectItem>
-                <SelectItem value="monthly">شهري</SelectItem>
-                <SelectItem value="yearly">سنوي</SelectItem>
-                <SelectItem value="custom">مدة محددة</SelectItem>
+                <SelectItem value="daily">{tr("يومي")}</SelectItem>
+                <SelectItem value="weekly">{tr("أسبوعي")}</SelectItem>
+                <SelectItem value="monthly">{tr("شهري")}</SelectItem>
+                <SelectItem value="yearly">{tr("سنوي")}</SelectItem>
+                <SelectItem value="custom">{tr("مدة محددة")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -319,35 +320,35 @@ function ExpensesPage() {
             <Input type="date" value={form.period_date} onChange={(e) => setForm({ ...form, period_date: e.target.value })} />
           </div>
           {form.period_type === "custom" && (
-            <div><Label>إلى</Label><Input type="date" value={form.period_end_date} onChange={(e) => setForm({ ...form, period_end_date: e.target.value })} /></div>
+            <div><Label>{tr("إلى")}</Label><Input type="date" value={form.period_end_date} onChange={(e) => setForm({ ...form, period_end_date: e.target.value })} /></div>
           )}
 
-          <NumField label="المبلغ *" value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} />
+          <NumField label={tr("المبلغ *")} value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} />
           {isMarketing && (
             <>
               <div>
-                <Label>المنصة *</Label>
+                <Label>{tr("المنصة *")}</Label>
                 <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v })}>
-                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(PLATFORM_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <NumField label="الإيراد المنسوب" value={form.attributed_revenue} onChange={(v) => setForm({ ...form, attributed_revenue: v })} />
+              <NumField label={tr("الإيراد المنسوب")} value={form.attributed_revenue} onChange={(v) => setForm({ ...form, attributed_revenue: v })} />
             </>
           )}
           {isPurchases && (
             <>
               <div>
-                <Label>المورد *</Label>
+                <Label>{tr("المورد *")}</Label>
                 <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={tr("اختر المورد")} /></SelectTrigger>
                   <SelectContent>
                     {brandSuppliers.filter((s) => s.active).map((s) => (
                       <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                     ))}
-                    {brandSuppliers.length === 0 && <SelectItem value="__none" disabled>لا يوجد موردون لهذا البراند</SelectItem>}
+                    {brandSuppliers.length === 0 && <SelectItem value="__none" disabled>{tr("لا يوجد موردون لهذا البراند")}</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
@@ -356,23 +357,22 @@ function ExpensesPage() {
                   to="/purchases"
                   className="text-xs text-primary underline hover:no-underline"
                 >
-                  فتح فواتير المشتريات لإدخال الأصناف بالتفصيل ↗
-                </Link>
+                  فتح فواتير المشتريا{tr("فتح فواتير المشتريات لإدخال الأصناف بالتفصيل ↗")}Link>
               </div>
             </>
           )}
           <div className="md:col-span-2">
-            <Label>ملاحظة</Label>
+            <Label>{tr("ملاحظة")}</Label>
             <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
           </div>
         </div>
         <div className="flex gap-2">
           <Button
             onClick={() => {
-              if (!form.brand_id) return toast.error("اختر البراند");
-              if (!form.category_id || form.amount <= 0) return toast.error("اختر بند ومبلغ صحيح");
-              if (isMarketing && !form.platform) return toast.error("اختر المنصة الإعلانية");
-              if (isPurchases && !form.supplier_id) return toast.error("اختر المورد");
+              if (!form.brand_id) return toast.error(tr("اختر البراند"));
+              if (!form.category_id || form.amount <= 0) return toast.error(tr("اختر بند ومبلغ صحيح"));
+              if (isMarketing && !form.platform) return toast.error(tr("اختر المنصة الإعلانية"));
+              if (isPurchases && !form.supplier_id) return toast.error(tr("اختر المورد"));
               const supplierPrefix = isPurchases && selectedSupplier ? `مورد: ${selectedSupplier.name}` : "";
               const merged = supplierPrefix
                 ? (form.note ? `${supplierPrefix} — ${form.note}` : supplierPrefix)
@@ -385,30 +385,29 @@ function ExpensesPage() {
             <Plus className="w-4 h-4" /> {form.id ? "حفظ التعديل" : "إضافة"}
           </Button>
           {form.id && (
-            <Button variant="ghost" onClick={() => setForm({ ...form, id: undefined, category_id: "", amount: 0, note: "", platform: "", attributed_revenue: 0, supplier_id: "" })}>إلغاء</Button>
+            <Button variant="ghost" onClick={() => setForm({ ...form, id: undefined, category_id: "", amount: 0, note: "", platform: "", attributed_revenue: 0, supplier_id: "" })}>{tr("إلغاء")}</Button>
           )}
         </div>
         {isMarketing && (
           <p className="text-xs text-muted-foreground">
-            💡 الإيراد المنسوب هو الإيراد الآتي من هذه الحملة/المنصة. يُستخدم في حساب ROI/ROAS المنسوب فقط ولا يُجمَع مع إيراد البراند الكلي.
-          </p>
+            💡 الإيراد ال{tr("💡 الإيراد المنسوب هو الإيراد الآتي من هذه الحملة/المنصة. يُستخدم في حساب ROI/ROAS المنسوب فقط ولا يُجمَع مع إيراد البراند الكلي.")}p>
         )}
       </Card>
 
       {/* TABLE */}
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">بنود {rangeLabel}</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("بنود")} {rangeLabel}</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-muted-foreground text-right border-b border-border">
-                <th className="p-3">التاريخ / الفترة</th>
-                <th className="p-3">البراند</th>
-                <th className="p-3">البند</th>
-                <th className="p-3">المنصة</th>
-                <th className="p-3 text-left">المبلغ</th>
-                <th className="p-3 text-left">الإيراد المنسوب</th>
-                <th className="p-3">ملاحظة</th>
+                <th className="p-3">{tr("التاريخ / الفترة")}</th>
+                <th className="p-3">{tr("البراند")}</th>
+                <th className="p-3">{tr("البند")}</th>
+                <th className="p-3">{tr("المنصة")}</th>
+                <th className="p-3 text-left">{tr("المبلغ")}</th>
+                <th className="p-3 text-left">{tr("الإيراد المنسوب")}</th>
+                <th className="p-3">{tr("ملاحظة")}</th>
                 <th className="p-3"></th>
               </tr>
             </thead>
@@ -438,7 +437,7 @@ function ExpensesPage() {
                 );
               })}
               {(expQ.data ?? []).length === 0 && (
-                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground text-sm">لا مصروفات في هذه الفترة.</td></tr>
+                <tr><td colSpan={8} className="p-6 text-center text-muted-foreground text-sm">{tr("لا مصروفات في هذه الفترة.")}</td></tr>
               )}
             </tbody>
           </table>
@@ -456,12 +455,12 @@ function ConfirmDelete({ onConfirm }: { onConfirm: () => void }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
-          <AlertDialogDescription>هل تريد حذف هذا البند نهائياً؟ لا يمكن التراجع.</AlertDialogDescription>
+          <AlertDialogTitle>{tr("تأكيد الحذف")}</AlertDialogTitle>
+          <AlertDialogDescription>{tr("هل تريد حذف هذا البند نهائياً؟ لا يمكن التراجع.")}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>إلغاء</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>حذف</AlertDialogAction>
+          <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{tr("حذف")}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

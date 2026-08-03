@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Minus, ShieldCheck } from "lucide-react";
@@ -158,24 +159,24 @@ function ScopeCell({ s }: { s: Scope }) {
   }
   if (s === "all") {
     return (
-      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400" title="جميع البراندات">
+      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400" title={tr("جميع البراندات")}>
         <Check className="w-3.5 h-3.5" />
-        <span className="text-[10px]">كل البراندات</span>
+        <span className="text-[10px]">{tr("كل البراندات")}</span>
       </span>
     );
   }
   if (s === "brand") {
     return (
-      <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400" title="البراندات المصرح بها فقط">
+      <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400" title={tr("البراندات المصرح بها فقط")}>
         <Check className="w-3.5 h-3.5" />
-        <span className="text-[10px]">براندات مصرحة</span>
+        <span className="text-[10px]">{tr("براندات مصرحة")}</span>
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400" title="صفوفه الخاصة فقط">
+    <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400" title={tr("صفوفه الخاصة فقط")}>
       <Minus className="w-3.5 h-3.5" />
-      <span className="text-[10px]">صفوفه فقط</span>
+      <span className="text-[10px]">{tr("صفوفه فقط")}</span>
     </span>
   );
 }
@@ -187,17 +188,15 @@ export function PermissionsMatrix() {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <ShieldCheck className="w-6 h-6 text-primary" />
-            مصفوفة الصلاحيات
-          </h2>
+            مصفوفة الصلاح{tr("مصفوفة الصلاحيات")}h2>
           <p className="text-sm text-muted-foreground mt-1">
-            ما يقدر يعمله كل دور في كل قسم — بما فيها نطاق البراندات
-          </p>
+            ما يقدر يعمله{tr("ما يقدر يعمله كل دور في كل قسم — بما فيها نطاق البراندات")}p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
-          <Badge variant="outline" className="gap-1"><Check className="w-3 h-3 text-emerald-600" /> كل البراندات</Badge>
-          <Badge variant="outline" className="gap-1"><Check className="w-3 h-3 text-blue-600" /> البراندات المصرح بها</Badge>
-          <Badge variant="outline" className="gap-1"><Minus className="w-3 h-3 text-amber-600" /> صفوفه فقط</Badge>
-          <Badge variant="outline" className="gap-1"><X className="w-3 h-3 text-muted-foreground/60" /> غير مسموح</Badge>
+          <Badge variant="outline" className="gap-1"><Check className="w-3 h-3 text-emerald-600" /> ك{tr("كل البراندات")}/Badge>
+          <Badge variant="outline" className="gap-1"><Check className="w-3 h-3 text-blue-600" /> ا{tr("البراندات المصرح بها")}/Badge>
+          <Badge variant="outline" className="gap-1"><Minus className="w-3 h-3 text-amber-600" /> ص{tr("صفوفه فقط")}/Badge>
+          <Badge variant="outline" className="gap-1"><X className="w-3 h-3 text-muted-foreground/60" /> غ{tr("غير مسموح")}/Badge>
         </div>
       </div>
 
@@ -214,12 +213,12 @@ export function PermissionsMatrix() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right whitespace-nowrap">القسم</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">إدخال</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">عرض</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">تعديل</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">حذف</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">تصدير</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">{tr("القسم")}</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">{tr("إدخال")}</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">{tr("عرض")}</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">{tr("تعديل")}</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">{tr("حذف")}</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">{tr("تصدير")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -244,14 +243,14 @@ export function PermissionsMatrix() {
       </div>
 
       <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-xs text-muted-foreground leading-6">
-        <p className="font-semibold mb-2 text-foreground">ملاحظات مهمة:</p>
+        <p className="font-semibold mb-2 text-foreground">{tr("ملاحظات مهمة:")}</p>
         <ul className="space-y-1 list-disc pr-5">
-          <li>«البراندات المصرح بها» = البراندات التي أضافها المشرف يدوياً للمستخدم في تبويب «الصلاحيات».</li>
-          <li>«المحاسب» يتمتع بوصول شامل للحسابات (فواتير، مصروفات، خزنة، مدفوعات، أصول) على كل البراندات دون الحاجة لتخصيص براند.</li>
-          <li>«إدخال البيانات» يشتغل فقط على البراندات المصرح بها من المشرف.</li>
-          <li>«المشاهد» يقدر يعرض ويصدّر تقارير برانداته المصرح بها فقط دون أي تعديل.</li>
-          <li>«المستثمر» يشاهد فقط نصيبه من الأرباح والأصول المرتبطة بحصصه.</li>
-          <li>الصلاحيات مفروضة على مستوى قاعدة البيانات (RLS) — لا يمكن تجاوزها من الواجهة.</li>
+          <li>{tr("«البراندات المصرح بها» = البراندات التي أضافها المشرف يدوياً للمستخدم في تبويب «الصلاحيات».")}</li>
+          <li>{tr("«المحاسب» يتمتع بوصول شامل للحسابات (فواتير، مصروفات، خزنة، مدفوعات، أصول) على كل البراندات دون الحاجة لتخصيص براند.")}</li>
+          <li>{tr("«إدخال البيانات» يشتغل فقط على البراندات المصرح بها من المشرف.")}</li>
+          <li>{tr("«المشاهد» يقدر يعرض ويصدّر تقارير برانداته المصرح بها فقط دون أي تعديل.")}</li>
+          <li>{tr("«المستثمر» يشاهد فقط نصيبه من الأرباح والأصول المرتبطة بحصصه.")}</li>
+          <li>{tr("الصلاحيات مفروضة على مستوى قاعدة البيانات (RLS) — لا يمكن تجاوزها من الواجهة.")}</li>
         </ul>
       </div>
     </div>

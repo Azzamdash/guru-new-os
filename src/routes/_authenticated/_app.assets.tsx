@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -79,7 +80,7 @@ function AssetsPage() {
       <div className="p-10 max-w-2xl mx-auto">
         <Card className="p-8 text-center card-gradient">
           <Lock className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <h2 className="text-xl font-bold">لا تملك صلاحية عرض هذه الصفحة</h2>
+          <h2 className="text-xl font-bold">{tr("لا تملك صلاحية عرض هذه الصفحة")}</h2>
         </Card>
       </div>
     );
@@ -89,30 +90,29 @@ function AssetsPage() {
     <div className="p-6 md:p-8 space-y-6 max-w-6xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Building2 className="w-7 h-7 text-primary" /> أصول الشركة</h1>
-          <p className="text-muted-foreground text-sm mt-1">إدارة الأصول وحساب القيمة الدفترية بعد الإهلاك السنوي.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><Building2 className="w-7 h-7 text-primary" /> أ{tr("أصول الشركة")}/h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("إدارة الأصول وحساب القيمة الدفترية بعد الإهلاك السنوي.")}</p>
         </div>
         {canWrite && (
           <Button className="gap-2" onClick={() => setEditing({ name: "", cost: 0, purchase_date: getTodayInBusinessTimezone(), annual_depreciation_rate: 20, brand_id: null, notes: "" })}>
-            <Plus className="w-4 h-4" /> إضافة أصل
-          </Button>
+            <Plus className="w-4 h-4" /> إ{tr("إضافة أصل")}          </Button>
         )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="عدد الأصول" value={String(rows.length)} />
-        <StatCard label="إجمالي التكلفة" value={fmt(totals.cost)} />
-        <StatCard label="القيمة الدفترية الحالية" value={fmt(totals.net)} highlight />
-        <StatCard label="إهلاك سنوي متوقع" value={fmt(totals.dep)} />
+        <StatCard label={tr("عدد الأصول")} value={String(rows.length)} />
+        <StatCard label={tr("إجمالي التكلفة")} value={fmt(totals.cost)} />
+        <StatCard label={tr("القيمة الدفترية الحالية")} value={fmt(totals.net)} highlight />
+        <StatCard label={tr("إهلاك سنوي متوقع")} value={fmt(totals.dep)} />
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
-        <Label className="text-sm">فلترة حسب البراند:</Label>
+        <Label className="text-sm">{tr("فلترة حسب البراند:")}</Label>
         <Select value={brandFilter} onValueChange={setBrandFilter}>
           <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الأصول</SelectItem>
-            <SelectItem value="company">أصول عامة للشركة</SelectItem>
+            <SelectItem value="all">{tr("كل الأصول")}</SelectItem>
+            <SelectItem value="company">{tr("أصول عامة للشركة")}</SelectItem>
             {(brandsQ.data ?? []).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -120,20 +120,20 @@ function AssetsPage() {
 
       <Card className="card-gradient overflow-hidden">
         {assetsQ.isLoading ? (
-          <div className="p-10 text-center text-muted-foreground">جارٍ التحميل…</div>
+          <div className="p-10 text-center text-muted-foreground">{tr("جارٍ التحميل…")}</div>
         ) : rows.length === 0 ? (
-          <EmptyState title="لا توجد أصول بعد" description="ابدأ بإضافة أول أصل لتتبع تكلفته والقيمة الدفترية بعد الإهلاك." />
+          <EmptyState title={tr("لا توجد أصول بعد")} description={tr("ابدأ بإضافة أول أصل لتتبع تكلفته والقيمة الدفترية بعد الإهلاك.")} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[720px]">
               <thead>
                 <tr className="text-muted-foreground text-right border-b border-border">
-                  <th className="p-3">الأصل</th>
-                  <th className="p-3">البراند</th>
-                  <th className="p-3">تاريخ الشراء</th>
-                  <th className="p-3">التكلفة</th>
-                  <th className="p-3">الإهلاك %</th>
-                  <th className="p-3">القيمة الحالية</th>
+                  <th className="p-3">{tr("الأصل")}</th>
+                  <th className="p-3">{tr("البراند")}</th>
+                  <th className="p-3">{tr("تاريخ الشراء")}</th>
+                  <th className="p-3">{tr("التكلفة")}</th>
+                  <th className="p-3">{tr("الإهلاك %")}</th>
+                  <th className="p-3">{tr("القيمة الحالية")}</th>
                   <th className="p-3"></th>
                 </tr>
               </thead>
@@ -150,7 +150,7 @@ function AssetsPage() {
                       {canWrite && <Button size="sm" variant="ghost" onClick={() => setEditing(a)}><Pencil className="w-4 h-4" /></Button>}
                       {(roleQ.data?.isAdmin || roleQ.data?.isManager) && (
                         <Button size="sm" variant="ghost" onClick={() => {
-                          if (confirm("حذف هذا الأصل؟")) delFn({ data: { id: a.id } }).then(() => { toast.success("حُذف"); qc.invalidateQueries({ queryKey: ["assets"] }); });
+                          if (confirm(tr("حذف هذا الأصل؟"))) delFn({ data: { id: a.id } }).then(() => { toast.success(tr("حُذف")); qc.invalidateQueries({ queryKey: ["assets"] }); });
                         }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                       )}
                     </td>
@@ -169,7 +169,7 @@ function AssetsPage() {
           onClose={() => setEditing(null)}
           onSave={(payload) => {
             upsertFn({ data: payload })
-              .then(() => { toast.success("تم الحفظ"); qc.invalidateQueries({ queryKey: ["assets"] }); setEditing(null); })
+              .then(() => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["assets"] }); setEditing(null); })
               .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
           }}
         />
@@ -195,8 +195,8 @@ function AssetDialog({ initial, brands, onClose, onSave }: {
 }) {
   const [form, setForm] = useState<Partial<CompanyAsset>>(initial);
   const submit = () => {
-    if (!form.name?.trim()) return toast.error("اسم الأصل مطلوب");
-    if (!form.purchase_date) return toast.error("تاريخ الشراء مطلوب");
+    if (!form.name?.trim()) return toast.error(tr("اسم الأصل مطلوب"));
+    if (!form.purchase_date) return toast.error(tr("تاريخ الشراء مطلوب"));
     const payload: Partial<CompanyAsset> & { name: string; cost: number; purchase_date: string; annual_depreciation_rate: number } = {
       name: form.name.trim(),
       cost: Number(form.cost) || 0,
@@ -213,35 +213,35 @@ function AssetDialog({ initial, brands, onClose, onSave }: {
       <DialogContent>
         <DialogHeader><DialogTitle>{form.id ? "تعديل أصل" : "أصل جديد"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>اسم الأصل</Label><Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: لابتوب Dell / مكينة تصنيع" /></div>
+          <div><Label>{tr("اسم الأصل")}</Label><Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={tr("مثال: لابتوب Dell / مكينة تصنيع")} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>التكلفة</Label>
+              <Label>{tr("التكلفة")}</Label>
               <Input type="number" dir="ltr" value={form.cost ?? 0} onChange={(e) => setForm({ ...form, cost: parseFloat(e.target.value) || 0 })} />
             </div>
             <div>
-              <Label>تاريخ الشراء</Label>
+              <Label>{tr("تاريخ الشراء")}</Label>
               <Input type="date" dir="ltr" value={form.purchase_date ?? ""} onChange={(e) => setForm({ ...form, purchase_date: e.target.value })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>معدل الإهلاك السنوي %</Label>
+              <Label>{tr("معدل الإهلاك السنوي %")}</Label>
               <Input type="number" dir="ltr" value={form.annual_depreciation_rate ?? 0} onChange={(e) => setForm({ ...form, annual_depreciation_rate: parseFloat(e.target.value) || 0 })} />
             </div>
             <div>
-              <Label>البراند</Label>
+              <Label>{tr("البراند")}</Label>
               <Select value={form.brand_id ?? "company"} onValueChange={(v) => setForm({ ...form, brand_id: v === "company" ? null : v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="company">أصل عام للشركة</SelectItem>
+                  <SelectItem value="company">{tr("أصل عام للشركة")}</SelectItem>
                   {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div><Label>ملاحظات (اختياري)</Label><Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-          <Button onClick={submit} className="w-full">حفظ</Button>
+          <div><Label>{tr("ملاحظات (اختياري)")}</Label><Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <Button onClick={submit} className="w-full">{tr("حفظ")}</Button>
         </div>
       </DialogContent>
     </Dialog>

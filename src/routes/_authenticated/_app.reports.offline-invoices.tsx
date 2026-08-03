@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -83,7 +84,7 @@ function OfflineInvoicesPage() {
           await updateItemsFn({ data: { id: editing.id, items: editItems } });
         } catch (e) { toast.error(e instanceof Error ? e.message : "فشل حفظ الأصناف"); }
       }
-      toast.success("تم الحفظ");
+      toast.success(tr("تم الحفظ"));
       setEditing(null);
       setEditItems([]);
       qc.invalidateQueries({ queryKey: ["offline-invoices"] });
@@ -92,7 +93,7 @@ function OfflineInvoicesPage() {
   });
   const deleteMut = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
-    onSuccess: () => { toast.success("تم الحذف"); setDeletingId(null); qc.invalidateQueries({ queryKey: ["offline-invoices"] }); },
+    onSuccess: () => { toast.success(tr("تم الحذف")); setDeletingId(null); qc.invalidateQueries({ queryKey: ["offline-invoices"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const viewQ = useQuery({
@@ -155,7 +156,7 @@ function OfflineInvoicesPage() {
   }
   function sendWhatsapp(inv: { id: string; brand_name: string; customer_name: string | null; customer_phone: string | null; total_amount: number; created_at: string; payment_method: string | null }) {
     const phone = waPhone(inv.customer_phone);
-    if (!phone) { toast.error("رقم عميل غير صالح"); return; }
+    if (!phone) { toast.error(tr("رقم عميل غير صالح")); return; }
     const no = `POS-${String(inv.id).slice(0, 8).toUpperCase()}`;
     const lines = [
       `فاتورة ${inv.brand_name}`,
@@ -173,58 +174,58 @@ function OfflineInvoicesPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Receipt className="w-7 h-7" /> فواتير الأوفلاين</h1>
-          <p className="text-muted-foreground text-sm mt-1">كل فواتير الفروع الأوفلاين ببيانات العميل وسجل التاريخ.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><Receipt className="w-7 h-7" /> ف{tr("فواتير الأوفلاين")}/h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("كل فواتير الفروع الأوفلاين ببيانات العميل وسجل التاريخ.")}</p>
         </div>
       </div>
 
       <Card className="p-4 flex flex-wrap items-end gap-3">
         <div className="min-w-[140px]">
-          <Label className="text-xs">الفترة</Label>
+          <Label className="text-xs">{tr("الفترة")}</Label>
           <Select value={range} onValueChange={(v) => applyRange(v as Range)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="day">اليوم</SelectItem>
-              <SelectItem value="week">أسبوع</SelectItem>
-              <SelectItem value="month">شهر</SelectItem>
-              <SelectItem value="year">سنة</SelectItem>
-              <SelectItem value="custom">مخصص</SelectItem>
+              <SelectItem value="day">{tr("اليوم")}</SelectItem>
+              <SelectItem value="week">{tr("أسبوع")}</SelectItem>
+              <SelectItem value="month">{tr("شهر")}</SelectItem>
+              <SelectItem value="year">{tr("سنة")}</SelectItem>
+              <SelectItem value="custom">{tr("مخصص")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div><Label className="text-xs">من</Label><Input type="date" dir="ltr" value={start} onChange={(e) => { setStart(e.target.value); setRange("custom"); }} /></div>
-        <div><Label className="text-xs">إلى</Label><Input type="date" dir="ltr" value={end} onChange={(e) => { setEnd(e.target.value); setRange("custom"); }} /></div>
+        <div><Label className="text-xs">{tr("من")}</Label><Input type="date" dir="ltr" value={start} onChange={(e) => { setStart(e.target.value); setRange("custom"); }} /></div>
+        <div><Label className="text-xs">{tr("إلى")}</Label><Input type="date" dir="ltr" value={end} onChange={(e) => { setEnd(e.target.value); setRange("custom"); }} /></div>
         <div className="flex-1 min-w-[200px]">
-          <Label className="text-xs">بحث (اسم/تليفون)</Label>
+          <Label className="text-xs">{tr("بحث (اسم/تليفون)")}</Label>
           <div className="relative">
             <SearchIcon className="w-4 h-4 absolute top-2.5 right-2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} className="pr-8" placeholder="بحث..." />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} className="pr-8" placeholder={tr("بحث...")} />
           </div>
         </div>
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Kpi label="عدد الفواتير" value={totals.count} />
-        <Kpi label="عدد القطع" value={totals.qty} />
-        <Kpi label="الإجمالي" value={totals.total} />
-        <Kpi label="كاش" value={totals.cash} />
-        <Kpi label="فيزا" value={totals.card} />
+        <Kpi label={tr("عدد الفواتير")} value={totals.count} />
+        <Kpi label={tr("عدد القطع")} value={totals.qty} />
+        <Kpi label={tr("الإجمالي")} value={totals.total} />
+        <Kpi label={tr("كاش")} value={totals.cash} />
+        <Kpi label={tr("فيزا")} value={totals.card} />
       </div>
 
       <Card className="card-gradient overflow-x-auto">
         <table className="w-full text-sm min-w-[900px]">
           <thead>
             <tr className="text-muted-foreground text-right border-b border-border">
-              <th className="p-3">التاريخ</th>
-              <th className="p-3">رقم الفاتورة</th>
-              <th className="p-3">الفرع</th>
-              <th className="p-3">العميل</th>
-              <th className="p-3">الهاتف</th>
-              <th className="p-3">الدفع</th>
-              <th className="p-3">قطع</th>
-              <th className="p-3">الإجمالي</th>
-              <th className="p-3">البائع</th>
-              <th className="p-3">إجراءات</th>
+              <th className="p-3">{tr("التاريخ")}</th>
+              <th className="p-3">{tr("رقم الفاتورة")}</th>
+              <th className="p-3">{tr("الفرع")}</th>
+              <th className="p-3">{tr("العميل")}</th>
+              <th className="p-3">{tr("الهاتف")}</th>
+              <th className="p-3">{tr("الدفع")}</th>
+              <th className="p-3">{tr("قطع")}</th>
+              <th className="p-3">{tr("الإجمالي")}</th>
+              <th className="p-3">{tr("البائع")}</th>
+              <th className="p-3">{tr("إجراءات")}</th>
             </tr>
           </thead>
           <tbody>
@@ -248,7 +249,7 @@ function OfflineInvoicesPage() {
                 <td className="p-3">
                   <div className="flex gap-1 justify-end">
                     <Button size="sm" variant="outline" onClick={() => setViewingId(i.id)}><Printer className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="outline" title="إرسال واتساب" onClick={() => sendWhatsapp(i)}><MessageCircle className="w-4 h-4" /></Button>
+                    <Button size="sm" variant="outline" title={tr("إرسال واتساب")} onClick={() => sendWhatsapp(i)}><MessageCircle className="w-4 h-4" /></Button>
                     {canEdit && (
                       <Button size="sm" variant="outline" onClick={() => setEditing({
                         id: i.id,
@@ -268,7 +269,7 @@ function OfflineInvoicesPage() {
               </tr>
             ))}
             {invoices.length === 0 && !q.isLoading && (
-              <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">لا فواتير في هذه الفترة.</td></tr>
+              <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">{tr("لا فواتير في هذه الفترة.")}</td></tr>
             )}
           </tbody>
         </table>
@@ -277,20 +278,20 @@ function OfflineInvoicesPage() {
       {/* Edit dialog */}
       <Dialog open={!!editing} onOpenChange={(o) => { if (!o) { setEditing(null); setEditItems([]); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>تعديل الفاتورة</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{tr("تعديل الفاتورة")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div><Label>اسم العميل</Label><Input value={editing.customer_name} onChange={(e) => setEditing({ ...editing, customer_name: e.target.value })} /></div>
-                <div><Label>الهاتف</Label><Input dir="ltr" value={editing.customer_phone} onChange={(e) => setEditing({ ...editing, customer_phone: e.target.value })} /></div>
-                <div><Label>الإيميل</Label><Input dir="ltr" value={editing.customer_email} onChange={(e) => setEditing({ ...editing, customer_email: e.target.value })} /></div>
-                <div><Label>التاريخ</Label><Input type="date" dir="ltr" value={editing.occurred_at} onChange={(e) => setEditing({ ...editing, occurred_at: e.target.value })} /></div>
+                <div><Label>{tr("اسم العميل")}</Label><Input value={editing.customer_name} onChange={(e) => setEditing({ ...editing, customer_name: e.target.value })} /></div>
+                <div><Label>{tr("الهاتف")}</Label><Input dir="ltr" value={editing.customer_phone} onChange={(e) => setEditing({ ...editing, customer_phone: e.target.value })} /></div>
+                <div><Label>{tr("الإيميل")}</Label><Input dir="ltr" value={editing.customer_email} onChange={(e) => setEditing({ ...editing, customer_email: e.target.value })} /></div>
+                <div><Label>{tr("التاريخ")}</Label><Input type="date" dir="ltr" value={editing.occurred_at} onChange={(e) => setEditing({ ...editing, occurred_at: e.target.value })} /></div>
               </div>
-              <div><Label>ملاحظات</Label><Input value={editing.note} onChange={(e) => setEditing({ ...editing, note: e.target.value })} /></div>
+              <div><Label>{tr("ملاحظات")}</Label><Input value={editing.note} onChange={(e) => setEditing({ ...editing, note: e.target.value })} /></div>
 
               <div className="border-t pt-3">
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-semibold">الأصناف</Label>
+                  <Label className="text-sm font-semibold">{tr("الأصناف")}</Label>
                   <Button size="sm" variant="outline" type="button" onClick={() => {
                     const firstProd = editProdsQ.data?.[0];
                     setEditItems((prev) => [...prev, {
@@ -298,14 +299,14 @@ function OfflineInvoicesPage() {
                       qty: 1,
                       unitPrice: Number(firstProd?.sell_price ?? 0),
                     }]);
-                  }} className="gap-1"><Plus className="w-3 h-3" /> إضافة صنف</Button>
+                  }} className="gap-1"><Plus className="w-3 h-3" /> إ{tr("إضافة صنف")}/Button>
                 </div>
-                {editInvQ.isLoading && <div className="text-xs text-muted-foreground">جاري تحميل الأصناف…</div>}
+                {editInvQ.isLoading && <div className="text-xs text-muted-foreground">{tr("جاري تحميل الأصناف…")}</div>}
                 <div className="space-y-2">
                   {editItems.map((it, idx) => (
                     <div key={idx} className="flex flex-wrap gap-2 items-end">
                       <div className="flex-1 min-w-[180px]">
-                        <Label className="text-xs">الصنف</Label>
+                        <Label className="text-xs">{tr("الصنف")}</Label>
                         <Select value={it.productId} onValueChange={(v) => {
                           const p = editProdsQ.data?.find((x) => x.id === v);
                           setEditItems((prev) => prev.map((r, i) => i === idx ? {
@@ -313,7 +314,7 @@ function OfflineInvoicesPage() {
                             unitPrice: p ? Number(p.sell_price) : r.unitPrice,
                           } : r));
                         }}>
-                          <SelectTrigger><SelectValue placeholder="اختر صنف" /></SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder={tr("اختر صنف")} /></SelectTrigger>
                           <SelectContent>
                             {(editProdsQ.data ?? []).map((p) => (
                               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
@@ -321,18 +322,18 @@ function OfflineInvoicesPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="w-20"><Label className="text-xs">كمية</Label>
+                      <div className="w-20"><Label className="text-xs">{tr("كمية")}</Label>
                         <Input type="number" min={1} value={it.qty} onChange={(e) => {
                           const q = Math.max(1, Number(e.target.value) || 1);
                           setEditItems((prev) => prev.map((r, i) => i === idx ? { ...r, qty: q } : r));
                         }} /></div>
-                      <div className="w-28"><Label className="text-xs">سعر</Label>
+                      <div className="w-28"><Label className="text-xs">{tr("سعر")}</Label>
                         <Input type="number" min={0} step="0.01" value={it.unitPrice} onChange={(e) => {
                           const p = Math.max(0, Number(e.target.value) || 0);
                           setEditItems((prev) => prev.map((r, i) => i === idx ? { ...r, unitPrice: p } : r));
                         }} /></div>
                       <div className="w-24 text-sm num" dir="ltr">
-                        <div className="text-xs text-muted-foreground">إجمالي</div>
+                        <div className="text-xs text-muted-foreground">{tr("إجمالي")}</div>
                         <div className="pt-2 font-semibold">{(it.qty * it.unitPrice).toLocaleString("en-US")}</div>
                       </div>
                       <Button size="sm" variant="ghost" type="button" onClick={() => setEditItems((prev) => prev.filter((_, i) => i !== idx))}>
@@ -342,13 +343,13 @@ function OfflineInvoicesPage() {
                   ))}
                 </div>
                 <div className="text-right text-sm font-bold pt-2 border-t mt-2">
-                  الإجمالي الجديد: <span className="num" dir="ltr">{editItems.reduce((s, it) => s + it.qty * it.unitPrice, 0).toLocaleString("en-US")}</span>
+                  الإجمالي الجديد: <s{tr("الإجمالي الجديد:")}um" dir="ltr">{editItems.reduce((s, it) => s + it.qty * it.unitPrice, 0).toLocaleString("en-US")}</span>
                 </div>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => { setEditing(null); setEditItems([]); }}>إلغاء</Button>
+            <Button variant="ghost" onClick={() => { setEditing(null); setEditItems([]); }}>{tr("إلغاء")}</Button>
             <Button disabled={updateMut.isPending} onClick={() => editing && updateMut.mutate({
               id: editing.id,
               customerName: editing.customer_name,
@@ -356,7 +357,7 @@ function OfflineInvoicesPage() {
               customerEmail: editing.customer_email,
               note: editing.note,
               occurredAt: editing.occurred_at,
-            })}>حفظ</Button>
+            })}>{tr("حفظ")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -365,12 +366,12 @@ function OfflineInvoicesPage() {
       <AlertDialog open={!!deletingId} onOpenChange={(o) => !o && setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>حذف الفاتورة؟</AlertDialogTitle>
-            <AlertDialogDescription>لا يمكن التراجع عن هذه العملية.</AlertDialogDescription>
+            <AlertDialogTitle>{tr("حذف الفاتورة؟")}</AlertDialogTitle>
+            <AlertDialogDescription>{tr("لا يمكن التراجع عن هذه العملية.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deletingId && deleteMut.mutate(deletingId)}>حذف</AlertDialogAction>
+            <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && deleteMut.mutate(deletingId)}>{tr("حذف")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -378,32 +379,32 @@ function OfflineInvoicesPage() {
       {/* View / Print */}
       <Dialog open={!!viewingId} onOpenChange={(o) => !o && setViewingId(null)}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>تفاصيل الفاتورة</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{tr("تفاصيل الفاتورة")}</DialogTitle></DialogHeader>
           {viewQ.data && (
             <div className="space-y-2 text-sm">
-              <div><b>الفرع:</b> {viewQ.data.brand_name}</div>
-              <div><b>التاريخ:</b> <span dir="ltr">{new Date(viewQ.data.created_at).toLocaleString("en-GB")}</span></div>
-              <div><b>العميل:</b> {viewQ.data.customer_name} — <span dir="ltr">{viewQ.data.customer_phone}</span></div>
+              <div><b>{tr("الفرع:")}</b> {viewQ.data.brand_name}</div>
+              <div><b>{tr("التاريخ:")}</b> <span dir="ltr">{new Date(viewQ.data.created_at).toLocaleString("en-GB")}</span></div>
+              <div><b>{tr("العميل:")}</b> {viewQ.data.customer_name} — <span dir="ltr">{viewQ.data.customer_phone}</span></div>
               <table className="w-full mt-2 text-xs">
-                <thead><tr className="border-b"><th className="text-right p-1">الصنف</th><th className="p-1">كمية</th><th className="p-1">سعر</th><th className="p-1">إجمالي</th></tr></thead>
+                <thead><tr className="border-b"><th className="text-right p-1">{tr("الصنف")}</th><th className="p-1">{tr("كمية")}</th><th className="p-1">{tr("سعر")}</th><th className="p-1">{tr("إجمالي")}</th></tr></thead>
                 <tbody>
                   {viewQ.data.items.map((it) => (
                     <tr key={it.id} className="border-b border-border/40"><td className="p-1">{it.product_name}</td><td className="p-1 num text-center">{it.qty}</td><td className="p-1 num text-center">{Number(it.unit_price).toLocaleString("en-US")}</td><td className="p-1 num text-center">{Number(it.subtotal).toLocaleString("en-US")}</td></tr>
                   ))}
                 </tbody>
               </table>
-              <div className="font-bold flex justify-between pt-2 border-t"><span>الإجمالي</span><span className="num">{Number(viewQ.data.total_amount).toLocaleString("en-US")}</span></div>
+              <div className="font-bold flex justify-between pt-2 border-t"><span>{tr("الإجمالي")}</span><span className="num">{Number(viewQ.data.total_amount).toLocaleString("en-US")}</span></div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setViewingId(null)}>إغلاق</Button>
+            <Button variant="ghost" onClick={() => setViewingId(null)}>{tr("إغلاق")}</Button>
             <Button variant="outline" onClick={() => viewQ.data && sendWhatsapp({
               id: viewQ.data.id, brand_name: viewQ.data.brand_name,
               customer_name: viewQ.data.customer_name, customer_phone: viewQ.data.customer_phone,
               total_amount: Number(viewQ.data.total_amount), created_at: viewQ.data.created_at,
               payment_method: viewQ.data.payment_method,
-            })} className="gap-1"><MessageCircle className="w-4 h-4" /> واتساب</Button>
-            <Button onClick={printInvoice} className="gap-1"><Printer className="w-4 h-4" /> طباعة</Button>
+            })} className="gap-1"><MessageCircle className="w-4 h-4" /> و{tr("واتساب")}/Button>
+            <Button onClick={printInvoice} className="gap-1"><Printer className="w-4 h-4" /> ط{tr("طباعة")}/Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

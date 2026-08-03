@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { AlertTriangle, Inbox, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -61,7 +62,7 @@ export function ChartFrame({
       <div style={style}>
         <EmptyState
           icon="warn"
-          title="حدث خطأ أثناء التحميل"
+          title={tr("حدث خطأ أثناء التحميل")}
           description={msg}
           action={onRetry ? { label: "إعادة المحاولة", onClick: onRetry } : undefined}
         />
@@ -86,7 +87,7 @@ export function ChartFrame({
         <div style={style}>
           <EmptyState
             icon="warn"
-            title="بيانات ناقصة"
+            title={tr("بيانات ناقصة")}
             description={`الحقول التالية غير متوفرة: ${missing.join("، ")}. أكمل الإدخال ليظهر الرسم بشكل صحيح.`}
           />
         </div>

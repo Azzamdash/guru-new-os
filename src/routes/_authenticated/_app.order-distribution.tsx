@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -125,7 +126,7 @@ function OrderDistributionPage() {
       });
     },
     onSuccess: (r) => {
-      if (!r.updated && !r.failed) toast.info("لا توجد أوردرات لها اقتراح تلقائي");
+      if (!r.updated && !r.failed) toast.info(tr("لا توجد أوردرات لها اقتراح تلقائي"));
       else toast.success(`تم التوزيع التلقائي: ${r.updated} أوردر${r.failed ? ` — فشل ${r.failed}` : ""}`);
       invalidate();
     },
@@ -174,47 +175,44 @@ function OrderDistributionPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Truck className="h-6 w-6 text-primary" /> إدارة توزيع الأوردرات
-          </h1>
+            <Truck className="h-6 w-6 text-primary" /> إ{tr("إدارة توزيع الأوردرات")}          </h1>
           <p className="text-sm text-muted-foreground">
-            وزّع الأوردرات على شركات الشحن والمناديب مع اقتراح تلقائي حسب المحافظة والسعر.
-          </p>
+            وزّع الأوردرا{tr("وزّع الأوردرات على شركات الشحن والمناديب مع اقتراح تلقائي حسب المحافظة والسعر.")}p>
         </div>
         <Button variant="outline" onClick={() => boardQ.refetch()} disabled={boardQ.isFetching}>
-          <RefreshCw className={`h-4 w-4 ${boardQ.isFetching ? "animate-spin" : ""}`} /> تحديث
-        </Button>
+          <RefreshCw className={`h-4 w-4 ${boardQ.isFetching ? "animate-spin" : ""}`} /> ت{tr("تحديث")}        </Button>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground">غير موزّعة</p>
+          <p className="text-xs text-muted-foreground">{tr("غير موزّعة")}</p>
           <p className="text-2xl font-bold">{board?.totals.unassigned ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground">موزّعة</p>
+          <p className="text-xs text-muted-foreground">{tr("موزّعة")}</p>
           <p className="text-2xl font-bold">{board?.totals.assigned ?? 0}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground">قيمة الأوردرات المفتوحة</p>
+          <p className="text-xs text-muted-foreground">{tr("قيمة الأوردرات المفتوحة")}</p>
           <p className="text-2xl font-bold">{money(board?.totals.openAmount ?? 0)}</p>
         </Card>
       </div>
 
       <Tabs defaultValue="queue">
         <TabsList>
-          <TabsTrigger value="queue">طابور التوزيع</TabsTrigger>
-          <TabsTrigger value="loads">أحمال شركات الشحن</TabsTrigger>
-          <TabsTrigger value="log">سجل التوزيع</TabsTrigger>
+          <TabsTrigger value="queue">{tr("طابور التوزيع")}</TabsTrigger>
+          <TabsTrigger value="loads">{tr("أحمال شركات الشحن")}</TabsTrigger>
+          <TabsTrigger value="log">{tr("سجل التوزيع")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="space-y-4">
           <Card className="flex flex-wrap items-end gap-3 p-4">
             <div className="min-w-40">
-              <label className="mb-1 block text-xs text-muted-foreground">البراند</label>
+              <label className="mb-1 block text-xs text-muted-foreground">{tr("البراند")}</label>
               <Select value={brandId} onValueChange={setBrandId}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">كل البراندات</SelectItem>
+                  <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
                   {(brandsQ.data ?? []).map((b: { id: string; name: string }) => (
                     <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                   ))}
@@ -222,11 +220,11 @@ function OrderDistributionPage() {
               </Select>
             </div>
             <div className="min-w-40">
-              <label className="mb-1 block text-xs text-muted-foreground">المحافظة</label>
+              <label className="mb-1 block text-xs text-muted-foreground">{tr("المحافظة")}</label>
               <Select value={governorate} onValueChange={setGovernorate}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">كل المحافظات</SelectItem>
+                  <SelectItem value="all">{tr("كل المحافظات")}</SelectItem>
                   {(board?.governorates ?? []).map((g) => (
                     <SelectItem key={g} value={g}>{g}</SelectItem>
                   ))}
@@ -234,11 +232,11 @@ function OrderDistributionPage() {
               </Select>
             </div>
             <div className="min-w-48 flex-1">
-              <label className="mb-1 block text-xs text-muted-foreground">بحث</label>
+              <label className="mb-1 block text-xs text-muted-foreground">{tr("بحث")}</label>
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="اسم العميل، الهاتف، رقم الأوردر"
+                placeholder={tr("اسم العميل، الهاتف، رقم الأوردر")}
                 maxLength={80}
               />
             </div>
@@ -247,21 +245,20 @@ function OrderDistributionPage() {
                 checked={onlyUnassigned}
                 onCheckedChange={(v) => setOnlyUnassigned(Boolean(v))}
               />
-              غير الموزّعة فقط
-            </label>
+              غير الموزّعة فق{tr("غير الموزّعة فقط")}label>
           </Card>
 
           <Card className="flex flex-wrap items-end gap-3 p-4">
             <Button onClick={() => autoStaffM.mutate()} disabled={autoStaffM.isPending || !autoTargetCount}>
-              <Wand2 className="h-4 w-4" /> توزيع تلقائي على الموظفين ({autoTargetCount})
+              <Wand2 className="h-4 w-4" /> ت{tr("توزيع تلقائي على الموظفين (")}autoTargetCount})
             </Button>
             <Button variant="outline" onClick={() => autoM.mutate()} disabled={autoM.isPending || !suggestedCount}>
-              <Wand2 className="h-4 w-4" /> توزيع تلقائي لشركات الشحن ({suggestedCount})
+              <Wand2 className="h-4 w-4" /> ت{tr("توزيع تلقائي لشركات الشحن (")}suggestedCount})
             </Button>
             <div className="min-w-44">
-              <label className="mb-1 block text-xs text-muted-foreground">شركة الشحن</label>
+              <label className="mb-1 block text-xs text-muted-foreground">{tr("شركة الشحن")}</label>
               <Select value={courierPick} onValueChange={setCourierPick}>
-                <SelectTrigger><SelectValue placeholder="اختر شركة" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر شركة")} /></SelectTrigger>
                 <SelectContent>
                   {(board?.couriers ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -274,12 +271,12 @@ function OrderDistributionPage() {
               disabled={!courierPick || !selected.size || courierM.isPending}
               onClick={() => courierM.mutate(courierPick)}
             >
-              تعيين للمحدد ({selected.size})
+              تعيين للمحدد ({{tr("تعيين للمحدد (")})
             </Button>
             <div className="min-w-44">
-              <label className="mb-1 block text-xs text-muted-foreground">الموظف (مستخدم النظام)</label>
+              <label className="mb-1 block text-xs text-muted-foreground">{tr("الموظف (مستخدم النظام)")}</label>
               <Select value={employeePick} onValueChange={setEmployeePick}>
-                <SelectTrigger><SelectValue placeholder="اختر مستخدم" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={tr("اختر مستخدم")} /></SelectTrigger>
                 <SelectContent>
                   {(board?.employees ?? []).map((e) => (
                     <SelectItem key={e.id} value={e.id}>
@@ -288,7 +285,7 @@ function OrderDistributionPage() {
                     </SelectItem>
                   ))}
                   {(board?.employees ?? []).length === 0 && (
-                    <div className="p-2 text-xs text-muted-foreground">لا يوجد مستخدمون بصلاحية على هذه الصفحة</div>
+                    <div className="p-2 text-xs text-muted-foreground">{tr("لا يوجد مستخدمون بصلاحية على هذه الصفحة")}</div>
                   )}
                 </SelectContent>
               </Select>
@@ -299,15 +296,14 @@ function OrderDistributionPage() {
               disabled={!employeePick || !selected.size || employeeM.isPending}
               onClick={() => employeeM.mutate(employeePick)}
             >
-              <Users className="h-4 w-4" /> إسناد للمحدد
-            </Button>
+              <Users className="h-4 w-4" /> إ{tr("إسناد للمحدد")}            </Button>
             <Button
               variant="ghost"
               disabled={!selected.size || courierM.isPending}
               onClick={() => courierM.mutate(null)}
             >
               إلغاء التوزيع
-            </Button>
+ {tr("إلغاء التوزيع")}Button>
           </Card>
 
           <Card className="overflow-x-auto">
@@ -315,22 +311,22 @@ function OrderDistributionPage() {
               <thead className="bg-muted/50 text-xs">
                 <tr>
                   <th className="p-2"><Checkbox checked={allChecked} onCheckedChange={toggleAll} /></th>
-                  <th className="p-2 text-start">الأوردر</th>
-                  <th className="p-2 text-start">العميل</th>
-                  <th className="p-2 text-start">المحافظة</th>
-                  <th className="p-2 text-start">القيمة</th>
-                  <th className="p-2 text-start">الحالة</th>
-                  <th className="p-2 text-start">شركة الشحن</th>
-                  <th className="p-2 text-start">الموظف</th>
-                  <th className="p-2 text-start">الاقتراح</th>
+                  <th className="p-2 text-start">{tr("الأوردر")}</th>
+                  <th className="p-2 text-start">{tr("العميل")}</th>
+                  <th className="p-2 text-start">{tr("المحافظة")}</th>
+                  <th className="p-2 text-start">{tr("القيمة")}</th>
+                  <th className="p-2 text-start">{tr("الحالة")}</th>
+                  <th className="p-2 text-start">{tr("شركة الشحن")}</th>
+                  <th className="p-2 text-start">{tr("الموظف")}</th>
+                  <th className="p-2 text-start">{tr("الاقتراح")}</th>
                 </tr>
               </thead>
               <tbody>
                 {boardQ.isLoading && (
-                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">جاري التحميل…</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{tr("جاري التحميل…")}</td></tr>
                 )}
                 {!boardQ.isLoading && !queue.length && (
-                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">لا توجد أوردرات مطابقة</td></tr>
+                  <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{tr("لا توجد أوردرات مطابقة")}</td></tr>
                 )}
                 {queue.map((o) => (
                   <tr key={o.id} className="border-t">
@@ -357,7 +353,7 @@ function OrderDistributionPage() {
                           {o.suggestedFee != null ? ` — ${money(o.suggestedFee)}` : ""}
                         </span>
                       ) : (
-                        <span className="text-xs text-muted-foreground">لا يوجد سعر مسجّل</span>
+                        <span className="text-xs text-muted-foreground">{tr("لا يوجد سعر مسجّل")}</span>
                       )}
                     </td>
                   </tr>
@@ -372,13 +368,13 @@ function OrderDistributionPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs">
                 <tr>
-                  <th className="p-2 text-start">شركة الشحن</th>
-                  <th className="p-2 text-start">مفتوحة</th>
-                  <th className="p-2 text-start">قيمة المفتوحة</th>
-                  <th className="p-2 text-start">تم التسليم</th>
-                  <th className="p-2 text-start">مرتجع</th>
-                  <th className="p-2 text-start">نسبة التسليم</th>
-                  <th className="p-2 text-start">تغطية المحافظات</th>
+                  <th className="p-2 text-start">{tr("شركة الشحن")}</th>
+                  <th className="p-2 text-start">{tr("مفتوحة")}</th>
+                  <th className="p-2 text-start">{tr("قيمة المفتوحة")}</th>
+                  <th className="p-2 text-start">{tr("تم التسليم")}</th>
+                  <th className="p-2 text-start">{tr("مرتجع")}</th>
+                  <th className="p-2 text-start">{tr("نسبة التسليم")}</th>
+                  <th className="p-2 text-start">{tr("تغطية المحافظات")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -394,7 +390,7 @@ function OrderDistributionPage() {
                   </tr>
                 ))}
                 {!board?.loads.length && (
-                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">لا توجد بيانات</td></tr>
+                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{tr("لا توجد بيانات")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -406,13 +402,13 @@ function OrderDistributionPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs">
                 <tr>
-                  <th className="p-2 text-start">التاريخ</th>
-                  <th className="p-2 text-start">الأوردر</th>
-                  <th className="p-2 text-start">من</th>
-                  <th className="p-2 text-start">إلى</th>
-                  <th className="p-2 text-start">الطريقة</th>
-                  <th className="p-2 text-start">السبب</th>
-                  <th className="p-2 text-start">بواسطة</th>
+                  <th className="p-2 text-start">{tr("التاريخ")}</th>
+                  <th className="p-2 text-start">{tr("الأوردر")}</th>
+                  <th className="p-2 text-start">{tr("من")}</th>
+                  <th className="p-2 text-start">{tr("إلى")}</th>
+                  <th className="p-2 text-start">{tr("الطريقة")}</th>
+                  <th className="p-2 text-start">{tr("السبب")}</th>
+                  <th className="p-2 text-start">{tr("بواسطة")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -438,8 +434,7 @@ function OrderDistributionPage() {
                 {(logQ.data ?? []).length === 0 && (
                   <tr>
                     <td colSpan={7} className="p-6 text-center text-muted-foreground">
-                      لا توجد عمليات توزيع مسجّلة بعد
-                    </td>
+                      لا توجد عمليات توزيع مس{tr("لا توجد عمليات توزيع مسجّلة بعد")}td>
                   </tr>
                 )}
               </tbody>

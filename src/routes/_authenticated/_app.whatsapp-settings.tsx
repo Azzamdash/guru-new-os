@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -56,12 +57,10 @@ const KEYS = [
 function StatusBadge({ ok }: { ok: boolean }) {
   return ok ? (
     <Badge className="gap-1">
-      <CheckCircle2 className="h-3.5 w-3.5" /> مُفعّل
-    </Badge>
+      <CheckCircle2 className="h-3.5 w-3.5" /> م{tr("مُفعّل")}    </Badge>
   ) : (
     <Badge variant="destructive" className="gap-1">
-      <AlertCircle className="h-3.5 w-3.5" /> غير مضبوط
-    </Badge>
+      <AlertCircle className="h-3.5 w-3.5" /> غ{tr("غير مضبوط")}    </Badge>
   );
 }
 
@@ -93,28 +92,24 @@ function WhatsappSettingsPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <MessageCircle className="h-6 w-6 text-primary" /> إعدادات واتساب
-          </h1>
+            <MessageCircle className="h-6 w-6 text-primary" /> إ{tr("إعدادات واتساب")}          </h1>
           <p className="text-sm text-muted-foreground">
-            إدارة مفاتيح WhatsApp Cloud API المستخدمة في مركز إدارة الأوردرات.
-          </p>
+            إدارة مفاتيح {tr("إدارة مفاتيح WhatsApp Cloud API المستخدمة في مركز إدارة الأوردرات.")}p>
         </div>
         <Button variant="outline" onClick={() => q.refetch()} disabled={q.isFetching}>
-          <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} /> تحديث
-        </Button>
+          <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} /> ت{tr("تحديث")}        </Button>
       </header>
 
       {q.isError && (
         <Card className="border-destructive p-4 text-sm text-destructive">
-          لا تملك صلاحية عرض هذه الإعدادات (متاحة للمدراء فقط).
-        </Card>
+          لا تملك صلا{tr("لا تملك صلاحية عرض هذه الإعدادات (متاحة للمدراء فقط).")}Card>
       )}
 
       {s && (
         <>
           <Card className="space-y-4 p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">حالة المفاتيح</h2>
+              <h2 className="font-semibold">{tr("حالة المفاتيح")}</h2>
               <StatusBadge ok={allSet} />
             </div>
             <div className="space-y-3">
@@ -141,13 +136,11 @@ function WhatsappSettingsPage() {
               })}
             </div>
             <p className="text-xs text-muted-foreground">
-              القيم مخزّنة مشفّرة على الخادم ولا تظهر كاملة في الواجهة. لتغيير أي مفتاح اطلب من المطوّر
-              تحديثه عبر إعدادات الأسرار الآمنة.
-            </p>
+              القيم مخزّنة مش{tr("القيم مخزّنة مشفّرة على الخادم ولا تظهر كاملة في الواجهة. لتغيير أي مفتاح اطلب من المطوّر\n              تحديثه عبر إعدادات الأسرار الآمنة.")}p>
           </Card>
 
           <Card className="space-y-3 p-4">
-            <h2 className="font-semibold">رابط الـ Webhook</h2>
+            <h2 className="font-semibold">{tr("رابط الـ Webhook")}</h2>
             <div className="flex items-center gap-2">
               <Input readOnly value={s.webhookUrl} className="font-mono text-xs" />
               <Button
@@ -155,25 +148,23 @@ function WhatsappSettingsPage() {
                 size="icon"
                 onClick={() => {
                   navigator.clipboard.writeText(s.webhookUrl);
-                  toast.success("تم نسخ الرابط");
+                  toast.success(tr("تم نسخ الرابط"));
                 }}
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              ضع هذا الرابط في Meta → WhatsApp → Configuration → Callback URL، ونفس قيمة
-              WHATSAPP_VERIFY_TOKEN في خانة Verify token، ثم اشترك في حقل messages.
-            </p>
+              ضع هذا الرابط ف{tr("ضع هذا الرابط في Meta → WhatsApp → Configuration → Callback URL، ونفس قيمة\n              WHATSAPP_VERIFY_TOKEN في خانة Verify token، ثم اشترك في حقل messages.")}p>
           </Card>
 
           <Card className="space-y-4 p-4">
-            <h2 className="font-semibold">اختبار الاتصال</h2>
+            <h2 className="font-semibold">{tr("اختبار الاتصال")}</h2>
             <Button onClick={() => testM.mutate()} disabled={testM.isPending}>
               {testM.isPending ? "جاري الفحص..." : "فحص الاتصال بحساب واتساب"}
             </Button>
             <div className="space-y-2">
-              <Label htmlFor="test-phone">إرسال رسالة اختبار إلى رقم (صيغة دولية بدون +)</Label>
+              <Label htmlFor="test-phone">{tr("إرسال رسالة اختبار إلى رقم (صيغة دولية بدون +)")}</Label>
               <div className="flex gap-2">
                 <Input
                   id="test-phone"
@@ -189,7 +180,7 @@ function WhatsappSettingsPage() {
                   disabled={sendM.isPending || phone.trim().length < 8}
                 >
                   إرسال
-                </Button>
+             {tr("إرسال")}Button>
               </div>
             </div>
           </Card>
