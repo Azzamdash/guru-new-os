@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { AR_EN } from "./i18n-ar-en";
+
 
 export type Lang = "ar" | "en";
 
