@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/_app/order-confirmation")(
   component: OrderConfirmationPage,
 });
 
-const money = (n: number) => `${Math.round(n).toLocaleString("ar-EG")} ج`;
+const money = (n: number) => `${Math.round(n).toLocaleString("en-US")} ج`;
 
 function OrderConfirmationPage() {
   const qc = useQueryClient();

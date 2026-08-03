@@ -225,7 +225,7 @@ export const getOrderTimeline = createServerFn({ method: "POST" })
         id: `co-${String(c["id"])}`,
         kind: "collection",
         at: String(c["collected_at"]),
-        title: `تحصيل ${Number(c["amount"] ?? 0).toLocaleString()} (${c["method"]})`,
+        title: `تحصيل ${Number(c["amount"] ?? 0).toLocaleString("en-US")} (${c["method"]})`,
         detail: (c["note"] as string) ?? null,
         source: "collection",
       });

@@ -206,7 +206,7 @@ function SupplierPaymentsPage() {
   </table>
   <div class="amount">المبلغ المدفوع: ${nf(Number(p.amount || 0))} EGP</div>
   <div class="sig"><div>توقيع المورد</div><div>توقيع المستلم</div></div>
-  <div class="foot"><div>مطبوع تلقائياً من نظام e-GURUS</div><div>${new Date().toLocaleString("ar-EG")}</div></div>
+  <div class="foot"><div>مطبوع تلقائياً من نظام e-GURUS</div><div>${new Date().toLocaleString("en-US")}</div></div>
   <div class="noprint" style="text-align:center;margin-top:20px"><button class="btn" onclick="window.print()">طباعة / حفظ PDF</button></div>
 </div>
 <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),300));</script>
@@ -687,7 +687,7 @@ function StatementDialog({
 <h1>كشف حساب مورد</h1><div>${sName}</div><div style="color:#666;font-size:13px">الفترة: ${from || "من البداية"} → ${to || "حتى الآن"}</div>
 <table><thead><tr><th>التاريخ</th><th>البيان</th><th>مدين (له)</th><th>دائن (عليه)</th><th>الرصيد</th></tr></thead><tbody>${rowsHtml}
 <tr><th colspan="2">الإجماليات</th><th class="num">${nf(data.totals.debit)}</th><th class="num">${nf(data.totals.credit)}</th><th class="num">${nf(data.totals.balance)}</th></tr></tbody></table>
-<div class="foot"><div>e-GURUS</div><div>${new Date().toLocaleString("ar-EG")}</div></div>
+<div class="foot"><div>e-GURUS</div><div>${new Date().toLocaleString("en-US")}</div></div>
 <div class="noprint" style="text-align:center;margin-top:20px"><button onclick="window.print()">طباعة / حفظ PDF</button></div>
 <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),300));</script>
 </body></html>`;

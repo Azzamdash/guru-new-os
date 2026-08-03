@@ -78,7 +78,7 @@ function MaterialsPage() {
               <tr key={m.id} className="border-b border-border/50 hover:bg-muted/30">
                 <td className="p-3 font-medium">{m.name}</td>
                 <td className="p-3 text-muted-foreground">{unitLabel(m.unit)}</td>
-                <td className="p-3 num text-left">{m.unit_cost.toLocaleString()}</td>
+                <td className="p-3 num text-left">{m.unit_cost.toLocaleString("en-US")}</td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-1">
                     {(m.brand_ids ?? []).length === 0 && <span className="text-muted-foreground text-xs">—</span>}

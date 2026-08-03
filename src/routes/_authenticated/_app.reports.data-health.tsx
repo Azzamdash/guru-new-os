@@ -53,7 +53,7 @@ function DataHealthPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Activity className="w-6 h-6" /> صحة البيانات</h1>
           <p className="text-sm text-muted-foreground">
-            آخر تحديث: {new Date(data.generatedAt).toLocaleString("ar-EG")} — تحديث تلقائي كل دقيقة
+            آخر تحديث: {new Date(data.generatedAt).toLocaleString("en-US")} — تحديث تلقائي كل دقيقة
           </p>
         </div>
       </div>
@@ -62,7 +62,7 @@ function DataHealthPage() {
         <Kpi label="عناصر أوردر بتكلفة صفر" value={data.cogsZero.orderItems} tone={data.cogsZero.orderItems > 0 ? "warn" : "good"} />
         <Kpi label="اوردرات cost = 0" value={data.cogsZero.ordersWithZeroCost} tone={data.cogsZero.ordersWithZeroCost > 0 ? "warn" : "good"} />
         <Kpi label="منتجات بدون COGS" value={data.cogsZero.products} tone={data.cogsZero.products > 0 ? "warn" : "good"} />
-        <Kpi label="إجمالي COD مفتوح" value={data.couriers.totalOpenCod.toLocaleString("ar-EG", { maximumFractionDigits: 0 })} />
+        <Kpi label="إجمالي COD مفتوح" value={data.couriers.totalOpenCod.toLocaleString("en-US", { maximumFractionDigits: 0 })} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

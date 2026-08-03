@@ -127,7 +127,7 @@ function CalendarPage() {
                 <span className="text-sm truncate">{e.title}</span>
                 {e.resource && <span className="text-xs text-muted-foreground truncate">• {e.resource}</span>}
               </div>
-              <span className="text-xs text-muted-foreground shrink-0">{new Date(e.starts_at).toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground shrink-0">{new Date(e.starts_at).toLocaleString("en-US")}</span>
             </button>
           ))}
           {q.data?.length === 0 && <div className="text-sm text-muted-foreground">No events in this range.</div>}

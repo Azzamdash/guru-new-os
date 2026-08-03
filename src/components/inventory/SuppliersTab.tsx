@@ -153,9 +153,9 @@ export function SuppliersTab() {
                 <td className="p-3 font-medium">{s.name}</td>
                 <td className="p-3 text-muted-foreground">{s.contact ?? "—"}</td>
                 <td className="p-3 num text-left">{s.invoiceCount}</td>
-                <td className="p-3 num text-left font-semibold">{s.outstanding.toLocaleString()}</td>
+                <td className="p-3 num text-left font-semibold">{s.outstanding.toLocaleString("en-US")}</td>
                 <td className="p-3 text-left">
-                  {s.overdue > 0 ? <Badge variant="destructive">{s.overdue.toLocaleString()}</Badge> : <span className="text-muted-foreground">—</span>}
+                  {s.overdue > 0 ? <Badge variant="destructive">{s.overdue.toLocaleString("en-US")}</Badge> : <span className="text-muted-foreground">—</span>}
                 </td>
                 <td className="p-3 text-left">
                   {isAdmin && (
@@ -433,7 +433,7 @@ function SupplierDetail({
               <div key={inv.id} className="p-3 rounded-md bg-muted/30 border border-border/50">
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="num font-semibold">{Number(inv.amount).toLocaleString()}</span>
+                    <span className="num font-semibold">{Number(inv.amount).toLocaleString("en-US")}</span>
                     <span className="text-muted-foreground">·</span>
                     <span className="text-xs text-muted-foreground">{inv.issued_at}</span>
                     {inv.due_at && <span className={`text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>← {inv.due_at}</span>}
@@ -461,12 +461,12 @@ function SupplierDetail({
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  مدفوع: <span className="num">{paid.toLocaleString()}</span> · متبقي: <span className="num font-semibold">{remaining.toLocaleString()}</span>
+                  مدفوع: <span className="num">{paid.toLocaleString("en-US")}</span> · متبقي: <span className="num font-semibold">{remaining.toLocaleString("en-US")}</span>
                   {inv.note && <> · {inv.note}</>}
                 </div>
                 {payments.filter((p) => p.invoice_id === inv.id).map((p) => (
                   <div key={p.id} className="flex items-center justify-between mt-1 pl-3 text-xs text-muted-foreground border-r-2 border-primary/30 pr-2">
-                    <span>دفعة {Number(p.amount).toLocaleString()} · {p.paid_at} {p.note ? `· ${p.note}` : ""}</span>
+                    <span>دفعة {Number(p.amount).toLocaleString("en-US")} · {p.paid_at} {p.note ? `· ${p.note}` : ""}</span>
                     {isAdmin && (
                       <Button size="sm" variant="ghost" onClick={() => delPay({ data: { id: p.id } }).then(onChanged)}>
                         <Trash2 className="w-3 h-3 text-destructive" />

@@ -100,7 +100,7 @@ function PurchasesPage() {
     return { total, paid, open, overdueCount: overdue.length, overdueTotal, topSuppliers, statusSplit };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, suppliers]);
-  const nf = (n: number) => Number(n || 0).toLocaleString();
+  const nf = (n: number) => Number(n || 0).toLocaleString("en-US");
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -181,7 +181,7 @@ function PurchasesPage() {
                   <td className="p-3 num" dir="ltr">{r.issued_at}</td>
                   <td className="p-3 font-medium">{supplierName(r.supplier_id)}</td>
                   <td className="p-3 text-muted-foreground">{brandName(r.brand_id)}</td>
-                  <td className="p-3 num text-left">{Number(r.amount).toLocaleString()}</td>
+                  <td className="p-3 num text-left">{Number(r.amount).toLocaleString("en-US")}</td>
                   <td className="p-3 num text-muted-foreground" dir="ltr">{r.due_at ?? "—"}</td>
                   <td className="p-3">
                     {r.status === "paid" ? <Badge>مدفوعة</Badge> : <Badge variant="outline">آجل</Badge>}
@@ -375,9 +375,9 @@ function ItemsDialog({ invoiceId, onClose, canWrite }: { invoiceId: string | nul
                 <tr key={r.id} className="border-b border-border/50">
                   <td className="p-2 text-muted-foreground">{r.kind === "product" ? "منتج" : r.kind === "material" ? "خامة" : "أخرى"}</td>
                   <td className="p-2 font-medium">{labelFor(r)}</td>
-                  <td className="p-2 num text-left">{Number(r.qty).toLocaleString()}</td>
-                  <td className="p-2 num text-left">{Number(r.unit_cost).toLocaleString()}</td>
-                  <td className="p-2 num text-left">{Number(r.subtotal).toLocaleString()}</td>
+                  <td className="p-2 num text-left">{Number(r.qty).toLocaleString("en-US")}</td>
+                  <td className="p-2 num text-left">{Number(r.unit_cost).toLocaleString("en-US")}</td>
+                  <td className="p-2 num text-left">{Number(r.subtotal).toLocaleString("en-US")}</td>
                   <td className="p-2 text-left">
                     {canWrite && <Button size="icon" variant="ghost" onClick={() => setConfirmDel(r.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>}
                   </td>
@@ -386,7 +386,7 @@ function ItemsDialog({ invoiceId, onClose, canWrite }: { invoiceId: string | nul
               {rows.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">لا بنود.</td></tr>}
             </tbody>
             <tfoot>
-              <tr className="font-semibold"><td className="p-2" colSpan={4}>الإجمالي</td><td className="p-2 num text-left" colSpan={2}>{total.toLocaleString()}</td></tr>
+              <tr className="font-semibold"><td className="p-2" colSpan={4}>الإجمالي</td><td className="p-2 num text-left" colSpan={2}>{total.toLocaleString("en-US")}</td></tr>
             </tfoot>
           </table>
         </div>

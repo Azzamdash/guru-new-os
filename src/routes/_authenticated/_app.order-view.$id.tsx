@@ -24,8 +24,8 @@ export const Route = createFileRoute("/_authenticated/_app/order-view/$id")({
   component: OrderViewPage,
 });
 
-const money = (n: number) => `${Math.round(n).toLocaleString("ar-EG")} ج`;
-const dt = (v: unknown) => (v ? new Date(String(v)).toLocaleString("ar-EG") : "—");
+const money = (n: number) => `${Math.round(n).toLocaleString("en-US")} ج`;
+const dt = (v: unknown) => (v ? new Date(String(v)).toLocaleString("en-US") : "—");
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

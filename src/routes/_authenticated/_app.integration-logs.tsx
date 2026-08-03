@@ -126,7 +126,7 @@ function IntegrationLogsPage() {
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.id} className="border-t align-top">
-                      <td className="py-2 pr-3 whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{new Date(r.created_at).toLocaleString("en-US")}</td>
                       <td className="py-2 pr-3">{r.provider}</td>
                       <td className="py-2 pr-3">{r.direction}</td>
                       <td className="py-2 pr-3 font-mono">{r.operation}</td>

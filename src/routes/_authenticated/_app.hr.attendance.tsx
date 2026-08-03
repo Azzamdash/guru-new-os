@@ -214,7 +214,7 @@ function AttendancePage() {
         <Kpi label="عدد السجلات" value={logs.length} />
         <Kpi label="إجمالي التأخير" value={fmtDur(totals.late)} color="text-amber-500" />
         <Kpi label="إجمالي الأوفر تايم" value={fmtDur(totals.overtime)} color="text-emerald-500" />
-        <Kpi label="صافي مكافآت − خصومات" value={Math.round(totals.overtimePay - totals.lateDeduction).toLocaleString()} color={totals.overtimePay - totals.lateDeduction >= 0 ? "text-emerald-500" : "text-destructive"} />
+        <Kpi label="صافي مكافآت − خصومات" value={Math.round(totals.overtimePay - totals.lateDeduction).toLocaleString("en-US")} color={totals.overtimePay - totals.lateDeduction >= 0 ? "text-emerald-500" : "text-destructive"} />
       </div>
 
       <Tabs defaultValue="log" dir="rtl">
@@ -307,9 +307,9 @@ function AttendancePage() {
                       <td className="p-3 text-center text-amber-500">{fmtDur(r.late)}</td>
                       <td className="p-3 text-center text-emerald-500">{fmtDur(r.overtime)}</td>
                       <td className="p-3 text-center num">{r.rate ? r.rate.toFixed(2) : <span className="text-muted-foreground">حدد الجدول</span>}</td>
-                      <td className="p-3 text-center num text-destructive">{Math.round(r.lateDeduction).toLocaleString()}</td>
-                      <td className="p-3 text-center num text-emerald-500">{Math.round(r.overtimePay).toLocaleString()}</td>
-                      <td className={`p-3 text-center num font-semibold ${r.net >= 0 ? "text-emerald-500" : "text-destructive"}`}>{Math.round(r.net).toLocaleString()}</td>
+                      <td className="p-3 text-center num text-destructive">{Math.round(r.lateDeduction).toLocaleString("en-US")}</td>
+                      <td className="p-3 text-center num text-emerald-500">{Math.round(r.overtimePay).toLocaleString("en-US")}</td>
+                      <td className={`p-3 text-center num font-semibold ${r.net >= 0 ? "text-emerald-500" : "text-destructive"}`}>{Math.round(r.net).toLocaleString("en-US")}</td>
                     </tr>
                   ))}
                   {report.length === 0 && (
@@ -506,7 +506,7 @@ function ScheduleRow({ emp, canWrite, onSave }: {
   };
   return (
     <tr className="border-b border-border/50">
-      <td className="p-3 font-medium">{emp.name}<div className="text-xs text-muted-foreground">مرتب: {Number(emp.salary || 0).toLocaleString()}</div></td>
+      <td className="p-3 font-medium">{emp.name}<div className="text-xs text-muted-foreground">مرتب: {Number(emp.salary || 0).toLocaleString("en-US")}</div></td>
       <td className="p-2 text-center">
         <Input type="time" dir="ltr" disabled={!canWrite} className="w-28 mx-auto"
           value={v.work_start_time} onChange={(e) => setV({ ...v, work_start_time: e.target.value })} />

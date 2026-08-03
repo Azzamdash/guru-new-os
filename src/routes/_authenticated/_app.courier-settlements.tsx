@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/_app/courier-settlements")
   component: CourierSettlementsPage,
 });
 
-const money = (n: number) => `${Math.round(n).toLocaleString("ar-EG")} ج`;
+const money = (n: number) => `${Math.round(n).toLocaleString("en-US")} ج`;
 
 function CourierSettlementsPage() {
   const qc = useQueryClient();

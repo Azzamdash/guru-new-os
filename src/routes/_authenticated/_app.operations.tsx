@@ -217,7 +217,7 @@ function OperationsPage() {
                 <span className={`mt-1 w-1.5 h-1.5 rounded-full ${a.severity === "danger" ? "bg-destructive" : "bg-amber-500"}`} />
                 <div className="flex-1 min-w-0">
                   <div className="truncate">{a.message}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5" dir="ltr">{new Date(a.when).toLocaleString()}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5" dir="ltr">{new Date(a.when).toLocaleString("en-US")}</div>
                 </div>
               </div>
             ))}
