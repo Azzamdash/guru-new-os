@@ -86,7 +86,9 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
             <span className="text-gradient-primary">{tr("لوحة تحكم حية")}</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg">
-            {tr("اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في\n            رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.")}
+            {tr(
+              "اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في\n            رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.",
+            )}
           </p>
           <div className="grid grid-cols-2 gap-3 mt-2">
             {[

@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { AlertTriangle, Inbox, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/lib/i18n";

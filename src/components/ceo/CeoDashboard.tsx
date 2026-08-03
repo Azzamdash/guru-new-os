@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { useMemo } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";

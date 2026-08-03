@@ -14,13 +14,15 @@ type AuthorizationDetails = {
   scopes?: string[];
 };
 type OAuthResult = { data: AuthorizationDetails | null; error: { message: string } | null };
-const authOAuth = (supabase.auth as unknown as {
-  oauth: {
-    getAuthorizationDetails: (id: string) => Promise<OAuthResult>;
-    approveAuthorization: (id: string) => Promise<OAuthResult>;
-    denyAuthorization: (id: string) => Promise<OAuthResult>;
-  };
-}).oauth;
+const authOAuth = (
+  supabase.auth as unknown as {
+    oauth: {
+      getAuthorizationDetails: (id: string) => Promise<OAuthResult>;
+      approveAuthorization: (id: string) => Promise<OAuthResult>;
+      denyAuthorization: (id: string) => Promise<OAuthResult>;
+    };
+  }
+).oauth;
 
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
@@ -45,7 +47,9 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   errorComponent: ({ error }) => (
     <main className="p-8 max-w-lg mx-auto">
       <Card className="p-6">
-        <p>{tr("تعذّر تحميل طلب الصلاحية:")} {String((error as Error)?.message ?? error)}</p>
+        <p>
+          {tr("تعذّر تحميل طلب الصلاحية:")} {String((error as Error)?.message ?? error)}
+        </p>
       </Card>
     </main>
   ),
@@ -82,19 +86,32 @@ function Consent() {
   return (
     <main className="min-h-screen flex items-center justify-center p-4" dir="rtl">
       <Card className="p-8 max-w-md w-full space-y-4">
-        <h1 className="text-2xl font-bold">{tr("ربط")} {clientName} {tr("بحسابك")}</h1>
+        <h1 className="text-2xl font-bold">
+          {tr("ربط")} {clientName} {tr("بحسابك")}
+        </h1>
         <p className="text-muted-foreground">
-          {tr("سيسمح هذا لـ")} {clientName} {tr("باستخدام تطبيق e-GURUS بالنيابة عنك، مع احترام صلاحياتك على البراندات والأقسام.")}
+          {tr("سيسمح هذا لـ")} {clientName}{" "}
+          {tr("باستخدام تطبيق e-GURUS بالنيابة عنك، مع احترام صلاحياتك على البراندات والأقسام.")}
         </p>
         {details?.scopes && details.scopes.length > 0 && (
           <ul className="text-sm list-disc pr-5 space-y-1">
-            {details.scopes.map((s: string) => <li key={s}>{s}</li>)}
+            {details.scopes.map((s: string) => (
+              <li key={s}>{s}</li>
+            ))}
           </ul>
         )}
-        {error && <p role="alert" className="text-destructive text-sm">{error}</p>}
+        {error && (
+          <p role="alert" className="text-destructive text-sm">
+            {error}
+          </p>
+        )}
         <div className="flex gap-3 pt-2">
-          <Button disabled={busy} onClick={() => decide(true)}>{tr("موافقة")}</Button>
-          <Button variant="outline" disabled={busy} onClick={() => decide(false)}>{tr("رفض")}</Button>
+          <Button disabled={busy} onClick={() => decide(true)}>
+            {tr("موافقة")}
+          </Button>
+          <Button variant="outline" disabled={busy} onClick={() => decide(false)}>
+            {tr("رفض")}
+          </Button>
         </div>
       </Card>
     </main>

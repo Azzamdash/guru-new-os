@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell } from "lucide-react";

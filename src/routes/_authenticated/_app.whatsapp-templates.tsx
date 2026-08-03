@@ -183,7 +183,9 @@ function WhatsappTemplatesPage() {
           rows={4}
           value={draft.body}
           onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-          placeholder={tr("مرحباً {{customer_name}}، أوردرك رقم {{order_number}} خرج للشحن مع {{courier}} — رقم التتبع {{tracking}}.")}
+          placeholder={tr(
+            "مرحباً {{customer_name}}، أوردرك رقم {{order_number}} خرج للشحن مع {{courier}} — رقم التتبع {{tracking}}.",
+          )}
         />
         <div className="text-xs text-muted-foreground">
           {T("المتغيرات المتاحة", "Available variables")}:{" "}

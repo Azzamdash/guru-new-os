@@ -3,7 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { listAuditLog } from "@/lib/audit.functions";
@@ -11,11 +17,16 @@ import { useLang, tr } from "@/lib/i18n";
 import { ShieldAlert, Plus, Pencil, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/audit")({
-  head: () => ({ meta: [
-    { title: tr("سجل التدقيق المالي — e-GURUS") },
-    { name: "description", content: "سجل كامل بكل التعديلات على الفواتير والمصروفات والمعاملات النقدية." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: tr("سجل التدقيق المالي — e-GURUS") },
+      {
+        name: "description",
+        content: "سجل كامل بكل التعديلات على الفواتير والمصروفات والمعاملات النقدية.",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: Page,
 });
 
@@ -43,14 +54,17 @@ function Page() {
 
   const q = useQuery({
     queryKey: ["audit", tableName, operation, from, to, page],
-    queryFn: () => fn({ data: {
-      tableName: tableName === "all" ? null : tableName,
-      operation: operation === "all" ? null : (operation as "INSERT"|"UPDATE"|"DELETE"),
-      from: from || null,
-      to: to || null,
-      limit,
-      offset: (page - 1) * limit,
-    }}),
+    queryFn: () =>
+      fn({
+        data: {
+          tableName: tableName === "all" ? null : tableName,
+          operation: operation === "all" ? null : (operation as "INSERT" | "UPDATE" | "DELETE"),
+          from: from || null,
+          to: to || null,
+          limit,
+          offset: (page - 1) * limit,
+        },
+      }),
   });
 
   const opIcon = (op: string) => {
@@ -81,19 +95,43 @@ function Page() {
       </h1>
       <Card className="card-gradient p-4 flex flex-wrap gap-3 items-end">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">{L(tr("الجدول"), "Table")}</label>
-          <Select value={tableName} onValueChange={(v) => { setTableName(v); setPage(1); }}>
-            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <label className="text-xs text-muted-foreground block mb-1">
+            {L(tr("الجدول"), "Table")}
+          </label>
+          <Select
+            value={tableName}
+            onValueChange={(v) => {
+              setTableName(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{L(tr("الكل"), "All")}</SelectItem>
-              {TABLES.map((t) => <SelectItem key={t.v} value={t.v}>{L(t.ar, t.en)}</SelectItem>)}
+              {TABLES.map((t) => (
+                <SelectItem key={t.v} value={t.v}>
+                  {L(t.ar, t.en)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">{L(tr("العملية"), "Operation")}</label>
-          <Select value={operation} onValueChange={(v) => { setOperation(v); setPage(1); }}>
-            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <label className="text-xs text-muted-foreground block mb-1">
+            {L(tr("العملية"), "Operation")}
+          </label>
+          <Select
+            value={operation}
+            onValueChange={(v) => {
+              setOperation(v);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{L(tr("الكل"), "All")}</SelectItem>
               <SelectItem value="INSERT">{L(tr("إضافة"), "Insert")}</SelectItem>
@@ -104,13 +142,38 @@ function Page() {
         </div>
         <div>
           <label className="text-xs text-muted-foreground block mb-1">{L(tr("من"), "From")}</label>
-          <Input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(1); }} className="w-40" />
+          <Input
+            type="date"
+            value={from}
+            onChange={(e) => {
+              setFrom(e.target.value);
+              setPage(1);
+            }}
+            className="w-40"
+          />
         </div>
         <div>
           <label className="text-xs text-muted-foreground block mb-1">{L(tr("إلى"), "To")}</label>
-          <Input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(1); }} className="w-40" />
+          <Input
+            type="date"
+            value={to}
+            onChange={(e) => {
+              setTo(e.target.value);
+              setPage(1);
+            }}
+            className="w-40"
+          />
         </div>
-        <Button variant="outline" onClick={() => { setTableName("all"); setOperation("all"); setFrom(""); setTo(""); setPage(1); }}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setTableName("all");
+            setOperation("all");
+            setFrom("");
+            setTo("");
+            setPage(1);
+          }}
+        >
           {L(tr("مسح الفلاتر"), "Clear")}
         </Button>
       </Card>
@@ -118,27 +181,40 @@ function Page() {
       <Card className="card-gradient p-5">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-border text-muted-foreground">
-              <th className="p-2 text-start">{L(tr("التاريخ"), "When")}</th>
-              <th className="p-2 text-start">{L(tr("المستخدم"), "User")}</th>
-              <th className="p-2 text-start">{L(tr("الجدول"), "Table")}</th>
-              <th className="p-2 text-center">{L(tr("العملية"), "Op")}</th>
-              <th className="p-2 text-start">{L(tr("الحقول المتغيرة"), "Changed fields")}</th>
-              <th className="p-2"></th>
-            </tr></thead>
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="p-2 text-start">{L(tr("التاريخ"), "When")}</th>
+                <th className="p-2 text-start">{L(tr("المستخدم"), "User")}</th>
+                <th className="p-2 text-start">{L(tr("الجدول"), "Table")}</th>
+                <th className="p-2 text-center">{L(tr("العملية"), "Op")}</th>
+                <th className="p-2 text-start">{L(tr("الحقول المتغيرة"), "Changed fields")}</th>
+                <th className="p-2"></th>
+              </tr>
+            </thead>
             <tbody>
-              {q.isLoading && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">…</td></tr>}
+              {q.isLoading && (
+                <tr>
+                  <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                    …
+                  </td>
+                </tr>
+              )}
               {(q.data?.rows ?? []).map((r) => {
                 const fields = r.operation === "UPDATE" ? diffFields(r.old_data, r.new_data) : [];
                 const tbl = TABLES.find((x) => x.v === r.table_name);
                 return (
                   <>
                     <tr key={r.id} className="border-b border-border/50 align-top">
-                      <td className="p-2 num text-xs whitespace-nowrap">{new Date(r.created_at).toLocaleString("en-US")}</td>
+                      <td className="p-2 num text-xs whitespace-nowrap">
+                        {new Date(r.created_at).toLocaleString("en-US")}
+                      </td>
                       <td className="p-2 text-xs">{r.actor_email}</td>
                       <td className="p-2">{tbl ? L(tbl.ar, tbl.en) : r.table_name}</td>
                       <td className={`p-2 text-center ${opTone(r.operation)}`}>
-                        <span className="inline-flex items-center gap-1">{opIcon(r.operation)}{r.operation}</span>
+                        <span className="inline-flex items-center gap-1">
+                          {opIcon(r.operation)}
+                          {r.operation}
+                        </span>
                       </td>
                       <td className="p-2 text-xs">
                         {r.operation === "UPDATE"
@@ -146,7 +222,11 @@ function Page() {
                           : L("—", "—")}
                       </td>
                       <td className="p-2 text-end">
-                        <Button size="sm" variant="ghost" onClick={() => setExpanded(expanded === r.id ? null : r.id)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setExpanded(expanded === r.id ? null : r.id)}
+                        >
                           {expanded === r.id ? L(tr("إخفاء"), "Hide") : L(tr("عرض"), "View")}
                         </Button>
                       </td>
@@ -168,32 +248,57 @@ function Page() {
                 );
               })}
               {!q.isLoading && (q.data?.rows ?? []).length === 0 && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد سجلات"), "No records")}</td></tr>
+                <tr>
+                  <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                    {L(tr("لا توجد سجلات"), "No records")}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
         <div className="mt-4 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <div className="tabular-nums">{L(tr("الإجمالي"), "Total")}: {q.data?.total ?? 0}</div>
+          <div className="tabular-nums">
+            {L(tr("الإجمالي"), "Total")}: {q.data?.total ?? 0}
+          </div>
           <Input
-            placeholder={L(tr("ابحث داخل التغييرات (اسم الحقل أو القيمة)…"), "Search inside changes (field or value)…")}
+            placeholder={L(
+              tr("ابحث داخل التغييرات (اسم الحقل أو القيمة)…"),
+              "Search inside changes (field or value)…",
+            )}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-xs h-8"
           />
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-7" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
               {L(tr("السابق"), "Prev")}
             </Button>
-            <span className="tabular-nums min-w-[70px] text-center">{page} / {totalPages}</span>
-            <Button variant="outline" size="sm" className="h-7" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+            <span className="tabular-nums min-w-[70px] text-center">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
               {L(tr("التالي"), "Next")}
             </Button>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-3">
           {L(
-            tr("يتم تسجيل كل إضافة أو تعديل أو حذف على الجداول المالية تلقائيًا. السجلات غير قابلة للتعديل أو الحذف."),
+            tr(
+              "يتم تسجيل كل إضافة أو تعديل أو حذف على الجداول المالية تلقائيًا. السجلات غير قابلة للتعديل أو الحذف.",
+            ),
             "Every insert/update/delete on financial tables is auto-recorded. Records are immutable.",
           )}
         </p>
@@ -242,7 +347,11 @@ function DiffView({
     });
 
   if (rows.length === 0) {
-    return <div className="text-xs text-muted-foreground">{L(tr("لا يوجد اختلاف مطابق للبحث"), "No matching differences")}</div>;
+    return (
+      <div className="text-xs text-muted-foreground">
+        {L(tr("لا يوجد اختلاف مطابق للبحث"), "No matching differences")}
+      </div>
+    );
   }
 
   return (

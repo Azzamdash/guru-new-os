@@ -1,9 +1,15 @@
 import { Link } from "@tanstack/react-router";
 import { useLang } from "@/lib/i18n";
-import { pagesForHub, canSeePage, HUB_BY_KEY, type HubKey, type RoleCtx, type NavPage } from "@/lib/nav-registry";
+import {
+  pagesForHub,
+  canSeePage,
+  HUB_BY_KEY,
+  type HubKey,
+  type RoleCtx,
+  type NavPage,
+} from "@/lib/nav-registry";
 import { Lock } from "lucide-react";
 import { CeoDashboard } from "@/components/ceo/CeoDashboard";
-
 
 export function HubPage({ hub, ctx }: { hub: HubKey; ctx: RoleCtx }) {
   const { lang } = useLang();
@@ -15,18 +21,22 @@ export function HubPage({ hub, ctx }: { hub: HubKey; ctx: RoleCtx }) {
   return (
     <div className="relative min-h-screen p-4 md:p-8 space-y-6">
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className={`absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-gradient-to-br ${meta.accent} blur-3xl opacity-60`} />
+        <div
+          className={`absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-gradient-to-br ${meta.accent} blur-3xl opacity-60`}
+        />
         <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
       <div className="rounded-3xl bg-card/60 backdrop-blur-xl border border-border/60 shadow-xl p-5 md:p-7">
         <div className="flex items-center gap-4">
-          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.accent} border border-border/60 flex items-center justify-center`}>
+          <div
+            className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${meta.accent} border border-border/60 flex items-center justify-center`}
+          >
             <HubIcon className="w-7 h-7 text-foreground" />
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">
-              {meta.en}
+              {lang === "ar" ? meta.ar : meta.en}
             </h1>
             <p className="text-sm text-muted-foreground">
               {lang === "ar" ? meta.descAr : meta.descEn}
@@ -51,7 +61,7 @@ export function HubPage({ hub, ctx }: { hub: HubKey; ctx: RoleCtx }) {
             return (
               <div key={sec.key} className="space-y-3">
                 <h2 className="text-lg font-bold text-foreground/90">
-                  {sec.en}
+                  {lang === "ar" ? sec.ar : sec.en}
                 </h2>
                 <CardGrid items={items} lang={lang} />
               </div>
@@ -70,14 +80,12 @@ export function HubPage({ hub, ctx }: { hub: HubKey; ctx: RoleCtx }) {
             );
           })()}
         </div>
-
       ) : (
         <CardGrid items={visible} lang={lang} />
       )}
     </div>
   );
 }
-
 
 const OVERVIEW_SECTIONS: { key: string; ar: string; en: string }[] = [
   { key: "executive", ar: "نظرة تنفيذية", en: "Executive" },
@@ -104,7 +112,7 @@ function CardGrid({ items, lang }: { items: NavPage[]; lang: string }) {
             </div>
             <div>
               <div className="font-semibold text-sm leading-tight">
-                {p.en}
+                {lang === "ar" ? p.ar : p.en}
               </div>
               {(p.descAr || p.descEn) && (
                 <div className="text-xs text-muted-foreground mt-1 line-clamp-2">

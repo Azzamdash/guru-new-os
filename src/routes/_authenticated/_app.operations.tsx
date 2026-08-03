@@ -33,7 +33,7 @@ import {
 } from "@/lib/operations.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { listOrderPrepUsers } from "@/lib/admin.functions";
-import { useLang, tr } from "@/lib/i18n";
+import { useLang } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/operations")({

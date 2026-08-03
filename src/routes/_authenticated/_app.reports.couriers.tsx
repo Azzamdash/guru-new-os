@@ -3,10 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Truck } from "lucide-react";
-import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
+import {
+  PeriodFilter,
+  defaultPeriod,
+  resolvePeriod,
+  type PeriodValue,
+} from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
 import { getCouriersDashboard } from "@/lib/couriers.functions";
 import { listBrands } from "@/lib/internal.functions";
@@ -15,11 +26,16 @@ import { registerReportOrderCount, orderScopeKey } from "@/lib/salesUnify";
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/couriers")({
-  head: () => ({ meta: [
-    { title: tr("لوحة شركات الشحن — e-GURUS") },
-    { name: "description", content: "تحليل أداء المناديب وشركات الشحن حسب البراند والمدة والمحافظة." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: tr("لوحة شركات الشحن — e-GURUS") },
+      {
+        name: "description",
+        content: "تحليل أداء المناديب وشركات الشحن حسب البراند والمدة والمحافظة.",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: CouriersReport,
 });
 
@@ -37,7 +53,15 @@ function CouriersReport() {
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
   const dashQ = useQuery({
     queryKey: ["couriers-dash", from, to, brandId, courierId],
-    queryFn: () => dashFn({ data: { from, to, brandId: brandId === "all" ? null : brandId, courierId: courierId === "all" ? null : courierId } }),
+    queryFn: () =>
+      dashFn({
+        data: {
+          from,
+          to,
+          brandId: brandId === "all" ? null : brandId,
+          courierId: courierId === "all" ? null : courierId,
+        },
+      }),
   });
   const d = dashQ.data;
   useEffect(() => {
@@ -56,23 +80,37 @@ function CouriersReport() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center gap-2">
         <Truck className="w-7 h-7" />
-        <h1 className="text-3xl font-bold">{AR ? tr("لوحة شركات الشحن والمناديب") : "Couriers Dashboard"}</h1>
+        <h1 className="text-3xl font-bold">
+          {AR ? tr("لوحة شركات الشحن والمناديب") : "Couriers Dashboard"}
+        </h1>
       </div>
 
       <Card className="card-gradient p-4 flex flex-wrap items-center gap-3">
         <PeriodFilter value={period} onChange={setPeriod} />
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("all_brands")}</SelectItem>
-            {(brandsQ.data ?? []).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            {(brandsQ.data ?? []).map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={courierId} onValueChange={setCourierId}>
-          <SelectTrigger className="w-56"><SelectValue placeholder={AR ? tr("كل المناديب") : "All couriers"} /></SelectTrigger>
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder={AR ? tr("كل المناديب") : "All couriers"} />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{AR ? tr("كل المناديب") : "All couriers"}</SelectItem>
-            {(d?.couriersList ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            {(d?.couriersList ?? []).map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </Card>
@@ -80,40 +118,69 @@ function CouriersReport() {
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
         <Kpi label={AR ? tr("الأوردرات") : "Orders"} value={nf(d?.totals.orders ?? 0)} />
-        <Kpi label={AR ? tr("مسلَّم (أوردرات)") : "Delivered (orders)"} value={nf(d?.totals.delivered ?? 0)} tone="success" />
-        <Kpi label={AR ? tr("مسلَّم (قطع)") : "Delivered (pieces)"} value={nf(d?.totals.deliveredPieces ?? 0)} tone="success" />
-        <Kpi label={AR ? tr("مرتجع") : "Returned"} value={nf(d?.totals.returned ?? 0)} tone="destructive" />
+        <Kpi
+          label={AR ? tr("مسلَّم (أوردرات)") : "Delivered (orders)"}
+          value={nf(d?.totals.delivered ?? 0)}
+          tone="success"
+        />
+        <Kpi
+          label={AR ? tr("مسلَّم (قطع)") : "Delivered (pieces)"}
+          value={nf(d?.totals.deliveredPieces ?? 0)}
+          tone="success"
+        />
+        <Kpi
+          label={AR ? tr("مرتجع") : "Returned"}
+          value={nf(d?.totals.returned ?? 0)}
+          tone="destructive"
+        />
         <Kpi label={AR ? tr("في الطريق") : "In transit"} value={nf(d?.totals.inTransit ?? 0)} />
-        <Kpi label={AR ? tr("نسبة التسليم") : "Delivery rate"} value={pct(d?.totals.deliveryRate ?? 0)} tone="success" />
-        <Kpi label={AR ? tr("متوقع تحصيله") : "Expected COD"} value={nf(Math.round(d?.totals.expectedCod ?? 0))} />
-        <Kpi label={AR ? tr("التحصيل") : "Collected"} value={nf(Math.round(d?.totals.collected ?? 0))} />
+        <Kpi
+          label={AR ? tr("نسبة التسليم") : "Delivery rate"}
+          value={pct(d?.totals.deliveryRate ?? 0)}
+          tone="success"
+        />
+        <Kpi
+          label={AR ? tr("متوقع تحصيله") : "Expected COD"}
+          value={nf(Math.round(d?.totals.expectedCod ?? 0))}
+        />
+        <Kpi
+          label={AR ? tr("التحصيل") : "Collected"}
+          value={nf(Math.round(d?.totals.collected ?? 0))}
+        />
       </div>
-
 
       {/* Couriers table */}
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 font-semibold">{AR ? tr("أداء كل مندوب / شركة") : "Per courier performance"}</div>
+        <div className="p-4 font-semibold">
+          {AR ? tr("أداء كل مندوب / شركة") : "Per courier performance"}
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-border text-muted-foreground">
-              <th className="p-3 text-start">{AR ? tr("الاسم") : "Name"}</th>
-              <th className="p-3 text-start">{AR ? tr("النوع") : "Type"}</th>
-              <th className="p-3 text-start">{AR ? tr("الأوردرات") : "Orders"}</th>
-              <th className="p-3 text-start">{AR ? tr("مسلَّم (أوردرات)") : "Delivered (orders)"}</th>
-              <th className="p-3 text-start">{AR ? tr("مسلَّم (قطع)") : "Delivered (pieces)"}</th>
-              <th className="p-3 text-start">{AR ? tr("مرتجع") : "Returned"}</th>
-              <th className="p-3 text-start">{AR ? tr("في الطريق") : "In transit"}</th>
-              <th className="p-3 text-start">{AR ? tr("نسبة التسليم") : "Delivery %"}</th>
-              <th className="p-3 text-start">{AR ? tr("نسبة الارتجاع") : "Return %"}</th>
-              <th className="p-3 text-start">{AR ? tr("متوقع تحصيله") : "Expected COD"}</th>
-              <th className="p-3 text-start">{AR ? tr("التحصيل") : "Collected"}</th>
-              <th className="p-3 text-start">{AR ? tr("الشحن") : "Shipping"}</th>
-            </tr></thead>
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="p-3 text-start">{AR ? tr("الاسم") : "Name"}</th>
+                <th className="p-3 text-start">{AR ? tr("النوع") : "Type"}</th>
+                <th className="p-3 text-start">{AR ? tr("الأوردرات") : "Orders"}</th>
+                <th className="p-3 text-start">
+                  {AR ? tr("مسلَّم (أوردرات)") : "Delivered (orders)"}
+                </th>
+                <th className="p-3 text-start">{AR ? tr("مسلَّم (قطع)") : "Delivered (pieces)"}</th>
+                <th className="p-3 text-start">{AR ? tr("مرتجع") : "Returned"}</th>
+                <th className="p-3 text-start">{AR ? tr("في الطريق") : "In transit"}</th>
+                <th className="p-3 text-start">{AR ? tr("نسبة التسليم") : "Delivery %"}</th>
+                <th className="p-3 text-start">{AR ? tr("نسبة الارتجاع") : "Return %"}</th>
+                <th className="p-3 text-start">{AR ? tr("متوقع تحصيله") : "Expected COD"}</th>
+                <th className="p-3 text-start">{AR ? tr("التحصيل") : "Collected"}</th>
+                <th className="p-3 text-start">{AR ? tr("الشحن") : "Shipping"}</th>
+              </tr>
+            </thead>
             <tbody>
               {(d?.couriers ?? []).map((c) => (
                 <tr key={c.courier_id ?? "none"} className="border-b border-border/50">
                   <td className="p-3">{c.name}</td>
-                  <td className="p-3 text-xs"><Badge variant="outline">{c.type}</Badge></td>
+                  <td className="p-3 text-xs">
+                    <Badge variant="outline">{c.type}</Badge>
+                  </td>
                   <td className="p-3 num">{nf(c.orders)}</td>
                   <td className="p-3 num text-emerald-500">{nf(c.delivered)}</td>
                   <td className="p-3 num text-emerald-500">{nf(c.deliveredPieces)}</td>
@@ -127,10 +194,13 @@ function CouriersReport() {
                 </tr>
               ))}
               {(d?.couriers ?? []).length === 0 && (
-                <tr><td colSpan={13} className="p-8 text-center text-muted-foreground">{AR ? tr("لا توجد بيانات في هذه المدة.") : "No data in this period."}</td></tr>
+                <tr>
+                  <td colSpan={13} className="p-8 text-center text-muted-foreground">
+                    {AR ? tr("لا توجد بيانات في هذه المدة.") : "No data in this period."}
+                  </td>
+                </tr>
               )}
             </tbody>
-
           </table>
         </div>
       </Card>
@@ -141,13 +211,15 @@ function CouriersReport() {
           <div className="p-4 font-semibold">{AR ? tr("حسب البراند") : "Per brand"}</div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-border text-muted-foreground">
-                <th className="p-2 text-start">{t("brand")}</th>
-                <th className="p-2 text-start">{AR ? tr("أوردرات") : "Orders"}</th>
-                <th className="p-2 text-start">{AR ? tr("تسليم") : "Deliv."}</th>
-                <th className="p-2 text-start">{AR ? tr("ارتجاع") : "Return"}</th>
-                <th className="p-2 text-start">{AR ? tr("نسبة") : "Rate"}</th>
-              </tr></thead>
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="p-2 text-start">{t("brand")}</th>
+                  <th className="p-2 text-start">{AR ? tr("أوردرات") : "Orders"}</th>
+                  <th className="p-2 text-start">{AR ? tr("تسليم") : "Deliv."}</th>
+                  <th className="p-2 text-start">{AR ? tr("ارتجاع") : "Return"}</th>
+                  <th className="p-2 text-start">{AR ? tr("نسبة") : "Rate"}</th>
+                </tr>
+              </thead>
               <tbody>
                 {(d?.brands ?? []).map((b) => (
                   <tr key={b.brand_id} className="border-b border-border/50">
@@ -164,15 +236,19 @@ function CouriersReport() {
         </Card>
 
         <Card className="card-gradient overflow-hidden">
-          <div className="p-4 font-semibold">{AR ? tr("حسب المحافظة + أفضل شركة شحن") : "Per governorate + best courier"}</div>
+          <div className="p-4 font-semibold">
+            {AR ? tr("حسب المحافظة + أفضل شركة شحن") : "Per governorate + best courier"}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-border text-muted-foreground">
-                <th className="p-2 text-start">{AR ? tr("المحافظة") : "Governorate"}</th>
-                <th className="p-2 text-start">{AR ? tr("أوردرات") : "Orders"}</th>
-                <th className="p-2 text-start">{AR ? tr("نسبة التسليم") : "Delivery %"}</th>
-                <th className="p-2 text-start">{AR ? tr("أفضل شركة") : "Best courier"}</th>
-              </tr></thead>
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="p-2 text-start">{AR ? tr("المحافظة") : "Governorate"}</th>
+                  <th className="p-2 text-start">{AR ? tr("أوردرات") : "Orders"}</th>
+                  <th className="p-2 text-start">{AR ? tr("نسبة التسليم") : "Delivery %"}</th>
+                  <th className="p-2 text-start">{AR ? tr("أفضل شركة") : "Best courier"}</th>
+                </tr>
+              </thead>
               <tbody>
                 {(d?.governorates ?? []).map((g) => (
                   <tr key={g.governorate} className="border-b border-border/50">
@@ -180,9 +256,16 @@ function CouriersReport() {
                     <td className="p-2 num">{nf(g.orders)}</td>
                     <td className="p-2 num">{pct(g.deliveryRate)}</td>
                     <td className="p-2 text-xs">
-                      {g.bestCourier
-                        ? <span><span className="font-semibold">{g.bestCourier.name}</span> <span className="text-emerald-500 num">({pct(g.bestCourier.deliveryRate)})</span></span>
-                        : <span className="text-muted-foreground">—</span>}
+                      {g.bestCourier ? (
+                        <span>
+                          <span className="font-semibold">{g.bestCourier.name}</span>{" "}
+                          <span className="text-emerald-500 num">
+                            ({pct(g.bestCourier.deliveryRate)})
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -195,8 +278,23 @@ function CouriersReport() {
   );
 }
 
-function Kpi({ label, value, tone = "default" }: { label: string; value: string; tone?: "default"|"success"|"destructive"|"muted" }) {
-  const cls = tone === "success" ? "text-emerald-500" : tone === "destructive" ? "text-destructive" : tone === "muted" ? "text-muted-foreground" : "";
+function Kpi({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "success" | "destructive" | "muted";
+}) {
+  const cls =
+    tone === "success"
+      ? "text-emerald-500"
+      : tone === "destructive"
+        ? "text-destructive"
+        : tone === "muted"
+          ? "text-muted-foreground"
+          : "";
   return (
     <Card className="card-gradient p-4">
       <div className="text-xs text-muted-foreground">{label}</div>

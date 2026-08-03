@@ -35,7 +35,7 @@ import {
   updateCustomer,
 } from "@/lib/customers.functions";
 import { listBrands } from "@/lib/internal.functions";
-import { useLang, tr } from "@/lib/i18n";
+import { useLang } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/customers/$id")({

@@ -26,7 +26,7 @@ export const Route = createFileRoute("/auth")({
 
   head: () => ({
     meta: [
-      { title: tr("تسجيل الدخول — e-GURUS Dashboard") },
+      { title: "تسجيل الدخول — e-GURUS Dashboard" },
       {
         name: "description",
         content: "سجّل الدخول لإدارة براندك وعرض لوحة التحكم المالية والتشغيلية.",
@@ -99,7 +99,7 @@ function AuthPage() {
         <div className="grid md:grid-cols-2 gap-10 max-w-5xl w-full items-center">
           {/* Brand side */}
           <div className="flex flex-col justify-center gap-6 md:pr-8 order-2 md:order-1">
-            <Link to="/" className="flex items-center gap-3 group">
+            <Link to="/" search={{ next: "" }} className="flex items-center gap-3 group">
               <div className="relative">
                 <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-xl group-hover:blur-2xl transition-all" />
                 <img

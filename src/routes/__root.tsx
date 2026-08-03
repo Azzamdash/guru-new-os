@@ -10,7 +10,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
 
-
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "../lib/i18n";
@@ -92,10 +91,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:title", content: "e-Gurus OS" },
       { name: "twitter:title", content: "e-Gurus OS" },
-      { property: "og:description", content: "microSaaS لإدارة البراندات والفواتير والمخزون والتسويق مع لوحة تحكم تفاعلية ورسوم KPI وتقارير شاملة." },
-      { name: "twitter:description", content: "microSaaS لإدارة البراندات والفواتير والمخزون والتسويق مع لوحة تحكم تفاعلية ورسوم KPI وتقارير شاملة." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/di3kU3qDRjYqK4xqg9WEnr8MgEl2/social-images/social-1784776314805-305406DA-562B-463A-86D6-7A405B1A98E1.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/di3kU3qDRjYqK4xqg9WEnr8MgEl2/social-images/social-1784776314805-305406DA-562B-463A-86D6-7A405B1A98E1.webp" },
+      {
+        property: "og:description",
+        content:
+          "microSaaS لإدارة البراندات والفواتير والمخزون والتسويق مع لوحة تحكم تفاعلية ورسوم KPI وتقارير شاملة.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "microSaaS لإدارة البراندات والفواتير والمخزون والتسويق مع لوحة تحكم تفاعلية ورسوم KPI وتقارير شاملة.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/di3kU3qDRjYqK4xqg9WEnr8MgEl2/social-images/social-1784776314805-305406DA-562B-463A-86D6-7A405B1A98E1.webp",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/di3kU3qDRjYqK4xqg9WEnr8MgEl2/social-images/social-1784776314805-305406DA-562B-463A-86D6-7A405B1A98E1.webp",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -144,4 +159,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

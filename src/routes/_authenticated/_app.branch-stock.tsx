@@ -9,24 +9,37 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Store, Plus, Minus, PackagePlus, Layers } from "lucide-react";
 import { toast } from "sonner";
 import {
-  listOfflineBranches, listBranchStock, addBranchStockMovement, listBranchStockMovements,
+  listOfflineBranches,
+  listBranchStock,
+  addBranchStockMovement,
+  listBranchStockMovements,
 } from "@/lib/branch-stock.functions";
 import { useLang, tr } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/branch-stock")({
-  head: () => ({ meta: [
-    { title: tr("مخزون الفروع الأوفلاين — e-GURUS") },
-    { name: "description", content: "إضافة وخصم مخزون منتجات الفروع الأوفلاين يدويًا." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: tr("مخزون الفروع الأوفلاين — e-GURUS") },
+      { name: "description", content: "إضافة وخصم مخزون منتجات الفروع الأوفلاين يدويًا." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: Page,
 });
 
@@ -54,11 +67,16 @@ function Page() {
     enabled: !!activeBrand,
   });
 
-  const [dialog, setDialog] = useState<null | { product_id: string; product_name: string; direction: "in" | "out" }>(null);
+  const [dialog, setDialog] = useState<null | {
+    product_id: string;
+    product_name: string;
+    direction: "in" | "out";
+  }>(null);
 
   const totals = useMemo(() => {
     const items = stockQ.data ?? [];
-    let units = 0, value = 0;
+    let units = 0,
+      value = 0;
     for (const p of items) {
       units += Number(p.on_hand_qty || 0);
       value += Number(p.on_hand_qty || 0) * Number(p.moving_avg_cost || 0);
@@ -95,18 +113,31 @@ function Page() {
         <div>
           <Label className="text-xs">{T(tr("الفرع"), "Branch")}</Label>
           <Select value={activeBrand} onValueChange={setBrandId}>
-            <SelectTrigger className="w-64"><SelectValue placeholder={T(tr("اختر فرع"), "Select branch")} /></SelectTrigger>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder={T(tr("اختر فرع"), "Select branch")} />
+            </SelectTrigger>
             <SelectContent>
               {(branchesQ.data ?? []).map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="ms-auto flex gap-6 text-sm">
-          <div><span className="text-muted-foreground">{T(tr("عدد المنتجات"), "Products")}: </span><b>{totals.count}</b></div>
-          <div><span className="text-muted-foreground">{T(tr("إجمالي القطع"), "Units")}: </span><b>{totals.units.toLocaleString("en-US")}</b></div>
-          <div><span className="text-muted-foreground">{T(tr("قيمة المخزون"), "Stock value")}: </span><b>{totals.value.toLocaleString("en-US", { maximumFractionDigits: 2 })} EGP</b></div>
+          <div>
+            <span className="text-muted-foreground">{T(tr("عدد المنتجات"), "Products")}: </span>
+            <b>{totals.count}</b>
+          </div>
+          <div>
+            <span className="text-muted-foreground">{T(tr("إجمالي القطع"), "Units")}: </span>
+            <b>{totals.units.toLocaleString("en-US")}</b>
+          </div>
+          <div>
+            <span className="text-muted-foreground">{T(tr("قيمة المخزون"), "Stock value")}: </span>
+            <b>{totals.value.toLocaleString("en-US", { maximumFractionDigits: 2 })} EGP</b>
+          </div>
         </div>
       </Card>
 
@@ -138,14 +169,34 @@ function Page() {
                         {Number(p.on_hand_qty || 0).toLocaleString("en-US")}
                       </Badge>
                     </td>
-                    <td className="p-2">{Number(p.moving_avg_cost || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
-                    <td className="p-2">{Number(p.sell_price || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
+                    <td className="p-2">
+                      {Number(p.moving_avg_cost || 0).toLocaleString("en-US", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td className="p-2">
+                      {Number(p.sell_price || 0).toLocaleString("en-US", {
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
                     <td className="p-2 text-end">
                       <div className="flex gap-1 justify-end">
-                        <Button size="sm" variant="default" onClick={() => setDialog({ product_id: p.id, product_name: p.name, direction: "in" })}>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() =>
+                            setDialog({ product_id: p.id, product_name: p.name, direction: "in" })
+                          }
+                        >
                           <Plus className="w-3.5 h-3.5 me-1" /> {T(tr("إضافة"), "Add")}
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => setDialog({ product_id: p.id, product_name: p.name, direction: "out" })}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            setDialog({ product_id: p.id, product_name: p.name, direction: "out" })
+                          }
+                        >
                           <Minus className="w-3.5 h-3.5 me-1" /> {T(tr("خصم"), "Deduct")}
                         </Button>
                       </div>
@@ -154,7 +205,11 @@ function Page() {
                 );
               })}
               {(!stockQ.data || stockQ.data.length === 0) && (
-                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{T(tr("لا توجد منتجات في هذا الفرع."), "No products in this branch.")}</td></tr>
+                <tr>
+                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                    {T(tr("لا توجد منتجات في هذا الفرع."), "No products in this branch.")}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -162,7 +217,9 @@ function Page() {
       </Card>
 
       <Card className="card-gradient p-4 md:p-5 space-y-3">
-        <h3 className="font-semibold flex items-center gap-2"><PackagePlus className="w-4 h-4" /> {T(tr("آخر حركات المخزون"), "Recent stock movements")}</h3>
+        <h3 className="font-semibold flex items-center gap-2">
+          <PackagePlus className="w-4 h-4" /> {T(tr("آخر حركات المخزون"), "Recent stock movements")}
+        </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -192,7 +249,11 @@ function Page() {
                 );
               })}
               {(!movesQ.data || movesQ.data.length === 0) && (
-                <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{T(tr("لا توجد حركات."), "No movements.")}</td></tr>
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                    {T(tr("لا توجد حركات."), "No movements.")}
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -218,10 +279,19 @@ function Page() {
 }
 
 function MoveDialog({
-  brandId, product_id, product_name, direction, onClose, onDone,
+  brandId,
+  product_id,
+  product_name,
+  direction,
+  onClose,
+  onDone,
 }: {
-  brandId: string; product_id: string; product_name: string; direction: "in" | "out";
-  onClose: () => void; onDone: () => void;
+  brandId: string;
+  product_id: string;
+  product_name: string;
+  direction: "in" | "out";
+  onClose: () => void;
+  onDone: () => void;
 }) {
   const { lang } = useLang();
   const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
@@ -230,14 +300,20 @@ function MoveDialog({
   const [note, setNote] = useState("");
   const addFn = useServerFn(addBranchStockMovement);
   const mut = useMutation({
-    mutationFn: () => addFn({ data: {
-      product_id,
-      direction,
-      qty: Number(qty || 0),
-      unit_cost: direction === "in" && cost ? Number(cost) : null,
-      note: note || null,
-    }}),
-    onSuccess: () => { toast.success(T(tr("تم التحديث"), "Updated")); onDone(); },
+    mutationFn: () =>
+      addFn({
+        data: {
+          product_id,
+          direction,
+          qty: Number(qty || 0),
+          unit_cost: direction === "in" && cost ? Number(cost) : null,
+          note: note || null,
+        },
+      }),
+    onSuccess: () => {
+      toast.success(T(tr("تم التحديث"), "Updated"));
+      onDone();
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -254,14 +330,30 @@ function MoveDialog({
         <div className="space-y-3">
           <div>
             <Label>{T(tr("الكمية"), "Quantity")}</Label>
-            <Input type="number" min={1} step="1" value={qty} onChange={(e) => setQty(e.target.value)} autoFocus />
+            <Input
+              type="number"
+              min={1}
+              step="1"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              autoFocus
+            />
           </div>
           {direction === "in" && (
             <div>
               <Label>{T(tr("تكلفة الوحدة (اختياري)"), "Unit cost (optional)")}</Label>
-              <Input type="number" min={0} step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} />
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+              />
               <p className="text-xs text-muted-foreground mt-1">
-                {T(tr("لو ادخلت التكلفة هيتحسب متوسط التكلفة تلقائيًا."), "If entered, the moving-average cost updates automatically.")}
+                {T(
+                  tr("لو ادخلت التكلفة هيتحسب متوسط التكلفة تلقائيًا."),
+                  "If entered, the moving-average cost updates automatically.",
+                )}
               </p>
             </div>
           )}
@@ -272,7 +364,9 @@ function MoveDialog({
           <input type="hidden" value={brandId} readOnly />
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>{T(tr("إلغاء"), "Cancel")}</Button>
+          <Button variant="ghost" onClick={onClose}>
+            {T(tr("إلغاء"), "Cancel")}
+          </Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending || !qty || Number(qty) <= 0}>
             {T(tr("حفظ"), "Save")}
           </Button>
