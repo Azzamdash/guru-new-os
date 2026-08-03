@@ -1,15 +1,15 @@
-version: '3.8'
-
 services:
   app:
     image: ghcr.io/azzamdash/guru-new-os:latest
+#    image: gurunewos:latest
     container_name: guru-new-os
     restart: always
+    env-file:
+      - /etc/secrets/egurus-os.env
     environment:
       - PORT=${PORT:-3000}
       - NODE_ENV=${NODE_ENV:-production}
-      - VITE_SUPABASE_URL
-      - VITE_SUPABASE_PUBLISHABLE_KEY
+      - SUPABASE_SERVICE_ROLE_KEY
     networks:
       - app-net
 
