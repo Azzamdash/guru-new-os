@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -37,7 +38,7 @@ function InvestorDashboard() {
   });
 
   if (q.isError) {
-    return <div className="p-6"><EmptyState title="خطأ" description={(q.error as Error).message} /></div>;
+    return <div className="p-6"><EmptyState title={tr("خطأ")} description={(q.error as Error).message} /></div>;
   }
   const d = q.data;
   return (
@@ -48,33 +49,33 @@ function InvestorDashboard() {
             <TrendingUp className="w-6 h-6 text-primary" />
             {d?.investor.name ?? "المستثمر"}
           </h1>
-          <p className="text-sm text-muted-foreground">نصيبك من أرباح البراندات</p>
+          <p className="text-sm text-muted-foreground">{tr("نصيبك من أرباح البراندات")}</p>
         </div>
         <PeriodFilter value={period} onChange={setPeriod} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi title="إجمالي الإيرادات" value={fmt(d?.totals.revenue ?? 0)} />
-        <Kpi title="إجمالي التكاليف" value={fmt(d?.totals.costs ?? 0)} />
-        <Kpi title="صافي الأرباح" value={fmt(d?.totals.profit ?? 0)} />
-        <Kpi title="نصيبك من الأرباح" value={fmt(d?.totals.investor_profit ?? 0)} highlight />
+        <Kpi title={tr("إجمالي الإيرادات")} value={fmt(d?.totals.revenue ?? 0)} />
+        <Kpi title={tr("إجمالي التكاليف")} value={fmt(d?.totals.costs ?? 0)} />
+        <Kpi title={tr("صافي الأرباح")} value={fmt(d?.totals.profit ?? 0)} />
+        <Kpi title={tr("نصيبك من الأرباح")} value={fmt(d?.totals.investor_profit ?? 0)} highlight />
       </div>
 
       <Card>
-        <CardHeader><CardTitle>التفاصيل حسب البراند</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{tr("التفاصيل حسب البراند")}</CardTitle></CardHeader>
         <CardContent>
           {(d?.brands ?? []).length === 0 ? (
-            <EmptyState title="لا توجد براندات" description="لم يتم تحديد نسب لأي براند بعد" />
+            <EmptyState title={tr("لا توجد براندات")} description={tr("لم يتم تحديد نسب لأي براند بعد")} />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>البراند</TableHead>
-                  <TableHead>نسبتك</TableHead>
-                  <TableHead>الإيرادات</TableHead>
-                  <TableHead>التكاليف</TableHead>
-                  <TableHead>الربح</TableHead>
-                  <TableHead>نصيبك</TableHead>
+                  <TableHead>{tr("البراند")}</TableHead>
+                  <TableHead>{tr("نسبتك")}</TableHead>
+                  <TableHead>{tr("الإيرادات")}</TableHead>
+                  <TableHead>{tr("التكاليف")}</TableHead>
+                  <TableHead>{tr("الربح")}</TableHead>
+                  <TableHead>{tr("نصيبك")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -102,24 +103,24 @@ function InvestorDashboard() {
       {d?.valuation && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> نصيبك من التقييم</CardTitle>
+            <CardTitle className="flex items-center gap-2"><Building2 className="w-5 h-5 text-primary" /> {tr("نصيبك من التقييم")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Kpi title="نصيبك من تقييمات البراندات" value={fmt(d.valuation.brand_totals.investor_valuation)} highlight />
-              <Kpi title="تقييم كامل الشركة" value={fmt(d.valuation.company.total_company_valuation)} />
-              <Kpi title="نسبتك الفعلية من الشركة" value={`${d.valuation.company.effective_ownership_pct.toFixed(2)}%`} />
-              <Kpi title="نصيبك من كامل الشركة" value={fmt(d.valuation.company.investor_company_share)} highlight />
+              <Kpi title={tr("نصيبك من تقييمات البراندات")} value={fmt(d.valuation.brand_totals.investor_valuation)} highlight />
+              <Kpi title={tr("تقييم كامل الشركة")} value={fmt(d.valuation.company.total_company_valuation)} />
+              <Kpi title={tr("نسبتك الفعلية من الشركة")} value={`${d.valuation.company.effective_ownership_pct.toFixed(2)}%`} />
+              <Kpi title={tr("نصيبك من كامل الشركة")} value={fmt(d.valuation.company.investor_company_share)} highlight />
             </div>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>البراند</TableHead>
-                  <TableHead>نسبتك</TableHead>
-                  <TableHead>إيرادات سنوية</TableHead>
-                  <TableHead>أصول (صافي)</TableHead>
-                  <TableHead>تقييم البراند</TableHead>
-                  <TableHead>نصيبك</TableHead>
+                  <TableHead>{tr("البراند")}</TableHead>
+                  <TableHead>{tr("نسبتك")}</TableHead>
+                  <TableHead>{tr("إيرادات سنوية")}</TableHead>
+                  <TableHead>{tr("أصول (صافي)")}</TableHead>
+                  <TableHead>{tr("تقييم البراند")}</TableHead>
+                  <TableHead>{tr("نصيبك")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

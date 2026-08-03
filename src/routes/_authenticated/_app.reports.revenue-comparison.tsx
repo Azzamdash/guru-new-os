@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -55,8 +56,8 @@ function RevenueComparisonPage() {
     <div className="p-6 md:p-8 space-y-6" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><GitCompareArrows className="w-7 h-7 text-primary" /> مقارنة الإيرادات</h1>
-          <p className="text-muted-foreground text-sm mt-1">إدخالات يدوية (monthly_entries) مقابل فواتير المبيعات الصافية (بعد المرتجعات).</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><GitCompareArrows className="w-7 h-7 text-primary" /> {tr("مقارنة الإيرادات")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("إدخالات يدوية (monthly_entries) مقابل فواتير المبيعات الصافية (بعد المرتجعات).")}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
@@ -68,30 +69,30 @@ function RevenueComparisonPage() {
             </SelectContent>
           </Select>
           <Select value={brandId} onValueChange={setBrandId}>
-            <SelectTrigger className="w-52"><SelectValue placeholder="البراند" /></SelectTrigger>
+            <SelectTrigger className="w-52"><SelectValue placeholder={tr("البراند")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل البراندات</SelectItem>
+              <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
               {(brandsQ.data ?? []).map((b) => (
                 <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <ReportActions filename={`revenue-comparison-${year}.csv`} rows={csvRows} summaryTitle="مقارنة الإيرادات" summaryText={`سنة ${year} — الفرق الإجمالي: ${fmt(totals.diff)}`} />
+          <ReportActions filename={`revenue-comparison-${year}.csv`} rows={csvRows} summaryTitle={tr("مقارنة الإيرادات")} summaryText={`سنة ${year} — الفرق الإجمالي: ${fmt(totals.diff)}`} />
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">إجمالي يدوي (monthly_entries)</div>
+          <div className="text-xs text-muted-foreground">{tr("إجمالي يدوي (monthly_entries)")}</div>
           <div className="text-2xl font-bold mt-1">{fmt(totals.manual)}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">إجمالي من الفواتير (بعد المرتجعات)</div>
+          <div className="text-xs text-muted-foreground">{tr("إجمالي من الفواتير (بعد المرتجعات)")}</div>
           <div className="text-2xl font-bold mt-1 text-primary">{fmt(totals.invoices)}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">الفرق</div>
+          <div className="text-xs text-muted-foreground">{tr("الفرق")}</div>
           <div className={`text-2xl font-bold mt-1 ${Math.abs(totals.diff) > 1 ? "text-destructive" : "text-emerald-500"}`}>
             {totals.diff > 0 ? "+" : ""}{fmt(totals.diff)}
           </div>
@@ -100,7 +101,7 @@ function RevenueComparisonPage() {
 
       {/* Chart */}
       <Card className="p-4">
-        <div className="font-semibold mb-3">اتجاه شهري</div>
+        <div className="font-semibold mb-3">{tr("اتجاه شهري")}</div>
         <ResponsiveContainer width="100%" height={320}>
           <BarChart data={byMonth}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -108,30 +109,30 @@ function RevenueComparisonPage() {
             <YAxis tick={{ fill: "hsl(var(--muted-foreground))" }} />
             <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} formatter={(v: number) => fmt(v)} />
             <Legend />
-            <Bar dataKey="manual" name="يدوي" fill="hsl(200 60% 60%)" />
-            <Bar dataKey="invoices" name="فواتير صافي" fill="hsl(155 55% 55%)" />
+            <Bar dataKey="manual" name={tr("يدوي")} fill="hsl(200 60% 60%)" />
+            <Bar dataKey="invoices" name={tr("فواتير صافي")} fill="hsl(155 55% 55%)" />
           </BarChart>
         </ResponsiveContainer>
       </Card>
 
       {/* Table */}
       <Card className="p-4">
-        <div className="font-semibold mb-3">تفصيل البراند × الشهر</div>
+        <div className="font-semibold mb-3">{tr("تفصيل البراند × الشهر")}</div>
         {cmpQ.isLoading ? (
-          <div className="text-sm text-muted-foreground">جاري التحميل...</div>
+          <div className="text-sm text-muted-foreground">{tr("جاري التحميل...")}</div>
         ) : rows.length === 0 ? (
-          <div className="text-sm text-muted-foreground">لا توجد بيانات لهذا العام.</div>
+          <div className="text-sm text-muted-foreground">{tr("لا توجد بيانات لهذا العام.")}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground border-b">
                 <tr>
-                  <th className="p-2 text-right">البراند</th>
-                  <th className="p-2 text-right">الشهر</th>
-                  <th className="p-2 text-right">يدوي</th>
-                  <th className="p-2 text-right">فواتير صافي</th>
-                  <th className="p-2 text-right">الفرق</th>
-                  <th className="p-2 text-right">الحالة</th>
+                  <th className="p-2 text-right">{tr("البراند")}</th>
+                  <th className="p-2 text-right">{tr("الشهر")}</th>
+                  <th className="p-2 text-right">{tr("يدوي")}</th>
+                  <th className="p-2 text-right">{tr("فواتير صافي")}</th>
+                  <th className="p-2 text-right">{tr("الفرق")}</th>
+                  <th className="p-2 text-right">{tr("الحالة")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,9 +149,9 @@ function RevenueComparisonPage() {
                       </td>
                       <td className="p-2">
                         {match ? (
-                          <Badge variant="outline" className="gap-1 text-emerald-500 border-emerald-500/30"><Check className="w-3 h-3" /> متطابق</Badge>
+                          <Badge variant="outline" className="gap-1 text-emerald-500 border-emerald-500/30"><Check className="w-3 h-3" /> {tr("متطابق")}</Badge>
                         ) : (
-                          <Badge variant="outline" className="gap-1 text-destructive border-destructive/30"><AlertTriangle className="w-3 h-3" /> فرق</Badge>
+                          <Badge variant="outline" className="gap-1 text-destructive border-destructive/30"><AlertTriangle className="w-3 h-3" /> {tr("فرق")}</Badge>
                         )}
                       </td>
                     </tr>

@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -58,7 +59,7 @@ function IntegrationsPage() {
     const s = p.get("shopify");
     if (!s) return;
     const msg = p.get("msg") ?? "";
-    if (s === "connected") toast.success("تم ربط Shopify بنجاح");
+    if (s === "connected") toast.success(tr("تم ربط Shopify بنجاح"));
     else toast.error(`فشل ربط Shopify: ${msg}`);
     qc.invalidateQueries({ queryKey: ["integrations"] });
     const clean = new URL(window.location.href);
@@ -77,8 +78,8 @@ function IntegrationsPage() {
   return (
     <div className="p-4 md:p-8 space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">التكاملات</h1>
-        <p className="text-muted-foreground text-sm mt-1">اربط Shopify وشركات الشحن لكل براند على حدة. المفاتيح تُخزن مشفّرة (AES-256-GCM).</p>
+        <h1 className="text-2xl md:text-3xl font-bold">{tr("التكاملات")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{tr("اربط Shopify وشركات الشحن لكل براند على حدة. المفاتيح تُخزن مشفّرة (AES-256-GCM).")}</p>
       </div>
 
       {/* Shopify */}
@@ -87,7 +88,7 @@ function IntegrationsPage() {
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center"><ShoppingBag className="w-5 h-5 text-primary" /></div>
           <div>
             <h3 className="font-semibold">Shopify</h3>
-            <p className="text-xs text-muted-foreground">Admin API Access Token لكل براند — لسحب الطلبات والمبيعات والمنتجات.</p>
+            <p className="text-xs text-muted-foreground">{tr("Admin API Access Token لكل براند — لسحب الطلبات والمبيعات والمنتجات.")}</p>
           </div>
         </div>
         <div className="grid md:grid-cols-2 gap-3">
@@ -102,11 +103,11 @@ function IntegrationsPage() {
                 onDeleted={invalidate}
                 testFn={testShopify}
                 syncFn={syncShopifyOrders}
-                syncLabel="استيراد طلبات اليوم"
+                syncLabel={tr("استيراد طلبات اليوم")}
               />
             );
           })}
-          {productBrands.length === 0 && <p className="text-sm text-muted-foreground col-span-full">أضف براندات منتجات أولاً.</p>}
+          {productBrands.length === 0 && <p className="text-sm text-muted-foreground col-span-full">{tr("أضف براندات منتجات أولاً.")}</p>}
         </div>
       </Card>
 
@@ -115,8 +116,8 @@ function IntegrationsPage() {
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center"><Truck className="w-5 h-5 text-primary" /></div>
           <div>
-            <h3 className="font-semibold">شركات الشحن</h3>
-            <p className="text-xs text-muted-foreground">اربط شركة الشحن الخاصة بكل براند لسحب حالة التسليم والمرتجعات والـ COD.</p>
+            <h3 className="font-semibold">{tr("شركات الشحن")}</h3>
+            <p className="text-xs text-muted-foreground">{tr("اربط شركة الشحن الخاصة بكل براند لسحب حالة التسليم والمرتجعات والـ COD.")}</p>
           </div>
         </div>
 
@@ -132,11 +133,11 @@ function IntegrationsPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{c.name}</span>
-                          {!c.live && <Badge variant="outline" className="text-[10px]">قريباً</Badge>}
+                          {!c.live && <Badge variant="outline" className="text-[10px]">{tr("قريباً")}</Badge>}
                           {it && <StatusBadge status={it.status} />}
                         </div>
                         {it?.last_sync_at && (
-                          <div className="text-[11px] text-muted-foreground truncate">آخر مزامنة: {new Date(it.last_sync_at).toLocaleString("en-US")}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{tr("آخر مزامنة:")} {new Date(it.last_sync_at).toLocaleString("en-US")}</div>
                         )}
                         {it?.last_error && <div className="text-[11px] text-destructive truncate">{it.last_error}</div>}
                       </div>
@@ -149,7 +150,7 @@ function IntegrationsPage() {
                             </Button>
                           </>
                         ) : (
-                          <Button size="sm" variant="outline" disabled>قريباً</Button>
+                          <Button size="sm" variant="outline" disabled>{tr("قريباً")}</Button>
                         )}
                       </div>
                     </div>
@@ -158,12 +159,12 @@ function IntegrationsPage() {
               </div>
             </div>
           ))}
-          {productBrands.length === 0 && <p className="text-sm text-muted-foreground">أضف براندات منتجات أولاً.</p>}
+          {productBrands.length === 0 && <p className="text-sm text-muted-foreground">{tr("أضف براندات منتجات أولاً.")}</p>}
         </div>
       </Card>
 
       <p className="text-[11px] text-muted-foreground text-center">
-        المفاتيح تُخزّن مشفّرة على الخادم فقط ولا تظهر مرة أخرى بعد الحفظ. لتغيير المفتاح، احذف الاتصال وأعد الإدخال.
+        {tr("المفاتيح تُخزّن مشفّرة على الخادم فقط ولا تظهر مرة أخرى بعد الحفظ. لتغيير المفتاح، احذف الاتصال وأعد الإدخال.")}
       </p>
 
       {openDialog && (
@@ -179,9 +180,9 @@ function IntegrationsPage() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === "connected") return <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]"><CheckCircle2 className="w-3 h-3 me-1" />متصل</Badge>;
-  if (status === "error") return <Badge variant="destructive" className="text-[10px]"><AlertCircle className="w-3 h-3 me-1" />خطأ</Badge>;
-  return <Badge variant="outline" className="text-[10px]">غير متصل</Badge>;
+  if (status === "connected") return <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]"><CheckCircle2 className="w-3 h-3 me-1" />{tr("متصل")}</Badge>;
+  if (status === "error") return <Badge variant="destructive" className="text-[10px]"><AlertCircle className="w-3 h-3 me-1" />{tr("خطأ")}</Badge>;
+  return <Badge variant="outline" className="text-[10px]">{tr("غير متصل")}</Badge>;
 }
 
 function BrandRow({
@@ -213,7 +214,7 @@ function BrandRow({
             {integration && <StatusBadge status={integration.status} />}
           </div>
           {integration?.last_sync_at && (
-            <div className="text-[11px] text-muted-foreground">آخر مزامنة: {new Date(integration.last_sync_at).toLocaleString("en-US")}</div>
+            <div className="text-[11px] text-muted-foreground">{tr("آخر مزامنة:")} {new Date(integration.last_sync_at).toLocaleString("en-US")}</div>
           )}
           {integration?.last_error && <div className="text-[11px] text-destructive truncate">{integration.last_error}</div>}
         </div>
@@ -260,19 +261,19 @@ function SyncButton({
   const test = useServerFn(testFn);
   const sync = useServerFn(syncFn);
   const del = useServerFn(deleteIntegration);
-  const testM = useMutation({ mutationFn: () => test({ data: { brand_id } }), onSuccess: () => { toast.success("الاتصال يعمل"); onDone(); }, onError: (e) => toast.error(String(e)) });
+  const testM = useMutation({ mutationFn: () => test({ data: { brand_id } }), onSuccess: () => { toast.success(tr("الاتصال يعمل")); onDone(); }, onError: (e) => toast.error(String(e)) });
   const syncM = useMutation({ mutationFn: () => sync({ data: { brand_id, days: syncDays ?? 7 } }), onSuccess: (r) => { toast.success(`تمت المزامنة: ${JSON.stringify(r)}`); onDone(); }, onError: (e) => toast.error(String(e)) });
-  const delM = useMutation({ mutationFn: () => del({ data: { brand_id, provider } }), onSuccess: () => { toast.success("تم الحذف"); onDone(); }, onError: (e) => toast.error(String(e)) });
+  const delM = useMutation({ mutationFn: () => del({ data: { brand_id, provider } }), onSuccess: () => { toast.success(tr("تم الحذف")); onDone(); }, onError: (e) => toast.error(String(e)) });
 
   return (
     <>
-      <Button size="sm" variant="outline" title="اختبار" onClick={() => testM.mutate()} disabled={testM.isPending}>
+      <Button size="sm" variant="outline" title={tr("اختبار")} onClick={() => testM.mutate()} disabled={testM.isPending}>
         <CheckCircle2 className="w-3.5 h-3.5" />
       </Button>
       <Button size="sm" variant="outline" title={label ?? "مزامنة"} onClick={() => syncM.mutate()} disabled={syncM.isPending}>
         <RefreshCw className={`w-3.5 h-3.5 ${syncM.isPending ? "animate-spin" : ""}`} />
       </Button>
-      <Button size="sm" variant="ghost" title="حذف" onClick={() => { if (confirm("حذف هذا الاتصال؟")) delM.mutate(); }} disabled={delM.isPending}>
+      <Button size="sm" variant="ghost" title={tr("حذف")} onClick={() => { if (confirm(tr("حذف هذا الاتصال؟"))) delM.mutate(); }} disabled={delM.isPending}>
         <Trash2 className="w-3.5 h-3.5 text-destructive" />
       </Button>
     </>
@@ -294,7 +295,7 @@ function RegisterWebhooksButton({ brand_id, onDone }: { brand_id: string; onDone
     onError: (e) => toast.error(String(e)),
   });
   return (
-    <Button size="sm" variant="outline" title="تسجيل/تحديث Webhooks" onClick={() => m.mutate()} disabled={m.isPending}>
+    <Button size="sm" variant="outline" title={tr("تسجيل/تحديث Webhooks")} onClick={() => m.mutate()} disabled={m.isPending}>
       <RefreshCw className={`w-3.5 h-3.5 ${m.isPending ? "animate-spin" : ""}`} />
       <span className="ms-1 text-[10px]">WH</span>
     </Button>
@@ -349,7 +350,7 @@ function CredentialsDialog({
     },
     onSuccess: () => {
       if (provider === "shopify" && mode === "oauth") return; // redirecting
-      toast.success("تم الحفظ"); onSaved(); onClose();
+      toast.success(tr("تم الحفظ")); onSaved(); onClose();
     },
     onError: (e) => toast.error(String(e)),
   });
@@ -369,13 +370,13 @@ function CredentialsDialog({
             <div>
               <Label>Shop domain</Label>
               <Input placeholder="mystore.myshopify.com" value={shop} onChange={(e) => setShop(e.target.value)} />
-              <p className="text-[11px] text-muted-foreground mt-1">اسم متجرك على Shopify (بدون https).</p>
+              <p className="text-[11px] text-muted-foreground mt-1">{tr("اسم متجرك على Shopify (بدون https).")}</p>
             </div>
             {mode === "oauth" ? (
               <>
                 <div>
                   <Label>Client ID</Label>
-                  <Input placeholder="Client ID من Shopify App" value={clientId} onChange={(e) => setClientId(e.target.value)} />
+                  <Input placeholder={tr("Client ID من Shopify App")} value={clientId} onChange={(e) => setClientId(e.target.value)} />
                 </div>
                 <div>
                   <Label>Client Secret</Label>
@@ -385,11 +386,10 @@ function CredentialsDialog({
                   <div className="text-xs font-semibold">Redirect / Callback URL</div>
                   <Input readOnly value={redirectUri} className="text-[11px] font-mono" onFocus={(e) => e.currentTarget.select()} />
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(redirectUri); toast.success("تم النسخ"); }}>نسخ</Button>
+                    <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(redirectUri); toast.success(tr("تم النسخ")); }}>{tr("نسخ")}</Button>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    أضف هذا الرابط كما هو بالضبط في Shopify Partners → App → Configuration → Allowed redirection URL(s) قبل الضغط على اتصال.
-                    بعدها اضغط "اتصال" لتحويلك لصفحة تصريح Shopify.
+                    {tr("أضف هذا الرابط كما هو بالضبط في Shopify Partners → App → Configuration → Allowed redirection URL(s) قبل الضغط على اتصال.\n                    بعدها اضغط \"اتصال\" لتحويلك لصفحة تصريح Shopify.")}
                   </p>
                 </div>
               </>
@@ -398,7 +398,7 @@ function CredentialsDialog({
                 <Label>Admin API Access Token</Label>
                 <Input type="password" placeholder="shpat_..." value={token} onChange={(e) => setToken(e.target.value)} />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Shopify Admin → Settings → Apps and sales channels → Develop apps → Custom App → Admin API Scopes: read_orders, write_orders, read_products, write_products, read_customers, write_customers, read_inventory, write_inventory, read_fulfillments, write_fulfillments. بعد تغيير الـ scopes لازم تعمل Install/Reinstall للتطبيق وتنسخ Token جديد.
+                  {tr("Shopify Admin → Settings → Apps and sales channels → Develop apps → Custom App → Admin API Scopes: read_orders, write_orders, read_products, write_products, read_customers, write_customers, read_inventory, write_inventory, read_fulfillments, write_fulfillments. بعد تغيير الـ scopes لازم تعمل Install/Reinstall للتطبيق وتنسخ Token جديد.")}
                 </p>
               </div>
             )}
@@ -407,10 +407,10 @@ function CredentialsDialog({
           <div className="space-y-3">
             <div>
               <Label>API Key</Label>
-              <Input type="password" placeholder="مفتاح API الخاص بشركة الشحن" value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
+              <Input type="password" placeholder={tr("مفتاح API الخاص بشركة الشحن")} value={apiKey} onChange={(e) => setApiKey(e.target.value)} />
               {provider === "bosta" && (
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Bosta Dashboard → Settings → API → أنشئ API Key. سيتم استخدامه في Header: Authorization.
+                  {tr("Bosta Dashboard → Settings → API → أنشئ API Key. سيتم استخدامه في Header: Authorization.")}
                 </p>
               )}
             </div>
@@ -421,7 +421,7 @@ function CredentialsDialog({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>إلغاء</Button>
+          <Button variant="outline" onClick={onClose}>{tr("إلغاء")}</Button>
           <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>
             {provider === "shopify" && mode === "oauth" ? "اتصال بـ Shopify" : "حفظ"}
           </Button>
@@ -443,10 +443,10 @@ function BostaWebhookInfo({ brand_id }: { brand_id: string }) {
     <div className="rounded-md border p-3 space-y-2 bg-muted/30">
       <div className="text-xs font-semibold">Bosta Webhook</div>
       <p className="text-[11px] text-muted-foreground">
-        سجّل الرابط ده في Bosta Dashboard → Settings → Webhooks عشان يوصل تحديث الحالة فورًا (بدل انتظار الـ Cron).
+        {tr("سجّل الرابط ده في Bosta Dashboard → Settings → Webhooks عشان يوصل تحديث الحالة فورًا (بدل انتظار الـ Cron).")}
       </p>
       {isLoading ? (
-        <p className="text-[11px] text-muted-foreground">جارٍ التحميل…</p>
+        <p className="text-[11px] text-muted-foreground">{tr("جارٍ التحميل…")}</p>
       ) : (
         <>
           <Input readOnly value={url} className="text-[11px] font-mono" onFocus={(e) => e.currentTarget.select()} />
@@ -456,13 +456,13 @@ function BostaWebhookInfo({ brand_id }: { brand_id: string }) {
               variant="outline"
               onClick={() => {
                 navigator.clipboard.writeText(url);
-                toast.success("تم نسخ الرابط");
+                toast.success(tr("تم نسخ الرابط"));
               }}
             >
-              نسخ الرابط
+              {tr("نسخ الرابط")}
             </Button>
             {!data?.hasSecret && (
-              <span className="text-[11px] text-destructive self-center">تنبيه: BOSTA_WEBHOOK_SECRET غير مُعرَّف</span>
+              <span className="text-[11px] text-destructive self-center">{tr("تنبيه: BOSTA_WEBHOOK_SECRET غير مُعرَّف")}</span>
             )}
           </div>
         </>

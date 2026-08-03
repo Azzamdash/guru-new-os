@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -54,7 +55,7 @@ function FulfillmentPage() {
       note: form.note || null,
     }}),
     onSuccess: () => {
-      toast.success("تم الحفظ");
+      toast.success(tr("تم الحفظ"));
       setForm({ ...form, employee_id: "", employee_name: "", orders_prepared: 0, note: "" });
       qc.invalidateQueries({ queryKey: ["fulfillment-entries"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
@@ -65,7 +66,7 @@ function FulfillmentPage() {
 
   const delMut = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
-    onSuccess: () => { toast.success("تم الحذف"); qc.invalidateQueries({ queryKey: ["fulfillment-entries"] }); },
+    onSuccess: () => { toast.success(tr("تم الحذف")); qc.invalidateQueries({ queryKey: ["fulfillment-entries"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -78,25 +79,25 @@ function FulfillmentPage() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2"><PackageCheck className="w-7 h-7 text-primary" /> تحضير الأوردرات</h1>
-        <p className="text-muted-foreground text-sm mt-1">سجّل عدد الأوردرات التي حضّرها كل موظف يوميًا.</p>
+        <h1 className="text-3xl font-bold flex items-center gap-2"><PackageCheck className="w-7 h-7 text-primary" /> {tr("تحضير الأوردرات")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{tr("سجّل عدد الأوردرات التي حضّرها كل موظف يوميًا.")}</p>
       </div>
 
       <Card className="card-gradient p-5">
-        <h3 className="font-semibold mb-4 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> إضافة/تسجيل تحضير</h3>
+        <h3 className="font-semibold mb-4 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> {tr("إضافة/تسجيل تحضير")}</h3>
         <div className="grid md:grid-cols-5 gap-3">
           <div>
-            <Label>البراند</Label>
+            <Label>{tr("البراند")}</Label>
             <Select value={form.brand_id || "none"} onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v, employee_id: "", employee_name: "" })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— بدون —</SelectItem>
+                <SelectItem value="none">{tr("— بدون —")}</SelectItem>
                 {brands.filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>الموظف</Label>
+            <Label>{tr("الموظف")}</Label>
             <Select value={form.employee_id || "none"} onValueChange={(v) => {
               if (v === "none") { setForm({ ...form, employee_id: "", employee_name: "" }); return; }
               const emp = employees.find((e) => e.id === v);
@@ -104,43 +105,43 @@ function FulfillmentPage() {
             }}>
               <SelectTrigger><SelectValue placeholder={form.brand_id ? "اختر" : "اختر البراند أولًا"} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— يدوي —</SelectItem>
+                <SelectItem value="none">{tr("— يدوي —")}</SelectItem>
                 {brandEmployees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
               </SelectContent>
             </Select>
             {!form.employee_id && (
-              <Input className="mt-1" placeholder="أو اكتب اسمًا" value={form.employee_name} onChange={(e) => setForm({ ...form, employee_name: e.target.value })} />
+              <Input className="mt-1" placeholder={tr("أو اكتب اسمًا")} value={form.employee_name} onChange={(e) => setForm({ ...form, employee_name: e.target.value })} />
             )}
           </div>
           <div>
-            <Label>عدد الأوردرات</Label>
+            <Label>{tr("عدد الأوردرات")}</Label>
             <Input type="number" value={form.orders_prepared} onChange={(e) => setForm({ ...form, orders_prepared: parseInt(e.target.value) || 0 })} />
           </div>
           <div>
-            <Label>التاريخ</Label>
+            <Label>{tr("التاريخ")}</Label>
             <Input type="date" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} />
           </div>
           <div>
-            <Label>ملاحظة</Label>
-            <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="اختياري" />
+            <Label>{tr("ملاحظة")}</Label>
+            <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder={tr("اختياري")} />
           </div>
         </div>
         <div className="mt-4">
           <Button onClick={() => saveMut.mutate()} disabled={!form.employee_name.trim() || saveMut.isPending} className="gap-1.5">
-            <Plus className="w-4 h-4" /> حفظ
+            <Plus className="w-4 h-4" /> {tr("حفظ")}
           </Button>
         </div>
       </Card>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">أحدث السجلات</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("أحدث السجلات")}</div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">التاريخ</th>
-            <th className="p-3">الموظف</th>
-            <th className="p-3">البراند</th>
-            <th className="p-3">عدد الأوردرات</th>
-            <th className="p-3">ملاحظة</th>
+            <th className="p-3">{tr("التاريخ")}</th>
+            <th className="p-3">{tr("الموظف")}</th>
+            <th className="p-3">{tr("البراند")}</th>
+            <th className="p-3">{tr("عدد الأوردرات")}</th>
+            <th className="p-3">{tr("ملاحظة")}</th>
             <th className="p-3"></th>
           </tr></thead>
           <tbody>
@@ -152,13 +153,13 @@ function FulfillmentPage() {
                 <td className="p-3 font-semibold">{fmt(r.orders_prepared)}</td>
                 <td className="p-3 text-xs text-muted-foreground">{r.note || "—"}</td>
                 <td className="p-3">
-                  <Button variant="ghost" size="sm" onClick={() => { if (confirm("حذف السجل؟")) delMut.mutate(r.id); }}>
+                  <Button variant="ghost" size="sm" onClick={() => { if (confirm(tr("حذف السجل؟"))) delMut.mutate(r.id); }}>
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">لا سجلات بعد.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">{tr("لا سجلات بعد.")}</td></tr>}
           </tbody>
         </table>
       </Card>

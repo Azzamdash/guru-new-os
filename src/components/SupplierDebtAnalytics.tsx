@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -164,23 +165,23 @@ export function SupplierDebtAnalytics({
   return (
     <div className="space-y-4">
       <div className={`grid gap-4 ${compact ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-4"}`}>
-        <StatCard icon={FileWarning} label="إجمالي المديونيات" value={fmt(analytics.totalOutstanding)} tone={analytics.totalOutstanding > 0 ? "warning" : "default"} />
-        <StatCard icon={AlertTriangle} label="متأخرات" value={fmt(analytics.totalOverdue)} tone={analytics.totalOverdue > 0 ? "destructive" : "default"} sub={`${analytics.overdueCount} فاتورة متأخرة`} />
-        <StatCard icon={Wallet} label="إجمالي المدفوعات" value={fmt(analytics.totalPaid)} tone="success" />
-        <StatCard icon={TrendingUp} label="نسبة السداد" value={analytics.totalBilled > 0 ? `${((analytics.totalPaid / analytics.totalBilled) * 100).toFixed(1)}%` : "—"} />
+        <StatCard icon={FileWarning} label={tr("إجمالي المديونيات")} value={fmt(analytics.totalOutstanding)} tone={analytics.totalOutstanding > 0 ? "warning" : "default"} />
+        <StatCard icon={AlertTriangle} label={tr("متأخرات")} value={fmt(analytics.totalOverdue)} tone={analytics.totalOverdue > 0 ? "destructive" : "default"} sub={`${analytics.overdueCount} فاتورة متأخرة`} />
+        <StatCard icon={Wallet} label={tr("إجمالي المدفوعات")} value={fmt(analytics.totalPaid)} tone="success" />
+        <StatCard icon={TrendingUp} label={tr("نسبة السداد")} value={analytics.totalBilled > 0 ? `${((analytics.totalPaid / analytics.totalBilled) * 100).toFixed(1)}%` : "—"} />
       </div>
 
       {!compact && !loading && analytics.invoiceCount > 0 && (
         <div className="grid lg:grid-cols-2 gap-4">
           <Card className="p-5">
-            <h3 className="font-semibold mb-3">تقادم المديونيات (Aging)</h3>
+            <h3 className="font-semibold mb-3">{tr("تقادم المديونيات (Aging)")}</h3>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={agingData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" />
                 <XAxis dataKey="name" fontSize={11} />
                 <YAxis fontSize={11} tickFormatter={(v) => fmt(v)} />
                 <Tooltip formatter={(v: number) => fmt(v)} contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-                <Bar dataKey="value" name="المستحق" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="value" name={tr("المستحق")} radius={[6, 6, 0, 0]}>
                   {agingData.map((_, i) => <Cell key={i} fill={agingColors[i]} />)}
                 </Bar>
               </BarChart>
@@ -188,9 +189,9 @@ export function SupplierDebtAnalytics({
           </Card>
 
           <Card className="p-5">
-            <h3 className="font-semibold mb-3">توزيع المديونيات على البراندات</h3>
+            <h3 className="font-semibold mb-3">{tr("توزيع المديونيات على البراندات")}</h3>
             {analytics.brandBreakdown.length === 0 ? (
-              <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">لا مديونيات مرتبطة ببراند</div>
+              <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">{tr("لا مديونيات مرتبطة ببراند")}</div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
@@ -207,9 +208,9 @@ export function SupplierDebtAnalytics({
       )}
 
       <Card className="p-5">
-        <h3 className="font-semibold mb-3">أعلى الموردين برصيد مستحق</h3>
+        <h3 className="font-semibold mb-3">{tr("أعلى الموردين برصيد مستحق")}</h3>
         {analytics.topSuppliers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">لا مديونيات مسجلة.</p>
+          <p className="text-sm text-muted-foreground">{tr("لا مديونيات مسجلة.")}</p>
         ) : (
           <div className="space-y-2">
             {analytics.topSuppliers.map((s, i) => (
@@ -218,9 +219,9 @@ export function SupplierDebtAnalytics({
                   <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">{i + 1}</span>
                   <div>
                     <div className="font-medium">{s.name}</div>
-                    <div className="text-xs text-muted-foreground">{s.count} فاتورة</div>
+                    <div className="text-xs text-muted-foreground">{s.count} {tr("فاتورة")}</div>
                   </div>
-                  {s.overdue > 0 && <Badge variant="destructive">متأخر {fmt(s.overdue)}</Badge>}
+                  {s.overdue > 0 && <Badge variant="destructive">{tr("متأخر")} {fmt(s.overdue)}</Badge>}
                 </div>
                 <span className="num font-semibold">{fmt(s.outstanding)}</span>
               </div>

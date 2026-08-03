@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -91,7 +92,7 @@ function DataEntryPage() {
   const saveMut = useMutation({
     mutationFn: () => upsertEntryFn({ data: { brand_id: brandId, year: effectiveYear, month: effectiveMonth, period_type: periodType, period_date: usesDate ? periodDate : null, period_end_date: periodType === "custom" ? periodEndDate : null, ...form } }),
     onSuccess: () => {
-      toast.success("تم الحفظ");
+      toast.success(tr("تم الحفظ"));
       qc.invalidateQueries({ queryKey: scopeKey });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
@@ -105,8 +106,8 @@ function DataEntryPage() {
       <div className="p-10 max-w-2xl mx-auto">
         <Card className="p-8 text-center card-gradient">
           <Lock className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <h2 className="text-xl font-bold mb-1">لا تملك صلاحية الإدخال</h2>
-          <p className="text-sm text-muted-foreground">تواصل مع المشرف.</p>
+          <h2 className="text-xl font-bold mb-1">{tr("لا تملك صلاحية الإدخال")}</h2>
+          <p className="text-sm text-muted-foreground">{tr("تواصل مع المشرف.")}</p>
         </Card>
       </div>
     );
@@ -117,16 +118,16 @@ function DataEntryPage() {
   return (
     <div className="p-6 md:p-8 space-y-6 max-w-5xl">
       <div>
-        <h1 className="text-3xl font-bold">إدخال البيانات</h1>
-        <p className="text-muted-foreground text-sm mt-1">يومي، أسبوعي، شهري، سنوي، أو مدة محددة — لكل براند.</p>
+        <h1 className="text-3xl font-bold">{tr("إدخال البيانات")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{tr("يومي، أسبوعي، شهري، سنوي، أو مدة محددة — لكل براند.")}</p>
       </div>
 
       <Card className="card-gradient p-5 space-y-4">
         <div className="grid md:grid-cols-4 gap-3">
           <div>
-            <Label>البراند</Label>
+            <Label>{tr("البراند")}</Label>
             <Select value={brandId} onValueChange={setBrandId}>
-              <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
               <SelectContent>
                 {(brandsQ.data ?? []).map((b) => (
                   <SelectItem key={b.id} value={b.id}>{b.name} {b.type === "service" ? "· خدمات" : ""}</SelectItem>
@@ -135,38 +136,38 @@ function DataEntryPage() {
             </Select>
           </div>
           <div>
-            <Label>نوع الفترة</Label>
+            <Label>{tr("نوع الفترة")}</Label>
             <Select value={periodType} onValueChange={(v) => setPeriodType(v as PeriodType)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="daily">يومي</SelectItem>
-                <SelectItem value="weekly">أسبوعي</SelectItem>
-                <SelectItem value="monthly">شهري</SelectItem>
-                <SelectItem value="yearly">سنوي</SelectItem>
-                <SelectItem value="custom">مدة محددة</SelectItem>
+                <SelectItem value="daily">{tr("يومي")}</SelectItem>
+                <SelectItem value="weekly">{tr("أسبوعي")}</SelectItem>
+                <SelectItem value="monthly">{tr("شهري")}</SelectItem>
+                <SelectItem value="yearly">{tr("سنوي")}</SelectItem>
+                <SelectItem value="custom">{tr("مدة محددة")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           {periodType === "daily" && (
             <div className="md:col-span-2">
-              <Label>التاريخ</Label>
+              <Label>{tr("التاريخ")}</Label>
               <Input type="date" value={periodDate} onChange={(e) => setPeriodDate(e.target.value)} />
             </div>
           )}
           {periodType === "weekly" && (
             <div className="md:col-span-2">
-              <Label>بداية الأسبوع</Label>
+              <Label>{tr("بداية الأسبوع")}</Label>
               <Input type="date" value={periodDate} onChange={(e) => setPeriodDate(e.target.value)} />
             </div>
           )}
           {periodType === "custom" && (
             <>
               <div>
-                <Label>من</Label>
+                <Label>{tr("من")}</Label>
                 <Input type="date" value={periodDate} onChange={(e) => setPeriodDate(e.target.value)} />
               </div>
               <div>
-                <Label>إلى</Label>
+                <Label>{tr("إلى")}</Label>
                 <Input type="date" value={periodEndDate} onChange={(e) => setPeriodEndDate(e.target.value)} />
               </div>
             </>
@@ -174,7 +175,7 @@ function DataEntryPage() {
           {(periodType === "monthly" || periodType === "yearly") && (
             <>
               <div>
-                <Label>السنة</Label>
+                <Label>{tr("السنة")}</Label>
                 <Select value={String(year)} onValueChange={(v) => setYear(parseInt(v, 10))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
@@ -182,7 +183,7 @@ function DataEntryPage() {
               </div>
               {periodType === "monthly" && (
                 <div>
-                  <Label>الشهر</Label>
+                  <Label>{tr("الشهر")}</Label>
                   <Select value={String(month)} onValueChange={(v) => setMonth(parseInt(v, 10))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{MONTHS.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
@@ -197,33 +198,33 @@ function DataEntryPage() {
       {brandId && (
         <>
           <Card className="card-gradient p-5 space-y-4">
-            <h3 className="font-semibold">البيانات المالية</h3>
+            <h3 className="font-semibold">{tr("البيانات المالية")}</h3>
             <div className="grid md:grid-cols-2 gap-3">
-              <NumField label="الإيرادات" value={form.revenue} onChange={(v) => setForm({ ...form, revenue: v })} />
-              <NumField label="المركز النقدي" value={form.cash_position} onChange={(v) => setForm({ ...form, cash_position: v })} />
+              <NumField label={tr("الإيرادات")} value={form.revenue} onChange={(v) => setForm({ ...form, revenue: v })} />
+              <NumField label={tr("المركز النقدي")} value={form.cash_position} onChange={(v) => setForm({ ...form, cash_position: v })} />
             </div>
             {!isService && (
               <>
-                <h3 className="font-semibold pt-2">البيانات التشغيلية</h3>
+                <h3 className="font-semibold pt-2">{tr("البيانات التشغيلية")}</h3>
                 <div className="grid md:grid-cols-4 gap-3">
-                  <NumField label="إجمالي الطلبات" value={form.orders_total} onChange={(v) => setForm({ ...form, orders_total: v })} />
-                  <NumField label="طلبات مؤكدة" value={form.orders_confirmed} onChange={(v) => setForm({ ...form, orders_confirmed: v })} />
-                  <NumField label="طلبات مسلّمة" value={form.orders_delivered} onChange={(v) => setForm({ ...form, orders_delivered: v })} />
-                  <NumField label="طلبات مرتجعة" value={form.orders_returned} onChange={(v) => setForm({ ...form, orders_returned: v })} />
+                  <NumField label={tr("إجمالي الطلبات")} value={form.orders_total} onChange={(v) => setForm({ ...form, orders_total: v })} />
+                  <NumField label={tr("طلبات مؤكدة")} value={form.orders_confirmed} onChange={(v) => setForm({ ...form, orders_confirmed: v })} />
+                  <NumField label={tr("طلبات مسلّمة")} value={form.orders_delivered} onChange={(v) => setForm({ ...form, orders_delivered: v })} />
+                  <NumField label={tr("طلبات مرتجعة")} value={form.orders_returned} onChange={(v) => setForm({ ...form, orders_returned: v })} />
                 </div>
               </>
             )}
             {isService && (
               <>
-                <h3 className="font-semibold pt-2">بيانات الخدمات</h3>
+                <h3 className="font-semibold pt-2">{tr("بيانات الخدمات")}</h3>
                 <div className="grid md:grid-cols-2 gap-3">
-                  <NumField label="عدد العملاء" value={form.service_clients} onChange={(v) => setForm({ ...form, service_clients: v })} />
-                  <NumField label="عدد المشروعات" value={form.service_projects} onChange={(v) => setForm({ ...form, service_projects: v })} />
+                  <NumField label={tr("عدد العملاء")} value={form.service_clients} onChange={(v) => setForm({ ...form, service_clients: v })} />
+                  <NumField label={tr("عدد المشروعات")} value={form.service_projects} onChange={(v) => setForm({ ...form, service_projects: v })} />
                 </div>
               </>
             )}
             <div>
-              <Label>ملاحظات</Label>
+              <Label>{tr("ملاحظات")}</Label>
               <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
             </div>
             <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="gap-2">

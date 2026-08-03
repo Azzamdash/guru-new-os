@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -41,8 +42,8 @@ function DataHealthPage() {
     refetchInterval: 60_000,
   });
 
-  if (isLoading) return <div className="p-6">جاري تحميل حالة البيانات...</div>;
-  if (error || !data) return <div className="p-6 text-red-600">تعذّر جلب البيانات: {String((error as Error)?.message ?? "")}</div>;
+  if (isLoading) return <div className="p-6">{tr("جاري تحميل حالة البيانات...")}</div>;
+  if (error || !data) return <div className="p-6 text-red-600">{tr("تعذّر جلب البيانات:")} {String((error as Error)?.message ?? "")}</div>;
 
   const hasCogsGap = data.cogsZero.orderItems > 0 || data.cogsZero.ordersWithZeroCost > 0;
   const staleIntegs = data.integrations.filter((i) => (i.minutesSinceSync ?? 0) > 60 || i.status === "error");
@@ -51,48 +52,48 @@ function DataHealthPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Activity className="w-6 h-6" /> صحة البيانات</h1>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Activity className="w-6 h-6" /> {tr("صحة البيانات")}</h1>
           <p className="text-sm text-muted-foreground">
-            آخر تحديث: {new Date(data.generatedAt).toLocaleString("en-US")} — تحديث تلقائي كل دقيقة
+            {tr("آخر تحديث:")} {new Date(data.generatedAt).toLocaleString("en-US")} {tr("— تحديث تلقائي كل دقيقة")}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Kpi label="عناصر أوردر بتكلفة صفر" value={data.cogsZero.orderItems} tone={data.cogsZero.orderItems > 0 ? "warn" : "good"} />
-        <Kpi label="اوردرات cost = 0" value={data.cogsZero.ordersWithZeroCost} tone={data.cogsZero.ordersWithZeroCost > 0 ? "warn" : "good"} />
-        <Kpi label="منتجات بدون COGS" value={data.cogsZero.products} tone={data.cogsZero.products > 0 ? "warn" : "good"} />
-        <Kpi label="إجمالي COD مفتوح" value={data.couriers.totalOpenCod.toLocaleString("en-US", { maximumFractionDigits: 0 })} />
+        <Kpi label={tr("عناصر أوردر بتكلفة صفر")} value={data.cogsZero.orderItems} tone={data.cogsZero.orderItems > 0 ? "warn" : "good"} />
+        <Kpi label={tr("اوردرات cost = 0")} value={data.cogsZero.ordersWithZeroCost} tone={data.cogsZero.ordersWithZeroCost > 0 ? "warn" : "good"} />
+        <Kpi label={tr("منتجات بدون COGS")} value={data.cogsZero.products} tone={data.cogsZero.products > 0 ? "warn" : "good"} />
+        <Kpi label={tr("إجمالي COD مفتوح")} value={data.couriers.totalOpenCod.toLocaleString("en-US", { maximumFractionDigits: 0 })} />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Kpi label="اوردرات بدون فاتورة" value={data.orphans.ordersMissingInvoice} tone={data.orphans.ordersMissingInvoice > 0 ? "bad" : "good"} />
-        <Kpi label="فواتير بدون براند" value={data.orphans.invoicesMissingBrand} tone={data.orphans.invoicesMissingBrand > 0 ? "bad" : "good"} />
-        <Kpi label="Webhooks ناجحة (24س)" value={data.webhooks.last24hSuccess} tone="good" />
-        <Kpi label="Webhooks فاشلة (24س)" value={data.webhooks.last24hFailures} tone={data.webhooks.last24hFailures > 0 ? "bad" : "good"} />
+        <Kpi label={tr("اوردرات بدون فاتورة")} value={data.orphans.ordersMissingInvoice} tone={data.orphans.ordersMissingInvoice > 0 ? "bad" : "good"} />
+        <Kpi label={tr("فواتير بدون براند")} value={data.orphans.invoicesMissingBrand} tone={data.orphans.invoicesMissingBrand > 0 ? "bad" : "good"} />
+        <Kpi label={tr("Webhooks ناجحة (24س)")} value={data.webhooks.last24hSuccess} tone="good" />
+        <Kpi label={tr("Webhooks فاشلة (24س)")} value={data.webhooks.last24hFailures} tone={data.webhooks.last24hFailures > 0 ? "bad" : "good"} />
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {staleIntegs.length === 0
-              ? <><CheckCircle2 className="w-5 h-5 text-emerald-600" /> كل التكاملات محدَّثة</>
-              : <><AlertTriangle className="w-5 h-5 text-amber-600" /> {staleIntegs.length} تكامل يحتاج انتباه</>}
+              ? <><CheckCircle2 className="w-5 h-5 text-emerald-600" /> {tr("كل التكاملات محدَّثة")}</>
+              : <><AlertTriangle className="w-5 h-5 text-amber-600" /> {staleIntegs.length} {tr("تكامل يحتاج انتباه")}</>}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {data.integrations.length === 0 ? (
-            <p className="text-sm text-muted-foreground">لا توجد تكاملات مربوطة بعد.</p>
+            <p className="text-sm text-muted-foreground">{tr("لا توجد تكاملات مربوطة بعد.")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-right p-2">البراند</th>
-                    <th className="text-right p-2">المزوّد</th>
-                    <th className="text-right p-2">الحالة</th>
-                    <th className="text-right p-2">آخر مزامنة</th>
-                    <th className="text-right p-2">آخر خطأ</th>
+                    <th className="text-right p-2">{tr("البراند")}</th>
+                    <th className="text-right p-2">{tr("المزوّد")}</th>
+                    <th className="text-right p-2">{tr("الحالة")}</th>
+                    <th className="text-right p-2">{tr("آخر مزامنة")}</th>
+                    <th className="text-right p-2">{tr("آخر خطأ")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -125,13 +126,12 @@ function DataHealthPage() {
         <Card className="border-amber-500/40 bg-amber-500/5">
           <CardHeader>
             <CardTitle className="text-amber-700 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5" /> فجوات COGS
+              <AlertTriangle className="w-5 h-5" /> {tr("فجوات COGS")}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm space-y-2">
-            <p>يوجد {data.cogsZero.orderItems} صف order_item بتكلفة صفر رغم وجود منتج مربوط.</p>
-            <p>الحل الفوري: من صفحة المنتجات، اضغط <b>استيراد من Shopify</b> لكل براند لجلب تكلفة الـ variants،
-               ثم من هذه الصفحة راقب انخفاض الرقم.</p>
+            <p>{tr("يوجد")} {data.cogsZero.orderItems} {tr("صف order_item بتكلفة صفر رغم وجود منتج مربوط.")}</p>
+            <p>{tr("الحل الفوري: من صفحة المنتجات، اضغط")} <b>{tr("استيراد من Shopify")}</b> {tr("لكل براند لجلب تكلفة الـ variants،\n               ثم من هذه الصفحة راقب انخفاض الرقم.")}</p>
           </CardContent>
         </Card>
       )}

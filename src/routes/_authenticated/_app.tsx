@@ -10,7 +10,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRole } from "@/lib/admin.functions";
 import { getMyAccess } from "@/lib/permissions.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import logoAsset from "@/assets/egurus-logo.asset.json";
 import {
@@ -343,7 +343,7 @@ function AppLayout() {
           >
             {isReadOnlyPage && (
               <div className="sticky top-0 z-30 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-xs font-medium text-amber-700 dark:text-amber-300">
-                صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة
+                {tr("صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة")}
               </div>
             )}
             <OrderModuleNav />

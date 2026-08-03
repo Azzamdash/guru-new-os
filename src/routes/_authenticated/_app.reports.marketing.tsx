@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -123,28 +124,28 @@ function MarketingReports() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Megaphone className="w-7 h-7 text-primary" /> تقارير التسويق</h1>
-          <p className="text-muted-foreground text-sm mt-1">أداء المنصات الإعلانية لكل براند: ميتا، تيك توك، جوجل، واتساب، SMS.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><Megaphone className="w-7 h-7 text-primary" /> {tr("تقارير التسويق")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("أداء المنصات الإعلانية لكل براند: ميتا، تيك توك، جوجل، واتساب، SMS.")}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">كل البراندات</SelectItem>
+              <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
               {brands.filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={roiBasis} onValueChange={(v) => setRoiBasis(v as "attributed" | "brand_total")}>
             <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="brand_total">ROI/ROAS: إيراد البراند الكلي</SelectItem>
-              <SelectItem value="attributed">ROI/ROAS: الإيراد المنسوب</SelectItem>
+              <SelectItem value="brand_total">{tr("ROI/ROAS: إيراد البراند الكلي")}</SelectItem>
+              <SelectItem value="attributed">{tr("ROI/ROAS: الإيراد المنسوب")}</SelectItem>
             </SelectContent>
           </Select>
           <PeriodFilter value={period} onChange={setPeriod} />
           <ReportActions
             filename={`marketing-report-${resolved.year}.csv`}
-            summaryTitle="تقرير التسويق"
+            summaryTitle={tr("تقرير التسويق")}
             summaryText={`الفترة: ${resolved.dateFrom ?? resolved.year}${resolved.dateTo ? ` → ${resolved.dateTo}` : ""}`}
             rows={(brandId === "all" ? filteredMatrix : platformTotals.map((p) => ({ brand: "—", platform: p.platform, spend: p.spend, revenue: p.revenue, roi: p.roi }))) as unknown as Array<Record<string, unknown>>}
             columns={[
@@ -160,16 +161,16 @@ function MarketingReports() {
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">إجمالي إنفاق الماركتنج</div>
-          <div className="text-2xl font-bold mt-1">{fmt(totalSpend)} جنيه</div>
+          <div className="text-xs text-muted-foreground">{tr("إجمالي إنفاق الماركتنج")}</div>
+          <div className="text-2xl font-bold mt-1">{fmt(totalSpend)} {tr("جنيه")}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">الإيراد المنسوب</div>
-          <div className="text-2xl font-bold mt-1">{fmt(attributedRevenue)} جنيه</div>
+          <div className="text-xs text-muted-foreground">{tr("الإيراد المنسوب")}</div>
+          <div className="text-2xl font-bold mt-1">{fmt(attributedRevenue)} {tr("جنيه")}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">إيراد البراند الكلي</div>
-          <div className="text-2xl font-bold mt-1">{fmt(brandTotalRevenue)} جنيه</div>
+          <div className="text-xs text-muted-foreground">{tr("إيراد البراند الكلي")}</div>
+          <div className="text-2xl font-bold mt-1">{fmt(brandTotalRevenue)} {tr("جنيه")}</div>
         </Card>
         <Card className="card-gradient p-5">
           <div className="text-xs text-muted-foreground">ROI ({roiBasis === "brand_total" ? "إيراد البراند" : "المنسوب"})</div>
@@ -186,14 +187,14 @@ function MarketingReports() {
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-4">الإنفاق مقابل الإيراد حسب المنصة</h3>
+          <h3 className="font-semibold mb-4">{tr("الإنفاق مقابل الإيراد حسب المنصة")}</h3>
           <ChartFrame
             isLoading={dashQ.isLoading || allBrandsExpQ.isLoading}
             isError={dashQ.isError || allBrandsExpQ.isError}
             error={dashQ.error || allBrandsExpQ.error}
             isEmpty={!dashQ.isLoading && !allBrandsExpQ.isLoading && platformTotals.length === 0}
-            emptyTitle="لا مصروفات تسويقية لهذه الفترة"
-            emptyDescription="أضف فاتورة مصروف تسويقي وحدّد المنصة (Meta / TikTok / Google …) ليظهر الرسم."
+            emptyTitle={tr("لا مصروفات تسويقية لهذه الفترة")}
+            emptyDescription={tr("أضف فاتورة مصروف تسويقي وحدّد المنصة (Meta / TikTok / Google …) ليظهر الرسم.")}
             onRetry={() => { dashQ.refetch(); allBrandsExpQ.refetch(); }}
             height={280}
           >
@@ -204,20 +205,20 @@ function MarketingReports() {
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
-                <Bar dataKey="spend" name="إنفاق" fill="hsl(var(--destructive))" />
-                <Bar dataKey="revenue" name="إيراد" fill="hsl(var(--primary))" />
+                <Bar dataKey="spend" name={tr("إنفاق")} fill="hsl(var(--destructive))" />
+                <Bar dataKey="revenue" name={tr("إيراد")} fill="hsl(var(--primary))" />
               </BarChart>
             </ResponsiveContainer>
           </ChartFrame>
         </Card>
         <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-4">توزيع الإنفاق</h3>
+          <h3 className="font-semibold mb-4">{tr("توزيع الإنفاق")}</h3>
           <ChartFrame
             isLoading={dashQ.isLoading || allBrandsExpQ.isLoading}
             isError={dashQ.isError || allBrandsExpQ.isError}
             error={dashQ.error || allBrandsExpQ.error}
             isEmpty={!dashQ.isLoading && !allBrandsExpQ.isLoading && platformTotals.every((p) => p.spend === 0)}
-            emptyTitle="لا يوجد إنفاق لتوزيعه"
+            emptyTitle={tr("لا يوجد إنفاق لتوزيعه")}
             onRetry={() => { dashQ.refetch(); allBrandsExpQ.refetch(); }}
             height={280}
           >
@@ -236,12 +237,12 @@ function MarketingReports() {
 
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">تفاصيل المنصات {brandId === "all" ? "(كل البراندات)" : ""}</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("تفاصيل المنصات")} {brandId === "all" ? "(كل البراندات)" : ""}</div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">المنصة</th>
-            <th className="p-3">الإنفاق</th>
-            <th className="p-3">الإيراد المنسوب</th>
+            <th className="p-3">{tr("المنصة")}</th>
+            <th className="p-3">{tr("الإنفاق")}</th>
+            <th className="p-3">{tr("الإيراد المنسوب")}</th>
             <th className="p-3">ROI</th>
             <th className="p-3">ROAS</th>
           </tr></thead>
@@ -255,17 +256,17 @@ function MarketingReports() {
                 <td className="p-3 font-semibold">{p.spend > 0 ? (p.revenue / p.spend).toFixed(2) + "x" : "—"}</td>
               </tr>
             ))}
-            {platformTotals.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا بيانات تسويقية لهذه الفترة.</td></tr>}
+            {platformTotals.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{tr("لا بيانات تسويقية لهذه الفترة.")}</td></tr>}
           </tbody>
         </table>
       </Card>
 
       {brandId === "all" && filteredMatrix.length > 0 && (
         <Card className="card-gradient overflow-hidden">
-          <div className="p-4 border-b border-border font-semibold">مصفوفة البراند × المنصة</div>
+          <div className="p-4 border-b border-border font-semibold">{tr("مصفوفة البراند × المنصة")}</div>
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border text-right text-muted-foreground">
-              <th className="p-3">البراند</th><th className="p-3">المنصة</th><th className="p-3">الإنفاق</th><th className="p-3">الإيراد</th><th className="p-3">ROI</th>
+              <th className="p-3">{tr("البراند")}</th><th className="p-3">{tr("المنصة")}</th><th className="p-3">{tr("الإنفاق")}</th><th className="p-3">{tr("الإيراد")}</th><th className="p-3">ROI</th>
             </tr></thead>
             <tbody>
               {filteredMatrix.sort((a, b) => b.spend - a.spend).map((r, i) => (
@@ -282,7 +283,7 @@ function MarketingReports() {
         </Card>
       )}
 
-      {d && (dashQ.isLoading || allBrandsExpQ.isLoading) && <p className="text-muted-foreground text-sm">جاري التحميل...</p>}
+      {d && (dashQ.isLoading || allBrandsExpQ.isLoading) && <p className="text-muted-foreground text-sm">{tr("جاري التحميل...")}</p>}
     </div>
   );
 }

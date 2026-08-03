@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -58,7 +59,7 @@ function ProductionPage() {
       employee_id: form.type === "production" ? (form.employee_id || null) : null,
       worker_name: form.type === "production" ? (form.worker_name || null) : null,
     } }),
-    onSuccess: () => { toast.success("تم"); qc.invalidateQueries({ queryKey: ["inv-moves"] }); setForm({ ...form, qty: 1, note: "", worker_name: "", employee_id: "" }); },
+    onSuccess: () => { toast.success(tr("تم")); qc.invalidateQueries({ queryKey: ["inv-moves"] }); setForm({ ...form, qty: 1, note: "", worker_name: "", employee_id: "" }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const remove = useMutation({
@@ -78,15 +79,15 @@ function ProductionPage() {
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">الإنتاج والمخزون</h1>
-          <p className="text-muted-foreground text-sm mt-1">اختر البراند ثم المنتج ثم أدخل الحركة.</p>
+          <h1 className="text-3xl font-bold">{tr("الإنتاج والمخزون")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{tr("اختر البراند ثم المنتج ثم أدخل الحركة.")}</p>
         </div>
         <Button asChild variant="outline" size="sm" className="gap-2">
           <Link
             to="/reports/inventory-valuation"
             search={{ brandId: brandId || "", branchId: "", year: new Date().getFullYear() }}
           >
-            <Layers className="w-4 h-4" /> تقارير المخزون {brandId ? `— ${brands.find((b) => b.id === brandId)?.name ?? ""}` : ""}
+            <Layers className="w-4 h-4" /> {tr("تقارير المخزون")} {brandId ? `— ${brands.find((b) => b.id === brandId)?.name ?? ""}` : ""}
           </Link>
         </Button>
       </div>
@@ -94,40 +95,40 @@ function ProductionPage() {
       <Card className="card-gradient p-5">
         <div className="grid md:grid-cols-6 gap-3 items-end">
           <div>
-            <Label>البراند</Label>
+            <Label>{tr("البراند")}</Label>
             <Select value={brandId} onValueChange={(v) => { setBrandId(v); setForm({ ...form, product_id: "" }); }}>
-              <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
               <SelectContent>{brands.filter((b) => b.type === "product" && b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="md:col-span-2">
-            <Label>المنتج</Label>
+            <Label>{tr("المنتج")}</Label>
             <Select value={form.product_id} onValueChange={(v) => setForm({ ...form, product_id: v })} disabled={!brandId}>
               <SelectTrigger><SelectValue placeholder={brandId ? "اختر" : "اختر البراند"} /></SelectTrigger>
               <SelectContent>{filteredProducts.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · {UNITS_LABEL[p.unit] ?? p.unit}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
-            <Label>النوع</Label>
+            <Label>{tr("النوع")}</Label>
             <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as typeof form.type })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="production">إنتاج</SelectItem>
-                <SelectItem value="sale">بيع</SelectItem>
-                <SelectItem value="return">مرتجع</SelectItem>
-                <SelectItem value="adjustment">تسوية</SelectItem>
+                <SelectItem value="production">{tr("إنتاج")}</SelectItem>
+                <SelectItem value="sale">{tr("بيع")}</SelectItem>
+                <SelectItem value="return">{tr("مرتجع")}</SelectItem>
+                <SelectItem value="adjustment">{tr("تسوية")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>الكمية {form.product_id ? `(${UNITS_LABEL[productUnit(form.product_id)] ?? ""})` : ""}</Label>
+            <Label>{tr("الكمية")} {form.product_id ? `(${UNITS_LABEL[productUnit(form.product_id)] ?? ""})` : ""}</Label>
             <Input type="number" value={form.qty} onChange={(e) => setForm({ ...form, qty: parseFloat(e.target.value) || 0 })} />
           </div>
-          <div><Label>التاريخ</Label><Input type="date" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} /></div>
+          <div><Label>{tr("التاريخ")}</Label><Input type="date" value={form.occurred_at} onChange={(e) => setForm({ ...form, occurred_at: e.target.value })} /></div>
         </div>
         <div className="mt-3 grid md:grid-cols-[1fr_1fr_1fr_auto] gap-3 items-end">
           <div>
-            <Label>الموظف (للإنتاج)</Label>
+            <Label>{tr("الموظف (للإنتاج)")}</Label>
             <Select value={form.employee_id || "none"} disabled={form.type !== "production"} onValueChange={(v) => {
               if (v === "none") { setForm({ ...form, employee_id: "", worker_name: "" }); return; }
               const emp = employees.find((e) => e.id === v);
@@ -135,19 +136,19 @@ function ProductionPage() {
             }}>
               <SelectTrigger><SelectValue placeholder={brandId ? "اختر" : "اختر البراند"} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">— يدوي —</SelectItem>
+                <SelectItem value="none">{tr("— يدوي —")}</SelectItem>
                 {brandEmployees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div><Label>اسم يدوي</Label><Input value={form.worker_name} onChange={(e) => setForm({ ...form, worker_name: e.target.value, employee_id: "" })} disabled={form.type !== "production" || !!form.employee_id} placeholder={form.type === "production" ? "اختياري" : "—"} /></div>
-          <div><Label>ملاحظة</Label><Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
-          <Button onClick={() => save.mutate()} disabled={!form.product_id || form.qty <= 0 || save.isPending}>تسجيل</Button>
+          <div><Label>{tr("اسم يدوي")}</Label><Input value={form.worker_name} onChange={(e) => setForm({ ...form, worker_name: e.target.value, employee_id: "" })} disabled={form.type !== "production" || !!form.employee_id} placeholder={form.type === "production" ? "اختياري" : "—"} /></div>
+          <div><Label>{tr("ملاحظة")}</Label><Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
+          <Button onClick={() => save.mutate()} disabled={!form.product_id || form.qty <= 0 || save.isPending}>{tr("تسجيل")}</Button>
         </div>
       </Card>
 
       <Card className="card-gradient p-5">
-        <h3 className="font-semibold mb-3">أرصدة المخزون {brandId ? `— ${brands.find((b) => b.id === brandId)?.name ?? ""}` : ""}</h3>
+        <h3 className="font-semibold mb-3">{tr("أرصدة المخزون")} {brandId ? `— ${brands.find((b) => b.id === brandId)?.name ?? ""}` : ""}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {visibleStockProducts.map((p) => (
             <div key={p.id} className="rounded border border-border p-3">
@@ -156,16 +157,16 @@ function ProductionPage() {
               <div className="text-xs text-muted-foreground mt-1">{UNITS_LABEL[p.unit] ?? p.unit}</div>
             </div>
           ))}
-          {visibleStockProducts.length === 0 && <p className="text-sm text-muted-foreground col-span-full">لا منتجات.</p>}
+          {visibleStockProducts.length === 0 && <p className="text-sm text-muted-foreground col-span-full">{tr("لا منتجات.")}</p>}
         </div>
       </Card>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">آخر الحركات</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("آخر الحركات")}</div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
-            <th className="p-3">التاريخ</th><th className="p-3">المنتج</th><th className="p-3">النوع</th>
-            <th className="p-3 text-left">الكمية</th><th className="p-3">العامل</th><th className="p-3">ملاحظة</th><th className="p-3"></th>
+            <th className="p-3">{tr("التاريخ")}</th><th className="p-3">{tr("المنتج")}</th><th className="p-3">{tr("النوع")}</th>
+            <th className="p-3 text-left">{tr("الكمية")}</th><th className="p-3">{tr("العامل")}</th><th className="p-3">{tr("ملاحظة")}</th><th className="p-3"></th>
           </tr></thead>
           <tbody>
             {((movesQ.data ?? []) as Array<{ id: string; product_id: string; type: string; qty: number; occurred_at: string; note: string | null; worker_name: string | null }>).map((m) => (

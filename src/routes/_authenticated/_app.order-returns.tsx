@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -55,7 +56,7 @@ function OrderReturnsPage() {
     mutationFn: (kind: "return" | "exchange") =>
       createFn({ data: { orderId: newOrderId.trim(), kind } }),
     onSuccess: () => {
-      toast.success("تم فتح طلب المرتجع");
+      toast.success(tr("تم فتح طلب المرتجع"));
       setNewOrderId("");
       invalidate();
     },
@@ -66,7 +67,7 @@ function OrderReturnsPage() {
     mutationFn: (v: { returnId: string; action: "receive" | "restock" | "refund" | "close" | "cancel"; refundAmount?: number }) =>
       advanceFn({ data: v }),
     onSuccess: () => {
-      toast.success("تم تحديث حالة المرتجع");
+      toast.success(tr("تم تحديث حالة المرتجع"));
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -78,18 +79,18 @@ function OrderReturnsPage() {
     <div className="space-y-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 text-xl font-bold">
-          <PackageX className="h-5 w-5 text-primary" /> المرتجعات والاستبدال
+          <PackageX className="h-5 w-5 text-primary" /> {tr("المرتجعات والاستبدال")}
         </h1>
         <Button variant="outline" size="sm" onClick={() => listQ.refetch()}>
-          <RefreshCw className="ml-1 h-4 w-4" /> تحديث
+          <RefreshCw className="ml-1 h-4 w-4" /> {tr("تحديث")}
         </Button>
       </div>
 
       <Card className="flex flex-wrap items-end gap-2 p-3">
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="البراند" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder={tr("البراند")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل البراندات</SelectItem>
+            <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
             {(brandsQ.data ?? []).map((b: { id: string; name: string }) => (
               <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
             ))}
@@ -98,7 +99,7 @@ function OrderReturnsPage() {
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">{tr("كل الحالات")}</SelectItem>
             {Object.entries(RETURN_STATUS_LABELS).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v}</SelectItem>
             ))}
@@ -108,22 +109,22 @@ function OrderReturnsPage() {
           <Input
             value={newOrderId}
             onChange={(e) => setNewOrderId(e.target.value)}
-            placeholder="معرّف الأوردر (UUID)"
+            placeholder={tr("معرّف الأوردر (UUID)")}
             className="w-64"
           />
           <Button size="sm" disabled={!newOrderId.trim() || createM.isPending} onClick={() => createM.mutate("return")}>
-            مرتجع
+            {tr("مرتجع")}
           </Button>
           <Button size="sm" variant="outline" disabled={!newOrderId.trim() || createM.isPending} onClick={() => createM.mutate("exchange")}>
-            استبدال
+            {tr("استبدال")}
           </Button>
         </div>
       </Card>
 
       <div className="space-y-2">
-        {listQ.isLoading && <Card className="p-6 text-center text-muted-foreground">جارِ التحميل…</Card>}
+        {listQ.isLoading && <Card className="p-6 text-center text-muted-foreground">{tr("جارِ التحميل…")}</Card>}
         {!listQ.isLoading && rows.length === 0 && (
-          <Card className="p-6 text-center text-muted-foreground">لا توجد مرتجعات</Card>
+          <Card className="p-6 text-center text-muted-foreground">{tr("لا توجد مرتجعات")}</Card>
         )}
         {rows.map((r) => (
           <Card key={r.id} className="space-y-2 p-3">
@@ -134,21 +135,21 @@ function OrderReturnsPage() {
               <Badge variant="outline">{r.kind === "exchange" ? "استبدال" : "مرتجع"}</Badge>
               <Badge>{RETURN_STATUS_LABELS[r.status] ?? r.status}</Badge>
               <span className="text-sm">{r.customer_name ?? "—"}</span>
-              <span className="text-sm text-muted-foreground">قيمة الأوردر: {money(r.order_total)}</span>
-              {r.restocked && <Badge variant="secondary">رجع للمخزون</Badge>}
-              {r.refund_amount > 0 && <Badge variant="secondary">استرداد {money(r.refund_amount)}</Badge>}
+              <span className="text-sm text-muted-foreground">{tr("قيمة الأوردر:")} {money(r.order_total)}</span>
+              {r.restocked && <Badge variant="secondary">{tr("رجع للمخزون")}</Badge>}
+              {r.refund_amount > 0 && <Badge variant="secondary">{tr("استرداد")} {money(r.refund_amount)}</Badge>}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" disabled={r.status !== "requested"} onClick={() => advanceM.mutate({ returnId: r.id, action: "receive" })}>
-                استلام
+                {tr("استلام")}
               </Button>
               <Button size="sm" variant="outline" disabled={r.restocked || r.status === "requested"} onClick={() => advanceM.mutate({ returnId: r.id, action: "restock" })}>
-                إرجاع للمخزون
+                {tr("إرجاع للمخزون")}
               </Button>
               <Input
                 className="w-32"
                 type="number"
-                placeholder="مبلغ الاسترداد"
+                placeholder={tr("مبلغ الاسترداد")}
                 value={refundInputs[r.id] ?? ""}
                 onChange={(e) => setRefundInputs((p) => ({ ...p, [r.id]: e.target.value }))}
               />
@@ -158,13 +159,13 @@ function OrderReturnsPage() {
                 disabled={!Number(refundInputs[r.id] ?? 0)}
                 onClick={() => advanceM.mutate({ returnId: r.id, action: "refund", refundAmount: Number(refundInputs[r.id]) })}
               >
-                تسجيل استرداد
+                {tr("تسجيل استرداد")}
               </Button>
               <Button size="sm" variant="secondary" disabled={r.status === "closed"} onClick={() => advanceM.mutate({ returnId: r.id, action: "close" })}>
-                إقفال
+                {tr("إقفال")}
               </Button>
               <Button size="sm" variant="ghost" className="text-destructive" onClick={() => advanceM.mutate({ returnId: r.id, action: "cancel" })}>
-                إلغاء
+                {tr("إلغاء")}
               </Button>
             </div>
           </Card>

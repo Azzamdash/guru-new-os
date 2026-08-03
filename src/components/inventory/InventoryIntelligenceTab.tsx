@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -67,31 +68,31 @@ export function InventoryIntelligenceTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">تحليل ذكي للمخزون</h2>
-        <p className="text-muted-foreground text-sm mt-1">مبني على معدل الاستهلاك خلال آخر {DEAD_STOCK_WINDOW_DAYS} يوم وفترة التوريد لكل صنف.</p>
+        <h2 className="text-2xl font-bold">{tr("تحليل ذكي للمخزون")}</h2>
+        <p className="text-muted-foreground text-sm mt-1">{tr("مبني على معدل الاستهلاك خلال آخر")} {DEAD_STOCK_WINDOW_DAYS} {tr("يوم وفترة التوريد لكل صنف.")}</p>
       </div>
 
       {itemsAtRisk.length > 0 && (
         <Card className="p-4 border-destructive/40 bg-destructive/5">
           <div className="flex items-center gap-2 font-semibold text-destructive mb-1">
-            <AlertTriangle className="h-4 w-4" /> {itemsAtRisk.length} صنف في خطر نفاد قبل وصول طلبية جديدة
+            <AlertTriangle className="h-4 w-4" /> {itemsAtRisk.length} {tr("صنف في خطر نفاد قبل وصول طلبية جديدة")}
           </div>
-          <p className="text-sm text-muted-foreground">راجع جدول "أصناف في خطر" تحت وابدأ بأمر شراء للأصناف الأولى في الترتيب.</p>
+          <p className="text-sm text-muted-foreground">{tr("راجع جدول \"أصناف في خطر\" تحت وابدأ بأمر شراء للأصناف الأولى في الترتيب.")}</p>
         </Card>
       )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Card className="p-4 space-y-1">
           <div className="flex items-center justify-between text-muted-foreground text-sm">
-            <span>متوسط أيام التوريد</span>
+            <span>{tr("متوسط أيام التوريد")}</span>
             <Clock className="h-4 w-4" />
           </div>
           <div className="text-2xl font-bold tabular-nums">{avgDaysOfSupply > 0 ? Math.round(avgDaysOfSupply) : "—"}</div>
-          <div className="text-xs text-muted-foreground">عبر الأصناف اللي عندها استهلاك فعلي</div>
+          <div className="text-xs text-muted-foreground">{tr("عبر الأصناف اللي عندها استهلاك فعلي")}</div>
         </Card>
         <Card className="p-4 space-y-1">
           <div className="flex items-center justify-between text-muted-foreground text-sm">
-            <span>أصناف تحتاج انتباه</span>
+            <span>{tr("أصناف تحتاج انتباه")}</span>
             <TrendingDown className="h-4 w-4" />
           </div>
           <div className="text-2xl font-bold tabular-nums">{nf(needsAttention.length)}</div>
@@ -99,17 +100,17 @@ export function InventoryIntelligenceTab() {
       </div>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">أصناف في خطر — مرتّبة بالأولوية</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("أصناف في خطر — مرتّبة بالأولوية")}</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-muted-foreground text-right border-b border-border">
-                <th className="p-3">الصنف</th>
-                <th className="p-3">البراند</th>
-                <th className="p-3 text-left">الرصيد الحالي</th>
-                <th className="p-3 text-left">أيام متبقية</th>
-                <th className="p-3 text-left">فترة التوريد</th>
-                <th className="p-3 text-left">الكمية المقترحة</th>
+                <th className="p-3">{tr("الصنف")}</th>
+                <th className="p-3">{tr("البراند")}</th>
+                <th className="p-3 text-left">{tr("الرصيد الحالي")}</th>
+                <th className="p-3 text-left">{tr("أيام متبقية")}</th>
+                <th className="p-3 text-left">{tr("فترة التوريد")}</th>
+                <th className="p-3 text-left">{tr("الكمية المقترحة")}</th>
               </tr>
             </thead>
             <tbody>
@@ -124,7 +125,7 @@ export function InventoryIntelligenceTab() {
                 </tr>
               ))}
               {itemsAtRisk.length === 0 && (
-                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">مفيش أصناف في خطر نفاد حاليًا.</td></tr>
+                <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{tr("مفيش أصناف في خطر نفاد حاليًا.")}</td></tr>
               )}
             </tbody>
           </table>
@@ -132,7 +133,7 @@ export function InventoryIntelligenceTab() {
       </Card>
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">أصناف تحتاج انتباه</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("أصناف تحتاج انتباه")}</div>
         <div className="divide-y divide-border/50">
           {needsAttention.map((r) => (
             <div key={r.key} className="p-3 flex items-center justify-between">
@@ -144,7 +145,7 @@ export function InventoryIntelligenceTab() {
             </div>
           ))}
           {needsAttention.length === 0 && (
-            <div className="p-6 text-center text-muted-foreground text-sm">كل الأصناف في وضع طبيعي.</div>
+            <div className="p-6 text-center text-muted-foreground text-sm">{tr("كل الأصناف في وضع طبيعي.")}</div>
           )}
         </div>
       </Card>
