@@ -426,27 +426,11 @@ export const NAV_PAGES: NavPage[] = [
   },
 
   // INVOICING & FINANCE
-  {
-    to: "/purchases",
-    ar: "المشتريات",
-    en: "Purchases",
-    icon: ShoppingCart,
-    hub: "invoicing",
-    requiresWrite: true,
-    descAr: "فواتير الموردين والمشتريات",
-    descEn: "Supplier invoices",
-  },
-  {
-    to: "/suppliers",
-    ar: "الموردون",
-    en: "Suppliers",
-    icon: FileWarning,
-    hub: "invoicing",
-    section: "suppliers",
-    requiresWrite: true,
-    descAr: "بيانات الموردين والمستحقات",
-    descEn: "Suppliers & dues",
-  },
+  // Purchases + Suppliers moved into the "إدارة المخزون" (Inventory
+  // Management) hub, which now has fuller Suppliers and Purchase Orders
+  // tabs — keeping separate nav cards here would just duplicate them.
+  // Supplier Payments stays: it's a more complete dedicated tool than the
+  // simple per-invoice payment form embedded in the Suppliers tab.
   {
     to: "/suppliers/payments",
     ar: "دفعات الموردين",
@@ -664,26 +648,24 @@ export const NAV_PAGES: NavPage[] = [
     ar: "حالة المخزون",
     en: "Inventory Status",
     icon: Activity,
-    hub: "overview",
+    hub: "inventory",
     section: "fulfillment",
     privilegedOnly: true,
     extraRoles: ["operation_manager"],
     descAr: "حالة ومتابعة المخزون اليومية",
     descEn: "Daily inventory status",
-    group: "production_inventory",
   },
   {
     to: "/reports/production",
     ar: "تقارير الإنتاج",
     en: "Production Reports",
     icon: BarChart3,
-    hub: "overview",
+    hub: "inventory",
     section: "reports_production",
     privilegedOnly: true,
     extraRoles: ["production_manager", "operation_manager"],
     descAr: "أداء الإنتاج والاستهلاك",
     descEn: "Output & usage",
-    group: "production_inventory",
   },
 
   // INVESTORS
@@ -798,17 +780,6 @@ export const NAV_PAGES: NavPage[] = [
     descAr: "أداء التنفيذ والتسليم",
     descEn: "Fulfilment perf.",
     group: "audit",
-  },
-  {
-    to: "/reports/inventory-valuation",
-    ar: "تقارير المخزون",
-    en: "Inventory Reports",
-    icon: Boxes,
-    hub: "overview",
-    privilegedOnly: true,
-    descAr: "قيمة ومخزون البراندات والفروع مع ربط الإنتاج",
-    descEn: "Stock value & levels across brands, branches & production",
-    group: "production_inventory",
   },
   {
     to: "/reports/shopify",
