@@ -35,7 +35,7 @@ export function OrderModuleNav() {
               ].join(" ")}
             >
               <Icon className="h-3.5 w-3.5" />
-              {p.ar}
+              {p.en}
             </Link>
           );
         })}
