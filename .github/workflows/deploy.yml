@@ -20,22 +20,19 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.gate.outputs.should_deploy }}
-      target_ip: ${{ steps.gate.outputs.target_ip }}
       version: ${{ steps.gate2.outputs.version }}
     steps:
-      - name: Resolve target
+      - name: Check target configured
         id: gate
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           MANUAL_IP: ${{ inputs.target_ip }}
         run: |
-          IP="${MANUAL_IP:-$SERVER_IP}"
-          if [[ -z "$IP" ]]; then
+          if [[ -n "$MANUAL_IP" || -n "$SERVER_IP" ]]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
             echo "No SERVER_IP secret configured and no target_ip provided — skipping deploy."
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "target_ip=$IP" >> "$GITHUB_OUTPUT"
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Determine version
         id: ver
@@ -57,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.check.outputs.version }}
-      TARGET_IP: ${{ needs.check.outputs.target_ip }}
+      TARGET_IP: ${{ inputs.target_ip || secrets.SERVER_IP }}
       SSH_USER: ${{ secrets.SSH_USERNAME }}
     steps:
       - uses: actions/checkout@v4
