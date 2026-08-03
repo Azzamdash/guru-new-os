@@ -16,15 +16,15 @@ on:
         type: string
 
 jobs:
-  check:
+   check:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.gate.outputs.should_deploy }}
       servers: ${{ steps.gate.outputs.servers }}
-      version: ${{ steps.gate.outputs.version }}
+      version: ${{ steps.gate2.outputs.version }}
     steps:
-      - name: Resolve targets and version
+      - name: Resolve targets
         id: gate
         env:
           SERVER_IPS: ${{ secrets.SERVER_IPS }}
@@ -39,9 +39,9 @@ jobs:
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "No SERVER_IPS secret configured — skipping deploy."
+            echo "servers=[]" >> "$GITHUB_OUTPUT"
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
           fi
-
       - name: Determine version
         id: ver
         run: |
@@ -53,7 +53,6 @@ jobs:
               | jq -r .tag_name | sed 's/^v//')
             echo "version=$V" >> "$GITHUB_OUTPUT"
           fi
-
       - run: echo "version=${{ steps.ver.outputs.version }}" >> "$GITHUB_OUTPUT"
         id: gate2
 
