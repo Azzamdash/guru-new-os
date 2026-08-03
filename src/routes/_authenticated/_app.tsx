@@ -238,9 +238,11 @@ function AppLayout() {
           <Input
             value={navSearch}
             onChange={(e) => setNavSearch(e.target.value)}
+            aria-label={lang === "ar" ? "ابحث في القائمة" : "Search menu"}
             placeholder={lang === "ar" ? "ابحث في القائمة..." : "Search menu..."}
             className="h-8 ltr:pl-8 rtl:pr-8 text-sm"
           />
+
         </div>
       </div>
       <NavSearchContext.Provider value={navSearch.trim().toLowerCase()}>
