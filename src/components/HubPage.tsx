@@ -51,7 +51,7 @@ export function HubPage({ hub, ctx }: { hub: HubKey; ctx: RoleCtx }) {
             return (
               <div key={sec.key} className="space-y-3">
                 <h2 className="text-lg font-bold text-foreground/90">
-                  {lang === "ar" ? sec.ar : sec.en}
+                  {sec.en}
                 </h2>
                 <CardGrid items={items} lang={lang} />
               </div>
@@ -104,7 +104,7 @@ function CardGrid({ items, lang }: { items: NavPage[]; lang: string }) {
             </div>
             <div>
               <div className="font-semibold text-sm leading-tight">
-                {lang === "ar" ? p.ar : p.en}
+                {p.en}
               </div>
               {(p.descAr || p.descEn) && (
                 <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
