@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,14 +8,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Minus, Trash2, Printer, MessageCircle, Search, Store, CreditCard, Banknote, Layers } from "lucide-react";
-import { listMyOfflineBranches, listBranchProducts, createPosSale, getPosInvoice } from "@/lib/pos.functions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus,
+  Minus,
+  Trash2,
+  Printer,
+  MessageCircle,
+  Search,
+  Store,
+  CreditCard,
+  Banknote,
+  Layers,
+} from "lucide-react";
+import {
+  listMyOfflineBranches,
+  listBranchProducts,
+  createPosSale,
+  getPosInvoice,
+} from "@/lib/pos.functions";
+import { useLang } from "@/lib/i18n";
 
 type PosInvoice = Awaited<ReturnType<typeof getPosInvoice>>;
 
 export const Route = createFileRoute("/_authenticated/_app/pos")({
-  head: () => ({ meta: [{ title: tr("نقطة البيع — e-GURUS") }, { name: "description", content: "شاشة بيع الفروع الأوفلاين" }] }),
+  head: () => ({
+    meta: [
+      { title: "نقطة البيع — e-GURUS" },
+      { name: "description", content: "شاشة بيع الفروع الأوفلاين" },
+    ],
+  }),
   component: PosPage,
 });
 
@@ -24,6 +51,8 @@ type CartItem = { productId: string; name: string; unitPrice: number; qty: numbe
 type PaymentMethod = "cash" | "visa" | "mixed";
 
 function PosPage() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const qc = useQueryClient();
   const branchesFn = useServerFn(listMyOfflineBranches);
   const productsFn = useServerFn(listBranchProducts);
@@ -52,7 +81,9 @@ function PosPage() {
   const branch = branchesQ.data?.find((b) => b.id === activeBranchId);
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (productsQ.data ?? []).filter((p) => !q || p.name.toLowerCase().includes(q) || (p.sku ?? "").toLowerCase().includes(q));
+    return (productsQ.data ?? []).filter(
+      (p) => !q || p.name.toLowerCase().includes(q) || (p.sku ?? "").toLowerCase().includes(q),
+    );
   }, [productsQ.data, search]);
 
   const total = cart.reduce((s, i) => s + i.qty * i.unitPrice, 0);
@@ -62,49 +93,84 @@ function PosPage() {
       const existing = prev.find((i) => i.productId === p.id);
       if (existing) {
         if (p.on_hand_qty > 0 && existing.qty + 1 > p.on_hand_qty) {
-          toast(tr("تخطيت المخزون المسجل — سيتم البيع على المكشوف"));
+          toast(
+            T(
+              "تخطيت المخزون المسجل — سيتم البيع على المكشوف",
+              "Exceeded recorded stock — will sell as backorder",
+            ),
+          );
         }
-        return prev.map((i) => i.productId === p.id ? { ...i, qty: i.qty + 1 } : i);
+        return prev.map((i) => (i.productId === p.id ? { ...i, qty: i.qty + 1 } : i));
       }
       if (p.on_hand_qty <= 0) {
-        toast(tr("المخزون غير مسجل لهذا المنتج — سيتم البيع على المكشوف"));
+        toast(
+          T(
+            "المخزون غير مسجل لهذا المنتج — سيتم البيع على المكشوف",
+            "No recorded stock for this product — will sell as backorder",
+          ),
+        );
       }
-      return [...prev, { productId: p.id, name: p.name, unitPrice: p.sell_price, qty: 1, stock: Math.max(p.on_hand_qty, 9999) }];
+      return [
+        ...prev,
+        {
+          productId: p.id,
+          name: p.name,
+          unitPrice: p.sell_price,
+          qty: 1,
+          stock: Math.max(p.on_hand_qty, 9999),
+        },
+      ];
     });
   };
   const changeQty = (id: string, delta: number) => {
-    setCart((prev) => prev.flatMap((i) => {
-      if (i.productId !== id) return [i];
-      const q = i.qty + delta;
-      if (q <= 0) return [];
-      return [{ ...i, qty: q }];
-    }));
+    setCart((prev) =>
+      prev.flatMap((i) => {
+        if (i.productId !== id) return [i];
+        const q = i.qty + delta;
+        if (q <= 0) return [];
+        return [{ ...i, qty: q }];
+      }),
+    );
   };
   const removeItem = (id: string) => setCart((prev) => prev.filter((i) => i.productId !== id));
   const reset = () => {
-    setCart([]); setCustomerName(""); setCustomerPhone("");
-    setPayment("cash"); setCashAmt(0); setCardAmt(0);
+    setCart([]);
+    setCustomerName("");
+    setCustomerPhone("");
+    setPayment("cash");
+    setCashAmt(0);
+    setCardAmt(0);
   };
 
   const submit = async () => {
-    if (!activeBranchId) return toast.error(tr("اختر فرعًا"));
-    if (cart.length === 0) return toast.error(tr("السلة فارغة"));
-    if (!customerName.trim()) return toast.error(tr("اسم العميل مطلوب"));
-    if (!customerPhone.trim()) return toast.error(tr("رقم تليفون العميل مطلوب"));
+    if (!activeBranchId) return toast.error(T("اختر فرعًا", "Select a branch"));
+    if (cart.length === 0) return toast.error(T("السلة فارغة", "Cart is empty"));
+    if (!customerName.trim())
+      return toast.error(T("اسم العميل مطلوب", "Customer name is required"));
+    if (!customerPhone.trim())
+      return toast.error(T("رقم تليفون العميل مطلوب", "Customer phone number is required"));
     if (payment === "mixed" && Math.abs(cashAmt + cardAmt - total) > 0.5) {
-      return toast.error(tr("مجموع الكاش والفيزا لازم يساوي الإجمالي"));
+      return toast.error(
+        T(
+          "مجموع الكاش والفيزا لازم يساوي الإجمالي",
+          "Cash + card total must equal the grand total",
+        ),
+      );
     }
     setSaving(true);
     try {
-      const res = await createFn({ data: {
-        brandId: activeBranchId,
-        customerName, customerPhone,
-        paymentMethod: payment,
-        cashAmount: payment === "cash" ? total : payment === "mixed" ? cashAmt : 0,
-        cardAmount: payment === "visa" ? total : payment === "mixed" ? cardAmt : 0,
-        items: cart.map((c) => ({ productId: c.productId, qty: c.qty, unitPrice: c.unitPrice })),
-      } });
-      toast.success(tr("تم إتمام البيع"));
+      const res = await createFn({
+        data: {
+          brandId: activeBranchId,
+          customerName,
+          customerPhone,
+          paymentMethod: payment,
+          cashAmount: payment === "cash" ? total : payment === "mixed" ? cashAmt : 0,
+          cardAmount: payment === "visa" ? total : payment === "mixed" ? cardAmt : 0,
+          items: cart.map((c) => ({ productId: c.productId, qty: c.qty, unitPrice: c.unitPrice })),
+        },
+      });
+      toast.success(T("تم إتمام البيع", "Sale completed"));
       // Refresh stock
       qc.invalidateQueries({ queryKey: ["pos-products", activeBranchId] });
       qc.invalidateQueries({ queryKey: ["pos-recent", 7] });
@@ -113,18 +179,25 @@ function PosPage() {
         const full = await invFn({ data: { id: res.id } });
         openReceiptModal(full);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : tr("تعذر فتح إيصال الطباعة"));
+        toast.error(
+          e instanceof Error
+            ? e.message
+            : T("تعذر فتح إيصال الطباعة", "Could not open the print receipt"),
+        );
       }
       reset();
     } catch (e) {
       const msg = e instanceof Error ? e.message : typeof e === "string" ? e : JSON.stringify(e);
       console.error("[POS submit] failed:", e);
-      toast.error(msg ? `فشل إتمام البيع: ${msg}` : tr("فشل إتمام البيع"));
+      toast.error(
+        msg
+          ? `${T("فشل إتمام البيع", "Failed to complete sale")}: ${msg}`
+          : T("فشل إتمام البيع", "Failed to complete sale"),
+      );
     } finally {
       setSaving(false);
     }
   };
-
 
   const [receipt, setReceipt] = useState<PosInvoice | null>(null);
   const openReceiptModal = (r: PosInvoice) => setReceipt(r);
@@ -133,7 +206,9 @@ function PosPage() {
       const full = await invFn({ data: { id } });
       setReceipt(full);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : tr("تعذر فتح الفاتورة"));
+      toast.error(
+        e instanceof Error ? e.message : T("تعذر فتح الفاتورة", "Could not open the invoice"),
+      );
     }
   };
 
@@ -152,9 +227,11 @@ function PosPage() {
             <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-xl sm:text-2xl font-extrabold leading-tight">{tr("نقطة البيع")}</h1>
+            <h1 className="truncate text-xl sm:text-2xl font-extrabold leading-tight">
+              {T("نقطة البيع", "Point of Sale")}
+            </h1>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">
-              {branch ? branch.name : tr("اختر الفرع للبدء")}
+              {branch ? branch.name : T("اختر الفرع للبدء", "Select a branch to begin")}
             </p>
           </div>
         </div>
@@ -163,11 +240,13 @@ function PosPage() {
             <Store className="w-4 h-4 text-primary" />
             <Select value={activeBranchId} onValueChange={setBranchId}>
               <SelectTrigger className="min-w-[180px] h-8 border-0 bg-transparent p-0 focus:ring-0 focus:ring-offset-0 shadow-none">
-                <SelectValue placeholder={tr("اختر الفرع")} />
+                <SelectValue placeholder={T("اختر الفرع", "Select branch")} />
               </SelectTrigger>
               <SelectContent>
                 {(branchesQ.data ?? []).map((b) => (
-                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -181,14 +260,17 @@ function PosPage() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={tr("بحث بالمنتج أو SKU")}
+          placeholder={T("بحث بالمنتج أو SKU", "Search by product or SKU")}
           className="h-12 rtl:pr-11 ltr:pl-11 rounded-2xl bg-card/60 backdrop-blur-md border-border/60"
         />
       </div>
 
       {branchesQ.data && branchesQ.data.length === 0 && (
         <Card className="p-8 text-center text-muted-foreground rounded-3xl border-border/60 bg-card/40 backdrop-blur-md">
-          {tr("لا يوجد فرع أوفلاين متاح لك. اطلب من الأدمن إنشاء براند بنوع «فرع أوفلاين» وإتاحة الوصول.")}
+          {T(
+            "لا يوجد فرع أوفلاين متاح لك. اطلب من الأدمن إنشاء براند بنوع «فرع أوفلاين» وإتاحة الوصول.",
+            "No offline branch is available to you. Ask the admin to create a brand of type “offline branch” and grant you access.",
+          )}
         </Card>
       )}
 
@@ -198,12 +280,16 @@ function PosPage() {
           <div className="sticky top-16 z-10 mb-3 rounded-2xl border border-border/60 bg-gradient-to-r from-primary/15 to-primary/0 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-5 rounded-full bg-primary" />
-              <h2 className="text-sm font-bold tracking-wide">{tr("المنتجات")}</h2>
+              <h2 className="text-sm font-bold tracking-wide">{T("المنتجات", "Products")}</h2>
             </div>
-            <span className="text-[11px] font-semibold text-muted-foreground num">{filteredProducts.length} {tr("صنف")}</span>
+            <span className="text-[11px] font-semibold text-muted-foreground num">
+              {filteredProducts.length} {T("صنف", "items")}
+            </span>
           </div>
           {productsQ.isLoading && (
-            <p className="text-sm text-muted-foreground p-4">{tr("جاري التحميل...")}</p>
+            <p className="text-sm text-muted-foreground p-4">
+              {T("جاري التحميل...", "Loading...")}
+            </p>
           )}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pb-40 lg:pb-4">
             {filteredProducts.map((p) => {
@@ -242,7 +328,7 @@ function PosPage() {
             })}
             {filteredProducts.length === 0 && !productsQ.isLoading && (
               <div className="col-span-full text-center text-sm text-muted-foreground p-10 rounded-3xl border border-dashed border-border/60">
-                {tr("لا منتجات.")}
+                {T("لا منتجات.", "No products.")}
               </div>
             )}
           </div>
@@ -252,58 +338,107 @@ function PosPage() {
         <div className="hidden lg:block space-y-4">
           <Card className="p-5 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl shadow-2xl shadow-black/20">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold">{tr("السلة")}</h2>
-              <span className="text-xs text-muted-foreground num">{cartCount} {tr("قطعة")}</span>
+              <h2 className="font-bold">{T("السلة", "Cart")}</h2>
+              <span className="text-xs text-muted-foreground num">
+                {cartCount} {T("قطعة", "items")}
+              </span>
             </div>
             {cart.length === 0 && (
               <div className="text-center text-sm text-muted-foreground py-8 rounded-2xl border border-dashed border-border/60">
-                {tr("فارغة — اختر منتجًا لإضافته.")}
+                {T("فارغة — اختر منتجًا لإضافته.", "Empty — pick a product to add it.")}
               </div>
             )}
             <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
               {cart.map((i) => (
-                <div key={i.productId} className="flex items-center gap-2 rounded-2xl bg-background/40 border border-border/40 p-2">
+                <div
+                  key={i.productId}
+                  className="flex items-center gap-2 rounded-2xl bg-background/40 border border-border/40 p-2"
+                >
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{i.name}</div>
                     <div className="text-[11px] text-muted-foreground num">
-                      {Number(i.unitPrice).toLocaleString("en-US")} × {i.qty} = {(i.qty * i.unitPrice).toLocaleString("en-US")}
+                      {Number(i.unitPrice).toLocaleString("en-US")} × {i.qty} ={" "}
+                      {(i.qty * i.unitPrice).toLocaleString("en-US")}
                     </div>
                   </div>
                   <div className="flex items-center gap-0.5 rounded-full bg-muted/50 border border-border/40 p-0.5">
-                    <Button size="icon" variant="ghost" className="w-7 h-7 rounded-full" onClick={() => changeQty(i.productId, -1)}><Minus className="w-3.5 h-3.5" /></Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-7 h-7 rounded-full"
+                      onClick={() => changeQty(i.productId, -1)}
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </Button>
                     <span className="w-6 text-center text-sm font-bold num">{i.qty}</span>
-                    <Button size="icon" variant="ghost" className="w-7 h-7 rounded-full" onClick={() => changeQty(i.productId, 1)}><Plus className="w-3.5 h-3.5" /></Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-7 h-7 rounded-full"
+                      onClick={() => changeQty(i.productId, 1)}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                  <Button size="icon" variant="ghost" className="w-8 h-8" onClick={() => removeItem(i.productId)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="w-8 h-8"
+                    onClick={() => removeItem(i.productId)}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
                 </div>
               ))}
             </div>
             <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">{tr("الإجمالي")}</span>
-              <span className="text-2xl font-extrabold text-primary num">{total.toLocaleString("en-US")}</span>
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                {T("الإجمالي", "Total")}
+              </span>
+              <span className="text-2xl font-extrabold text-primary num">
+                {total.toLocaleString("en-US")}
+              </span>
             </div>
           </Card>
 
           <Card className="p-5 space-y-4 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl">
             <div className="grid grid-cols-1 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{tr("اسم العميل *")}</Label>
-                <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="h-11 rounded-xl bg-background/40 border-border/50" />
+                <Label className="text-xs text-muted-foreground">
+                  {T("اسم العميل *", "Customer name *")}
+                </Label>
+                <Input
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="h-11 rounded-xl bg-background/40 border-border/50"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{tr("رقم تليفون العميل *")}</Label>
-                <Input dir="ltr" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="01xxxxxxxxx" className="h-11 rounded-xl bg-background/40 border-border/50" />
+                <Label className="text-xs text-muted-foreground">
+                  {T("رقم تليفون العميل *", "Customer phone *")}
+                </Label>
+                <Input
+                  dir="ltr"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="01xxxxxxxxx"
+                  className="h-11 rounded-xl bg-background/40 border-border/50"
+                />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">{tr("طريقة الدفع")}</Label>
+              <Label className="text-xs text-muted-foreground">
+                {T("طريقة الدفع", "Payment method")}
+              </Label>
               <div className="grid grid-cols-3 gap-2">
-                {([
-                  { v: "cash", label: tr("كاش"), Icon: Banknote },
-                  { v: "visa", label: tr("فيزا"), Icon: CreditCard },
-                  { v: "mixed", label: tr("مختلط"), Icon: Layers },
-                ] as const).map(({ v, label, Icon }) => (
+                {(
+                  [
+                    { v: "cash", label: T("كاش", "Cash"), Icon: Banknote },
+                    { v: "visa", label: T("فيزا", "Card"), Icon: CreditCard },
+                    { v: "mixed", label: T("مختلط", "Mixed"), Icon: Layers },
+                  ] as const
+                ).map(({ v, label, Icon }) => (
                   <button
                     key={v}
                     type="button"
@@ -322,8 +457,26 @@ function PosPage() {
             </div>
             {payment === "mixed" && (
               <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-xs text-muted-foreground">{tr("كاش")}</Label><Input type="number" dir="ltr" value={cashAmt} onChange={(e) => setCashAmt(parseFloat(e.target.value) || 0)} className="h-11 rounded-xl bg-background/40 border-border/50" /></div>
-                <div><Label className="text-xs text-muted-foreground">{tr("فيزا")}</Label><Input type="number" dir="ltr" value={cardAmt} onChange={(e) => setCardAmt(parseFloat(e.target.value) || 0)} className="h-11 rounded-xl bg-background/40 border-border/50" /></div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">{T("كاش", "Cash")}</Label>
+                  <Input
+                    type="number"
+                    dir="ltr"
+                    value={cashAmt}
+                    onChange={(e) => setCashAmt(parseFloat(e.target.value) || 0)}
+                    className="h-11 rounded-xl bg-background/40 border-border/50"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">{T("فيزا", "Card")}</Label>
+                  <Input
+                    type="number"
+                    dir="ltr"
+                    value={cardAmt}
+                    onChange={(e) => setCardAmt(parseFloat(e.target.value) || 0)}
+                    className="h-11 rounded-xl bg-background/40 border-border/50"
+                  />
+                </div>
               </div>
             )}
 
@@ -332,7 +485,9 @@ function PosPage() {
               disabled={saving || cart.length === 0}
               onClick={submit}
             >
-              {saving ? tr("جارٍ الحفظ...") : `إتمام البيع — ${total.toLocaleString("en-US")}`}
+              {saving
+                ? T("جارٍ الحفظ...", "Saving...")
+                : `${T("إتمام البيع", "Complete Sale")} — ${total.toLocaleString("en-US")}`}
             </Button>
           </Card>
         </div>
@@ -346,11 +501,17 @@ function PosPage() {
               <span className="w-9 h-9 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-xs font-bold text-primary num">
                 {cartCount}
               </span>
-              <span className="text-xs text-muted-foreground">{tr("قطعة في السلة")}</span>
+              <span className="text-xs text-muted-foreground">
+                {T("قطعة في السلة", "items in cart")}
+              </span>
             </div>
             <div className="text-left">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{tr("الإجمالي")}</p>
-              <p className="text-lg font-extrabold text-primary num leading-none mt-0.5">{total.toLocaleString("en-US")}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                {T("الإجمالي", "Total")}
+              </p>
+              <p className="text-lg font-extrabold text-primary num leading-none mt-0.5">
+                {total.toLocaleString("en-US")}
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -359,7 +520,7 @@ function PosPage() {
               disabled={cart.length === 0}
               className="flex-1 h-12 rounded-2xl font-bold shadow-lg shadow-primary/25 active:scale-[.98]"
             >
-              {tr("متابعة الدفع")}
+              {T("متابعة الدفع", "Proceed to Payment")}
             </Button>
             <Button
               variant="outline"
@@ -375,46 +536,91 @@ function PosPage() {
 
       {/* Mobile checkout sheet */}
       {mobileSheetOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-background/70 backdrop-blur-sm flex items-end" onClick={() => setMobileSheetOpen(false)}>
-          <div className="w-full bg-card border-t border-border/60 rounded-t-[2rem] p-5 space-y-4 max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-background/70 backdrop-blur-sm flex items-end"
+          onClick={() => setMobileSheetOpen(false)}
+        >
+          <div
+            className="w-full bg-card border-t border-border/60 rounded-t-[2rem] p-5 space-y-4 max-h-[92vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mx-auto w-10 h-1 rounded-full bg-border" />
             <div className="flex items-center justify-between">
-              <h2 className="font-bold">{tr("إتمام البيع")}</h2>
-              <span className="text-xs text-muted-foreground num">{cartCount} {tr("قطعة ·")} {total.toLocaleString("en-US")}</span>
+              <h2 className="font-bold">{T("إتمام البيع", "Complete Sale")}</h2>
+              <span className="text-xs text-muted-foreground num">
+                {cartCount} {T("قطعة", "items")} · {total.toLocaleString("en-US")}
+              </span>
             </div>
             <div className="space-y-2 max-h-[180px] overflow-y-auto">
               {cart.map((i) => (
-                <div key={i.productId} className="flex items-center gap-2 rounded-xl bg-background/50 border border-border/40 p-2">
+                <div
+                  key={i.productId}
+                  className="flex items-center gap-2 rounded-xl bg-background/50 border border-border/40 p-2"
+                >
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate">{i.name}</div>
-                    <div className="text-[11px] text-muted-foreground num">{Number(i.unitPrice).toLocaleString("en-US")} × {i.qty}</div>
+                    <div className="text-[11px] text-muted-foreground num">
+                      {Number(i.unitPrice).toLocaleString("en-US")} × {i.qty}
+                    </div>
                   </div>
                   <div className="flex items-center gap-0.5 rounded-full bg-muted/50 border border-border/40 p-0.5">
-                    <Button size="icon" variant="ghost" className="w-7 h-7 rounded-full" onClick={() => changeQty(i.productId, -1)}><Minus className="w-3.5 h-3.5" /></Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-7 h-7 rounded-full"
+                      onClick={() => changeQty(i.productId, -1)}
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </Button>
                     <span className="w-6 text-center text-sm font-bold num">{i.qty}</span>
-                    <Button size="icon" variant="ghost" className="w-7 h-7 rounded-full" onClick={() => changeQty(i.productId, 1)}><Plus className="w-3.5 h-3.5" /></Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="w-7 h-7 rounded-full"
+                      onClick={() => changeQty(i.productId, 1)}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
             <div className="grid grid-cols-1 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{tr("اسم العميل *")}</Label>
-                <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} className="h-11 rounded-xl" />
+                <Label className="text-xs text-muted-foreground">
+                  {T("اسم العميل *", "Customer name *")}
+                </Label>
+                <Input
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="h-11 rounded-xl"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">{tr("رقم تليفون العميل *")}</Label>
-                <Input dir="ltr" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="01xxxxxxxxx" className="h-11 rounded-xl" />
+                <Label className="text-xs text-muted-foreground">
+                  {T("رقم تليفون العميل *", "Customer phone *")}
+                </Label>
+                <Input
+                  dir="ltr"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="01xxxxxxxxx"
+                  className="h-11 rounded-xl"
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">{tr("طريقة الدفع")}</Label>
+              <Label className="text-xs text-muted-foreground">
+                {T("طريقة الدفع", "Payment method")}
+              </Label>
               <div className="grid grid-cols-3 gap-2">
-                {([
-                  { v: "cash", label: tr("كاش"), Icon: Banknote },
-                  { v: "visa", label: tr("فيزا"), Icon: CreditCard },
-                  { v: "mixed", label: tr("مختلط"), Icon: Layers },
-                ] as const).map(({ v, label, Icon }) => (
+                {(
+                  [
+                    { v: "cash", label: T("كاش", "Cash"), Icon: Banknote },
+                    { v: "visa", label: T("فيزا", "Card"), Icon: CreditCard },
+                    { v: "mixed", label: T("مختلط", "Mixed"), Icon: Layers },
+                  ] as const
+                ).map(({ v, label, Icon }) => (
                   <button
                     key={v}
                     type="button"
@@ -433,69 +639,134 @@ function PosPage() {
             </div>
             {payment === "mixed" && (
               <div className="grid grid-cols-2 gap-2">
-                <div><Label className="text-xs text-muted-foreground">{tr("كاش")}</Label><Input type="number" dir="ltr" value={cashAmt} onChange={(e) => setCashAmt(parseFloat(e.target.value) || 0)} className="h-11 rounded-xl" /></div>
-                <div><Label className="text-xs text-muted-foreground">{tr("فيزا")}</Label><Input type="number" dir="ltr" value={cardAmt} onChange={(e) => setCardAmt(parseFloat(e.target.value) || 0)} className="h-11 rounded-xl" /></div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">{T("كاش", "Cash")}</Label>
+                  <Input
+                    type="number"
+                    dir="ltr"
+                    value={cashAmt}
+                    onChange={(e) => setCashAmt(parseFloat(e.target.value) || 0)}
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">{T("فيزا", "Card")}</Label>
+                  <Input
+                    type="number"
+                    dir="ltr"
+                    value={cardAmt}
+                    onChange={(e) => setCardAmt(parseFloat(e.target.value) || 0)}
+                    className="h-11 rounded-xl"
+                  />
+                </div>
               </div>
             )}
             <Button
               className="w-full h-12 text-base rounded-2xl shadow-lg shadow-primary/25"
               disabled={saving || cart.length === 0}
-              onClick={async () => { await submit(); setMobileSheetOpen(false); }}
+              onClick={async () => {
+                await submit();
+                setMobileSheetOpen(false);
+              }}
             >
-              {saving ? tr("جارٍ الحفظ...") : `تأكيد الدفع — ${total.toLocaleString("en-US")}`}
+              {saving
+                ? T("جارٍ الحفظ...", "Saving...")
+                : `${T("تأكيد الدفع", "Confirm Payment")} — ${total.toLocaleString("en-US")}`}
             </Button>
           </div>
         </div>
       )}
 
-      {receipt && <ReceiptDialog inv={receipt} onClose={() => setReceipt(null)} branchName={branch?.name ?? receipt.brand_name} />}
+      {receipt && (
+        <ReceiptDialog
+          inv={receipt}
+          onClose={() => setReceipt(null)}
+          branchName={branch?.name ?? receipt.brand_name}
+        />
+      )}
     </div>
   );
 }
 
-function ReceiptDialog({ inv, onClose, branchName }: { inv: PosInvoice; onClose: () => void; branchName: string }) {
+function ReceiptDialog({
+  inv,
+  onClose,
+  branchName,
+}: {
+  inv: PosInvoice;
+  onClose: () => void;
+  branchName: string;
+}) {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const invoiceNo = `POS-${String(inv.id).slice(0, 8).toUpperCase()}`;
   const subtotal = inv.items.reduce((s, i) => s + i.qty * i.unit_price, 0);
   const totalQty = inv.items.reduce((s, i) => s + Number(i.qty), 0);
-  const payLabel = inv.payment_method === "cash" ? "كاش"
-    : inv.payment_method === "visa" ? "فيزا"
-    : inv.payment_method === "mixed" ? "مختلط (كاش + فيزا)" : "—";
+  const payLabel =
+    inv.payment_method === "cash"
+      ? T("كاش", "Cash")
+      : inv.payment_method === "visa"
+        ? T("فيزا", "Card")
+        : inv.payment_method === "mixed"
+          ? T("مختلط (كاش + فيزا)", "Mixed (cash + card)")
+          : "—";
   const dateStr = new Date(inv.created_at).toLocaleString("en-GB");
 
   const receiptText = useMemo(() => {
     const lines = [
-      `فاتورة مبيعات — ${branchName}`,
-      `رقم الفاتورة: ${invoiceNo}`,
-      `العميل: ${inv.customer_name ?? ""}`,
-      `التليفون: ${inv.customer_phone ?? ""}`,
-      `التاريخ: ${dateStr}`,
+      T(`فاتورة مبيعات — ${branchName}`, `Sales Invoice — ${branchName}`),
+      T(`رقم الفاتورة: ${invoiceNo}`, `Invoice No.: ${invoiceNo}`),
+      T(`العميل: ${inv.customer_name ?? ""}`, `Customer: ${inv.customer_name ?? ""}`),
+      T(`التليفون: ${inv.customer_phone ?? ""}`, `Phone: ${inv.customer_phone ?? ""}`),
+      T(`التاريخ: ${dateStr}`, `Date: ${dateStr}`),
       "----------------",
-      ...inv.items.map((i) => `${i.product_name} × ${i.qty} = ${(i.qty * i.unit_price).toLocaleString("en-US")}`),
+      ...inv.items.map(
+        (i) => `${i.product_name} × ${i.qty} = ${(i.qty * i.unit_price).toLocaleString("en-US")}`,
+      ),
       "----------------",
-      `الإجمالي: ${Number(inv.total_amount).toLocaleString("en-US")}`,
+      T(
+        `الإجمالي: ${Number(inv.total_amount).toLocaleString("en-US")}`,
+        `Total: ${Number(inv.total_amount).toLocaleString("en-US")}`,
+      ),
       inv.payment_method === "mixed"
-        ? `كاش: ${Number(inv.cash_amount).toLocaleString("en-US")} / فيزا: ${Number(inv.card_amount).toLocaleString("en-US")}`
-        : `طريقة الدفع: ${payLabel}`,
+        ? T(
+            `كاش: ${Number(inv.cash_amount).toLocaleString("en-US")} / فيزا: ${Number(inv.card_amount).toLocaleString("en-US")}`,
+            `Cash: ${Number(inv.cash_amount).toLocaleString("en-US")} / Card: ${Number(inv.card_amount).toLocaleString("en-US")}`,
+          )
+        : T(`طريقة الدفع: ${payLabel}`, `Payment method: ${payLabel}`),
       "",
-      "شكرًا لتعاملكم معنا.",
+      T("شكرًا لتعاملكم معنا.", "Thank you for your business."),
     ];
     return lines.join("\n");
-  }, [inv, branchName, invoiceNo, dateStr, payLabel]);
+  }, [inv, branchName, invoiceNo, dateStr, payLabel, lang]);
 
   const print = () => {
     const w = window.open("", "_blank", "width=420,height=680");
     if (!w) return;
-    const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
-    const money = (n: number) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const rows = inv.items.map((i) => `
+    const esc = (s: string) =>
+      s.replace(
+        /[&<>"']/g,
+        (c) =>
+          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+      );
+    const money = (n: number) =>
+      Number(n || 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const rows = inv.items
+      .map(
+        (i) => `
       <tr>
         <td class="prod">${esc(i.product_name)}</td>
         <td class="num">${i.qty}</td>
         <td class="num">${money(i.unit_price)}</td>
         <td class="num">${money(i.qty * i.unit_price)}</td>
-      </tr>`).join("");
+      </tr>`,
+      )
+      .join("");
 
-    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${esc(invoiceNo)}</title>
+    const html = `<!doctype html><html dir="${lang === "ar" ? "rtl" : "ltr"}" lang="${lang}"><head><meta charset="utf-8"><title>${esc(invoiceNo)}</title>
 <style>
   @page { size: 80mm auto; margin: 4mm; }
   * { box-sizing: border-box; }
@@ -524,42 +795,46 @@ function ReceiptDialog({ inv, onClose, branchName }: { inv: PosInvoice; onClose:
 </style></head><body>
   <div class="brand">
     <div class="name">${esc(branchName)}</div>
-    <div class="sub">فاتورة مبيعات</div>
+    <div class="sub">${T("فاتورة مبيعات", "Sales Invoice")}</div>
   </div>
 
-  <div class="meta"><span class="label">رقم الفاتورة</span><span class="num">${esc(invoiceNo)}</span></div>
-  <div class="meta"><span class="label">التاريخ</span><span class="num">${esc(dateStr)}</span></div>
+  <div class="meta"><span class="label">${T("رقم الفاتورة", "Invoice No.")}</span><span class="num">${esc(invoiceNo)}</span></div>
+  <div class="meta"><span class="label">${T("التاريخ", "Date")}</span><span class="num">${esc(dateStr)}</span></div>
 
-  <h2 class="section">بيانات العميل</h2>
+  <h2 class="section">${T("بيانات العميل", "Customer Details")}</h2>
   <div class="box">
-    <div class="meta"><span class="label">الاسم</span><span>${esc(inv.customer_name ?? "-")}</span></div>
-    <div class="meta"><span class="label">التليفون</span><span class="num">${esc(inv.customer_phone ?? "-")}</span></div>
+    <div class="meta"><span class="label">${T("الاسم", "Name")}</span><span>${esc(inv.customer_name ?? "-")}</span></div>
+    <div class="meta"><span class="label">${T("التليفون", "Phone")}</span><span class="num">${esc(inv.customer_phone ?? "-")}</span></div>
   </div>
 
-  <h2 class="section">الأصناف</h2>
+  <h2 class="section">${T("الأصناف", "Items")}</h2>
   <table>
-    <thead><tr><th>الصنف</th><th class="num">كمية</th><th class="num">سعر</th><th class="num">إجمالي</th></tr></thead>
+    <thead><tr><th>${T("الصنف", "Item")}</th><th class="num">${T("كمية", "Qty")}</th><th class="num">${T("سعر", "Price")}</th><th class="num">${T("إجمالي", "Total")}</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
 
   <div class="totals">
-    <div class="row"><span>عدد الأصناف</span><span class="num">${inv.items.length}</span></div>
-    <div class="row"><span>إجمالي القطع</span><span class="num">${totalQty}</span></div>
-    <div class="row"><span>الإجمالي الفرعي</span><span class="num">${money(subtotal)}</span></div>
-    <div class="row grand"><span>الإجمالي</span><span class="num">${money(inv.total_amount)}</span></div>
+    <div class="row"><span>${T("عدد الأصناف", "Item count")}</span><span class="num">${inv.items.length}</span></div>
+    <div class="row"><span>${T("إجمالي القطع", "Total quantity")}</span><span class="num">${totalQty}</span></div>
+    <div class="row"><span>${T("الإجمالي الفرعي", "Subtotal")}</span><span class="num">${money(subtotal)}</span></div>
+    <div class="row grand"><span>${T("الإجمالي", "Total")}</span><span class="num">${money(inv.total_amount)}</span></div>
   </div>
 
   <div class="pay">
-    <h2 class="section">الدفع</h2>
-    <div class="row"><span>الطريقة</span><span>${esc(payLabel)}</span></div>
-    ${inv.payment_method === "mixed" ? `
-      <div class="row"><span>كاش</span><span class="num">${money(inv.cash_amount)}</span></div>
-      <div class="row"><span>فيزا</span><span class="num">${money(inv.card_amount)}</span></div>
-    ` : ""}
+    <h2 class="section">${T("الدفع", "Payment")}</h2>
+    <div class="row"><span>${T("الطريقة", "Method")}</span><span>${esc(payLabel)}</span></div>
+    ${
+      inv.payment_method === "mixed"
+        ? `
+      <div class="row"><span>${T("كاش", "Cash")}</span><span class="num">${money(inv.cash_amount)}</span></div>
+      <div class="row"><span>${T("فيزا", "Card")}</span><span class="num">${money(inv.card_amount)}</span></div>
+    `
+        : ""
+    }
   </div>
 
   <div class="footer">
-    <div class="thanks">شكرًا لتعاملكم معنا</div>
+    <div class="thanks">${T("شكرًا لتعاملكم معنا", "Thank you for your business")}</div>
     <div>e-Gurus • ${esc(invoiceNo)}</div>
   </div>
   <script>window.onload = () => { window.print(); }</script>
@@ -570,21 +845,42 @@ function ReceiptDialog({ inv, onClose, branchName }: { inv: PosInvoice; onClose:
 
   const whatsapp = () => {
     const digits = (inv.customer_phone ?? "").replace(/\D/g, "");
-    if (!digits) { toast.error(tr("رقم عميل غير صالح")); return; }
-    const phone = digits.startsWith("2") || digits.startsWith("00") ? digits.replace(/^00/, "") : digits.startsWith("0") ? `2${digits}` : digits;
+    if (!digits) {
+      toast.error(T("رقم عميل غير صالح", "Invalid customer number"));
+      return;
+    }
+    const phone =
+      digits.startsWith("2") || digits.startsWith("00")
+        ? digits.replace(/^00/, "")
+        : digits.startsWith("0")
+          ? `2${digits}`
+          : digits;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(receiptText)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <Card className="max-w-md w-full p-5" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-bold mb-2">{tr("تمت الفاتورة")}</h3>
-        <pre className="text-xs bg-muted p-3 rounded whitespace-pre-wrap font-mono max-h-[50vh] overflow-auto">{receiptText}</pre>
+        <h3 className="text-lg font-bold mb-2">{T("تمت الفاتورة", "Invoice completed")}</h3>
+        <pre className="text-xs bg-muted p-3 rounded whitespace-pre-wrap font-mono max-h-[50vh] overflow-auto">
+          {receiptText}
+        </pre>
         <div className="flex gap-2 mt-4">
-          <Button className="flex-1 gap-2" onClick={print}><Printer className="w-4 h-4" />{tr("طباعة")}</Button>
-          <Button className="flex-1 gap-2" variant="outline" onClick={whatsapp}><MessageCircle className="w-4 h-4" />{tr("واتساب")}</Button>
-          <Button variant="ghost" onClick={onClose}>{tr("إغلاق")}</Button>
+          <Button className="flex-1 gap-2" onClick={print}>
+            <Printer className="w-4 h-4" />
+            {T("طباعة", "Print")}
+          </Button>
+          <Button className="flex-1 gap-2" variant="outline" onClick={whatsapp}>
+            <MessageCircle className="w-4 h-4" />
+            {T("واتساب", "WhatsApp")}
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            {T("إغلاق", "Close")}
+          </Button>
         </div>
       </Card>
     </div>

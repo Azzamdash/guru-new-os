@@ -14,10 +14,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil, Lock, Building2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/assets")({
   head: () => ({
@@ -29,17 +36,23 @@ export const Route = createFileRoute("/_authenticated/_app/assets")({
   component: AssetsPage,
 });
 
-const fmt = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n || 0);
+const fmt = (n: number) =>
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n || 0);
 
 function netBook(a: CompanyAsset) {
   const cost = Number(a.cost) || 0;
   const rate = Number(a.annual_depreciation_rate) || 0;
-  const years = Math.max(0, (Date.now() - new Date(a.purchase_date).getTime()) / (365.25 * 24 * 3600 * 1000));
+  const years = Math.max(
+    0,
+    (Date.now() - new Date(a.purchase_date).getTime()) / (365.25 * 24 * 3600 * 1000),
+  );
   const acc = Math.min(cost, cost * (rate / 100) * years);
   return Math.max(0, cost - acc);
 }
 
 function AssetsPage() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const qc = useQueryClient();
   const roleQ = useQuery({ queryKey: ["my-role"], queryFn: useServerFn(getMyRole) });
   const canWrite = !!(roleQ.data?.isAdmin || roleQ.data?.isManager || roleQ.data?.canWrite);
@@ -52,7 +65,12 @@ function AssetsPage() {
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
   const assetsQ = useQuery({
     queryKey: ["assets", brandFilter],
-    queryFn: () => listFn({ data: { brandId: brandFilter === "all" ? null : brandFilter === "company" ? null : brandFilter } }),
+    queryFn: () =>
+      listFn({
+        data: {
+          brandId: brandFilter === "all" ? null : brandFilter === "company" ? null : brandFilter,
+        },
+      }),
   });
   const rows = useMemo(() => {
     const all = assetsQ.data ?? [];
@@ -62,10 +80,15 @@ function AssetsPage() {
   }, [assetsQ.data, brandFilter]);
 
   const [editing, setEditing] = useState<Partial<CompanyAsset> | null>(null);
-  const brandName = (id: string | null) => id ? (brandsQ.data ?? []).find((b) => b.id === id)?.name ?? "—" : "أصل عام للشركة";
+  const brandName = (id: string | null) =>
+    id
+      ? ((brandsQ.data ?? []).find((b) => b.id === id)?.name ?? "—")
+      : T("أصل عام للشركة", "General Company Asset");
 
   const totals = useMemo(() => {
-    let cost = 0, net = 0, dep = 0;
+    let cost = 0,
+      net = 0,
+      dep = 0;
     for (const a of rows) {
       const c = Number(a.cost) || 0;
       cost += c;
@@ -80,7 +103,9 @@ function AssetsPage() {
       <div className="p-10 max-w-2xl mx-auto">
         <Card className="p-8 text-center card-gradient">
           <Lock className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <h2 className="text-xl font-bold">{tr("لا تملك صلاحية عرض هذه الصفحة")}</h2>
+          <h2 className="text-xl font-bold">
+            {T("لا تملك صلاحية عرض هذه الصفحة", "You do not have permission to view this page")}
+          </h2>
         </Card>
       </div>
     );
@@ -90,69 +115,134 @@ function AssetsPage() {
     <div className="p-6 md:p-8 space-y-6 max-w-6xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Building2 className="w-7 h-7 text-primary" /> {tr("أصول الشركة")}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{tr("إدارة الأصول وحساب القيمة الدفترية بعد الإهلاك السنوي.")}</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Building2 className="w-7 h-7 text-primary" /> {T("أصول الشركة", "Company Assets")}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {T(
+              "إدارة الأصول وحساب القيمة الدفترية بعد الإهلاك السنوي.",
+              "Manage assets and calculate net book value after annual depreciation.",
+            )}
+          </p>
         </div>
         {canWrite && (
-          <Button className="gap-2" onClick={() => setEditing({ name: "", cost: 0, purchase_date: getTodayInBusinessTimezone(), annual_depreciation_rate: 20, brand_id: null, notes: "" })}>
-            <Plus className="w-4 h-4" /> {tr("إضافة أصل")}
+          <Button
+            className="gap-2"
+            onClick={() =>
+              setEditing({
+                name: "",
+                cost: 0,
+                purchase_date: getTodayInBusinessTimezone(),
+                annual_depreciation_rate: 20,
+                brand_id: null,
+                notes: "",
+              })
+            }
+          >
+            <Plus className="w-4 h-4" /> {T("إضافة أصل", "Add Asset")}
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label={tr("عدد الأصول")} value={String(rows.length)} />
-        <StatCard label={tr("إجمالي التكلفة")} value={fmt(totals.cost)} />
-        <StatCard label={tr("القيمة الدفترية الحالية")} value={fmt(totals.net)} highlight />
-        <StatCard label={tr("إهلاك سنوي متوقع")} value={fmt(totals.dep)} />
+        <StatCard label={T("عدد الأصول", "Number of Assets")} value={String(rows.length)} />
+        <StatCard label={T("إجمالي التكلفة", "Total Cost")} value={fmt(totals.cost)} />
+        <StatCard
+          label={T("القيمة الدفترية الحالية", "Current Net Book Value")}
+          value={fmt(totals.net)}
+          highlight
+        />
+        <StatCard
+          label={T("إهلاك سنوي متوقع", "Expected Annual Depreciation")}
+          value={fmt(totals.dep)}
+        />
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
-        <Label className="text-sm">{tr("فلترة حسب البراند:")}</Label>
+        <Label className="text-sm">{T("فلترة حسب البراند:", "Filter by brand:")}</Label>
         <Select value={brandFilter} onValueChange={setBrandFilter}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-56">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{tr("كل الأصول")}</SelectItem>
-            <SelectItem value="company">{tr("أصول عامة للشركة")}</SelectItem>
-            {(brandsQ.data ?? []).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            <SelectItem value="all">{T("كل الأصول", "All Assets")}</SelectItem>
+            <SelectItem value="company">
+              {T("أصول عامة للشركة", "General Company Assets")}
+            </SelectItem>
+            {(brandsQ.data ?? []).map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
       <Card className="card-gradient overflow-hidden">
         {assetsQ.isLoading ? (
-          <div className="p-10 text-center text-muted-foreground">{tr("جارٍ التحميل…")}</div>
+          <div className="p-10 text-center text-muted-foreground">
+            {T("جارٍ التحميل…", "Loading…")}
+          </div>
         ) : rows.length === 0 ? (
-          <EmptyState title={tr("لا توجد أصول بعد")} description={tr("ابدأ بإضافة أول أصل لتتبع تكلفته والقيمة الدفترية بعد الإهلاك.")} />
+          <EmptyState
+            title={T("لا توجد أصول بعد", "No Assets Yet")}
+            description={T(
+              "ابدأ بإضافة أول أصل لتتبع تكلفته والقيمة الدفترية بعد الإهلاك.",
+              "Start by adding your first asset to track its cost and net book value after depreciation.",
+            )}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[720px]">
               <thead>
                 <tr className="text-muted-foreground text-right border-b border-border">
-                  <th className="p-3">{tr("الأصل")}</th>
-                  <th className="p-3">{tr("البراند")}</th>
-                  <th className="p-3">{tr("تاريخ الشراء")}</th>
-                  <th className="p-3">{tr("التكلفة")}</th>
-                  <th className="p-3">{tr("الإهلاك %")}</th>
-                  <th className="p-3">{tr("القيمة الحالية")}</th>
+                  <th className="p-3">{T("الأصل", "Asset")}</th>
+                  <th className="p-3">{T("البراند", "Brand")}</th>
+                  <th className="p-3">{T("تاريخ الشراء", "Purchase Date")}</th>
+                  <th className="p-3">{T("التكلفة", "Cost")}</th>
+                  <th className="p-3">{T("الإهلاك %", "Depreciation %")}</th>
+                  <th className="p-3">{T("القيمة الحالية", "Current Value")}</th>
                   <th className="p-3"></th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((a) => (
                   <tr key={a.id} className="border-b border-border/50">
-                    <td className="p-3 font-medium">{a.name}{a.notes && <div className="text-xs text-muted-foreground">{a.notes}</div>}</td>
-                    <td className="p-3"><Badge variant={a.brand_id ? "outline" : "secondary"}>{brandName(a.brand_id)}</Badge></td>
-                    <td className="p-3 num" dir="ltr">{a.purchase_date}</td>
+                    <td className="p-3 font-medium">
+                      {a.name}
+                      {a.notes && <div className="text-xs text-muted-foreground">{a.notes}</div>}
+                    </td>
+                    <td className="p-3">
+                      <Badge variant={a.brand_id ? "outline" : "secondary"}>
+                        {brandName(a.brand_id)}
+                      </Badge>
+                    </td>
+                    <td className="p-3 num" dir="ltr">
+                      {a.purchase_date}
+                    </td>
                     <td className="p-3 num">{fmt(Number(a.cost))}</td>
                     <td className="p-3 num">{Number(a.annual_depreciation_rate)}%</td>
                     <td className="p-3 num font-semibold text-primary">{fmt(netBook(a))}</td>
                     <td className="p-3 text-left whitespace-nowrap">
-                      {canWrite && <Button size="sm" variant="ghost" onClick={() => setEditing(a)}><Pencil className="w-4 h-4" /></Button>}
+                      {canWrite && (
+                        <Button size="sm" variant="ghost" onClick={() => setEditing(a)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      )}
                       {(roleQ.data?.isAdmin || roleQ.data?.isManager) && (
-                        <Button size="sm" variant="ghost" onClick={() => {
-                          if (confirm(tr("حذف هذا الأصل؟"))) delFn({ data: { id: a.id } }).then(() => { toast.success(tr("حُذف")); qc.invalidateQueries({ queryKey: ["assets"] }); });
-                        }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            if (confirm(T("حذف هذا الأصل؟", "Delete this asset?")))
+                              delFn({ data: { id: a.id } }).then(() => {
+                                toast.success(T("حُذف", "Deleted"));
+                                qc.invalidateQueries({ queryKey: ["assets"] });
+                              });
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -170,8 +260,14 @@ function AssetsPage() {
           onClose={() => setEditing(null)}
           onSave={(payload) => {
             upsertFn({ data: payload })
-              .then(() => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["assets"] }); setEditing(null); })
-              .catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("فشل")));
+              .then(() => {
+                toast.success(T("تم الحفظ", "Saved"));
+                qc.invalidateQueries({ queryKey: ["assets"] });
+                setEditing(null);
+              })
+              .catch((e: unknown) =>
+                toast.error(e instanceof Error ? e.message : T("فشل", "Failed")),
+              );
           }}
         />
       )}
@@ -179,26 +275,56 @@ function AssetsPage() {
   );
 }
 
-function StatCard({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function StatCard({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <Card className={`p-4 ${highlight ? "border-primary/40 bg-primary/5" : ""}`}>
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-2xl font-bold mt-1 num ${highlight ? "text-primary" : ""}`}>{value}</div>
+      <div className={`text-2xl font-bold mt-1 num ${highlight ? "text-primary" : ""}`}>
+        {value}
+      </div>
     </Card>
   );
 }
 
-function AssetDialog({ initial, brands, onClose, onSave }: {
+function AssetDialog({
+  initial,
+  brands,
+  onClose,
+  onSave,
+}: {
   initial: Partial<CompanyAsset>;
   brands: Array<{ id: string; name: string }>;
   onClose: () => void;
-  onSave: (payload: Partial<CompanyAsset> & { name: string; cost: number; purchase_date: string; annual_depreciation_rate: number }) => void;
+  onSave: (
+    payload: Partial<CompanyAsset> & {
+      name: string;
+      cost: number;
+      purchase_date: string;
+      annual_depreciation_rate: number;
+    },
+  ) => void;
 }) {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const [form, setForm] = useState<Partial<CompanyAsset>>(initial);
   const submit = () => {
-    if (!form.name?.trim()) return toast.error(tr("اسم الأصل مطلوب"));
-    if (!form.purchase_date) return toast.error(tr("تاريخ الشراء مطلوب"));
-    const payload: Partial<CompanyAsset> & { name: string; cost: number; purchase_date: string; annual_depreciation_rate: number } = {
+    if (!form.name?.trim()) return toast.error(T("اسم الأصل مطلوب", "Asset name is required"));
+    if (!form.purchase_date)
+      return toast.error(T("تاريخ الشراء مطلوب", "Purchase date is required"));
+    const payload: Partial<CompanyAsset> & {
+      name: string;
+      cost: number;
+      purchase_date: string;
+      annual_depreciation_rate: number;
+    } = {
       name: form.name.trim(),
       cost: Number(form.cost) || 0,
       purchase_date: form.purchase_date,
@@ -212,37 +338,88 @@ function AssetDialog({ initial, brands, onClose, onSave }: {
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{form.id ? tr("تعديل أصل") : tr("أصل جديد")}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>
+            {form.id ? T("تعديل أصل", "Edit Asset") : T("أصل جديد", "New Asset")}
+          </DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
-          <div><Label>{tr("اسم الأصل")}</Label><Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={tr("مثال: لابتوب Dell / مكينة تصنيع")} /></div>
+          <div>
+            <Label>{T("اسم الأصل", "Asset Name")}</Label>
+            <Input
+              value={form.name ?? ""}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder={T(
+                "مثال: لابتوب Dell / مكينة تصنيع",
+                "e.g. Dell laptop / manufacturing machine",
+              )}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>{tr("التكلفة")}</Label>
-              <Input type="number" dir="ltr" value={form.cost ?? 0} onChange={(e) => setForm({ ...form, cost: parseFloat(e.target.value) || 0 })} />
+              <Label>{T("التكلفة", "Cost")}</Label>
+              <Input
+                type="number"
+                dir="ltr"
+                value={form.cost ?? 0}
+                onChange={(e) => setForm({ ...form, cost: parseFloat(e.target.value) || 0 })}
+              />
             </div>
             <div>
-              <Label>{tr("تاريخ الشراء")}</Label>
-              <Input type="date" dir="ltr" value={form.purchase_date ?? ""} onChange={(e) => setForm({ ...form, purchase_date: e.target.value })} />
+              <Label>{T("تاريخ الشراء", "Purchase Date")}</Label>
+              <Input
+                type="date"
+                dir="ltr"
+                value={form.purchase_date ?? ""}
+                onChange={(e) => setForm({ ...form, purchase_date: e.target.value })}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>{tr("معدل الإهلاك السنوي %")}</Label>
-              <Input type="number" dir="ltr" value={form.annual_depreciation_rate ?? 0} onChange={(e) => setForm({ ...form, annual_depreciation_rate: parseFloat(e.target.value) || 0 })} />
+              <Label>{T("معدل الإهلاك السنوي %", "Annual Depreciation Rate %")}</Label>
+              <Input
+                type="number"
+                dir="ltr"
+                value={form.annual_depreciation_rate ?? 0}
+                onChange={(e) =>
+                  setForm({ ...form, annual_depreciation_rate: parseFloat(e.target.value) || 0 })
+                }
+              />
             </div>
             <div>
-              <Label>{tr("البراند")}</Label>
-              <Select value={form.brand_id ?? "company"} onValueChange={(v) => setForm({ ...form, brand_id: v === "company" ? null : v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label>{T("البراند", "Brand")}</Label>
+              <Select
+                value={form.brand_id ?? "company"}
+                onValueChange={(v) => setForm({ ...form, brand_id: v === "company" ? null : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="company">{tr("أصل عام للشركة")}</SelectItem>
-                  {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  <SelectItem value="company">
+                    {T("أصل عام للشركة", "General Company Asset")}
+                  </SelectItem>
+                  {brands.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div><Label>{tr("ملاحظات (اختياري)")}</Label><Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-          <Button onClick={submit} className="w-full">{tr("حفظ")}</Button>
+          <div>
+            <Label>{T("ملاحظات (اختياري)", "Notes (optional)")}</Label>
+            <Textarea
+              rows={2}
+              value={form.notes ?? ""}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            />
+          </div>
+          <Button onClick={submit} className="w-full">
+            {T("حفظ", "Save")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

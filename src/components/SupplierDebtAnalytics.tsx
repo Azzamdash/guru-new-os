@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -8,11 +7,28 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, FileWarning, Wallet, TrendingUp } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
-  PieChart, Pie, Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Cell,
+  PieChart,
+  Pie,
+  Legend,
 } from "recharts";
+import { useLang } from "@/lib/i18n";
 
-const COLORS = ["hsl(175 60% 55%)", "hsl(85 65% 60%)", "hsl(155 55% 55%)", "hsl(305 55% 65%)", "hsl(30 70% 60%)", "hsl(200 60% 60%)"];
+const COLORS = [
+  "hsl(175 60% 55%)",
+  "hsl(85 65% 60%)",
+  "hsl(155 55% 55%)",
+  "hsl(305 55% 65%)",
+  "hsl(30 70% 60%)",
+  "hsl(200 60% 60%)",
+];
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
@@ -29,6 +45,8 @@ export function SupplierDebtAnalytics({
   asOfDate?: string;
   compact?: boolean;
 }) {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const supsQ = useQuery({ queryKey: ["suppliers"], queryFn: useServerFn(listSuppliers) });
   const invsQ = useQuery({ queryKey: ["invoices"], queryFn: useServerFn(listInvoices) });
   const paysQ = useQuery({ queryKey: ["payments"], queryFn: useServerFn(listPayments) });
@@ -47,7 +65,8 @@ export function SupplierDebtAnalytics({
     const m = new Map<string, number>();
     for (const p of paysQ.data ?? []) {
       if (p.paid_at && p.paid_at > refDate) continue;
-      if (!p.invoice_id && p.supplier_id) m.set(p.supplier_id, (m.get(p.supplier_id) ?? 0) + Number(p.amount));
+      if (!p.invoice_id && p.supplier_id)
+        m.set(p.supplier_id, (m.get(p.supplier_id) ?? 0) + Number(p.amount));
     }
     return m;
   }, [paysQ.data, refDate]);
@@ -55,19 +74,30 @@ export function SupplierDebtAnalytics({
   const analytics = useMemo(() => {
     const supIdSet = supplierIds ? new Set(supplierIds) : null;
     const invs = (invsQ.data ?? []).filter((i) => {
-
       if (i.issued_at > refDate) return false;
       if (brandFilter && brandFilter !== "all" && i.brand_id !== brandFilter) return false;
       if (supIdSet && !supIdSet.has(i.supplier_id)) return false;
       return true;
     });
-    let totalOutstanding = 0, totalOverdue = 0, invoiceCount = 0, overdueCount = 0, totalPaid = 0, totalBilled = 0;
+    let totalOutstanding = 0,
+      totalOverdue = 0,
+      invoiceCount = 0,
+      overdueCount = 0,
+      totalPaid = 0,
+      totalBilled = 0;
     const buckets = { current: 0, d30: 0, d60: 0, d90: 0, d90plus: 0 };
-    const bySupplier = new Map<string, { name: string; outstanding: number; overdue: number; count: number }>();
+    const bySupplier = new Map<
+      string,
+      { name: string; outstanding: number; overdue: number; count: number }
+    >();
     const byBrand = new Map<string, { name: string; outstanding: number }>();
 
     const supMap = new Map((supsQ.data ?? []).map((s) => [s.id, s.name] as const));
-    const supBrandMap = new Map((supsQ.data ?? []).map((s) => [s.id, (s as { brand_id?: string | null }).brand_id ?? null] as const));
+    const supBrandMap = new Map(
+      (supsQ.data ?? []).map(
+        (s) => [s.id, (s as { brand_id?: string | null }).brand_id ?? null] as const,
+      ),
+    );
     const brandMap = new Map((brandsQ.data ?? []).map((b) => [b.id, b.name] as const));
 
     for (const inv of invs) {
@@ -78,12 +108,19 @@ export function SupplierDebtAnalytics({
       totalOutstanding += remaining;
       invoiceCount += 1;
 
-      const overdue = !!inv.due_at && inv.due_at < refDate && inv.status !== "paid" && remaining > 0;
-      if (overdue) { totalOverdue += remaining; overdueCount += 1; }
+      const overdue =
+        !!inv.due_at && inv.due_at < refDate && inv.status !== "paid" && remaining > 0;
+      if (overdue) {
+        totalOverdue += remaining;
+        overdueCount += 1;
+      }
 
       if (remaining > 0) {
         const ref = inv.due_at ?? inv.issued_at;
-        const daysLate = Math.max(0, Math.floor((new Date(refDate).getTime() - new Date(ref).getTime()) / 86400000));
+        const daysLate = Math.max(
+          0,
+          Math.floor((new Date(refDate).getTime() - new Date(ref).getTime()) / 86400000),
+        );
         if (daysLate <= 0) buckets.current += remaining;
         else if (daysLate <= 30) buckets.d30 += remaining;
         else if (daysLate <= 60) buckets.d60 += remaining;
@@ -92,7 +129,12 @@ export function SupplierDebtAnalytics({
       }
 
       const sname = supMap.get(inv.supplier_id) ?? "—";
-      const supCur = bySupplier.get(inv.supplier_id) ?? { name: sname, outstanding: 0, overdue: 0, count: 0 };
+      const supCur = bySupplier.get(inv.supplier_id) ?? {
+        name: sname,
+        outstanding: 0,
+        overdue: 0,
+        count: 0,
+      };
       supCur.outstanding += remaining;
       supCur.overdue += overdue ? remaining : 0;
       supCur.count += 1;
@@ -133,7 +175,12 @@ export function SupplierDebtAnalytics({
       if (opening !== 0) {
         totalOutstanding += opening;
         const sname = s.name;
-        const supCur = bySupplier.get(s.id) ?? { name: sname, outstanding: 0, overdue: 0, count: 0 };
+        const supCur = bySupplier.get(s.id) ?? {
+          name: sname,
+          outstanding: 0,
+          overdue: 0,
+          count: 0,
+        };
         supCur.outstanding += opening;
         bySupplier.set(s.id, supCur);
         if (supBrand) {
@@ -145,60 +192,151 @@ export function SupplierDebtAnalytics({
       }
     }
 
-    const topSuppliers = Array.from(bySupplier.values()).filter((s) => s.outstanding > 0).sort((a, b) => b.outstanding - a.outstanding).slice(0, 6);
-    const brandBreakdown = Array.from(byBrand.values()).filter((b) => b.outstanding > 0).sort((a, b) => b.outstanding - a.outstanding);
-    return { totalOutstanding, totalOverdue, invoiceCount, overdueCount, totalPaid, totalBilled, buckets, topSuppliers, brandBreakdown };
-  }, [invsQ.data, paidByInv, paidBySupStandalone, brandFilter, supplierIds, supsQ.data, brandsQ.data, refDate]);
-
+    const topSuppliers = Array.from(bySupplier.values())
+      .filter((s) => s.outstanding > 0)
+      .sort((a, b) => b.outstanding - a.outstanding)
+      .slice(0, 6);
+    const brandBreakdown = Array.from(byBrand.values())
+      .filter((b) => b.outstanding > 0)
+      .sort((a, b) => b.outstanding - a.outstanding);
+    return {
+      totalOutstanding,
+      totalOverdue,
+      invoiceCount,
+      overdueCount,
+      totalPaid,
+      totalBilled,
+      buckets,
+      topSuppliers,
+      brandBreakdown,
+    };
+  }, [
+    invsQ.data,
+    paidByInv,
+    paidBySupStandalone,
+    brandFilter,
+    supplierIds,
+    supsQ.data,
+    brandsQ.data,
+    refDate,
+  ]);
 
   const agingData = [
-    { name: tr("الحالي"), value: analytics.buckets.current },
-    { name: tr("1-30 يوم"), value: analytics.buckets.d30 },
-    { name: tr("31-60 يوم"), value: analytics.buckets.d60 },
-    { name: tr("61-90 يوم"), value: analytics.buckets.d90 },
-    { name: tr("+90 يوم"), value: analytics.buckets.d90plus },
+    { name: T("الحالي", "Current"), value: analytics.buckets.current },
+    { name: T("1-30 يوم", "1-30 days"), value: analytics.buckets.d30 },
+    { name: T("31-60 يوم", "31-60 days"), value: analytics.buckets.d60 },
+    { name: T("61-90 يوم", "61-90 days"), value: analytics.buckets.d90 },
+    { name: T("+90 يوم", "90+ days"), value: analytics.buckets.d90plus },
   ];
-  const agingColors = ["hsl(155 55% 55%)", "hsl(45 75% 60%)", "hsl(30 70% 60%)", "hsl(15 75% 55%)", "hsl(0 65% 55%)"];
+  const agingColors = [
+    "hsl(155 55% 55%)",
+    "hsl(45 75% 60%)",
+    "hsl(30 70% 60%)",
+    "hsl(15 75% 55%)",
+    "hsl(0 65% 55%)",
+  ];
 
   const loading = supsQ.isLoading || invsQ.isLoading || paysQ.isLoading;
 
   return (
     <div className="space-y-4">
-      <div className={`grid gap-4 ${compact ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-4"}`}>
-        <StatCard icon={FileWarning} label={tr("إجمالي المديونيات")} value={fmt(analytics.totalOutstanding)} tone={analytics.totalOutstanding > 0 ? "warning" : "default"} />
-        <StatCard icon={AlertTriangle} label={tr("متأخرات")} value={fmt(analytics.totalOverdue)} tone={analytics.totalOverdue > 0 ? "destructive" : "default"} sub={`${analytics.overdueCount} فاتورة متأخرة`} />
-        <StatCard icon={Wallet} label={tr("إجمالي المدفوعات")} value={fmt(analytics.totalPaid)} tone="success" />
-        <StatCard icon={TrendingUp} label={tr("نسبة السداد")} value={analytics.totalBilled > 0 ? `${((analytics.totalPaid / analytics.totalBilled) * 100).toFixed(1)}%` : "—"} />
+      <div
+        className={`grid gap-4 ${compact ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-4"}`}
+      >
+        <StatCard
+          icon={FileWarning}
+          label={T("إجمالي المديونيات", "Total Debts")}
+          value={fmt(analytics.totalOutstanding)}
+          tone={analytics.totalOutstanding > 0 ? "warning" : "default"}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label={T("متأخرات", "Overdue")}
+          value={fmt(analytics.totalOverdue)}
+          tone={analytics.totalOverdue > 0 ? "destructive" : "default"}
+          sub={T(
+            `${analytics.overdueCount} فاتورة متأخرة`,
+            `${analytics.overdueCount} overdue invoice(s)`,
+          )}
+        />
+        <StatCard
+          icon={Wallet}
+          label={T("إجمالي المدفوعات", "Total Payments")}
+          value={fmt(analytics.totalPaid)}
+          tone="success"
+        />
+        <StatCard
+          icon={TrendingUp}
+          label={T("نسبة السداد", "Payment Rate")}
+          value={
+            analytics.totalBilled > 0
+              ? `${((analytics.totalPaid / analytics.totalBilled) * 100).toFixed(1)}%`
+              : "—"
+          }
+        />
       </div>
 
       {!compact && !loading && analytics.invoiceCount > 0 && (
         <div className="grid lg:grid-cols-2 gap-4">
           <Card className="p-5">
-            <h3 className="font-semibold mb-3">{tr("تقادم المديونيات (Aging)")}</h3>
+            <h3 className="font-semibold mb-3">{T("تقادم المديونيات (Aging)", "Debt Aging")}</h3>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={agingData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" />
                 <XAxis dataKey="name" fontSize={11} />
                 <YAxis fontSize={11} tickFormatter={(v) => fmt(v)} />
-                <Tooltip formatter={(v: number) => fmt(v)} contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-                <Bar dataKey="value" name={tr("المستحق")} radius={[6, 6, 0, 0]}>
-                  {agingData.map((_, i) => <Cell key={i} fill={agingColors[i]} />)}
+                <Tooltip
+                  formatter={(v: number) => fmt(v)}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="value" name={T("المستحق", "Outstanding")} radius={[6, 6, 0, 0]}>
+                  {agingData.map((_, i) => (
+                    <Cell key={i} fill={agingColors[i]} />
+                  ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </Card>
 
           <Card className="p-5">
-            <h3 className="font-semibold mb-3">{tr("توزيع المديونيات على البراندات")}</h3>
+            <h3 className="font-semibold mb-3">
+              {T("توزيع المديونيات على البراندات", "Debt Distribution by Brand")}
+            </h3>
             {analytics.brandBreakdown.length === 0 ? (
-              <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">{tr("لا مديونيات مرتبطة ببراند")}</div>
+              <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">
+                {T("لا مديونيات مرتبطة ببراند", "No debts linked to a brand")}
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
-                  <Pie data={analytics.brandBreakdown} dataKey="outstanding" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={45} paddingAngle={2}>
-                    {analytics.brandBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  <Pie
+                    data={analytics.brandBreakdown}
+                    dataKey="outstanding"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    innerRadius={45}
+                    paddingAngle={2}
+                  >
+                    {analytics.brandBreakdown.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
                   </Pie>
-                  <Tooltip formatter={(v: number) => fmt(v)} contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
+                  <Tooltip
+                    formatter={(v: number) => fmt(v)}
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                  />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -208,20 +346,35 @@ export function SupplierDebtAnalytics({
       )}
 
       <Card className="p-5">
-        <h3 className="font-semibold mb-3">{tr("أعلى الموردين برصيد مستحق")}</h3>
+        <h3 className="font-semibold mb-3">
+          {T("أعلى الموردين برصيد مستحق", "Top Suppliers by Outstanding Balance")}
+        </h3>
         {analytics.topSuppliers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{tr("لا مديونيات مسجلة.")}</p>
+          <p className="text-sm text-muted-foreground">
+            {T("لا مديونيات مسجلة.", "No debts recorded.")}
+          </p>
         ) : (
           <div className="space-y-2">
             {analytics.topSuppliers.map((s, i) => (
-              <div key={s.name + i} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+              <div
+                key={s.name + i}
+                className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+              >
                 <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                  <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold">
+                    {i + 1}
+                  </span>
                   <div>
                     <div className="font-medium">{s.name}</div>
-                    <div className="text-xs text-muted-foreground">{s.count} {tr("فاتورة")}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {T(`${s.count} فاتورة`, `${s.count} invoice(s)`)}
+                    </div>
                   </div>
-                  {s.overdue > 0 && <Badge variant="destructive">{tr("متأخر")} {fmt(s.overdue)}</Badge>}
+                  {s.overdue > 0 && (
+                    <Badge variant="destructive">
+                      {T(`متأخر ${fmt(s.overdue)}`, `Overdue ${fmt(s.overdue)}`)}
+                    </Badge>
+                  )}
                 </div>
                 <span className="num font-semibold">{fmt(s.outstanding)}</span>
               </div>
@@ -233,11 +386,27 @@ export function SupplierDebtAnalytics({
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, tone = "default" }: {
-  icon: typeof AlertTriangle; label: string; value: string; sub?: string;
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  tone = "default",
+}: {
+  icon: typeof AlertTriangle;
+  label: string;
+  value: string;
+  sub?: string;
   tone?: "default" | "warning" | "destructive" | "success";
 }) {
-  const color = tone === "success" ? "text-success" : tone === "destructive" ? "text-destructive" : tone === "warning" ? "text-amber-500" : "text-foreground";
+  const color =
+    tone === "success"
+      ? "text-success"
+      : tone === "destructive"
+        ? "text-destructive"
+        : tone === "warning"
+          ? "text-amber-500"
+          : "text-foreground";
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between text-xs text-muted-foreground">

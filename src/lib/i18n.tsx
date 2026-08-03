@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { AR_EN } from "./i18n-ar-en";
 
-
 export type Lang = "ar" | "en";
 
 type Dict = Record<string, { ar: string; en: string }>;
@@ -15,7 +14,7 @@ const DICT: Dict = {
   section_core: { ar: "البيانات الأساسية", en: "Core Data" },
   section_reports: { ar: "التقارير", en: "Reports" },
   section_catalog: { ar: "الكتالوج", en: "Catalog" },
- section_offline_data: { ar: "داتا الأوفلاين", en: "Offline Data" },
+  section_offline_data: { ar: "داتا الأوفلاين", en: "Offline Data" },
   section_settings: { ar: "إعدادات", en: "Settings" },
 
   nav_dashboard: { ar: "CEO Dashboard", en: "CEO Dashboard" },
@@ -66,14 +65,29 @@ const DICT: Dict = {
 
   // Profits
   profits_title: { ar: "تقرير الأرباح", en: "Profits report" },
-  profits_formula: { ar: "صافي الربح = الإيرادات − تكلفة البضاعة (COGS) − المصاريف (مرتبات، إعلانات، تشغيل…)", en: "Net profit = Revenue − COGS − Expenses (salaries, ads, ops…)" },
-  profits_empty: { ar: "لا توجد فواتير أو مصاريف داخل هذه الفترة.", en: "No sales or expenses in this period." },
-  profits_expense_breakdown: { ar: "تفاصيل المصاريف حسب البند", en: "Expenses breakdown by category" },
+  profits_formula: {
+    ar: "صافي الربح = الإيرادات − تكلفة البضاعة (COGS) − المصاريف (مرتبات، إعلانات، تشغيل…)",
+    en: "Net profit = Revenue − COGS − Expenses (salaries, ads, ops…)",
+  },
+  profits_empty: {
+    ar: "لا توجد فواتير أو مصاريف داخل هذه الفترة.",
+    en: "No sales or expenses in this period.",
+  },
+  profits_expense_breakdown: {
+    ar: "تفاصيل المصاريف حسب البند",
+    en: "Expenses breakdown by category",
+  },
   kpi_gross_profit: { ar: "الربح الإجمالي", en: "Gross profit" },
 
   // Investor valuation
-  investors_valuation_title: { ar: "نصيب المستثمرين من التقييم الحالي", en: "Investor share of current valuation" },
-  investors_valuation_sub: { ar: "بناءً على تقييم كل براند = الإيرادات السنوية × 1.5 + صافي الأصول", en: "Based on each brand's valuation = Annual revenue × 1.5 + Net assets" },
+  investors_valuation_title: {
+    ar: "نصيب المستثمرين من التقييم الحالي",
+    en: "Investor share of current valuation",
+  },
+  investors_valuation_sub: {
+    ar: "بناءً على تقييم كل براند = الإيرادات السنوية × 1.5 + صافي الأصول",
+    en: "Based on each brand's valuation = Annual revenue × 1.5 + Net assets",
+  },
   inv_val_brand_val: { ar: "تقييم البراند", en: "Brand valuation" },
   inv_val_share_pct: { ar: "نصيب المستثمر %", en: "Share %" },
   inv_val_investor_share: { ar: "قيمة نصيب المستثمر", en: "Investor share value" },
@@ -82,7 +96,10 @@ const DICT: Dict = {
 
   // Manual order dialog
   order_new_title: { ar: "أوردر يدوي جديد", en: "New manual order" },
-  order_new_hint: { ar: "أضف عميل، البراند، والمنتجات مع الأسعار.", en: "Choose brand, customer, and items with prices." },
+  order_new_hint: {
+    ar: "أضف عميل، البراند، والمنتجات مع الأسعار.",
+    en: "Choose brand, customer, and items with prices.",
+  },
   order_shipping_amount: { ar: "قيمة الشحن", en: "Shipping" },
   order_add_item: { ar: "بند جديد", en: "Add item" },
   order_item_title: { ar: "اسم البند", en: "Item name" },
@@ -244,13 +261,19 @@ const DICT: Dict = {
   chart_monthly_margin: { ar: "هامش الربحية الشهري", en: "Monthly profit margin" },
   chart_expense_split: { ar: "توزيع المصروفات على البنود", en: "Expenses by category" },
   chart_no_expenses: { ar: "لا مصروفات مسجلة", en: "No expenses recorded" },
-  chart_top_cat_per_brand: { ar: "أعلى بند مصروفات لكل براند", en: "Top expense category per brand" },
+  chart_top_cat_per_brand: {
+    ar: "أعلى بند مصروفات لكل براند",
+    en: "Top expense category per brand",
+  },
   no_data: { ar: "لا توجد بيانات.", en: "No data." },
   top_category: { ar: "أعلى بند", en: "Top category" },
   of_total: { ar: "من الإجمالي", en: "of total" },
   supplier_debt_analytics: { ar: "تحليلات مديونيات الموردين", en: "Supplier debt analytics" },
   manage_suppliers: { ar: "إدارة الموردين ←", en: "Manage suppliers →" },
-  investors_share_title: { ar: "تحليلات المستثمرين — نصيب الأرباح", en: "Investors analytics — profit share" },
+  investors_share_title: {
+    ar: "تحليلات المستثمرين — نصيب الأرباح",
+    en: "Investors analytics — profit share",
+  },
   investors_total_share: { ar: "مجموع النصيب:", en: "Total share:" },
   full_report: { ar: "التقرير الكامل ←", en: "Full report →" },
   customers_overview: { ar: "نظرة على العملاء", en: "Customers overview" },
@@ -266,16 +289,28 @@ const DICT: Dict = {
   reorder_threshold: { ar: "الحد:", en: "Threshold:" },
   remaining: { ar: "متبقي", en: "Remaining" },
   top_workers: { ar: "أعلى العاملين إنتاجًا", en: "Top producing workers" },
-  no_worker_output: { ar: "لا يوجد إنتاج مُسجَّل باسم عامل بعد.", en: "No worker production recorded yet." },
+  no_worker_output: {
+    ar: "لا يوجد إنتاج مُسجَّل باسم عامل بعد.",
+    en: "No worker production recorded yet.",
+  },
   products_short: { ar: "منتج", en: "products" },
   brands_details: { ar: "تفاصيل البراندات", en: "Brand details" },
   margin_col: { ar: "الهامش", en: "Margin" },
-  empty_start_title: { ar: "ابدأ بإضافة البراندات وإدخال البيانات", en: "Start by adding brands and entering data" },
-  empty_start_sub: { ar: "اذهب إلى إعدادات البراندات ثم إدخال البيانات الشهرية.", en: "Go to Brands, then monthly data entry." },
+  empty_start_title: {
+    ar: "ابدأ بإضافة البراندات وإدخال البيانات",
+    en: "Start by adding brands and entering data",
+  },
+  empty_start_sub: {
+    ar: "اذهب إلى إعدادات البراندات ثم إدخال البيانات الشهرية.",
+    en: "Go to Brands, then monthly data entry.",
+  },
 
   // Tasks
   tasks_title: { ar: "المهام", en: "Tasks" },
-  tasks_sub: { ar: "تنظيم وتوزيع المهام على الفريق.", en: "Organize and assign tasks across the team." },
+  tasks_sub: {
+    ar: "تنظيم وتوزيع المهام على الفريق.",
+    en: "Organize and assign tasks across the team.",
+  },
   tasks_new: { ar: "مهمة جديدة", en: "New task" },
   tasks_edit: { ar: "تعديل مهمة", en: "Edit task" },
   tasks_none: { ar: "لا مهام.", en: "No tasks." },
@@ -288,7 +323,10 @@ const DICT: Dict = {
 
   // Sales
   sales_title: { ar: "فواتير المبيعات والمرتجعات", en: "Sales & returns invoices" },
-  sales_sub: { ar: "فاتورة بعدة منتجات، سعر تلقائي، وتعديل بصلاحية.", en: "Multi-item invoice, auto pricing, permission-guarded edits." },
+  sales_sub: {
+    ar: "فاتورة بعدة منتجات، سعر تلقائي، وتعديل بصلاحية.",
+    en: "Multi-item invoice, auto pricing, permission-guarded edits.",
+  },
   sales_new: { ar: "فاتورة جديدة", en: "New invoice" },
   sales_edit: { ar: "تعديل فاتورة", en: "Edit invoice" },
   sales_report: { ar: "تقرير المبيعات", en: "Sales report" },
@@ -315,7 +353,12 @@ const DICT: Dict = {
   save_invoice: { ar: "حفظ الفاتورة", en: "Save invoice" },
 };
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: keyof typeof DICT | string) => string; toggle: () => void };
+type Ctx = {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (k: keyof typeof DICT | string) => string;
+  toggle: () => void;
+};
 const LangCtx = createContext<Ctx | null>(null);
 
 /**
@@ -334,7 +377,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("ar");
   currentLang = lang;
 
-
   useEffect(() => {
     try {
       const saved = (localStorage.getItem("app_lang") as Lang | null) ?? "ar";
@@ -350,17 +392,45 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLang = (l: Lang) => {
     setLangState(l);
-    try { localStorage.setItem("app_lang", l); } catch {}
+    try {
+      localStorage.setItem("app_lang", l);
+    } catch {}
   };
 
-  const t = (k: string) => (DICT[k]?.[lang]) ?? k;
+  const t = (k: string) => DICT[k]?.[lang] ?? k;
   const toggle = () => setLang(lang === "ar" ? "en" : "ar");
 
   return <LangCtx.Provider value={{ lang, setLang, t, toggle }}>{children}</LangCtx.Provider>;
 }
 
-export const MONTHS_AR = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
-export const MONTHS_EN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+export const MONTHS_AR = [
+  "يناير",
+  "فبراير",
+  "مارس",
+  "أبريل",
+  "مايو",
+  "يونيو",
+  "يوليو",
+  "أغسطس",
+  "سبتمبر",
+  "أكتوبر",
+  "نوفمبر",
+  "ديسمبر",
+];
+export const MONTHS_EN = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 export function monthName(lang: Lang, m: number) {
   return (lang === "ar" ? MONTHS_AR : MONTHS_EN)[m - 1] ?? "";
 }

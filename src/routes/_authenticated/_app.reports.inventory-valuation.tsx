@@ -5,10 +5,20 @@ import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getInventoryValuation } from "@/lib/inventory-valuation.functions";
 import { listBrands } from "@/lib/internal.functions";
-import { listOfflineBranches, listBranchStock, listBranchStockMovements } from "@/lib/branch-stock.functions";
+import {
+  listOfflineBranches,
+  listBranchStock,
+  listBranchStockMovements,
+} from "@/lib/branch-stock.functions";
 import { useLang, tr } from "@/lib/i18n";
 import { Layers, AlertTriangle, Store, Package } from "lucide-react";
 
@@ -22,11 +32,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/_authenticated/_app/reports/inventory-valuation")({
   validateSearch: zodValidator(searchSchema),
-  head: () => ({ meta: [
-    { title: tr("تقارير المخزون — e-GURUS") },
-    { name: "description", content: "قيمة المخزون بمتوسط التكلفة المتحرك (WAC) لكل منتج/براند/فرع." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: tr("تقارير المخزون — e-GURUS") },
+      {
+        name: "description",
+        content: "قيمة المخزون بمتوسط التكلفة المتحرك (WAC) لكل منتج/براند/فرع.",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: Page,
 });
 
@@ -100,11 +115,17 @@ function Page() {
           <Layers className="w-7 h-7" />
           {L(tr("تقارير المخزون"), "Inventory Reports")}
           {branchName && <span className="text-lg text-muted-foreground">— {branchName}</span>}
-          {!branchId && brandName && <span className="text-lg text-muted-foreground">— {brandName}</span>}
+          {!branchId && brandName && (
+            <span className="text-lg text-muted-foreground">— {brandName}</span>
+          )}
           <span className="text-lg text-muted-foreground">· {year}</span>
         </h1>
         {(brandId || branchId) && (
-          <Button variant="ghost" size="sm" onClick={() => setSearch({ brandId: "", branchId: "" })}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSearch({ brandId: "", branchId: "" })}
+          >
             {L(tr("عرض الكل"), "Show all")}
           </Button>
         )}
@@ -112,25 +133,45 @@ function Page() {
 
       <Card className="card-gradient p-4 flex flex-wrap gap-3 items-end">
         <div>
-          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Package className="w-3 h-3" /> {L(tr("البراند"), "Brand")}</div>
-          <Select value={brandId || "all"} onValueChange={(v) => setSearch({ brandId: v === "all" ? "" : v, branchId: "" })}>
-            <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+            <Package className="w-3 h-3" /> {L(tr("البراند"), "Brand")}
+          </div>
+          <Select
+            value={brandId || "all"}
+            onValueChange={(v) => setSearch({ brandId: v === "all" ? "" : v, branchId: "" })}
+          >
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("all_brands")}</SelectItem>
-              {(brandsQ.data ?? []).filter((b) => b.active).map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
+              {(brandsQ.data ?? [])
+                .filter((b) => b.active)
+                .map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Store className="w-3 h-3" /> {L(tr("الفرع الأوفلاين"), "Offline branch")}</div>
-          <Select value={branchId || "none"} onValueChange={(v) => setSearch({ branchId: v === "none" ? "" : v, brandId: "" })}>
-            <SelectTrigger className="w-56"><SelectValue placeholder={L(tr("اختر فرع"), "Select branch")} /></SelectTrigger>
+          <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+            <Store className="w-3 h-3" /> {L(tr("الفرع الأوفلاين"), "Offline branch")}
+          </div>
+          <Select
+            value={branchId || "none"}
+            onValueChange={(v) => setSearch({ branchId: v === "none" ? "" : v, brandId: "" })}
+          >
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder={L(tr("اختر فرع"), "Select branch")} />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">{L(tr("— بدون فرع —"), "— No branch —")}</SelectItem>
               {(branchesQ.data ?? []).map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -138,9 +179,15 @@ function Page() {
         <div>
           <div className="text-xs text-muted-foreground mb-1">{L(tr("السنة"), "Year")}</div>
           <Select value={String(year)} onValueChange={(v) => setSearch({ year: Number(v) })}>
-            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+              {years.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -155,21 +202,27 @@ function Page() {
             <Kpi label={L(tr("عدد المنتجات"), "Products")} value={nf(branchItems.length)} />
             <Kpi label={L(tr("عدد الوحدات"), "Units on hand")} value={nf(branchTotals.units)} />
             <Kpi label={L(tr("قيمة المخزون"), "Inventory Value")} value={nf(branchTotals.value)} />
-            <Kpi label={L(tr("الإيراد المحتمل"), "Potential Revenue")} value={nf(branchTotals.potential_revenue)} tone="text-emerald-500" />
+            <Kpi
+              label={L(tr("الإيراد المحتمل"), "Potential Revenue")}
+              value={nf(branchTotals.potential_revenue)}
+              tone="text-emerald-500"
+            />
           </div>
 
           <Card className="card-gradient p-5">
             <h3 className="font-semibold mb-3">{L(tr("منتجات الفرع"), "Branch Products")}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
-                  <th className="p-2 text-start">SKU</th>
-                  <th className="p-2 text-end">{L(tr("الرصيد"), "Qty")}</th>
-                  <th className="p-2 text-end">{L(tr("متوسط التكلفة"), "Avg Cost")}</th>
-                  <th className="p-2 text-end">{L(tr("قيمة المخزون"), "Inv. Value")}</th>
-                  <th className="p-2 text-end">{L(tr("سعر البيع"), "Sell Price")}</th>
-                </tr></thead>
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
+                    <th className="p-2 text-start">SKU</th>
+                    <th className="p-2 text-end">{L(tr("الرصيد"), "Qty")}</th>
+                    <th className="p-2 text-end">{L(tr("متوسط التكلفة"), "Avg Cost")}</th>
+                    <th className="p-2 text-end">{L(tr("قيمة المخزون"), "Inv. Value")}</th>
+                    <th className="p-2 text-end">{L(tr("سعر البيع"), "Sell Price")}</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {branchItems.map((p) => {
                     const qty = Number(p.on_hand_qty || 0);
@@ -181,11 +234,19 @@ function Page() {
                         <td className="p-2 num text-end">{nf(qty)}</td>
                         <td className="p-2 num text-end">{nf(cost)}</td>
                         <td className="p-2 num text-end font-semibold">{nf(qty * cost)}</td>
-                        <td className="p-2 num text-end text-muted-foreground">{nf(Number(p.sell_price || 0))}</td>
+                        <td className="p-2 num text-end text-muted-foreground">
+                          {nf(Number(p.sell_price || 0))}
+                        </td>
                       </tr>
                     );
                   })}
-                  {branchItems.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد بيانات"), "No data")}</td></tr>}
+                  {branchItems.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                        {L(tr("لا توجد بيانات"), "No data")}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -198,22 +259,32 @@ function Page() {
             </h3>
             <div className="overflow-x-auto max-h-96">
               <table className="w-full text-sm">
-                <thead><tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{L(tr("التاريخ"), "Date")}</th>
-                  <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
-                  <th className="p-2">{L(tr("النوع"), "Type")}</th>
-                  <th className="p-2 text-end">{L(tr("الكمية"), "Qty")}</th>
-                </tr></thead>
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="p-2 text-start">{L(tr("التاريخ"), "Date")}</th>
+                    <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
+                    <th className="p-2">{L(tr("النوع"), "Type")}</th>
+                    <th className="p-2 text-end">{L(tr("الكمية"), "Qty")}</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {movesForYear.map((m) => (
                     <tr key={m.id} className="border-b border-border/50">
-                      <td className="p-2" dir="ltr">{new Date(m.occurred_at).toLocaleDateString("en-US")}</td>
+                      <td className="p-2" dir="ltr">
+                        {new Date(m.occurred_at).toLocaleDateString("en-US")}
+                      </td>
                       <td className="p-2">{m.product_name}</td>
                       <td className="p-2">{m.type}</td>
                       <td className="p-2 num text-end">{nf(Number(m.qty))}</td>
                     </tr>
                   ))}
-                  {movesForYear.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد حركات لهذه السنة"), "No movements this year")}</td></tr>}
+                  {movesForYear.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="p-6 text-center text-muted-foreground">
+                        {L(tr("لا توجد حركات لهذه السنة"), "No movements this year")}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -222,21 +293,37 @@ function Page() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Kpi label={L(tr("عدد الوحدات"), "Units on hand")} value={nf(valQ.data?.totals.units ?? 0)} />
-            <Kpi label={L(tr("قيمة المخزون"), "Inventory Value")} value={nf(valQ.data?.totals.value ?? 0)} />
-            <Kpi label={L(tr("الإيراد المحتمل"), "Potential Revenue")} value={nf(valQ.data?.totals.potential_revenue ?? 0)} tone="text-emerald-500" />
-            <Kpi label={L(tr("الهامش المحتمل"), "Potential Margin")} value={nf(valQ.data?.totals.potential_margin ?? 0)} tone="text-emerald-500" />
+            <Kpi
+              label={L(tr("عدد الوحدات"), "Units on hand")}
+              value={nf(valQ.data?.totals.units ?? 0)}
+            />
+            <Kpi
+              label={L(tr("قيمة المخزون"), "Inventory Value")}
+              value={nf(valQ.data?.totals.value ?? 0)}
+            />
+            <Kpi
+              label={L(tr("الإيراد المحتمل"), "Potential Revenue")}
+              value={nf(valQ.data?.totals.potential_revenue ?? 0)}
+              tone="text-emerald-500"
+            />
+            <Kpi
+              label={L(tr("الهامش المحتمل"), "Potential Margin")}
+              value={nf(valQ.data?.totals.potential_margin ?? 0)}
+              tone="text-emerald-500"
+            />
           </div>
 
           <Card className="card-gradient p-5">
             <h3 className="font-semibold mb-3">{L(tr("حسب البراند"), "By Brand")}</h3>
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-border text-muted-foreground">
-                <th className="p-2 text-start">{L(tr("البراند"), "Brand")}</th>
-                <th className="p-2 text-end">{L(tr("الوحدات"), "Units")}</th>
-                <th className="p-2 text-end">{L(tr("القيمة"), "Value")}</th>
-                <th className="p-2 text-end"></th>
-              </tr></thead>
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="p-2 text-start">{L(tr("البراند"), "Brand")}</th>
+                  <th className="p-2 text-end">{L(tr("الوحدات"), "Units")}</th>
+                  <th className="p-2 text-end">{L(tr("القيمة"), "Value")}</th>
+                  <th className="p-2 text-end"></th>
+                </tr>
+              </thead>
               <tbody>
                 {(valQ.data?.byBrand ?? []).map((b) => (
                   <tr key={b.brand_id} className="border-b border-border/50">
@@ -244,7 +331,11 @@ function Page() {
                     <td className="p-2 num text-end">{nf(b.units)}</td>
                     <td className="p-2 num text-end">{nf(b.value)}</td>
                     <td className="p-2 text-end">
-                      <Link to="/reports/inventory-valuation" search={{ brandId: b.brand_id, branchId: "", year }} className="text-xs text-primary hover:underline">
+                      <Link
+                        to="/reports/inventory-valuation"
+                        search={{ brandId: b.brand_id, branchId: "", year }}
+                        className="text-xs text-primary hover:underline"
+                      >
                         {L(tr("عرض"), "View")}
                       </Link>
                     </td>
@@ -258,32 +349,54 @@ function Page() {
             <h3 className="font-semibold mb-3">{L(tr("تفصيل المنتجات"), "Product Detail")}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
-                  <th className="p-2 text-start">{L(tr("البراند"), "Brand")}</th>
-                  <th className="p-2 text-end">{L(tr("الرصيد"), "Qty")}</th>
-                  <th className="p-2 text-end">{L(tr("متوسط التكلفة"), "Avg Cost")}</th>
-                  <th className="p-2 text-end">{L(tr("قيمة المخزون"), "Inv. Value")}</th>
-                  <th className="p-2 text-end">{L(tr("سعر البيع"), "Sell Price")}</th>
-                  <th className="p-2 text-end">{L(tr("الهامش/وحدة"), "Margin/unit")}</th>
-                  <th className="p-2 text-center">{L(tr("تنبيه"), "Alert")}</th>
-                </tr></thead>
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="p-2 text-start">{L(tr("المنتج"), "Product")}</th>
+                    <th className="p-2 text-start">{L(tr("البراند"), "Brand")}</th>
+                    <th className="p-2 text-end">{L(tr("الرصيد"), "Qty")}</th>
+                    <th className="p-2 text-end">{L(tr("متوسط التكلفة"), "Avg Cost")}</th>
+                    <th className="p-2 text-end">{L(tr("قيمة المخزون"), "Inv. Value")}</th>
+                    <th className="p-2 text-end">{L(tr("سعر البيع"), "Sell Price")}</th>
+                    <th className="p-2 text-end">{L(tr("الهامش/وحدة"), "Margin/unit")}</th>
+                    <th className="p-2 text-center">{L(tr("تنبيه"), "Alert")}</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {(valQ.data?.items ?? []).map((i) => (
                     <tr key={i.id} className="border-b border-border/50">
-                      <td className="p-2 font-medium">{i.name}{i.sku ? <span className="text-xs text-muted-foreground ms-2">({i.sku})</span> : null}</td>
+                      <td className="p-2 font-medium">
+                        {i.name}
+                        {i.sku ? (
+                          <span className="text-xs text-muted-foreground ms-2">({i.sku})</span>
+                        ) : null}
+                      </td>
                       <td className="p-2 text-muted-foreground">{i.brand_name}</td>
                       <td className="p-2 num text-end">{nf(i.on_hand_qty)}</td>
                       <td className="p-2 num text-end">{nf(i.moving_avg_cost)}</td>
                       <td className="p-2 num text-end font-semibold">{nf(i.inventory_value)}</td>
                       <td className="p-2 num text-end text-muted-foreground">{nf(i.sell_price)}</td>
-                      <td className="p-2 num text-end text-emerald-500">{nf(i.sell_price - i.moving_avg_cost)}</td>
+                      <td className="p-2 num text-end text-emerald-500">
+                        {nf(i.sell_price - i.moving_avg_cost)}
+                      </td>
                       <td className="p-2 text-center">
-                        {i.low_stock ? <span className="inline-flex items-center gap-1 text-destructive"><AlertTriangle className="w-4 h-4" />{L(tr("منخفض"), "Low")}</span> : <span className="text-muted-foreground">—</span>}
+                        {i.low_stock ? (
+                          <span className="inline-flex items-center gap-1 text-destructive">
+                            <AlertTriangle className="w-4 h-4" />
+                            {L(tr("منخفض"), "Low")}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}
-                  {(valQ.data?.items ?? []).length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">{L(tr("لا توجد بيانات"), "No data")}</td></tr>}
+                  {(valQ.data?.items ?? []).length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                        {L(tr("لا توجد بيانات"), "No data")}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

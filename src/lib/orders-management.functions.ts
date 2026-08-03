@@ -3,7 +3,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
 import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
 
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
@@ -23,17 +22,32 @@ export type OrdersOverview = {
     shipping: number;
     avgOrderValue: number;
   };
-  delivery: { delivered: number; returned: number; open: number; cancelled: number; deliveryRate: number; returnRate: number };
+  delivery: {
+    delivered: number;
+    returned: number;
+    open: number;
+    cancelled: number;
+    deliveryRate: number;
+    returnRate: number;
+  };
   collection: { expected: number; collected: number; outstanding: number; collectionRate: number };
   byStatus: Array<{ status: string; count: number; amount: number }>;
   byGovernorate: Array<{ name: string; count: number; amount: number; delivered: number }>;
-  byCourier: Array<{ name: string; count: number; delivered: number; returned: number; deliveryRate: number }>;
+  byCourier: Array<{
+    name: string;
+    count: number;
+    delivered: number;
+    returned: number;
+    deliveryRate: number;
+  }>;
   daily: Array<{ day: string; count: number; amount: number }>;
 };
 
 export const getOrdersOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { dateFrom: string | null; dateTo: string | null; brandId?: string | null }) => input)
+  .inputValidator(
+    (input: { dateFrom: string | null; dateTo: string | null; brandId?: string | null }) => input,
+  )
   .handler(async ({ data, context }): Promise<OrdersOverview> => {
     const ctx = context as unknown as Ctx;
     const { start, end } = dayRange(data.dateFrom, data.dateTo);
@@ -63,14 +77,20 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
       for (const c of cols) collected += Number(c.amount ?? 0);
     }
 
-
     const { data: couriers } = await ctx.supabase.from("couriers").select("id, name");
     const courierName = new Map<string, string>(
       ((couriers ?? []) as Array<{ id: string; name: string }>).map((c) => [c.id, c.name]),
     );
 
     const totals = { orders: rows.length, revenue: 0, cost: 0, shipping: 0, avgOrderValue: 0 };
-    const delivery = { delivered: 0, returned: 0, open: 0, cancelled: 0, deliveryRate: 0, returnRate: 0 };
+    const delivery = {
+      delivered: 0,
+      returned: 0,
+      open: 0,
+      cancelled: 0,
+      deliveryRate: 0,
+      returnRate: 0,
+    };
     let expected = 0;
     const byStatus = new Map<string, { count: number; amount: number }>();
     const byGov = new Map<string, { count: number; amount: number; delivered: number }>();
@@ -94,11 +114,14 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
 
       const st = String(r["order_status"] ?? "new");
       const s = byStatus.get(st) ?? { count: 0, amount: 0 };
-      s.count += 1; s.amount += amount; byStatus.set(st, s);
+      s.count += 1;
+      s.amount += amount;
+      byStatus.set(st, s);
 
       const gov = String(r["shipping_governorate"] ?? "—") || "—";
       const g = byGov.get(gov) ?? { count: 0, amount: 0, delivered: 0 };
-      g.count += 1; g.amount += amount;
+      g.count += 1;
+      g.amount += amount;
       if (outcome === "delivered" || outcome === "exchanged") g.delivered += 1;
       byGov.set(gov, g);
 
@@ -112,7 +135,9 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
 
       const day = String(r["occurred_at"] ?? "").slice(0, 10);
       const d = daily.get(day) ?? { count: 0, amount: 0 };
-      d.count += 1; d.amount += amount; daily.set(day, d);
+      d.count += 1;
+      d.amount += amount;
+      daily.set(day, d);
     }
     totals.avgOrderValue = rows.length ? totals.revenue / rows.length : 0;
     const shipped = delivery.delivered + delivery.returned;
@@ -128,12 +153,24 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
         outstanding: expected - collected,
         collectionRate: expected ? (collected / expected) * 100 : 0,
       },
-      byStatus: [...byStatus.entries()].map(([status, v]) => ({ status, ...v })).sort((a, b) => b.count - a.count),
-      byGovernorate: [...byGov.entries()].map(([name, v]) => ({ name, ...v })).sort((a, b) => b.count - a.count).slice(0, 15),
-      byCourier: [...byCourier.entries()].map(([name, v]) => ({
-        name, ...v, deliveryRate: v.delivered + v.returned ? (v.delivered / (v.delivered + v.returned)) * 100 : 0,
-      })).sort((a, b) => b.count - a.count),
-      daily: [...daily.entries()].map(([day, v]) => ({ day, ...v })).sort((a, b) => a.day.localeCompare(b.day)),
+      byStatus: [...byStatus.entries()]
+        .map(([status, v]) => ({ status, ...v }))
+        .sort((a, b) => b.count - a.count),
+      byGovernorate: [...byGov.entries()]
+        .map(([name, v]) => ({ name, ...v }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 15),
+      byCourier: [...byCourier.entries()]
+        .map(([name, v]) => ({
+          name,
+          ...v,
+          deliveryRate:
+            v.delivered + v.returned ? (v.delivered / (v.delivered + v.returned)) * 100 : 0,
+        }))
+        .sort((a, b) => b.count - a.count),
+      daily: [...daily.entries()]
+        .map(([day, v]) => ({ day, ...v }))
+        .sort((a, b) => a.day.localeCompare(b.day)),
     };
   });
 
@@ -189,13 +226,24 @@ export const getOrderTimeline = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     const [events, shipments, collections] = await Promise.all([
-      ctx.supabase.from("order_lifecycle_events")
-        .select("id, created_at, source, from_order_status, to_order_status, to_collection_status, to_shipment_outcome, raw_status, note")
-        .eq("order_id", data.orderId).order("created_at", { ascending: false }).limit(200),
-      ctx.supabase.from("order_shipments")
-        .select("*").eq("order_id", data.orderId).order("attempt_no", { ascending: true }),
-      ctx.supabase.from("order_collections")
-        .select("*").eq("order_id", data.orderId).order("collected_at", { ascending: false }),
+      ctx.supabase
+        .from("order_lifecycle_events")
+        .select(
+          "id, created_at, source, from_order_status, to_order_status, to_collection_status, to_shipment_outcome, raw_status, note",
+        )
+        .eq("order_id", data.orderId)
+        .order("created_at", { ascending: false })
+        .limit(200),
+      ctx.supabase
+        .from("order_shipments")
+        .select("*")
+        .eq("order_id", data.orderId)
+        .order("attempt_no", { ascending: true }),
+      ctx.supabase
+        .from("order_collections")
+        .select("*")
+        .eq("order_id", data.orderId)
+        .order("collected_at", { ascending: false }),
     ]);
 
     const entries: TimelineEntry[] = [];
@@ -205,8 +253,10 @@ export const getOrderTimeline = createServerFn({ method: "POST" })
         kind: "lifecycle",
         at: String(e["created_at"]),
         title: `${e["from_order_status"] ?? "—"} → ${e["to_order_status"]}`,
-        detail: [e["to_collection_status"], e["to_shipment_outcome"], e["raw_status"], e["note"]]
-          .filter(Boolean).join(" • ") || null,
+        detail:
+          [e["to_collection_status"], e["to_shipment_outcome"], e["raw_status"], e["note"]]
+            .filter(Boolean)
+            .join(" • ") || null,
         source: String(e["source"] ?? ""),
       });
     }
@@ -241,21 +291,35 @@ export const getOrderTimeline = createServerFn({ method: "POST" })
 
 export const addShipmentAttempt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
-    orderId: string; courierId?: string | null; tracking?: string | null;
-    expectedCod?: number; shippingFee?: number; status?: string; note?: string | null;
-  }) => input)
+  .inputValidator(
+    (input: {
+      orderId: string;
+      courierId?: string | null;
+      tracking?: string | null;
+      expectedCod?: number;
+      shippingFee?: number;
+      status?: string;
+      note?: string | null;
+    }) => input,
+  )
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     await assertPageWrite(ctx, ORDERS_PAGE);
     const { data: order, error: oErr } = await ctx.supabase
-      .from("orders").select("id, brand_id, courier_id, total_amount").eq("id", data.orderId).maybeSingle();
+      .from("orders")
+      .select("id, brand_id, courier_id, total_amount")
+      .eq("id", data.orderId)
+      .maybeSingle();
     if (oErr) throw new Error(oErr.message);
     if (!order) throw new Error("Order not found");
 
     const { data: last } = await ctx.supabase
-      .from("order_shipments").select("attempt_no").eq("order_id", data.orderId)
-      .order("attempt_no", { ascending: false }).limit(1).maybeSingle();
+      .from("order_shipments")
+      .select("attempt_no")
+      .eq("order_id", data.orderId)
+      .order("attempt_no", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     const attemptNo = Number(last?.attempt_no ?? 0) + 1;
 
     const { error } = await ctx.supabase.from("order_shipments").insert({
@@ -277,16 +341,25 @@ export const addShipmentAttempt = createServerFn({ method: "POST" })
 
 export const recordCollection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
-    orderId: string; shipmentId?: string | null; amount: number;
-    method?: string; note?: string | null; collectedAt?: string | null;
-  }) => input)
+  .inputValidator(
+    (input: {
+      orderId: string;
+      shipmentId?: string | null;
+      amount: number;
+      method?: string;
+      note?: string | null;
+      collectedAt?: string | null;
+    }) => input,
+  )
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     await assertPageWrite(ctx, ORDERS_PAGE);
     if (!(Number(data.amount) > 0)) throw new Error("Amount must be positive");
     const { data: order } = await ctx.supabase
-      .from("orders").select("id, brand_id, courier_id").eq("id", data.orderId).maybeSingle();
+      .from("orders")
+      .select("id, brand_id, courier_id")
+      .eq("id", data.orderId)
+      .maybeSingle();
     if (!order) throw new Error("Order not found");
     const { error } = await ctx.supabase.from("order_collections").insert({
       order_id: data.orderId,
@@ -322,8 +395,11 @@ export const listWhatsappThreads = createServerFn({ method: "POST" })
   .inputValidator((input: { search?: string | null; brandId?: string | null }) => input)
   .handler(async ({ data, context }): Promise<WhatsappThread[]> => {
     const ctx = context as unknown as Ctx;
-    let q = ctx.supabase.from("whatsapp_threads").select("*")
-      .order("last_message_at", { ascending: false, nullsFirst: false }).limit(200);
+    let q = ctx.supabase
+      .from("whatsapp_threads")
+      .select("*")
+      .order("last_message_at", { ascending: false, nullsFirst: false })
+      .limit(200);
     if (data.brandId) q = q.eq("brand_id", data.brandId);
     if (data.search) {
       const s = sanitizeOrFilterValue(data.search);
@@ -340,8 +416,11 @@ export const getWhatsappThread = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     const { data: messages, error } = await ctx.supabase
-      .from("whatsapp_messages").select("*").eq("thread_id", data.threadId)
-      .order("sent_at", { ascending: true }).limit(300);
+      .from("whatsapp_messages")
+      .select("*")
+      .eq("thread_id", data.threadId)
+      .order("sent_at", { ascending: true })
+      .limit(300);
     if (error) throw new Error(error.message);
     await ctx.supabase.from("whatsapp_threads").update({ unread_count: 0 }).eq("id", data.threadId);
     return { messages: (messages ?? []) as WhatsappMessageRow[] };
@@ -349,18 +428,36 @@ export const getWhatsappThread = createServerFn({ method: "POST" })
 
 export const startWhatsappThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { brandId: string; phone: string; displayName?: string | null; orderId?: string | null }) => input)
+  .inputValidator(
+    (input: {
+      brandId: string;
+      phone: string;
+      displayName?: string | null;
+      orderId?: string | null;
+    }) => input,
+  )
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     await assertPageWrite(ctx, ORDERS_PAGE);
     const phone = data.phone.replace(/[^\d+]/g, "");
     if (phone.length < 8) throw new Error("Invalid phone");
-    const { data: existing } = await ctx.supabase.from("whatsapp_threads")
-      .select("id").eq("brand_id", data.brandId).eq("phone", phone).maybeSingle();
+    const { data: existing } = await ctx.supabase
+      .from("whatsapp_threads")
+      .select("id")
+      .eq("brand_id", data.brandId)
+      .eq("phone", phone)
+      .maybeSingle();
     if (existing) return { id: existing.id as string };
-    const { data: created, error } = await ctx.supabase.from("whatsapp_threads").insert({
-      brand_id: data.brandId, phone, display_name: data.displayName ?? null, order_id: data.orderId ?? null,
-    }).select("id").single();
+    const { data: created, error } = await ctx.supabase
+      .from("whatsapp_threads")
+      .insert({
+        brand_id: data.brandId,
+        phone,
+        display_name: data.displayName ?? null,
+        order_id: data.orderId ?? null,
+      })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     return { id: created.id as string };
   });
@@ -374,7 +471,10 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
     const body = data.body.trim();
     if (!body) throw new Error("Empty message");
     const { data: thread, error: tErr } = await ctx.supabase
-      .from("whatsapp_threads").select("id, brand_id, phone").eq("id", data.threadId).maybeSingle();
+      .from("whatsapp_threads")
+      .select("id, brand_id, phone")
+      .eq("id", data.threadId)
+      .maybeSingle();
     if (tErr) throw new Error(tErr.message);
     if (!thread) throw new Error("Thread not found");
 
@@ -396,7 +496,10 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
             text: { body },
           }),
         });
-        const json = (await res.json()) as { messages?: Array<{ id: string }>; error?: { message?: string } };
+        const json = (await res.json()) as {
+          messages?: Array<{ id: string }>;
+          error?: { message?: string };
+        };
         if (!res.ok) {
           status = "failed";
           err = `[${res.status}] ${json?.error?.message ?? "provider error"}`;
@@ -413,13 +516,23 @@ export const sendWhatsappMessage = createServerFn({ method: "POST" })
     }
 
     const { error } = await ctx.supabase.from("whatsapp_messages").insert({
-      thread_id: thread.id, brand_id: thread.brand_id, direction: "out",
-      body, wa_message_id: waId, status, error: err, created_by: ctx.userId,
+      thread_id: thread.id,
+      brand_id: thread.brand_id,
+      direction: "out",
+      body,
+      wa_message_id: waId,
+      status,
+      error: err,
+      created_by: ctx.userId,
     });
     if (error) throw new Error(error.message);
-    await ctx.supabase.from("whatsapp_threads").update({
-      last_message_at: new Date().toISOString(), last_message_preview: body.slice(0, 120),
-    }).eq("id", thread.id);
+    await ctx.supabase
+      .from("whatsapp_threads")
+      .update({
+        last_message_at: new Date().toISOString(),
+        last_message_preview: body.slice(0, 120),
+      })
+      .eq("id", thread.id);
     return { status, error: err };
   });
 
@@ -429,8 +542,10 @@ export const linkThreadToOrder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     await assertPageWrite(ctx, ORDERS_PAGE);
-    const { error } = await ctx.supabase.from("whatsapp_threads")
-      .update({ order_id: data.orderId }).eq("id", data.threadId);
+    const { error } = await ctx.supabase
+      .from("whatsapp_threads")
+      .update({ order_id: data.orderId })
+      .eq("id", data.threadId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -465,7 +580,8 @@ export const getStuckOrdersAlerts = createServerFn({ method: "POST" })
     const now = Date.now();
     const cutoff3 = new Date(now - 3 * DAY_MS).toISOString();
     const cutoff5 = new Date(now - 5 * DAY_MS).toISOString();
-    const select = "id, external_order_number, customer_name, customer_phone, order_status, shipment_outcome, total_amount, occurred_at, lifecycle_updated_at";
+    const select =
+      "id, external_order_number, customer_name, customer_phone, order_status, shipment_outcome, total_amount, occurred_at, lifecycle_updated_at";
 
     // (1) In-transit orders with no shipment row for more than 3 days.
     let q1 = ctx.supabase
@@ -493,9 +609,14 @@ export const getStuckOrdersAlerts = createServerFn({ method: "POST" })
     if (deliveredRes.error) throw new Error(deliveredRes.error.message);
 
     type Row = {
-      id: string; external_order_number: string | null; customer_name: string | null;
-      customer_phone: string | null; order_status: string; total_amount: number | null;
-      occurred_at: string; lifecycle_updated_at: string | null;
+      id: string;
+      external_order_number: string | null;
+      customer_name: string | null;
+      customer_phone: string | null;
+      order_status: string;
+      total_amount: number | null;
+      occurred_at: string;
+      lifecycle_updated_at: string | null;
     };
     const openRows = (openRes.data ?? []) as Row[];
     const deliveredRows = (deliveredRes.data ?? []) as Row[];
@@ -504,7 +625,9 @@ export const getStuckOrdersAlerts = createServerFn({ method: "POST" })
     const shipped = new Set<string>();
     if (openIds.length) {
       const { data: ships, error } = await ctx.supabase
-        .from("order_shipments").select("order_id").in("order_id", openIds);
+        .from("order_shipments")
+        .select("order_id")
+        .in("order_id", openIds);
       if (error) throw new Error(error.message);
       for (const s of (ships ?? []) as Array<{ order_id: string }>) shipped.add(s.order_id);
     }
@@ -513,14 +636,17 @@ export const getStuckOrdersAlerts = createServerFn({ method: "POST" })
     const collectedMap = new Map<string, number>();
     if (deliveredIds.length) {
       const { data: cols, error } = await ctx.supabase
-        .from("order_collections").select("order_id, amount").in("order_id", deliveredIds);
+        .from("order_collections")
+        .select("order_id, amount")
+        .in("order_id", deliveredIds);
       if (error) throw new Error(error.message);
       for (const c of (cols ?? []) as Array<{ order_id: string; amount: number | null }>) {
         collectedMap.set(c.order_id, (collectedMap.get(c.order_id) ?? 0) + Number(c.amount ?? 0));
       }
     }
 
-    const daysSince = (iso: string) => Math.max(0, Math.floor((now - new Date(iso).getTime()) / DAY_MS));
+    const daysSince = (iso: string) =>
+      Math.max(0, Math.floor((now - new Date(iso).getTime()) / DAY_MS));
 
     const noShipment: StuckOrderAlert[] = openRows
       .filter((r) => !shipped.has(r.id))

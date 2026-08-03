@@ -9,15 +9,27 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Factory, Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import {
-  listProductionTasks, upsertProductionTask, deleteProductionTask, updateProductionTaskStatus,
+  listProductionTasks,
+  upsertProductionTask,
+  deleteProductionTask,
+  updateProductionTaskStatus,
   type ProductionTask,
 } from "@/lib/production-tasks.functions";
 import { listUsers } from "@/lib/admin.functions";
@@ -27,19 +39,25 @@ import { useLang, tr } from "@/lib/i18n";
 import { KanbanBoard } from "@/components/pages/KanbanBoard";
 
 export const Route = createFileRoute("/_authenticated/_app/production-tasks")({
-  head: () => ({ meta: [
-    { title: tr("مهام الإنتاج — e-GURUS") },
-    { name: "description", content: "توزيع مهام الإنتاج على العمال ومتابعتها." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: tr("مهام الإنتاج — e-GURUS") },
+      { name: "description", content: "توزيع مهام الإنتاج على العمال ومتابعتها." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: ProductionTasksPage,
 });
 
 const STATUS_KEY: Record<ProductionTask["status"], string> = {
-  todo: "status_todo", in_progress: "status_in_progress", done: "status_done",
+  todo: "status_todo",
+  in_progress: "status_in_progress",
+  done: "status_done",
 };
 const PRIORITY_KEY: Record<ProductionTask["priority"], string> = {
-  low: "priority_low", medium: "priority_medium", high: "priority_high",
+  low: "priority_low",
+  medium: "priority_medium",
+  high: "priority_high",
 };
 const PRIORITY_STYLE: Record<ProductionTask["priority"], string> = {
   low: "bg-muted text-muted-foreground",
@@ -71,7 +89,11 @@ function ProductionTasksPage() {
   );
 
   const tasksQ = useQuery({ queryKey: ["production-tasks"], queryFn: () => listFn() });
-  const usersQ = useQuery({ queryKey: ["admin-users"], queryFn: () => usersFn(), enabled: canManage });
+  const usersQ = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: () => usersFn(),
+    enabled: canManage,
+  });
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
 
   const userLabel = (id: string | null) => usersQ.data?.find((u) => u.id === id)?.email ?? "—";
@@ -79,12 +101,17 @@ function ProductionTasksPage() {
 
   const statusMut = useMutation({
     mutationFn: (v: { id: string; status: ProductionTask["status"] }) => statusFn({ data: v }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["production-tasks"] }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["production-tasks"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
   const delMut = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
-    onSuccess: () => { toast.success(t("deleted")); qc.invalidateQueries({ queryKey: ["production-tasks"] }); },
+    onSuccess: () => {
+      toast.success(t("deleted"));
+      qc.invalidateQueries({ queryKey: ["production-tasks"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -92,11 +119,15 @@ function ProductionTasksPage() {
     <KanbanBoard
       icon={<Factory className="w-6 h-6" />}
       title={lang === "ar" ? "مهام الإنتاج" : "Production Tasks"}
-      subtitle={lang === "ar"
-        ? "مدير الإنتاج والمشرف يوزّعون مهام الإنتاج على العمال ويتابعون التنفيذ."
-        : "The production manager and supervisor assign production tasks to workers and track progress."}
-      action={canManage ? <ProdTaskDialog users={usersQ.data ?? []} brands={brandsQ.data ?? []} /> : null}
-      columns={(["todo","in_progress","done"] as const).map((col) => ({
+      subtitle={
+        lang === "ar"
+          ? "مدير الإنتاج والمشرف يوزّعون مهام الإنتاج على العمال ويتابعون التنفيذ."
+          : "The production manager and supervisor assign production tasks to workers and track progress."
+      }
+      action={
+        canManage ? <ProdTaskDialog users={usersQ.data ?? []} brands={brandsQ.data ?? []} /> : null
+      }
+      columns={(["todo", "in_progress", "done"] as const).map((col) => ({
         key: col,
         label: t(STATUS_KEY[col]),
         accent: COL_ACCENT[col],
@@ -111,8 +142,12 @@ function ProductionTasksPage() {
           userLabel={userLabel}
           brandLabel={brandLabel}
           onStatus={(s) => statusMut.mutate({ id: tk.id, status: s })}
-          onDelete={() => { if (confirm(t("confirm_delete_task"))) delMut.mutate(tk.id); }}
-          editButton={<ProdTaskDialog users={usersQ.data ?? []} brands={brandsQ.data ?? []} task={tk} />}
+          onDelete={() => {
+            if (confirm(t("confirm_delete_task"))) delMut.mutate(tk.id);
+          }}
+          editButton={
+            <ProdTaskDialog users={usersQ.data ?? []} brands={brandsQ.data ?? []} task={tk} />
+          }
         />
       )}
       emptyLabel={t("tasks_none")}
@@ -120,7 +155,16 @@ function ProductionTasksPage() {
   );
 }
 
-function ProdCard({ tk, t, canManage, userLabel, brandLabel, onStatus, onDelete, editButton }: {
+function ProdCard({
+  tk,
+  t,
+  canManage,
+  userLabel,
+  brandLabel,
+  onStatus,
+  onDelete,
+  editButton,
+}: {
   tk: ProductionTask;
   t: (k: string) => string;
   canManage: boolean;
@@ -134,11 +178,15 @@ function ProdCard({ tk, t, canManage, userLabel, brandLabel, onStatus, onDelete,
     <div className="group rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-3 space-y-2 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all">
       <div className="flex items-start justify-between gap-2">
         <div className="font-semibold text-sm leading-snug min-w-0">{tk.title}</div>
-        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_STYLE[tk.priority]}`}>
+        <span
+          className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_STYLE[tk.priority]}`}
+        >
           {t(PRIORITY_KEY[tk.priority])}
         </span>
       </div>
-      {tk.description && <p className="text-xs text-muted-foreground line-clamp-2">{tk.description}</p>}
+      {tk.description && (
+        <p className="text-xs text-muted-foreground line-clamp-2">{tk.description}</p>
+      )}
       <div className="flex flex-wrap gap-1.5 text-[10px]">
         {tk.due_date && (
           <span className="rounded-md bg-muted/50 px-1.5 py-0.5 text-muted-foreground num">
@@ -158,10 +206,14 @@ function ProdCard({ tk, t, canManage, userLabel, brandLabel, onStatus, onDelete,
       </div>
       <div className="flex items-center gap-1.5 justify-between pt-2 border-t border-border/40">
         <Select value={tk.status} onValueChange={(v) => onStatus(v as ProductionTask["status"])}>
-          <SelectTrigger className="h-7 text-[11px] w-28 rounded-full bg-muted/30 border-border/40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-7 text-[11px] w-28 rounded-full bg-muted/30 border-border/40">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             {(Object.keys(STATUS_KEY) as ProductionTask["status"][]).map((s) => (
-              <SelectItem key={s} value={s}>{t(STATUS_KEY[s])}</SelectItem>
+              <SelectItem key={s} value={s}>
+                {t(STATUS_KEY[s])}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -179,7 +231,9 @@ function ProdCard({ tk, t, canManage, userLabel, brandLabel, onStatus, onDelete,
 }
 
 function ProdTaskDialog({
-  task, users, brands,
+  task,
+  users,
+  brands,
 }: {
   task?: ProductionTask;
   users: Array<{ id: string; email: string }>;
@@ -197,78 +251,146 @@ function ProdTaskDialog({
   const qc = useQueryClient();
   const upFn = useServerFn(upsertProductionTask);
   const mut = useMutation({
-    mutationFn: () => upFn({ data: {
-      id: task?.id, title, description: description || null,
-      status, priority,
-      due_date: dueDate || null,
-      assignee_id: assigneeId || null,
-      brand_id: brandId || null,
-    }}),
-    onSuccess: () => { toast.success(t("saved")); qc.invalidateQueries({ queryKey: ["production-tasks"] }); setOpen(false); },
+    mutationFn: () =>
+      upFn({
+        data: {
+          id: task?.id,
+          title,
+          description: description || null,
+          status,
+          priority,
+          due_date: dueDate || null,
+          assignee_id: assigneeId || null,
+          brand_id: brandId || null,
+        },
+      }),
+    onSuccess: () => {
+      toast.success(t("saved"));
+      qc.invalidateQueries({ queryKey: ["production-tasks"] });
+      setOpen(false);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {task
-          ? <Button size="icon" variant="ghost" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button>
-          : <Button><Plus className="w-4 h-4 me-2" />{t("tasks_new")}</Button>}
+        {task ? (
+          <Button size="icon" variant="ghost" className="h-7 w-7">
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+        ) : (
+          <Button>
+            <Plus className="w-4 h-4 me-2" />
+            {t("tasks_new")}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>{task ? t("tasks_edit") : t("tasks_new")}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{task ? t("tasks_edit") : t("tasks_new")}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
-          <div><Label>{t("title_label")}</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-          <div><Label>{t("description")}</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} /></div>
+          <div>
+            <Label>{t("title_label")}</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div>
+            <Label>{t("description")}</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>{t("status")}</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as ProductionTask["status"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as ProductionTask["status"])}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(STATUS_KEY) as ProductionTask["status"][]).map((s) => (
-                    <SelectItem key={s} value={s}>{t(STATUS_KEY[s])}</SelectItem>
+                    <SelectItem key={s} value={s}>
+                      {t(STATUS_KEY[s])}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label>{t("priority")}</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as ProductionTask["priority"])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={priority}
+                onValueChange={(v) => setPriority(v as ProductionTask["priority"])}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(PRIORITY_KEY) as ProductionTask["priority"][]).map((p) => (
-                    <SelectItem key={p} value={p}>{t(PRIORITY_KEY[p])}</SelectItem>
+                    <SelectItem key={p} value={p}>
+                      {t(PRIORITY_KEY[p])}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div><Label>{t("due_date")}</Label><Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
+          <div>
+            <Label>{t("due_date")}</Label>
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
           <div>
             <Label>{t("assignee")}</Label>
-            <Select value={assigneeId || "__none"} onValueChange={(v) => setAssigneeId(v === "__none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder={t("select_placeholder")} /></SelectTrigger>
+            <Select
+              value={assigneeId || "__none"}
+              onValueChange={(v) => setAssigneeId(v === "__none" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("select_placeholder")} />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none">{t("none")}</SelectItem>
-                {users.map((u) => <SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.email}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label>{t("brand")}</Label>
-            <Select value={brandId || "__none"} onValueChange={(v) => setBrandId(v === "__none" ? "" : v)}>
-              <SelectTrigger><SelectValue placeholder={t("select_placeholder")} /></SelectTrigger>
+            <Select
+              value={brandId || "__none"}
+              onValueChange={(v) => setBrandId(v === "__none" ? "" : v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("select_placeholder")} />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none">{t("general")}</SelectItem>
-                {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                {brands.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>{t("cancel")}</Button>
-          <Button onClick={() => mut.mutate()} disabled={!title || mut.isPending}>{t("save")}</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            {t("cancel")}
+          </Button>
+          <Button onClick={() => mut.mutate()} disabled={!title || mut.isPending}>
+            {t("save")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

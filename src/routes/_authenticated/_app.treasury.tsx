@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,8 +5,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import {
-  listBrands, listCouriers,
-  listCashTransactions, upsertCashTransaction, deleteCashTransaction, getCashSummary,
+  listBrands,
+  listCouriers,
+  listCashTransactions,
+  upsertCashTransaction,
+  deleteCashTransaction,
+  getCashSummary,
   listWithdrawalActors,
   type CashTxnType,
 } from "@/lib/internal.functions";
@@ -20,23 +23,54 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Wallet, HandCoins, ArrowDownToLine, ArrowUpFromLine, ArrowLeftRight, Plus, Trash2, Lock, User, Truck } from "lucide-react";
+import {
+  Wallet,
+  HandCoins,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  ArrowLeftRight,
+  Plus,
+  Trash2,
+  Lock,
+  User,
+  Truck,
+} from "lucide-react";
 import { WalletsPanel } from "@/components/WalletsPanel";
 import { listWallets } from "@/lib/wallets.functions";
 import { useEffect } from "react";
+import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/treasury")({
-  head: () => ({ meta: [
-    { title: tr("الخزنة — التحصيلات والسحوبات") },
-    { name: "description", content: "تسجيل تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات مع رصيد الخزنة الحيّ." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: "الخزنة — التحصيلات والسحوبات" },
+      {
+        name: "description",
+        content:
+          "تسجيل تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات مع رصيد الخزنة الحيّ.",
+      },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: TreasuryPage,
 });
 
@@ -47,6 +81,13 @@ const TYPE_LABEL: Record<CashTxnType, string> = {
   other_out: "مصروف نقدي عام",
 };
 
+const TYPE_LABEL_EN: Record<CashTxnType, string> = {
+  collection: "Collection from courier/shipping",
+  personal_withdrawal: "Owner/investor withdrawal",
+  deposit: "Treasury deposit",
+  other_out: "General cash expense",
+};
+
 const TYPE_ICON: Record<CashTxnType, typeof Wallet> = {
   collection: HandCoins,
   personal_withdrawal: ArrowUpFromLine,
@@ -54,11 +95,21 @@ const TYPE_ICON: Record<CashTxnType, typeof Wallet> = {
   other_out: ArrowUpFromLine,
 };
 
-function today() { return getTodayInBusinessTimezone(); }
-function addDays(d: string, n: number) { const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().slice(0, 10); }
-function fmt(n: number) { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n); }
+function today() {
+  return getTodayInBusinessTimezone();
+}
+function addDays(d: string, n: number) {
+  const dt = new Date(d);
+  dt.setDate(dt.getDate() + n);
+  return dt.toISOString().slice(0, 10);
+}
+function fmt(n: number) {
+  return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
+}
 
 function TreasuryPage() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const qc = useQueryClient();
   const listBrandsFn = useServerFn(listBrands);
   const listCouriersFn = useServerFn(listCouriers);
@@ -70,12 +121,22 @@ function TreasuryPage() {
   const actorsFn = useServerFn(listWithdrawalActors);
 
   const roleQ = useQuery({ queryKey: ["my-role"], queryFn: () => getRoleFn() });
-  const canWrite = !!roleQ.data && (roleQ.data.isAdmin || roleQ.data.isManager || roleQ.data.roles.some((r) => ["data_entry","accountant"].includes(r)));
+  const canWrite =
+    !!roleQ.data &&
+    (roleQ.data.isAdmin ||
+      roleQ.data.isManager ||
+      roleQ.data.roles.some((r) => ["data_entry", "accountant"].includes(r)));
   const canPickActor = !!roleQ.data && (roleQ.data.isAdmin || roleQ.data.isManager);
-  const actorsQ = useQuery({ queryKey: ["withdrawal-actors"], queryFn: () => actorsFn(), enabled: canPickActor });
+  const actorsQ = useQuery({
+    queryKey: ["withdrawal-actors"],
+    queryFn: () => actorsFn(),
+    enabled: canPickActor,
+  });
 
   const [me, setMe] = useState<string | null>(null);
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null)); }, []);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null));
+  }, []);
 
   const [from, setFrom] = useState(addDays(today(), -30));
   const [to, setTo] = useState(today());
@@ -91,8 +152,13 @@ function TreasuryPage() {
   const listSuppliersFn = useServerFn(listSuppliers);
   const suppliersQ = useQuery({ queryKey: ["suppliers"], queryFn: () => listSuppliersFn() });
 
-
-  const filters = { from, to, type: typeFilter === "all" ? null : typeFilter, courierId: courierFilter === "all" ? null : courierFilter, forUserId: actorFilter === "all" ? null : actorFilter };
+  const filters = {
+    from,
+    to,
+    type: typeFilter === "all" ? null : typeFilter,
+    courierId: courierFilter === "all" ? null : courierFilter,
+    forUserId: actorFilter === "all" ? null : actorFilter,
+  };
   const listQ = useQuery({
     queryKey: ["cash-txns", filters],
     queryFn: () => listFn({ data: filters }),
@@ -144,42 +210,73 @@ function TreasuryPage() {
   );
 
   const saveMut = useMutation({
-    mutationFn: () => upsertFn({ data: {
-      id: form.id, type: form.type, amount: Number(form.amount) || 0,
-      occurred_at: form.occurred_at,
-      brand_id: form.brand_id || null,
-      courier_id: form.type === "collection" ? (form.courier_id || null) : null,
-      for_user_id: form.type === "personal_withdrawal" ? (form.for_user_id || null) : null,
-      category_id: form.type === "other_out" ? (form.category_id || null) : null,
-      wallet_id: form.wallet_id || null,
-      platform: form.type === "other_out" && isMarketingCat && form.platform ? (form.platform as "tiktok"|"meta"|"google"|"snapchat"|"whatsapp"|"sms"|"influencer"|"ugc"|"media_production"|"other") : null,
-      attributed_revenue: form.type === "other_out" && isMarketingCat ? Number(form.attributed_revenue) || 0 : null,
-      note: (() => {
-        const supplierPrefix = form.type === "other_out" && isPurchasesCat && selectedSupplier ? `مورد: ${selectedSupplier.name}` : "";
-        const merged = supplierPrefix ? (form.note ? `${supplierPrefix} — ${form.note}` : supplierPrefix) : form.note;
-        return merged || null;
-      })(),
-    } }),
+    mutationFn: () =>
+      upsertFn({
+        data: {
+          id: form.id,
+          type: form.type,
+          amount: Number(form.amount) || 0,
+          occurred_at: form.occurred_at,
+          brand_id: form.brand_id || null,
+          courier_id: form.type === "collection" ? form.courier_id || null : null,
+          for_user_id: form.type === "personal_withdrawal" ? form.for_user_id || null : null,
+          category_id: form.type === "other_out" ? form.category_id || null : null,
+          wallet_id: form.wallet_id || null,
+          platform:
+            form.type === "other_out" && isMarketingCat && form.platform
+              ? (form.platform as
+                  | "tiktok"
+                  | "meta"
+                  | "google"
+                  | "snapchat"
+                  | "whatsapp"
+                  | "sms"
+                  | "influencer"
+                  | "ugc"
+                  | "media_production"
+                  | "other")
+              : null,
+          attributed_revenue:
+            form.type === "other_out" && isMarketingCat
+              ? Number(form.attributed_revenue) || 0
+              : null,
+          note: (() => {
+            const supplierPrefix =
+              form.type === "other_out" && isPurchasesCat && selectedSupplier
+                ? `مورد: ${selectedSupplier.name}`
+                : "";
+            const merged = supplierPrefix
+              ? form.note
+                ? `${supplierPrefix} — ${form.note}`
+                : supplierPrefix
+              : form.note;
+            return merged || null;
+          })(),
+        },
+      }),
 
     onSuccess: () => {
-      toast.success(form.id ? tr("تم التعديل") : tr("تم الحفظ"));
+      toast.success(
+        form.id ? T("تم التعديل", "Updated successfully") : T("تم الحفظ", "Saved successfully"),
+      );
       setForm(initialForm());
       qc.invalidateQueries({ queryKey: ["cash-txns"] });
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحفظ")),
+    onError: (e) => toast.error(e instanceof Error ? e.message : T("فشل الحفظ", "Failed to save")),
   });
 
   const delMut = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
     onSuccess: () => {
-      toast.success(tr("تم الحذف"));
+      toast.success(T("تم الحذف", "Deleted successfully"));
       qc.invalidateQueries({ queryKey: ["cash-txns"] });
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحذف")),
+    onError: (e) =>
+      toast.error(e instanceof Error ? e.message : T("فشل الحذف", "Failed to delete")),
   });
 
   const couriersMap = useMemo(() => {
@@ -210,14 +307,23 @@ function TreasuryPage() {
     : null;
 
   return (
-    <div className="p-6 md:p-8 space-y-6" dir="rtl">
+    <div className="p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Wallet className="w-7 h-7 text-primary" /> {tr("الخزنة")}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{tr("تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات.")}</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Wallet className="w-7 h-7 text-primary" /> {T("الخزنة", "Treasury")}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {T(
+              "تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات.",
+              "Courier and shipping company collections, personal withdrawals, and deposits.",
+            )}
+          </p>
         </div>
         {!canWrite && (
-          <Badge variant="outline" className="gap-1"><Lock className="w-3 h-3" /> {tr("عرض فقط")}</Badge>
+          <Badge variant="outline" className="gap-1">
+            <Lock className="w-3 h-3" /> {T("عرض فقط", "View only")}
+          </Badge>
         )}
       </div>
 
@@ -225,34 +331,55 @@ function TreasuryPage() {
       <Card className="p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <Label className="text-xs sm:text-sm">{tr("من")}</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1" />
+            <Label className="text-xs sm:text-sm">{T("من", "From")}</Label>
+            <Input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
-            <Label className="text-xs sm:text-sm">{tr("إلى")}</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1" />
+            <Label className="text-xs sm:text-sm">{T("إلى", "To")}</Label>
+            <Input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="mt-1"
+            />
           </div>
           <div>
-            <Label className="text-xs sm:text-sm">{tr("النوع")}</Label>
-            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as "all" | CashTxnType)}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+            <Label className="text-xs sm:text-sm">{T("النوع", "Type")}</Label>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter(v as "all" | CashTxnType)}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tr("الكل")}</SelectItem>
-                <SelectItem value="collection">{tr("تحصيلات")}</SelectItem>
-                <SelectItem value="personal_withdrawal">{tr("سحوبات شخصية")}</SelectItem>
-                <SelectItem value="deposit">{tr("إيداعات")}</SelectItem>
-                <SelectItem value="other_out">{tr("مصروفات نقدية")}</SelectItem>
+                <SelectItem value="all">{T("الكل", "All")}</SelectItem>
+                <SelectItem value="collection">{T("تحصيلات", "Collections")}</SelectItem>
+                <SelectItem value="personal_withdrawal">
+                  {T("سحوبات شخصية", "Personal withdrawals")}
+                </SelectItem>
+                <SelectItem value="deposit">{T("إيداعات", "Deposits")}</SelectItem>
+                <SelectItem value="other_out">{T("مصروفات نقدية", "Cash expenses")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs sm:text-sm">{tr("المندوب")}</Label>
+            <Label className="text-xs sm:text-sm">{T("المندوب", "Courier")}</Label>
             <Select value={courierFilter} onValueChange={setCourierFilter}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tr("الكل")}</SelectItem>
+                <SelectItem value="all">{T("الكل", "All")}</SelectItem>
                 {(couriersQ.data ?? []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -263,24 +390,42 @@ function TreasuryPage() {
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">{tr("الرصيد المتاح في الخزنة")}</div>
-          <div className={`text-xl sm:text-2xl font-bold mt-1 ${(s?.balance ?? 0) < 0 ? "text-destructive" : "text-primary"}`}>{fmt(s?.balance ?? 0)}</div>
+          <div className="text-xs text-muted-foreground">
+            {T("الرصيد المتاح في الخزنة", "Available treasury balance")}
+          </div>
+          <div
+            className={`text-xl sm:text-2xl font-bold mt-1 ${(s?.balance ?? 0) < 0 ? "text-destructive" : "text-primary"}`}
+          >
+            {fmt(s?.balance ?? 0)}
+          </div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">{tr("داخل خلال الفترة")}</div>
-          <div className="text-xl sm:text-2xl font-bold mt-1 text-emerald-500">{fmt(s?.periodIn ?? 0)}</div>
+          <div className="text-xs text-muted-foreground">
+            {T("داخل خلال الفترة", "In during period")}
+          </div>
+          <div className="text-xl sm:text-2xl font-bold mt-1 text-emerald-500">
+            {fmt(s?.periodIn ?? 0)}
+          </div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">{tr("خارج خلال الفترة")}</div>
-          <div className="text-xl sm:text-2xl font-bold mt-1 text-destructive">{fmt(s?.periodOut ?? 0)}</div>
+          <div className="text-xs text-muted-foreground">
+            {T("خارج خلال الفترة", "Out during period")}
+          </div>
+          <div className="text-xl sm:text-2xl font-bold mt-1 text-destructive">
+            {fmt(s?.periodOut ?? 0)}
+          </div>
         </Card>
         <Card className="p-4">
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <User className="w-3 h-3" /> {tr("سحوبات مالك/مستثمر")} {onlyMinePersonal ? tr("(أنا)") : tr("(الكل)")}
+            <User className="w-3 h-3" /> {T("سحوبات مالك/مستثمر", "Owner/investor withdrawals")}{" "}
+            {onlyMinePersonal ? T("(أنا)", "(me)") : T("(الكل)", "(all)")}
           </div>
           <div className="text-xl sm:text-2xl font-bold mt-1">{fmt(s?.personalTotal ?? 0)}</div>
-          <button className="text-xs text-primary underline mt-1" onClick={() => setOnlyMinePersonal((v) => !v)}>
-            {onlyMinePersonal ? tr("عرض كل المستخدمين") : tr("خصني بس")}
+          <button
+            className="text-xs text-primary underline mt-1"
+            onClick={() => setOnlyMinePersonal((v) => !v)}
+          >
+            {onlyMinePersonal ? T("عرض كل المستخدمين", "Show all users") : T("خصني بس", "Just me")}
           </button>
         </Card>
       </div>
@@ -290,13 +435,20 @@ function TreasuryPage() {
       {/* Actor filter */}
       {canPickActor && (actorsQ.data ?? []).length > 0 && (
         <Card className="p-4">
-          <Label className="text-xs sm:text-sm">{tr("مالك / مستثمر (فلترة السحوبات)")}</Label>
+          <Label className="text-xs sm:text-sm">
+            {T("مالك / مستثمر (فلترة السحوبات)", "Owner / investor (filter withdrawals)")}
+          </Label>
           <Select value={actorFilter} onValueChange={setActorFilter}>
-            <SelectTrigger className="mt-1 w-full sm:max-w-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="mt-1 w-full sm:max-w-sm">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{tr("الكل")}</SelectItem>
+              <SelectItem value="all">{T("الكل", "All")}</SelectItem>
               {(actorsQ.data ?? []).map((a) => (
-                <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? tr("· مستثمر") : tr("· مالك")}</SelectItem>
+                <SelectItem key={a.userId} value={a.userId}>
+                  {a.name}{" "}
+                  {a.kind === "investor" ? T("· مستثمر", "· investor") : T("· مالك", "· owner")}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -306,31 +458,75 @@ function TreasuryPage() {
       {/* Add/Edit form */}
       {canWrite && (
         <Card className="p-4 space-y-4">
-          <div className="flex items-center gap-2 font-semibold"><Plus className="w-4 h-4" /> {form.id ? tr("تعديل عملية") : tr("إضافة عملية")}</div>
-          <Tabs value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as CashTxnType, courier_id: v === "collection" ? f.courier_id : "" }))}>
+          <div className="flex items-center gap-2 font-semibold">
+            <Plus className="w-4 h-4" />{" "}
+            {form.id ? T("تعديل عملية", "Edit transaction") : T("إضافة عملية", "Add transaction")}
+          </div>
+          <Tabs
+            value={form.type}
+            onValueChange={(v) =>
+              setForm((f) => ({
+                ...f,
+                type: v as CashTxnType,
+                courier_id: v === "collection" ? f.courier_id : "",
+              }))
+            }
+          >
             <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0">
-              <TabsTrigger value="collection" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><HandCoins className="w-4 h-4 ml-1" /> {tr("تحصيل")}</TabsTrigger>
-              <TabsTrigger value="personal_withdrawal" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><ArrowUpFromLine className="w-4 h-4 ml-1" /> {tr("سحب مالك/مستثمر")}</TabsTrigger>
-              <TabsTrigger value="deposit" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><ArrowDownToLine className="w-4 h-4 ml-1" /> {tr("إيداع")}</TabsTrigger>
+              <TabsTrigger
+                value="collection"
+                className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <HandCoins className="w-4 h-4 ml-1" /> {T("تحصيل", "Collection")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="personal_withdrawal"
+                className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <ArrowUpFromLine className="w-4 h-4 ml-1" />{" "}
+                {T("سحب مالك/مستثمر", "Owner/investor withdrawal")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="deposit"
+                className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <ArrowDownToLine className="w-4 h-4 ml-1" /> {T("إيداع", "Deposit")}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value={form.type} className="mt-4">
               <div className="grid md:grid-cols-4 gap-3">
                 <div>
-                  <Label>{tr("المبلغ")}</Label>
-                  <Input type="number" min="0" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value) }))} />
+                  <Label>{T("المبلغ", "Amount")}</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={form.amount}
+                    onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value) }))}
+                  />
                 </div>
                 <div>
-                  <Label>{tr("التاريخ")}</Label>
-                  <Input type="date" value={form.occurred_at} onChange={(e) => setForm((f) => ({ ...f, occurred_at: e.target.value }))} />
+                  <Label>{T("التاريخ", "Date")}</Label>
+                  <Input
+                    type="date"
+                    value={form.occurred_at}
+                    onChange={(e) => setForm((f) => ({ ...f, occurred_at: e.target.value }))}
+                  />
                 </div>
                 {form.type === "collection" && (
                   <div>
-                    <Label>{tr("المندوب / شركة الشحن *")}</Label>
-                    <Select value={form.courier_id} onValueChange={(v) => setForm((f) => ({ ...f, courier_id: v }))}>
-                      <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
+                    <Label>{T("المندوب / شركة الشحن *", "Courier / shipping company *")}</Label>
+                    <Select
+                      value={form.courier_id}
+                      onValueChange={(v) => setForm((f) => ({ ...f, courier_id: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={T("اختر", "Select")} />
+                      </SelectTrigger>
                       <SelectContent>
                         {(couriersQ.data ?? []).map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -338,12 +534,22 @@ function TreasuryPage() {
                 )}
                 {form.type === "personal_withdrawal" && canPickActor && (
                   <div>
-                    <Label>{tr("مالك / مستثمر *")}</Label>
-                    <Select value={form.for_user_id} onValueChange={(v) => setForm((f) => ({ ...f, for_user_id: v }))}>
-                      <SelectTrigger><SelectValue placeholder={tr("اختر الشخص")} /></SelectTrigger>
+                    <Label>{T("مالك / مستثمر *", "Owner / investor *")}</Label>
+                    <Select
+                      value={form.for_user_id}
+                      onValueChange={(v) => setForm((f) => ({ ...f, for_user_id: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={T("اختر الشخص", "Select person")} />
+                      </SelectTrigger>
                       <SelectContent>
                         {(actorsQ.data ?? []).map((a) => (
-                          <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? tr("· مستثمر") : tr("· مالك")}</SelectItem>
+                          <SelectItem key={a.userId} value={a.userId}>
+                            {a.name}{" "}
+                            {a.kind === "investor"
+                              ? T("· مستثمر", "· investor")
+                              : T("· مالك", "· owner")}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -351,13 +557,30 @@ function TreasuryPage() {
                 )}
                 {form.type === "other_out" && (
                   <div>
-                    <Label>{tr("بند المصروف *")}</Label>
-                    <Select value={form.category_id} onValueChange={(v) => setForm((f) => ({ ...f, category_id: v, platform: "", attributed_revenue: 0, supplier_id: "" }))}>
-                      <SelectTrigger><SelectValue placeholder={tr("اختر البند")} /></SelectTrigger>
+                    <Label>{T("بند المصروف *", "Expense category *")}</Label>
+                    <Select
+                      value={form.category_id}
+                      onValueChange={(v) =>
+                        setForm((f) => ({
+                          ...f,
+                          category_id: v,
+                          platform: "",
+                          attributed_revenue: 0,
+                          supplier_id: "",
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={T("اختر البند", "Select category")} />
+                      </SelectTrigger>
                       <SelectContent>
-                        {(categoriesQ.data ?? []).filter((c) => c.active && c.slug !== "supplier_payments").map((c) => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
+                        {(categoriesQ.data ?? [])
+                          .filter((c) => c.active && c.slug !== "supplier_payments")
+                          .map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -365,9 +588,14 @@ function TreasuryPage() {
                 {form.type === "other_out" && isMarketingCat && (
                   <>
                     <div>
-                      <Label>{tr("المنصة *")}</Label>
-                      <Select value={form.platform} onValueChange={(v) => setForm((f) => ({ ...f, platform: v }))}>
-                        <SelectTrigger><SelectValue placeholder={tr("اختر المنصة")} /></SelectTrigger>
+                      <Label>{T("المنصة *", "Platform *")}</Label>
+                      <Select
+                        value={form.platform}
+                        onValueChange={(v) => setForm((f) => ({ ...f, platform: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={T("اختر المنصة", "Select platform")} />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="tiktok">TikTok</SelectItem>
                           <SelectItem value="meta">Meta</SelectItem>
@@ -375,103 +603,190 @@ function TreasuryPage() {
                           <SelectItem value="snapchat">Snapchat</SelectItem>
                           <SelectItem value="whatsapp">WhatsApp</SelectItem>
                           <SelectItem value="sms">SMS</SelectItem>
-                          <SelectItem value="influencer">{tr("انفلونسر")}</SelectItem>
+                          <SelectItem value="influencer">{T("انفلونسر", "Influencer")}</SelectItem>
                           <SelectItem value="ugc">UGC</SelectItem>
                           <SelectItem value="media_production">Media Production</SelectItem>
-                          <SelectItem value="other">{tr("أخرى")}</SelectItem>
+                          <SelectItem value="other">{T("أخرى", "Other")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>{tr("الإيراد المنسوب")}</Label>
-                      <Input type="number" min="0" value={form.attributed_revenue} onChange={(e) => setForm((f) => ({ ...f, attributed_revenue: Number(e.target.value) }))} />
+                      <Label>{T("الإيراد المنسوب", "Attributed revenue")}</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={form.attributed_revenue}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, attributed_revenue: Number(e.target.value) }))
+                        }
+                      />
                     </div>
                   </>
                 )}
                 {form.type === "other_out" && isPurchasesCat && (
                   <>
                     <div>
-                      <Label>{tr("المورد *")}</Label>
-                      <Select value={form.supplier_id} onValueChange={(v) => setForm((f) => ({ ...f, supplier_id: v }))}>
-                        <SelectTrigger><SelectValue placeholder={tr("اختر المورد")} /></SelectTrigger>
+                      <Label>{T("المورد *", "Supplier *")}</Label>
+                      <Select
+                        value={form.supplier_id}
+                        onValueChange={(v) => setForm((f) => ({ ...f, supplier_id: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={T("اختر المورد", "Select supplier")} />
+                        </SelectTrigger>
                         <SelectContent>
-                          {brandSuppliers.filter((s) => s.active).map((s) => (
-                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                          ))}
-                          {brandSuppliers.length === 0 && <SelectItem value="__none" disabled>{tr("لا يوجد موردون لهذا البراند")}</SelectItem>}
+                          {brandSuppliers
+                            .filter((s) => s.active)
+                            .map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          {brandSuppliers.length === 0 && (
+                            <SelectItem value="__none" disabled>
+                              {T("لا يوجد موردون لهذا البراند", "No suppliers for this brand")}
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="flex items-end">
-                      <Link to="/purchases" className="text-xs text-primary underline hover:no-underline">
-                        {tr("فتح فواتير المشتريات لإدخال الأصناف بالتفصيل ↗")}
+                      <Link
+                        to="/purchases"
+                        className="text-xs text-primary underline hover:no-underline"
+                      >
+                        {T(
+                          "فتح فواتير المشتريات لإدخال الأصناف بالتفصيل ↗",
+                          "Open purchase invoices to enter items in detail ↗",
+                        )}
                       </Link>
                     </div>
                   </>
                 )}
                 <div>
-                  <Label>{tr("البراند *")}</Label>
-                  <Select value={form.brand_id} onValueChange={(v) => setForm((f) => ({ ...f, brand_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder={tr("اختر البراند")} /></SelectTrigger>
+                  <Label>{T("البراند *", "Brand *")}</Label>
+                  <Select
+                    value={form.brand_id}
+                    onValueChange={(v) => setForm((f) => ({ ...f, brand_id: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={T("اختر البراند", "Select brand")} />
+                    </SelectTrigger>
                     <SelectContent>
                       {(brandsQ.data ?? []).map((b) => (
-                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label>{tr("المحفظة / الخزنة")}</Label>
-                  <Select value={form.wallet_id} onValueChange={(v) => setForm((f) => ({ ...f, wallet_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder={tr("افتراضي")} /></SelectTrigger>
+                  <Label>{T("المحفظة / الخزنة", "Wallet / treasury")}</Label>
+                  <Select
+                    value={form.wallet_id}
+                    onValueChange={(v) => setForm((f) => ({ ...f, wallet_id: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={T("افتراضي", "Default")} />
+                    </SelectTrigger>
                     <SelectContent>
-                      {(walletsQ.data ?? []).filter((w) => w.active).map((w) => (
-                        <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-                      ))}
+                      {(walletsQ.data ?? [])
+                        .filter((w) => w.active)
+                        .map((w) => (
+                          <SelectItem key={w.id} value={w.id}>
+                            {w.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="md:col-span-4">
-                  <Label>{tr("ملاحظة")}</Label>
-                  <Input value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} placeholder={tr("اختياري")} />
+                  <Label>{T("ملاحظة", "Note")}</Label>
+                  <Input
+                    value={form.note}
+                    onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
+                    placeholder={T("اختياري", "Optional")}
+                  />
                 </div>
               </div>
-
 
               {/* Live courier debt preview */}
               {selectedCourierDebt && (
                 <div className="mt-4 p-3 rounded-md border bg-muted/30 text-sm grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div>
-                    <div className="text-xs text-muted-foreground">{tr("إجمالي المستحق")}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {T("إجمالي المستحق", "Total owed")}
+                    </div>
                     <div className="font-semibold">{fmt(selectedCourierDebt.totalOwed)}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground">{tr("محصَّل سابقاً")}</div>
-                    <div className="font-semibold text-emerald-500">{fmt(selectedCourierDebt.totalCollected)}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">{tr("المتبقي حالياً")}</div>
-                    <div className={`font-semibold ${selectedCourierDebt.remaining > 0 ? "text-destructive" : "text-emerald-500"}`}>{fmt(selectedCourierDebt.remaining)}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground">{tr("المتبقي بعد هذا التحصيل")}</div>
-                    <div className={`font-semibold ${(remainingAfter ?? 0) > 0 ? "text-destructive" : "text-emerald-500"}`}>{fmt(remainingAfter ?? 0)}</div>
-                  </div>
-                  {(Number(form.amount) || 0) > selectedCourierDebt.remaining && selectedCourierDebt.remaining > 0 && (
-                    <div className="md:col-span-4 text-xs text-amber-600">
-                      {tr("المبلغ أكبر من المتبقي — سيسجَّل كتحصيل زائد (رصيد للمندوب).")}
+                    <div className="text-xs text-muted-foreground">
+                      {T("محصَّل سابقاً", "Previously collected")}
                     </div>
-                  )}
+                    <div className="font-semibold text-emerald-500">
+                      {fmt(selectedCourierDebt.totalCollected)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">
+                      {T("المتبقي حالياً", "Currently remaining")}
+                    </div>
+                    <div
+                      className={`font-semibold ${selectedCourierDebt.remaining > 0 ? "text-destructive" : "text-emerald-500"}`}
+                    >
+                      {fmt(selectedCourierDebt.remaining)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">
+                      {T("المتبقي بعد هذا التحصيل", "Remaining after this collection")}
+                    </div>
+                    <div
+                      className={`font-semibold ${(remainingAfter ?? 0) > 0 ? "text-destructive" : "text-emerald-500"}`}
+                    >
+                      {fmt(remainingAfter ?? 0)}
+                    </div>
+                  </div>
+                  {(Number(form.amount) || 0) > selectedCourierDebt.remaining &&
+                    selectedCourierDebt.remaining > 0 && (
+                      <div className="md:col-span-4 text-xs text-amber-600">
+                        {T(
+                          "المبلغ أكبر من المتبقي — سيسجَّل كتحصيل زائد (رصيد للمندوب).",
+                          "Amount exceeds remaining balance — will be recorded as an overpayment (credit to courier).",
+                        )}
+                      </div>
+                    )}
                 </div>
               )}
 
               <div className="flex gap-2 mt-4">
-                <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending || form.amount <= 0 || !form.brand_id || (form.type === "collection" && !form.courier_id) || (form.type === "personal_withdrawal" && canPickActor && !form.for_user_id) || (form.type === "other_out" && !form.category_id) || (form.type === "other_out" && isMarketingCat && !form.platform) || (form.type === "other_out" && isPurchasesCat && !form.supplier_id)}>
-                  {saveMut.isPending ? "..." : (form.id ? tr("حفظ التعديل") : tr("حفظ"))}
+                <Button
+                  onClick={() => saveMut.mutate()}
+                  disabled={
+                    saveMut.isPending ||
+                    form.amount <= 0 ||
+                    !form.brand_id ||
+                    (form.type === "collection" && !form.courier_id) ||
+                    (form.type === "personal_withdrawal" && canPickActor && !form.for_user_id) ||
+                    (form.type === "other_out" && !form.category_id) ||
+                    (form.type === "other_out" && isMarketingCat && !form.platform) ||
+                    (form.type === "other_out" && isPurchasesCat && !form.supplier_id)
+                  }
+                >
+                  {saveMut.isPending
+                    ? "..."
+                    : form.id
+                      ? T("حفظ التعديل", "Save changes")
+                      : T("حفظ", "Save")}
                 </Button>
-                {form.id && <Button variant="outline" onClick={() => setForm(initialForm())}>{tr("إلغاء")}</Button>}
+                {form.id && (
+                  <Button variant="outline" onClick={() => setForm(initialForm())}>
+                    {T("إلغاء", "Cancel")}
+                  </Button>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -482,24 +797,39 @@ function TreasuryPage() {
       {/* Withdrawals per person */}
       {canPickActor && (s?.byUser ?? []).length > 0 && (
         <Card className="p-4">
-          <div className="font-semibold mb-3 flex items-center gap-2"><User className="w-4 h-4" /> {tr("سحوبات المالك / المستثمرين خلال الفترة")}</div>
+          <div className="font-semibold mb-3 flex items-center gap-2">
+            <User className="w-4 h-4" />{" "}
+            {T(
+              "سحوبات المالك / المستثمرين خلال الفترة",
+              "Owner / investor withdrawals during period",
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground border-b">
                 <tr>
-                  <th className="p-2 text-right">{tr("الشخص")}</th>
-                  <th className="p-2 text-right">{tr("إجمالي السحوبات")}</th>
+                  <th className="p-2 text-right">{T("الشخص", "Person")}</th>
+                  <th className="p-2 text-right">{T("إجمالي السحوبات", "Total withdrawals")}</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
               <tbody>
                 {(s?.byUser ?? []).map((u) => (
                   <tr key={u.userId} className="border-b last:border-0">
-                    <td className="p-2 font-medium">{actorNameById.get(u.userId) ?? u.userId.slice(0, 8)}</td>
+                    <td className="p-2 font-medium">
+                      {actorNameById.get(u.userId) ?? u.userId.slice(0, 8)}
+                    </td>
                     <td className="p-2 font-semibold text-destructive">{fmt(u.total)}</td>
                     <td className="p-2">
-                      <Button size="sm" variant="outline" onClick={() => { setActorFilter(u.userId); setTypeFilter("personal_withdrawal"); }}>
-                        {tr("عرض التفاصيل")}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setActorFilter(u.userId);
+                          setTypeFilter("personal_withdrawal");
+                        }}
+                      >
+                        {T("عرض التفاصيل", "View details")}
                       </Button>
                     </td>
                   </tr>
@@ -512,31 +842,60 @@ function TreasuryPage() {
 
       {/* Courier debts */}
       <Card className="p-4">
-        <div className="font-semibold mb-3 flex items-center gap-2"><Truck className="w-4 h-4" /> {tr("مديونيات المناديب / شركات الشحن")}</div>
+        <div className="font-semibold mb-3 flex items-center gap-2">
+          <Truck className="w-4 h-4" />{" "}
+          {T("مديونيات المناديب / شركات الشحن", "Courier / shipping company debts")}
+        </div>
         {(s?.courierDebts ?? []).length === 0 ? (
-          <div className="text-sm text-muted-foreground">{tr("لا توجد بيانات.")}</div>
+          <div className="text-sm text-muted-foreground">
+            {T("لا توجد بيانات.", "No data available.")}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground border-b">
-                <tr><th className="p-2 text-right">{tr("المندوب")}</th><th className="p-2 text-right">{tr("إجمالي مستحق")}</th><th className="p-2 text-right">{tr("محصَّل")}</th><th className="p-2 text-right">{tr("المتبقي")}</th><th className="p-2"></th></tr>
+                <tr>
+                  <th className="p-2 text-right">{T("المندوب", "Courier")}</th>
+                  <th className="p-2 text-right">{T("إجمالي مستحق", "Total owed")}</th>
+                  <th className="p-2 text-right">{T("محصَّل", "Collected")}</th>
+                  <th className="p-2 text-right">{T("المتبقي", "Remaining")}</th>
+                  <th className="p-2"></th>
+                </tr>
               </thead>
               <tbody>
-                {(s?.courierDebts ?? []).filter((c) => c.remaining !== 0 || c.totalOwed !== 0).map((c) => (
-                  <tr key={c.id} className="border-b last:border-0">
-                    <td className="p-2 font-medium">{c.name}</td>
-                    <td className="p-2">{fmt(c.totalOwed)}</td>
-                    <td className="p-2 text-emerald-500">{fmt(c.totalCollected)}</td>
-                    <td className={`p-2 font-semibold ${c.remaining > 0 ? "text-destructive" : "text-emerald-500"}`}>{fmt(c.remaining)}</td>
-                    <td className="p-2">
-                      {canWrite && c.remaining > 0 && (
-                        <Button size="sm" variant="outline" onClick={() => setForm({ ...initialForm(), type: "collection", courier_id: c.id, brand_id: c.brand_id ?? "", amount: c.remaining })}>
-                          {tr("تحصيل الكل")}
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {(s?.courierDebts ?? [])
+                  .filter((c) => c.remaining !== 0 || c.totalOwed !== 0)
+                  .map((c) => (
+                    <tr key={c.id} className="border-b last:border-0">
+                      <td className="p-2 font-medium">{c.name}</td>
+                      <td className="p-2">{fmt(c.totalOwed)}</td>
+                      <td className="p-2 text-emerald-500">{fmt(c.totalCollected)}</td>
+                      <td
+                        className={`p-2 font-semibold ${c.remaining > 0 ? "text-destructive" : "text-emerald-500"}`}
+                      >
+                        {fmt(c.remaining)}
+                      </td>
+                      <td className="p-2">
+                        {canWrite && c.remaining > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              setForm({
+                                ...initialForm(),
+                                type: "collection",
+                                courier_id: c.id,
+                                brand_id: c.brand_id ?? "",
+                                amount: c.remaining,
+                              })
+                            }
+                          >
+                            {T("تحصيل الكل", "Collect all")}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -545,23 +904,27 @@ function TreasuryPage() {
 
       {/* Transactions list */}
       <Card className="p-4">
-        <div className="font-semibold mb-3">{tr("العمليات (")}{(listQ.data ?? []).length})</div>
+        <div className="font-semibold mb-3">
+          {T("العمليات", "Transactions")} ({(listQ.data ?? []).length})
+        </div>
         {listQ.isLoading ? (
-          <div className="text-sm text-muted-foreground">{tr("جاري التحميل...")}</div>
+          <div className="text-sm text-muted-foreground">{T("جاري التحميل...", "Loading...")}</div>
         ) : (listQ.data ?? []).length === 0 ? (
-          <div className="text-sm text-muted-foreground">{tr("لا توجد عمليات في هذه الفترة.")}</div>
+          <div className="text-sm text-muted-foreground">
+            {T("لا توجد عمليات في هذه الفترة.", "No transactions in this period.")}
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground border-b">
                 <tr>
-                  <th className="p-2 text-right">{tr("التاريخ")}</th>
-                  <th className="p-2 text-right">{tr("النوع")}</th>
-                  <th className="p-2 text-right">{tr("المبلغ")}</th>
-                  <th className="p-2 text-right">{tr("المندوب")}</th>
-                  <th className="p-2 text-right">{tr("البراند")}</th>
-                  <th className="p-2 text-right">{tr("الشخص")}</th>
-                  <th className="p-2 text-right">{tr("ملاحظة")}</th>
+                  <th className="p-2 text-right">{T("التاريخ", "Date")}</th>
+                  <th className="p-2 text-right">{T("النوع", "Type")}</th>
+                  <th className="p-2 text-right">{T("المبلغ", "Amount")}</th>
+                  <th className="p-2 text-right">{T("المندوب", "Courier")}</th>
+                  <th className="p-2 text-right">{T("البراند", "Brand")}</th>
+                  <th className="p-2 text-right">{T("الشخص", "Person")}</th>
+                  <th className="p-2 text-right">{T("ملاحظة", "Note")}</th>
                   <th className="p-2"></th>
                 </tr>
               </thead>
@@ -575,44 +938,106 @@ function TreasuryPage() {
                   return (
                     <tr key={r.id} className="border-b last:border-0">
                       <td className="p-2">{r.occurred_at}</td>
-                      <td className="p-2"><span className="inline-flex items-center gap-1"><Icon className="w-3 h-3" /> {isTransfer ? tr("تحويل بين المحافظ") : TYPE_LABEL[r.type]}</span></td>
-                      <td className={`p-2 font-semibold ${isTransfer ? "text-amber-500" : (isIn ? "text-emerald-500" : "text-destructive")}`}>{isIn ? "+" : "-"}{fmt(Number(r.amount))}</td>
-                      <td className="p-2">{r.courier_id ? couriersMap.get(r.courier_id) ?? "—" : "—"}</td>
-                      <td className="p-2">{r.brand_id ? brandsMap.get(r.brand_id) ?? "—" : "—"}</td>
-                      <td className="p-2">{r.for_user_id ? (actorNameById.get(r.for_user_id) ?? r.for_user_id.slice(0, 6)) : "—"}</td>
-                      <td className="p-2 text-muted-foreground">{r.note ?? "—"}{isSupplierPay && <span className="ms-1 text-[10px] text-amber-500">{tr("(دفعة مورد — تُدار من صفحة دفعات الموردين)")}</span>}</td>
+                      <td className="p-2">
+                        <span className="inline-flex items-center gap-1">
+                          <Icon className="w-3 h-3" />{" "}
+                          {isTransfer
+                            ? T("تحويل بين المحافظ", "Transfer between wallets")
+                            : (lang === "ar" ? TYPE_LABEL : TYPE_LABEL_EN)[r.type]}
+                        </span>
+                      </td>
+                      <td
+                        className={`p-2 font-semibold ${isTransfer ? "text-amber-500" : isIn ? "text-emerald-500" : "text-destructive"}`}
+                      >
+                        {isIn ? "+" : "-"}
+                        {fmt(Number(r.amount))}
+                      </td>
+                      <td className="p-2">
+                        {r.courier_id ? (couriersMap.get(r.courier_id) ?? "—") : "—"}
+                      </td>
+                      <td className="p-2">
+                        {r.brand_id ? (brandsMap.get(r.brand_id) ?? "—") : "—"}
+                      </td>
+                      <td className="p-2">
+                        {r.for_user_id
+                          ? (actorNameById.get(r.for_user_id) ?? r.for_user_id.slice(0, 6))
+                          : "—"}
+                      </td>
+                      <td className="p-2 text-muted-foreground">
+                        {r.note ?? "—"}
+                        {isSupplierPay && (
+                          <span className="ms-1 text-[10px] text-amber-500">
+                            {T(
+                              "(دفعة مورد — تُدار من صفحة دفعات الموردين)",
+                              "(Supplier payment — managed from the supplier payments page)",
+                            )}
+                          </span>
+                        )}
+                      </td>
                       <td className="p-2">
                         {canWrite && !isSupplierPay && r.type !== "other_out" && !isTransfer && (
                           <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" onClick={() => setForm({
-                              id: r.id, type: r.type, amount: Number(r.amount),
-                              occurred_at: r.occurred_at, brand_id: r.brand_id ?? "",
-                              courier_id: r.courier_id ?? "", for_user_id: r.for_user_id ?? "",
-                              category_id: r.category_id ?? "", platform: "", attributed_revenue: 0, supplier_id: "", wallet_id: r.wallet_id ?? "", note: r.note ?? "",
-                            })}>{tr("تعديل")}</Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                setForm({
+                                  id: r.id,
+                                  type: r.type,
+                                  amount: Number(r.amount),
+                                  occurred_at: r.occurred_at,
+                                  brand_id: r.brand_id ?? "",
+                                  courier_id: r.courier_id ?? "",
+                                  for_user_id: r.for_user_id ?? "",
+                                  category_id: r.category_id ?? "",
+                                  platform: "",
+                                  attributed_revenue: 0,
+                                  supplier_id: "",
+                                  wallet_id: r.wallet_id ?? "",
+                                  note: r.note ?? "",
+                                })
+                              }
+                            >
+                              {T("تعديل", "Edit")}
+                            </Button>
 
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button size="sm" variant="ghost" className="text-destructive"><Trash2 className="w-3 h-3" /></Button>
+                                <Button size="sm" variant="ghost" className="text-destructive">
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent dir="rtl">
+                              <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>{tr("حذف العملية")}</AlertDialogTitle>
-                                  <AlertDialogDescription>{tr("هل أنت متأكد؟ لا يمكن التراجع.")}</AlertDialogDescription>
+                                  <AlertDialogTitle>
+                                    {T("حذف العملية", "Delete transaction")}
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {T(
+                                      "هل أنت متأكد؟ لا يمكن التراجع.",
+                                      "Are you sure? This cannot be undone.",
+                                    )}
+                                  </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => delMut.mutate(r.id)}>{tr("حذف")}</AlertDialogAction>
+                                  <AlertDialogCancel>{T("إلغاء", "Cancel")}</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => delMut.mutate(r.id)}>
+                                    {T("حذف", "Delete")}
+                                  </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
                           </div>
                         )}
                         {r.type === "other_out" && !isTransfer && (
-                          <span className="text-[10px] text-muted-foreground">{tr("تُدار من صفحة المصروفات")}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {T("تُدار من صفحة المصروفات", "Managed from the expenses page")}
+                          </span>
                         )}
                         {isTransfer && (
-                          <span className="text-[10px] text-muted-foreground">{tr("تُدار من لوحة المحافظ")}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {T("تُدار من لوحة المحافظ", "Managed from the wallets panel")}
+                          </span>
                         )}
                       </td>
                     </tr>

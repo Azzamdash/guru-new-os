@@ -3,21 +3,43 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/components/PeriodFilter";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  PeriodFilter,
+  defaultPeriod,
+  resolvePeriod,
+  type PeriodValue,
+} from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
 import { getCashFlow } from "@/lib/financials.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { useLang, tr } from "@/lib/i18n";
 import { Wallet, ArrowDownRight, ArrowUpRight } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/cash-flow")({
-  head: () => ({ meta: [
-    { title: tr("تقرير التدفقات النقدية — e-GURUS") },
-    { name: "description", content: "تدفقات نقدية: تشغيلية، تمويلية، وصافي التغير في النقد." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: tr("تقرير التدفقات النقدية — e-GURUS") },
+      { name: "description", content: "تدفقات نقدية: تشغيلية، تمويلية، وصافي التغير في النقد." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: Page,
 });
 
@@ -31,32 +53,66 @@ function Page() {
   const r = resolvePeriod(period);
   const q = useQuery({
     queryKey: ["cash-flow", brandId, r.dateFrom, r.dateTo, r.year],
-    queryFn: () => fn({ data: { brandId: brandId === "all" ? null : brandId, from: r.dateFrom ?? `${r.year}-01-01`, to: r.dateTo ?? `${r.year}-12-31` } }),
+    queryFn: () =>
+      fn({
+        data: {
+          brandId: brandId === "all" ? null : brandId,
+          from: r.dateFrom ?? `${r.year}-01-01`,
+          to: r.dateTo ?? `${r.year}-12-31`,
+        },
+      }),
   });
   const d = q.data;
   const nf = (n: number) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
   const L = (ar: string, en: string) => (lang === "ar" ? ar : en);
-  const cls = (n: number) => n >= 0 ? "text-emerald-500" : "text-destructive";
+  const cls = (n: number) => (n >= 0 ? "text-emerald-500" : "text-destructive");
 
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <h1 className="text-3xl font-bold flex items-center gap-2"><Wallet className="w-7 h-7" /> {L(tr("التدفقات النقدية"), "Cash Flow")}</h1>
+      <h1 className="text-3xl font-bold flex items-center gap-2">
+        <Wallet className="w-7 h-7" /> {L(tr("التدفقات النقدية"), "Cash Flow")}
+      </h1>
       <Card className="card-gradient p-4 flex flex-wrap gap-3 items-center">
         <PeriodFilter value={period} onChange={setPeriod} />
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-56">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("all_brands")}</SelectItem>
-            {(brandsQ.data ?? []).filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            {(brandsQ.data ?? [])
+              .filter((b) => b.active)
+              .map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Kpi label={L(tr("النقد التشغيلي"), "Operating Cash")} value={nf(d?.operating.net ?? 0)} tone={cls(d?.operating.net ?? 0)} />
-        <Kpi label={L(tr("النقد التمويلي"), "Financing Cash")} value={nf(d?.financing.net ?? 0)} tone={cls(d?.financing.net ?? 0)} />
-        <Kpi label={L(tr("النقد الاستثماري"), "Investing Cash")} value={nf(d?.investing.net ?? 0)} tone={cls(d?.investing.net ?? 0)} />
-        <Kpi label={L(tr("صافي التغير"), "Net Change in Cash")} value={nf(d?.netChange ?? 0)} tone={cls(d?.netChange ?? 0)} big />
+        <Kpi
+          label={L(tr("النقد التشغيلي"), "Operating Cash")}
+          value={nf(d?.operating.net ?? 0)}
+          tone={cls(d?.operating.net ?? 0)}
+        />
+        <Kpi
+          label={L(tr("النقد التمويلي"), "Financing Cash")}
+          value={nf(d?.financing.net ?? 0)}
+          tone={cls(d?.financing.net ?? 0)}
+        />
+        <Kpi
+          label={L(tr("النقد الاستثماري"), "Investing Cash")}
+          value={nf(d?.investing.net ?? 0)}
+          tone={cls(d?.investing.net ?? 0)}
+        />
+        <Kpi
+          label={L(tr("صافي التغير"), "Net Change in Cash")}
+          value={nf(d?.netChange ?? 0)}
+          tone={cls(d?.netChange ?? 0)}
+          big
+        />
       </div>
 
       <Card className="card-gradient p-5">
@@ -80,23 +136,38 @@ function Page() {
       <Card className="card-gradient p-5">
         <h3 className="font-semibold mb-3">{L(tr("تفصيل البنود"), "Line-item Breakdown")}</h3>
         <table className="w-full text-sm">
-          <thead><tr className="border-b border-border text-muted-foreground">
-            <th className="p-2 text-start">{L(tr("البند"), "Item")}</th>
-            <th className="p-2 text-start">{L(tr("التصنيف"), "Category")}</th>
-            <th className="p-2 text-start">{L(tr("الاتجاه"), "Direction")}</th>
-            <th className="p-2 text-end">{L(tr("المبلغ"), "Amount")}</th>
-          </tr></thead>
+          <thead>
+            <tr className="border-b border-border text-muted-foreground">
+              <th className="p-2 text-start">{L(tr("البند"), "Item")}</th>
+              <th className="p-2 text-start">{L(tr("التصنيف"), "Category")}</th>
+              <th className="p-2 text-start">{L(tr("الاتجاه"), "Direction")}</th>
+              <th className="p-2 text-end">{L(tr("المبلغ"), "Amount")}</th>
+            </tr>
+          </thead>
           <tbody>
             {(d?.breakdown ?? []).map((b, i) => (
               <tr key={i} className="border-b border-border/50">
                 <td className="p-2">{lang === "ar" && b.labelAr ? b.labelAr : b.label}</td>
                 <td className="p-2 text-xs uppercase text-muted-foreground">{b.category}</td>
                 <td className="p-2">
-                  {b.direction === "in"
-                    ? <span className="inline-flex items-center gap-1 text-emerald-500"><ArrowDownRight className="w-3 h-3" />{L(tr("داخل"), "Inflow")}</span>
-                    : <span className="inline-flex items-center gap-1 text-destructive"><ArrowUpRight className="w-3 h-3" />{L(tr("خارج"), "Outflow")}</span>}
+                  {b.direction === "in" ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-500">
+                      <ArrowDownRight className="w-3 h-3" />
+                      {L(tr("داخل"), "Inflow")}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-destructive">
+                      <ArrowUpRight className="w-3 h-3" />
+                      {L(tr("خارج"), "Outflow")}
+                    </span>
+                  )}
                 </td>
-                <td className={`p-2 num text-end ${b.direction === "in" ? "text-emerald-500" : "text-destructive"}`}>{b.direction === "in" ? "+" : "-"}{nf(b.amount)}</td>
+                <td
+                  className={`p-2 num text-end ${b.direction === "in" ? "text-emerald-500" : "text-destructive"}`}
+                >
+                  {b.direction === "in" ? "+" : "-"}
+                  {nf(b.amount)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -106,7 +177,17 @@ function Page() {
   );
 }
 
-function Kpi({ label, value, tone, big }: { label: string; value: string; tone: string; big?: boolean }) {
+function Kpi({
+  label,
+  value,
+  tone,
+  big,
+}: {
+  label: string;
+  value: string;
+  tone: string;
+  big?: boolean;
+}) {
   return (
     <Card className="card-gradient p-4">
       <div className="text-xs text-muted-foreground">{label}</div>

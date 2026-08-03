@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, AlertCircle, RefreshCw, Copy, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useLang } from "@/lib/i18n";
 import {
   getWhatsappSettings,
   testWhatsappConnection,
@@ -37,36 +38,47 @@ const KEYS = [
   {
     env: "WHATSAPP_TOKEN",
     ar: "توكن الوصول الدائم",
+    en: "Permanent access token",
     where: "Meta for Developers → تطبيقك → WhatsApp → API Setup → Permanent access token",
+    whereEn: "Meta for Developers → your app → WhatsApp → API Setup → Permanent access token",
     field: "token" as const,
   },
   {
     env: "WHATSAPP_PHONE_NUMBER_ID",
     ar: "معرّف رقم الهاتف",
+    en: "Phone number ID",
     where: "Meta for Developers → WhatsApp → API Setup → Phone number ID",
+    whereEn: "Meta for Developers → WhatsApp → API Setup → Phone number ID",
     field: "phoneNumberId" as const,
   },
   {
     env: "WHATSAPP_VERIFY_TOKEN",
     ar: "توكن التحقق من الـ Webhook",
+    en: "Webhook verify token",
     where: "أي نص عشوائي تختاره وتضعه نفسه في إعدادات Webhook داخل Meta",
+    whereEn:
+      "Any random text you choose and enter the same value in the Webhook settings inside Meta",
     field: "verifyToken" as const,
   },
 ];
 
 function StatusBadge({ ok }: { ok: boolean }) {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   return ok ? (
     <Badge className="gap-1">
-      <CheckCircle2 className="h-3.5 w-3.5" /> {tr("مُفعّل")}
+      <CheckCircle2 className="h-3.5 w-3.5" /> {T("مُفعّل", "Configured")}
     </Badge>
   ) : (
     <Badge variant="destructive" className="gap-1">
-      <AlertCircle className="h-3.5 w-3.5" /> {tr("غير مضبوط")}
+      <AlertCircle className="h-3.5 w-3.5" /> {T("غير مضبوط", "Not configured")}
     </Badge>
   );
 }
 
 function WhatsappSettingsPage() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const load = useServerFn(getWhatsappSettings);
   const test = useServerFn(testWhatsappConnection);
   const sendTest = useServerFn(sendWhatsappTestMessage);
@@ -87,27 +99,37 @@ function WhatsappSettingsPage() {
   });
 
   const s = q.data;
-  const allSet = s ? s.token.configured && s.phoneNumberId.configured && s.verifyToken.configured : false;
+  const allSet = s
+    ? s.token.configured && s.phoneNumberId.configured && s.verifyToken.configured
+    : false;
 
   return (
-    <div className="space-y-6 p-4 md:p-6" dir="rtl">
+    <div className="space-y-6 p-4 md:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <MessageCircle className="h-6 w-6 text-primary" /> {tr("إعدادات واتساب")}
+            <MessageCircle className="h-6 w-6 text-primary" />{" "}
+            {T("إعدادات واتساب", "WhatsApp settings")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {tr("إدارة مفاتيح WhatsApp Cloud API المستخدمة في مركز إدارة الأوردرات.")}
+            {T(
+              "إدارة مفاتيح WhatsApp Cloud API المستخدمة في مركز إدارة الأوردرات.",
+              "Manage the WhatsApp Cloud API keys used by the order management center.",
+            )}
           </p>
         </div>
         <Button variant="outline" onClick={() => q.refetch()} disabled={q.isFetching}>
-          <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} /> {tr("تحديث")}
+          <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} />{" "}
+          {T("تحديث", "Refresh")}
         </Button>
       </header>
 
       {q.isError && (
         <Card className="border-destructive p-4 text-sm text-destructive">
-          {tr("لا تملك صلاحية عرض هذه الإعدادات (متاحة للمدراء فقط).")}
+          {T(
+            "لا تملك صلاحية عرض هذه الإعدادات (متاحة للمدراء فقط).",
+            "You do not have permission to view these settings (managers only).",
+          )}
         </Card>
       )}
 
@@ -115,7 +137,7 @@ function WhatsappSettingsPage() {
         <>
           <Card className="space-y-4 p-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">{tr("حالة المفاتيح")}</h2>
+              <h2 className="font-semibold">{T("حالة المفاتيح", "Key status")}</h2>
               <StatusBadge ok={allSet} />
             </div>
             <div className="space-y-3">
@@ -128,12 +150,14 @@ function WhatsappSettingsPage() {
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{k.ar}</span>
+                        <span className="font-medium">{T(k.ar, k.en)}</span>
                         <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{k.env}</code>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{k.where}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{T(k.where, k.whereEn)}</p>
                       {item.preview && (
-                        <p className="mt-1 font-mono text-xs text-muted-foreground">{item.preview}</p>
+                        <p className="mt-1 font-mono text-xs text-muted-foreground">
+                          {item.preview}
+                        </p>
                       )}
                     </div>
                     <StatusBadge ok={item.configured} />
@@ -142,12 +166,15 @@ function WhatsappSettingsPage() {
               })}
             </div>
             <p className="text-xs text-muted-foreground">
-              {tr("القيم مخزّنة مشفّرة على الخادم ولا تظهر كاملة في الواجهة. لتغيير أي مفتاح اطلب من المطوّر\n              تحديثه عبر إعدادات الأسرار الآمنة.")}
+              {T(
+                "القيم مخزّنة مشفّرة على الخادم ولا تظهر كاملة في الواجهة. لتغيير أي مفتاح اطلب من المطوّر تحديثه عبر إعدادات الأسرار الآمنة.",
+                "Values are stored encrypted on the server and don't appear in full in the interface. To change any key, ask the developer to update it via the secure secrets settings.",
+              )}
             </p>
           </Card>
 
           <Card className="space-y-3 p-4">
-            <h2 className="font-semibold">{tr("رابط الـ Webhook")}</h2>
+            <h2 className="font-semibold">{T("رابط الـ Webhook", "Webhook URL")}</h2>
             <div className="flex items-center gap-2">
               <Input readOnly value={s.webhookUrl} className="font-mono text-xs" />
               <Button
@@ -155,24 +182,34 @@ function WhatsappSettingsPage() {
                 size="icon"
                 onClick={() => {
                   navigator.clipboard.writeText(s.webhookUrl);
-                  toast.success(tr("تم نسخ الرابط"));
+                  toast.success(T("تم نسخ الرابط", "Link copied"));
                 }}
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              {tr("ضع هذا الرابط في Meta → WhatsApp → Configuration → Callback URL، ونفس قيمة\n              WHATSAPP_VERIFY_TOKEN في خانة Verify token، ثم اشترك في حقل messages.")}
+              {T(
+                "ضع هذا الرابط في Meta → WhatsApp → Configuration → Callback URL، ونفس قيمة WHATSAPP_VERIFY_TOKEN في خانة Verify token، ثم اشترك في حقل messages.",
+                "Put this URL in Meta → WhatsApp → Configuration → Callback URL, the same value of WHATSAPP_VERIFY_TOKEN in the Verify token field, then subscribe to the messages field.",
+              )}
             </p>
           </Card>
 
           <Card className="space-y-4 p-4">
-            <h2 className="font-semibold">{tr("اختبار الاتصال")}</h2>
+            <h2 className="font-semibold">{T("اختبار الاتصال", "Connection test")}</h2>
             <Button onClick={() => testM.mutate()} disabled={testM.isPending}>
-              {testM.isPending ? tr("جاري الفحص...") : tr("فحص الاتصال بحساب واتساب")}
+              {testM.isPending
+                ? T("جاري الفحص...", "Checking...")
+                : T("فحص الاتصال بحساب واتساب", "Test WhatsApp account connection")}
             </Button>
             <div className="space-y-2">
-              <Label htmlFor="test-phone">{tr("إرسال رسالة اختبار إلى رقم (صيغة دولية بدون +)")}</Label>
+              <Label htmlFor="test-phone">
+                {T(
+                  "إرسال رسالة اختبار إلى رقم (صيغة دولية بدون +)",
+                  "Send a test message to a number (international format, no +)",
+                )}
+              </Label>
               <div className="flex gap-2">
                 <Input
                   id="test-phone"
@@ -187,7 +224,7 @@ function WhatsappSettingsPage() {
                   onClick={() => sendM.mutate()}
                   disabled={sendM.isPending || phone.trim().length < 8}
                 >
-                  {tr("إرسال")}
+                  {T("إرسال", "Send")}
                 </Button>
               </div>
             </div>

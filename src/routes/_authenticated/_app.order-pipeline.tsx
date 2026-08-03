@@ -3,9 +3,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ClipboardList, ChevronRight, ChevronLeft, X, Printer, Timer } from "lucide-react";
-import { getOperationsSnapshot, updateInvoiceStage, STAGES, type Stage, assignInvoicePrep, getInvoiceForPrint } from "@/lib/operations.functions";
+import {
+  getOperationsSnapshot,
+  updateInvoiceStage,
+  STAGES,
+  type Stage,
+  assignInvoicePrep,
+  getInvoiceForPrint,
+} from "@/lib/operations.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { listOrderPrepUsers, getMyRole } from "@/lib/admin.functions";
 import { useLang, tr } from "@/lib/i18n";
@@ -14,20 +27,27 @@ import { toast } from "sonner";
 type PrintInvoice = Awaited<ReturnType<typeof getInvoiceForPrint>>;
 
 function esc(s: string | null | undefined): string {
-  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+  return String(s ?? "").replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
+  );
 }
 
 function openPrintWindow(inv: PrintInvoice, lang: "ar" | "en") {
   const isAr = lang === "ar";
   const t = (ar: string, en: string) => (isAr ? ar : en);
   const money = (n: number) => `${n.toFixed(2)} ${t("ج.م", "EGP")}`;
-  const rows = inv.items.map((i) => `
+  const rows = inv.items
+    .map(
+      (i) => `
     <tr>
       <td>${esc(i.name)}${i.sku ? ` <span style="color:#888">(${esc(i.sku)})</span>` : ""}</td>
       <td style="text-align:center">${i.qty}${i.unit ? ` ${esc(i.unit)}` : ""}</td>
       <td style="text-align:end">${money(i.unitPrice)}</td>
       <td style="text-align:end">${money(i.subtotal)}</td>
-    </tr>`).join("");
+    </tr>`,
+    )
+    .join("");
   const html = `<!doctype html><html lang="${isAr ? "ar" : "en"}" dir="${isAr ? "rtl" : "ltr"}"><head>
     <meta charset="utf-8"><title>${esc(inv.code)} — ${t("فاتورة تحضير", "Prep slip")}</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -85,37 +105,58 @@ function openPrintWindow(inv: PrintInvoice, lang: "ar" | "en") {
     </div>
     <script>window.addEventListener("load",()=>setTimeout(()=>{try{window.focus();window.print()}catch(e){}},400))</script>
   </body></html>`;
-  const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const isMobile =
+    typeof navigator !== "undefined" &&
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   // Try popup first on desktop
   if (!isMobile) {
     const w = window.open("", "_blank", "width=800,height=900");
-    if (w) { w.document.open(); w.document.write(html); w.document.close(); return; }
+    if (w) {
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      return;
+    }
   }
   // Mobile / popup-blocked fallback: hidden iframe attached to current page
   const existing = document.getElementById("__prep_print_frame");
   if (existing) existing.remove();
   const iframe = document.createElement("iframe");
   iframe.id = "__prep_print_frame";
-  iframe.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;border:0;background:#fff;z-index:9999";
+  iframe.style.cssText =
+    "position:fixed;inset:0;width:100vw;height:100vh;border:0;background:#fff;z-index:9999";
   iframe.srcdoc = html;
   document.body.appendChild(iframe);
   // Provide a top-level close (in case the inline button is inside srcdoc sandbox)
   const closeBtn = document.createElement("button");
   closeBtn.textContent = isAr ? "إغلاق ✕" : "Close ✕";
-  closeBtn.style.cssText = "position:fixed;top:12px;inset-inline-end:12px;z-index:10000;padding:8px 14px;background:#111;color:#fff;border:0;border-radius:8px;font-size:14px;cursor:pointer";
-  closeBtn.onclick = () => { iframe.remove(); closeBtn.remove(); };
+  closeBtn.style.cssText =
+    "position:fixed;top:12px;inset-inline-end:12px;z-index:10000;padding:8px 14px;background:#111;color:#fff;border:0;border-radius:8px;font-size:14px;cursor:pointer";
+  closeBtn.onclick = () => {
+    iframe.remove();
+    closeBtn.remove();
+  };
   document.body.appendChild(closeBtn);
   iframe.onload = () => {
-    setTimeout(() => { try { iframe.contentWindow?.focus(); iframe.contentWindow?.print(); } catch { /* ignore */ } }, 400);
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch {
+        /* ignore */
+      }
+    }, 400);
   };
 }
 
 export const Route = createFileRoute("/_authenticated/_app/order-pipeline")({
-  head: () => ({ meta: [
-    { title: tr("مهمة تحضير الأوردر — e-GURUS") },
-    { name: "description", content: "خط تجهيز الأوردرات — مراحل SLA وإسناد موظفي التحضير." },
-    { name: "robots", content: "noindex, nofollow" },
-  ]}),
+  head: () => ({
+    meta: [
+      { title: tr("مهمة تحضير الأوردر — e-GURUS") },
+      { name: "description", content: "خط تجهيز الأوردرات — مراحل SLA وإسناد موظفي التحضير." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: OrderPipelinePage,
 });
 
@@ -135,7 +176,11 @@ function OrderPipelinePage() {
   const canAssign = !!(roleQ.data?.isAdmin || roleQ.data?.isManager);
   const [brandId, setBrandId] = useState<string>("all");
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => listBrandsFn() });
-  const prepUsersQ = useQuery({ queryKey: ["order-prep-users"], queryFn: () => listPrepFn(), enabled: canAssign });
+  const prepUsersQ = useQuery({
+    queryKey: ["order-prep-users"],
+    queryFn: () => listPrepFn(),
+    enabled: canAssign,
+  });
   const snapQ = useQuery({
     queryKey: ["ops-snapshot", brandId],
     queryFn: () => getSnap({ data: { brandId: brandId === "all" ? null : brandId } }),
@@ -144,12 +189,17 @@ function OrderPipelinePage() {
 
   const advance = useMutation({
     mutationFn: (v: { id: string; stage: Stage }) => updStage({ data: v }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["ops-snapshot"] }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["ops-snapshot"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
   const assign = useMutation({
     mutationFn: (v: { id: string; assigneeId: string | null }) => assignFn({ data: v }),
-    onSuccess: () => { toast.success(lang === "ar" ? "تم إسناد الأوردر" : "Assigned"); qc.invalidateQueries({ queryKey: ["ops-snapshot"] }); },
+    onSuccess: () => {
+      toast.success(lang === "ar" ? "تم إسناد الأوردر" : "Assigned");
+      qc.invalidateQueries({ queryKey: ["ops-snapshot"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -163,7 +213,12 @@ function OrderPipelinePage() {
   };
 
   const prepUsers = prepUsersQ.data ?? [];
-  const prepLabel = (id: string | null) => id ? (prepUsers.find((u) => u.id === id)?.email ?? id.slice(0, 6)) : (lang === "ar" ? "غير مُسند" : "Unassigned");
+  const prepLabel = (id: string | null) =>
+    id
+      ? (prepUsers.find((u) => u.id === id)?.email ?? id.slice(0, 6))
+      : lang === "ar"
+        ? "غير مُسند"
+        : "Unassigned";
 
   const brands = brandsQ.data ?? [];
   const data = snapQ.data;
@@ -193,15 +248,15 @@ function OrderPipelinePage() {
   const NextIcon = isRtl ? ChevronLeft : ChevronRight;
   const PrevIcon = isRtl ? ChevronRight : ChevronLeft;
 
-const STAGE_ACCENT: Record<Stage, string> = {
-  new: "from-sky-500/25 to-sky-500/0 text-sky-400",
-  processing: "from-primary/25 to-primary/0 text-primary",
-  packing: "from-amber-500/25 to-amber-500/0 text-amber-400",
-  ready_to_ship: "from-violet-500/25 to-violet-500/0 text-violet-400",
-  with_courier: "from-emerald-500/25 to-emerald-500/0 text-emerald-400",
-  delivered: "from-emerald-500/25 to-emerald-500/0 text-emerald-400",
-  cancelled: "from-rose-500/25 to-rose-500/0 text-rose-400",
-};
+  const STAGE_ACCENT: Record<Stage, string> = {
+    new: "from-sky-500/25 to-sky-500/0 text-sky-400",
+    processing: "from-primary/25 to-primary/0 text-primary",
+    packing: "from-amber-500/25 to-amber-500/0 text-amber-400",
+    ready_to_ship: "from-violet-500/25 to-violet-500/0 text-violet-400",
+    with_courier: "from-emerald-500/25 to-emerald-500/0 text-emerald-400",
+    delivered: "from-emerald-500/25 to-emerald-500/0 text-emerald-400",
+    cancelled: "from-rose-500/25 to-rose-500/0 text-rose-400",
+  };
 
   return (
     <div className="relative p-4 md:p-6 space-y-5">
@@ -213,24 +268,40 @@ const STAGE_ACCENT: Record<Stage, string> = {
             <ClipboardList className="w-6 h-6" />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-xl sm:text-2xl font-bold">{lang === "ar" ? "مهمة تحضير الأوردر" : "Order prep task"}</h1>
+            <h1 className="truncate text-xl sm:text-2xl font-bold">
+              {lang === "ar" ? "مهمة تحضير الأوردر" : "Order prep task"}
+            </h1>
             <p className="text-muted-foreground text-xs sm:text-sm mt-0.5 line-clamp-1">
-              {lang === "ar" ? "تابع كل أوردر خطوة بخطوة من الاستلام لحد التسليم." : "Track each order stage by stage."}
+              {lang === "ar"
+                ? "تابع كل أوردر خطوة بخطوة من الاستلام لحد التسليم."
+                : "Track each order stage by stage."}
             </p>
           </div>
         </div>
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-full sm:w-52 h-10 rounded-full bg-card/60 backdrop-blur border-border/60"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-52 h-10 rounded-full bg-card/60 backdrop-blur border-border/60">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{lang === "ar" ? "كل البراندات" : "All brands"}</SelectItem>
-            {brands.filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            {brands
+              .filter((b) => b.active)
+              .map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  {b.name}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </header>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
         <Timer className="w-3.5 h-3.5" />
-        <span>{lang === "ar" ? "كل مرحلة ليها SLA — يتلوّن أحمر لو اتأخر" : "Each stage has an SLA — red = breached"}</span>
+        <span>
+          {lang === "ar"
+            ? "كل مرحلة ليها SLA — يتلوّن أحمر لو اتأخر"
+            : "Each stage has an SLA — red = breached"}
+        </span>
       </div>
 
       <div className="-mx-4 md:-mx-6 px-4 md:px-6 overflow-x-auto pb-2 snap-x snap-mandatory md:snap-none">
@@ -245,13 +316,20 @@ const STAGE_ACCENT: Record<Stage, string> = {
                 <div className={`px-4 py-3 border-b border-border/40 bg-gradient-to-b ${accent}`}>
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-sm">{L(col.stage as Stage)}</h3>
-                    <span className={`text-lg font-extrabold num ${col.breached > 0 ? "text-destructive" : ""}`}>
+                    <span
+                      className={`text-lg font-extrabold num ${col.breached > 0 ? "text-destructive" : ""}`}
+                    >
                       {col.count}
                     </span>
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1.5">
                     <span className="rounded-md bg-background/30 px-1.5 py-0.5 backdrop-blur">
-                      SLA: {col.slaHours !== null ? (col.slaHours < 1 ? `${col.slaHours * 60}m` : `${col.slaHours}h`) : "—"}
+                      SLA:{" "}
+                      {col.slaHours !== null
+                        ? col.slaHours < 1
+                          ? `${col.slaHours * 60}m`
+                          : `${col.slaHours}h`
+                        : "—"}
                     </span>
                     {col.breached > 0 && (
                       <span className="rounded-md bg-destructive/20 text-destructive font-bold px-1.5 py-0.5">
@@ -272,51 +350,98 @@ const STAGE_ACCENT: Record<Stage, string> = {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="font-mono text-[10px] text-muted-foreground uppercase">{it.code}</div>
-                          <div className="truncate font-bold text-sm mt-0.5">{it.customer ?? it.brandName}</div>
+                          <div className="font-mono text-[10px] text-muted-foreground uppercase">
+                            {it.code}
+                          </div>
+                          <div className="truncate font-bold text-sm mt-0.5">
+                            {it.customer ?? it.brandName}
+                          </div>
                         </div>
-                        <div className={`text-[10px] whitespace-nowrap shrink-0 px-2 py-0.5 rounded-full font-semibold num ${
-                          it.breached ? "bg-destructive text-destructive-foreground" : "bg-muted/60 text-muted-foreground"
-                        }`}>
-                          {it.hoursIn < 1 ? `${Math.round(it.hoursIn * 60)}m` : `${it.hoursIn.toFixed(1)}h`}
+                        <div
+                          className={`text-[10px] whitespace-nowrap shrink-0 px-2 py-0.5 rounded-full font-semibold num ${
+                            it.breached
+                              ? "bg-destructive text-destructive-foreground"
+                              : "bg-muted/60 text-muted-foreground"
+                          }`}
+                        >
+                          {it.hoursIn < 1
+                            ? `${Math.round(it.hoursIn * 60)}m`
+                            : `${it.hoursIn.toFixed(1)}h`}
                         </div>
                       </div>
                       {canAssign && (
-                        <Select value={it.prepAssigneeId ?? "none"} onValueChange={(v) => assign.mutate({ id: it.id, assigneeId: v === "none" ? null : v })}>
-                          <SelectTrigger className="h-8 text-[11px] rounded-full bg-muted/30 border-border/40" title={lang === "ar" ? "إسناد لموظف تحضير" : "Assign prep employee"}>
+                        <Select
+                          value={it.prepAssigneeId ?? "none"}
+                          onValueChange={(v) =>
+                            assign.mutate({ id: it.id, assigneeId: v === "none" ? null : v })
+                          }
+                        >
+                          <SelectTrigger
+                            className="h-8 text-[11px] rounded-full bg-muted/30 border-border/40"
+                            title={lang === "ar" ? "إسناد لموظف تحضير" : "Assign prep employee"}
+                          >
                             <span className="truncate">{prepLabel(it.prepAssigneeId)}</span>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{lang === "ar" ? "غير مُسند" : "Unassigned"}</SelectItem>
-                            {prepUsers.map((u) => <SelectItem key={u.id} value={u.id}>{u.email}</SelectItem>)}
+                            <SelectItem value="none">
+                              {lang === "ar" ? "غير مُسند" : "Unassigned"}
+                            </SelectItem>
+                            {prepUsers.map((u) => (
+                              <SelectItem key={u.id} value={u.id}>
+                                {u.email}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       )}
                       {nextStage(col.stage as Stage) && (
                         <div className="flex items-center gap-1 pt-2 border-t border-border/40">
-                          <Button size="sm" variant="ghost" className="h-8 flex-1 gap-1 rounded-lg"
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 flex-1 gap-1 rounded-lg"
                             onClick={() => handlePrint(it.id)}
-                            title={lang === "ar" ? "طباعة فاتورة التحضير" : "Print prep slip"}>
+                            title={lang === "ar" ? "طباعة فاتورة التحضير" : "Print prep slip"}
+                          >
                             <Printer className="w-3.5 h-3.5" />
                             <span className="text-[11px]">{lang === "ar" ? "طباعة" : "Print"}</span>
                           </Button>
                           {prevStage(col.stage as Stage) && (
-                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg"
-                              onClick={() => advance.mutate({ id: it.id, stage: prevStage(col.stage as Stage)! })}
-                              title={lang === "ar" ? "رجوع للمرحلة السابقة" : "Move back"}>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-lg"
+                              onClick={() =>
+                                advance.mutate({ id: it.id, stage: prevStage(col.stage as Stage)! })
+                              }
+                              title={lang === "ar" ? "رجوع للمرحلة السابقة" : "Move back"}
+                            >
                               <PrevIcon className="w-4 h-4" />
                             </Button>
                           )}
                           {canAssign && (
-                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => { if (confirm(lang === "ar" ? "إلغاء الأوردر؟" : "Cancel order?")) advance.mutate({ id: it.id, stage: "cancelled" }); }}
-                              title={lang === "ar" ? "إلغاء الأوردر" : "Cancel order"}>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                if (confirm(lang === "ar" ? "إلغاء الأوردر؟" : "Cancel order?"))
+                                  advance.mutate({ id: it.id, stage: "cancelled" });
+                              }}
+                              title={lang === "ar" ? "إلغاء الأوردر" : "Cancel order"}
+                            >
                               <X className="w-4 h-4" />
                             </Button>
                           )}
-                          <Button size="icon" variant="default" className="h-8 w-8 rounded-lg shadow-md shadow-primary/20"
-                            onClick={() => advance.mutate({ id: it.id, stage: nextStage(col.stage as Stage)! })}
-                            title={lang === "ar" ? "المرحلة التالية" : "Next stage"}>
+                          <Button
+                            size="icon"
+                            variant="default"
+                            className="h-8 w-8 rounded-lg shadow-md shadow-primary/20"
+                            onClick={() =>
+                              advance.mutate({ id: it.id, stage: nextStage(col.stage as Stage)! })
+                            }
+                            title={lang === "ar" ? "المرحلة التالية" : "Next stage"}
+                          >
                             <NextIcon className="w-4 h-4" />
                           </Button>
                         </div>
@@ -324,10 +449,14 @@ const STAGE_ACCENT: Record<Stage, string> = {
                     </div>
                   ))}
                   {col.items.length === 0 && (
-                    <div className="text-xs text-muted-foreground text-center py-10 border border-dashed border-border/40 rounded-2xl">—</div>
+                    <div className="text-xs text-muted-foreground text-center py-10 border border-dashed border-border/40 rounded-2xl">
+                      —
+                    </div>
                   )}
                   {col.count > col.items.length && (
-                    <div className="text-[10px] text-muted-foreground text-center pt-2">+{col.count - col.items.length}</div>
+                    <div className="text-[10px] text-muted-foreground text-center pt-2">
+                      +{col.count - col.items.length}
+                    </div>
                   )}
                 </div>
               </div>

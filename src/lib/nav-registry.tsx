@@ -130,7 +130,7 @@ export const HUBS: Hub[] = [
   },
   {
     key: "sales",
-    ar: "Sales & Orders",
+    ar: "إدارة الأوردرات",
     en: "Sales & Orders",
     icon: ShoppingBag,
     accent: "from-emerald-500/40 to-primary/20",
@@ -171,7 +171,7 @@ export const HUBS: Hub[] = [
   },
   {
     key: "inventory",
-    ar: "Inventory & Purchasing",
+    ar: "إدارة المخزون",
     en: "Inventory & Purchasing",
     icon: Boxes,
     accent: "from-indigo-500/40 to-primary/20",
@@ -191,7 +191,7 @@ export const HUBS: Hub[] = [
   },
   {
     key: "fulfillment",
-    ar: "Fulfillment & Couriers",
+    ar: "Fulfillment",
     en: "Fulfillment & Couriers",
     icon: Truck,
     accent: "from-orange-500/40 to-red-500/20",
@@ -202,7 +202,7 @@ export const HUBS: Hub[] = [
 
   {
     key: "investors",
-    ar: "Investors Reporting",
+    ar: "المستثمرون",
     en: "Investors Reporting",
     icon: HandCoins,
     accent: "from-yellow-500/40 to-amber-500/20",
@@ -212,7 +212,7 @@ export const HUBS: Hub[] = [
   },
   {
     key: "hr",
-    ar: "HR & Payroll",
+    ar: "الموارد البشرية",
     en: "HR & Payroll",
     icon: UserCheck,
     accent: "from-teal-500/40 to-emerald-500/20",
@@ -222,7 +222,7 @@ export const HUBS: Hub[] = [
   },
   {
     key: "settings",
-    ar: "Settings & Access",
+    ar: "الإعدادات",
     en: "Settings & Access",
     icon: ShieldCheck,
     accent: "from-slate-500/40 to-zinc-500/20",
@@ -1007,7 +1007,6 @@ export function pageAccessLevel(p: NavPage, ctx: RoleCtx): PageAccessLevel {
 
   return "hidden";
 }
-
 
 export function canSeePage(p: NavPage, ctx: RoleCtx): boolean {
   return pageAccessLevel(p, ctx) !== "hidden";

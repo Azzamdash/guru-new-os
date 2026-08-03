@@ -3,7 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getReceivablesAging, type AgingBucket } from "@/lib/receivables.functions";
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/EmptyState";
 import { useLang, tr } from "@/lib/i18n";
 import { Clock } from "lucide-react";
@@ -19,7 +26,8 @@ export const Route = createFileRoute("/_authenticated/_app/reports/receivables-a
   component: ReceivablesAgingPage,
 });
 
-const fmt = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n || 0);
+const fmt = (n: number) =>
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n || 0);
 
 const BUCKET_LABELS: Record<AgingBucket, { ar: string; en: string }> = {
   b0_30: { ar: "0-30 يوم", en: "0-30 days" },
@@ -57,7 +65,9 @@ function ReceivablesAgingPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card className="p-4">
-              <div className="text-xs text-muted-foreground">{lang === "ar" ? "الإجمالي" : "Grand Total"}</div>
+              <div className="text-xs text-muted-foreground">
+                {lang === "ar" ? "الإجمالي" : "Grand Total"}
+              </div>
               <div className="text-2xl font-bold mt-1">{fmt(d.grandTotal)}</div>
             </Card>
             {buckets.map((b) => (
@@ -82,7 +92,9 @@ function ReceivablesAgingPage() {
                         {lang === "ar" ? BUCKET_LABELS[b].ar : BUCKET_LABELS[b].en}
                       </TableHead>
                     ))}
-                    <TableHead className="text-center">{lang === "ar" ? "الإجمالي" : "Total"}</TableHead>
+                    <TableHead className="text-center">
+                      {lang === "ar" ? "الإجمالي" : "Total"}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -90,7 +102,9 @@ function ReceivablesAgingPage() {
                     <TableRow key={g.key}>
                       <TableCell className="font-medium">{g.label}</TableCell>
                       {buckets.map((b) => (
-                        <TableCell key={b} className="text-center">{fmt(g.totals[b])}</TableCell>
+                        <TableCell key={b} className="text-center">
+                          {fmt(g.totals[b])}
+                        </TableCell>
                       ))}
                       <TableCell className="text-center font-semibold">{fmt(g.total)}</TableCell>
                     </TableRow>
@@ -112,7 +126,9 @@ function ReceivablesAgingPage() {
                         {lang === "ar" ? BUCKET_LABELS[b].ar : BUCKET_LABELS[b].en}
                       </TableHead>
                     ))}
-                    <TableHead className="text-center">{lang === "ar" ? "الإجمالي" : "Total"}</TableHead>
+                    <TableHead className="text-center">
+                      {lang === "ar" ? "الإجمالي" : "Total"}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -120,7 +136,9 @@ function ReceivablesAgingPage() {
                     <TableRow key={g.key}>
                       <TableCell className="font-medium">{g.label}</TableCell>
                       {buckets.map((b) => (
-                        <TableCell key={b} className="text-center">{fmt(g.totals[b])}</TableCell>
+                        <TableCell key={b} className="text-center">
+                          {fmt(g.totals[b])}
+                        </TableCell>
                       ))}
                       <TableCell className="text-center font-semibold">{fmt(g.total)}</TableCell>
                     </TableRow>

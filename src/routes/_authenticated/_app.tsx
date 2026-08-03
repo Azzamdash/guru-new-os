@@ -10,7 +10,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRole } from "@/lib/admin.functions";
 import { getMyAccess } from "@/lib/permissions.functions";
-import { useLang, tr } from "@/lib/i18n";
+import { useLang } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 import logoAsset from "@/assets/egurus-logo.asset.json";
 import {
@@ -242,7 +242,6 @@ function AppLayout() {
             placeholder={lang === "ar" ? "ابحث في القائمة..." : "Search menu..."}
             className="h-8 ltr:pl-8 rtl:pr-8 text-sm"
           />
-
         </div>
       </div>
       <NavSearchContext.Provider value={navSearch.trim().toLowerCase()}>
@@ -253,14 +252,14 @@ function AppLayout() {
             return (
               <div key={group.key} className="space-y-1">
                 <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.en}
+                  {lang === "ar" ? group.ar : group.en}
                 </div>
                 {groupHubs.map((hub) => (
                   <HubNavItem
                     key={hub.key}
                     to={hub.key === "services" ? "/services-dashboard" : `/hub/${hub.key}`}
                     icon={hub.icon}
-                    label={hub.en}
+                    label={lang === "ar" ? hub.ar : hub.en}
                   />
                 ))}
               </div>
@@ -343,7 +342,9 @@ function AppLayout() {
           >
             {isReadOnlyPage && (
               <div className="sticky top-0 z-30 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-xs font-medium text-amber-700 dark:text-amber-300">
-                {tr("صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة")}
+                {lang === "ar"
+                  ? "صلاحية مشاهدة فقط — التعديل والحفظ غير مسموحين في هذه الصفحة"
+                  : "View-only access — editing and saving are not allowed on this page"}
               </div>
             )}
             <OrderModuleNav />
