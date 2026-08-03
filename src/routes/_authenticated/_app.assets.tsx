@@ -22,7 +22,7 @@ import { EmptyState } from "@/components/EmptyState";
 export const Route = createFileRoute("/_authenticated/_app/assets")({
   head: () => ({
     meta: [
-      { title: "أصول الشركة — e-GURUS" },
+      { title: tr("أصول الشركة — e-GURUS") },
       { name: "description", content: "إدارة أصول الشركة والاهلاك السنوي لكل براند." },
     ],
   }),
@@ -171,7 +171,7 @@ function AssetsPage() {
           onSave={(payload) => {
             upsertFn({ data: payload })
               .then(() => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["assets"] }); setEditing(null); })
-              .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
+              .catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("فشل")));
           }}
         />
       )}
@@ -212,7 +212,7 @@ function AssetDialog({ initial, brands, onClose, onSave }: {
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{form.id ? "تعديل أصل" : "أصل جديد"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{form.id ? tr("تعديل أصل") : tr("أصل جديد")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>{tr("اسم الأصل")}</Label><Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={tr("مثال: لابتوب Dell / مكينة تصنيع")} /></div>
           <div className="grid grid-cols-2 gap-3">

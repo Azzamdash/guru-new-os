@@ -8,12 +8,12 @@ import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/
 import { usePersistedPeriod } from "@/lib/global-period";
 import { getIncomeStatement } from "@/lib/financials.functions";
 import { listBrands } from "@/lib/internal.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { FileBarChart } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/income-statement")({
   head: () => ({ meta: [
-    { title: "قائمة الدخل — e-GURUS" },
+    { title: tr("قائمة الدخل — e-GURUS") },
     { name: "description", content: "قائمة دخل احترافية: إيرادات، مرتجعات، خصومات، تكلفة البضاعة، مصاريف تشغيلية، صافي الربح." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -40,7 +40,7 @@ function Page() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-3xl font-bold flex items-center gap-2"><FileBarChart className="w-7 h-7" /> {L("قائمة الدخل", "Income Statement")}</h1>
+        <h1 className="text-3xl font-bold flex items-center gap-2"><FileBarChart className="w-7 h-7" /> {L(tr("قائمة الدخل"), "Income Statement")}</h1>
       </div>
       <Card className="card-gradient p-4 flex flex-wrap gap-3 items-center">
         <PeriodFilter value={period} onChange={setPeriod} />
@@ -57,36 +57,36 @@ function Page() {
         <div className="text-xs text-muted-foreground mb-3" dir="ltr">{d?.from} → {d?.to}</div>
         <table className="w-full text-sm">
           <tbody>
-            <Row label={L("إجمالي الإيرادات", "Gross Revenue")} val={nf(d?.grossRevenue ?? 0)} bold />
-            <Row label={L("(−) المرتجعات", "(−) Returns")} val={`(${nf(d?.returns ?? 0)})`} negative />
-            <Row label={L("(−) الخصومات", "(−) Discounts")} val={`(${nf(d?.discounts ?? 0)})`} negative />
-            <Row label={L("صافي الإيرادات", "Net Revenue")} val={nf(d?.netRevenue ?? 0)} bold divider />
-            <Row label={L("(−) تكلفة البضاعة المباعة (COGS)", "(−) Cost of Goods Sold")} val={`(${nf(d?.cogs ?? 0)})`} negative />
-            <Row label={L("مجمل الربح (Gross Profit)", "Gross Profit")} val={nf(d?.grossProfit ?? 0)} bold divider extra={pct(d?.grossMargin ?? 0)} />
-            <tr><td colSpan={3} className="pt-4 pb-1 text-xs uppercase text-muted-foreground">{L("مصاريف التشغيل", "Operating Expenses")}</td></tr>
+            <Row label={L(tr("إجمالي الإيرادات"), "Gross Revenue")} val={nf(d?.grossRevenue ?? 0)} bold />
+            <Row label={L(tr("(−) المرتجعات"), "(−) Returns")} val={`(${nf(d?.returns ?? 0)})`} negative />
+            <Row label={L(tr("(−) الخصومات"), "(−) Discounts")} val={`(${nf(d?.discounts ?? 0)})`} negative />
+            <Row label={L(tr("صافي الإيرادات"), "Net Revenue")} val={nf(d?.netRevenue ?? 0)} bold divider />
+            <Row label={L(tr("(−) تكلفة البضاعة المباعة (COGS)"), "(−) Cost of Goods Sold")} val={`(${nf(d?.cogs ?? 0)})`} negative />
+            <Row label={L(tr("مجمل الربح (Gross Profit)"), "Gross Profit")} val={nf(d?.grossProfit ?? 0)} bold divider extra={pct(d?.grossMargin ?? 0)} />
+            <tr><td colSpan={3} className="pt-4 pb-1 text-xs uppercase text-muted-foreground">{L(tr("مصاريف التشغيل"), "Operating Expenses")}</td></tr>
             {(d?.operatingExpenses ?? []).map((e) => (
               <Row key={e.name} label={`  ${e.name}`} val={`(${nf(e.amount)})`} negative small />
             ))}
-            <Row label={L("إجمالي مصاريف التشغيل", "Total Operating Expenses")} val={`(${nf(d?.operatingExpensesTotal ?? 0)})`} negative bold />
-            <Row label={L("الربح التشغيلي", "Operating Profit")} val={nf(d?.operatingProfit ?? 0)} bold divider extra={pct(d?.operatingMargin ?? 0)} />
-            <Row label={L("صافي الربح", "Net Profit")} val={nf(d?.netProfit ?? 0)} bold big extra={pct(d?.netMargin ?? 0)} />
+            <Row label={L(tr("إجمالي مصاريف التشغيل"), "Total Operating Expenses")} val={`(${nf(d?.operatingExpensesTotal ?? 0)})`} negative bold />
+            <Row label={L(tr("الربح التشغيلي"), "Operating Profit")} val={nf(d?.operatingProfit ?? 0)} bold divider extra={pct(d?.operatingMargin ?? 0)} />
+            <Row label={L(tr("صافي الربح"), "Net Profit")} val={nf(d?.netProfit ?? 0)} bold big extra={pct(d?.netMargin ?? 0)} />
           </tbody>
         </table>
       </Card>
 
       {(d?.perBrand ?? []).length > 0 && (
         <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-3">{L("تفصيل حسب البراند", "By Brand")}</h3>
+          <h3 className="font-semibold mb-3">{L(tr("تفصيل حسب البراند"), "By Brand")}</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-border text-muted-foreground">
-                <th className="p-2 text-start">{L("البراند", "Brand")}</th>
-                <th className="p-2 text-start">{L("صافي الإيرادات", "Net Revenue")}</th>
+                <th className="p-2 text-start">{L(tr("البراند"), "Brand")}</th>
+                <th className="p-2 text-start">{L(tr("صافي الإيرادات"), "Net Revenue")}</th>
                 <th className="p-2 text-start">COGS</th>
-                <th className="p-2 text-start">{L("مجمل الربح", "Gross Profit")}</th>
+                <th className="p-2 text-start">{L(tr("مجمل الربح"), "Gross Profit")}</th>
                 <th className="p-2 text-start">OpEx</th>
-                <th className="p-2 text-start">{L("صافي الربح", "Net Profit")}</th>
-                <th className="p-2 text-start">{L("هامش", "Margin")}</th>
+                <th className="p-2 text-start">{L(tr("صافي الربح"), "Net Profit")}</th>
+                <th className="p-2 text-start">{L(tr("هامش"), "Margin")}</th>
               </tr></thead>
               <tbody>
                 {(d?.perBrand ?? []).map((r) => (

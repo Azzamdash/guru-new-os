@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/_app/investors/$id")({
   component: InvestorDashboard,
   head: () => ({
     meta: [
-      { title: "داش بورد المستثمر | e-GURUS" },
+      { title: tr("داش بورد المستثمر | e-GURUS") },
       { name: "description", content: "نصيب المستثمر من أرباح البراندات" },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -47,7 +47,7 @@ function InvestorDashboard() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-primary" />
-            {d?.investor.name ?? "المستثمر"}
+            {d?.investor.name ?? tr("المستثمر")}
           </h1>
           <p className="text-sm text-muted-foreground">{tr("نصيبك من أرباح البراندات")}</p>
         </div>
@@ -84,7 +84,7 @@ function InvestorDashboard() {
                     <TableCell className="font-medium">
                       {b.brand_name}{" "}
                       <Badge variant="outline" className="mr-1 text-[10px]">
-                        {b.brand_type === "service" ? "خدمي" : "منتج"}
+                        {b.brand_type === "service" ? tr("خدمي") : tr("منتج")}
                       </Badge>
                     </TableCell>
                     <TableCell>{b.share_percentage}%</TableCell>

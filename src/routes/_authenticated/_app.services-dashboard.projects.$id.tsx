@@ -112,7 +112,7 @@ function ProjectDetailPage() {
                       qc.invalidateQueries({ queryKey: ["sd-project", id] });
                       toast.success(tr("تم إنشاء الفاتورة"));
                     } catch (e) {
-                      toast.error(e instanceof Error ? e.message : "فشل الإنشاء");
+                      toast.error(e instanceof Error ? e.message : tr("فشل الإنشاء"));
                     }
                   }}
                 >

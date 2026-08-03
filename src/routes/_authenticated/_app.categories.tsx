@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Plus, Trash2, Lock, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/categories")({
-  head: () => ({ meta: [{ title: "بنود المصروفات — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("بنود المصروفات — e-GURUS") }] }),
   component: CategoriesPage,
 });
 
@@ -80,7 +80,7 @@ function CategoriesPage() {
                   <Button size="sm" variant="ghost" onClick={() => setEditing(c)}><Pencil className="w-4 h-4" /></Button>
                   <Button size="sm" variant="ghost" onClick={() => {
                     if (confirm(tr("حذف البند؟"))) delFn({ data: { id: c.id } }).then(() => { toast.success(tr("حُذف")); invalidate(); })
-                      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "لا يمكن الحذف — البند مستخدم"));
+                      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("لا يمكن الحذف — البند مستخدم")));
                   }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </td>
               </tr>
@@ -101,12 +101,12 @@ function CategoryDialog({ editing, onClose, save, onSaved }: { editing: Cat; onC
     const payload: Partial<Cat> = { name: form.name, slug: form.slug, active: form.active, sort_order: form.sort_order };
     if (form.id) payload.id = form.id;
     save({ data: payload }).then(() => { toast.success(tr("تم الحفظ")); onSaved(); onClose(); })
-      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
+      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("فشل")));
   };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>{form.id ? "تعديل بند" : "بند جديد"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{form.id ? tr("تعديل بند") : tr("بند جديد")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>{tr("الاسم")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div><Label>{tr("الرمز (slug)")}</Label><Input value={form.slug} dir="ltr" onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>

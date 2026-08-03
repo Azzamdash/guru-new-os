@@ -50,7 +50,7 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
       if (error) throw error;
       goNext();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "بيانات الدخول غير صحيحة");
+      toast.error(err instanceof Error ? err.message : tr("بيانات الدخول غير صحيحة"));
     } finally {
       setLoading(false);
     }
@@ -90,10 +90,10 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
           </p>
           <div className="grid grid-cols-2 gap-3 mt-2">
             {[
-              { icon: TrendingUp, label: "مؤشرات KPI مباشرة" },
-              { icon: LineChart, label: "اتجاهات شهرية" },
-              { icon: BarChart3, label: "مقارنة الفروع" },
-              { icon: PieChart, label: "توزيع المصروفات" },
+              { icon: TrendingUp, label: tr("مؤشرات KPI مباشرة") },
+              { icon: LineChart, label: tr("اتجاهات شهرية") },
+              { icon: BarChart3, label: tr("مقارنة الفروع") },
+              { icon: PieChart, label: tr("توزيع المصروفات") },
             ].map((f) => (
               <div
                 key={f.label}
@@ -151,7 +151,7 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
               />
             </div>
             <Button type="submit" disabled={loading} className="w-full h-11">
-              {loading ? "..." : "دخول"}
+              {loading ? "..." : tr("دخول")}
             </Button>
           </form>
 

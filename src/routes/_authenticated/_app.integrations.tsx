@@ -39,7 +39,7 @@ const COURIERS: { id: Provider; name: string; live: boolean }[] = [
 export const Route = createFileRoute("/_authenticated/_app/integrations")({
   head: () => ({
     meta: [
-      { title: "التكاملات — e-GURUS" },
+      { title: tr("التكاملات — e-GURUS") },
       { name: "description", content: "ربط Shopify وشركات الشحن لكل براند لسحب الطلبات والشحنات تلقائياً." },
     ],
   }),
@@ -270,7 +270,7 @@ function SyncButton({
       <Button size="sm" variant="outline" title={tr("اختبار")} onClick={() => testM.mutate()} disabled={testM.isPending}>
         <CheckCircle2 className="w-3.5 h-3.5" />
       </Button>
-      <Button size="sm" variant="outline" title={label ?? "مزامنة"} onClick={() => syncM.mutate()} disabled={syncM.isPending}>
+      <Button size="sm" variant="outline" title={label ?? tr("مزامنة")} onClick={() => syncM.mutate()} disabled={syncM.isPending}>
         <RefreshCw className={`w-3.5 h-3.5 ${syncM.isPending ? "animate-spin" : ""}`} />
       </Button>
       <Button size="sm" variant="ghost" title={tr("حذف")} onClick={() => { if (confirm(tr("حذف هذا الاتصال؟"))) delM.mutate(); }} disabled={delM.isPending}>
@@ -423,7 +423,7 @@ function CredentialsDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>{tr("إلغاء")}</Button>
           <Button onClick={() => saveM.mutate()} disabled={saveM.isPending}>
-            {provider === "shopify" && mode === "oauth" ? "اتصال بـ Shopify" : "حفظ"}
+            {provider === "shopify" && mode === "oauth" ? tr("اتصال بـ Shopify") : tr("حفظ")}
           </Button>
         </DialogFooter>
       </DialogContent>

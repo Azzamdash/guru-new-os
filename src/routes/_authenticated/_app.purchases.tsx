@@ -24,7 +24,7 @@ import { getMyRole } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/purchases")({
   head: () => ({ meta: [
-    { title: "فواتير المشتريات — e-GURUS" },
+    { title: tr("فواتير المشتريات — e-GURUS") },
     { name: "description", content: "إدارة فواتير المشتريات من الموردين مع البنود (منتجات/خامات)." },
   ]}),
   component: PurchasesPage,
@@ -212,7 +212,7 @@ function PurchasesPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل فاتورة" : "فاتورة جديدة"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? tr("تعديل فاتورة") : tr("فاتورة جديدة")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
               <div>
@@ -347,7 +347,7 @@ function ItemsDialog({ invoiceId, onClose, canWrite }: { invoiceId: string | nul
                 </Select>
               </div>
               <div>
-                <Label>{kind === "other" ? "وصف" : "اختر"}</Label>
+                <Label>{kind === "other" ? tr("وصف") : tr("اختر")}</Label>
                 {kind === "other" ? (
                   <Input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={tr("وصف البند")} />
                 ) : (
@@ -374,7 +374,7 @@ function ItemsDialog({ invoiceId, onClose, canWrite }: { invoiceId: string | nul
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-b border-border/50">
-                  <td className="p-2 text-muted-foreground">{r.kind === "product" ? "منتج" : r.kind === "material" ? "خامة" : "أخرى"}</td>
+                  <td className="p-2 text-muted-foreground">{r.kind === "product" ? tr("منتج") : r.kind === "material" ? tr("خامة") : tr("أخرى")}</td>
                   <td className="p-2 font-medium">{labelFor(r)}</td>
                   <td className="p-2 num text-left">{Number(r.qty).toLocaleString("en-US")}</td>
                   <td className="p-2 num text-left">{Number(r.unit_cost).toLocaleString("en-US")}</td>

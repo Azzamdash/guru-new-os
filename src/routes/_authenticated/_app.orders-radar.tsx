@@ -16,7 +16,7 @@ import { getOrdersRadar, saveSlaRule } from "@/lib/orders-ops.functions";
 export const Route = createFileRoute("/_authenticated/_app/orders-radar")({
   head: () => ({
     meta: [
-      { title: "رادار الأوردرات — تنبيهات SLA والمخاطر — e-GURUS" },
+      { title: tr("رادار الأوردرات — تنبيهات SLA والمخاطر — e-GURUS") },
       { name: "description", content: "متابعة الأوردرات المتأخرة عن مدة المرحلة والأوردرات عالية المخاطر قبل الشحن." },
       { property: "og:title", content: "رادار الأوردرات — e-GURUS" },
       { property: "og:description", content: "تنبيهات SLA وكشف الأوردرات المشكوك فيها." },
@@ -28,11 +28,11 @@ export const Route = createFileRoute("/_authenticated/_app/orders-radar")({
 });
 
 const STAGES = [
-  { key: "new", label: "جديد" },
-  { key: "confirmation", label: "تأكيد" },
-  { key: "preparation", label: "تحضير" },
-  { key: "shipping", label: "شحن" },
-  { key: "collection", label: "تحصيل" },
+  { key: "new", label: tr("جديد") },
+  { key: "confirmation", label: tr("تأكيد") },
+  { key: "preparation", label: tr("تحضير") },
+  { key: "shipping", label: tr("شحن") },
+  { key: "collection", label: tr("تحصيل") },
 ];
 
 function OrdersRadarPage() {

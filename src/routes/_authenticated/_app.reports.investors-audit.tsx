@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/_app/reports/investors-aud
   component: InvestorsAuditPage,
   head: () => ({
     meta: [
-      { title: "تدقيق وتحليلات المستثمرين | e-GURUS" },
+      { title: tr("تدقيق وتحليلات المستثمرين | e-GURUS") },
       { name: "description", content: "تدقيق نسب المستثمرين وتحليل أرباحهم وخسائرهم لكل براند مع فلاتر مخصصة." },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -151,13 +151,13 @@ function InvestorsAuditPage() {
     investor_profit: r.investor_profit,
   }));
   const csvColumns = [
-    { key: "investor", label: "المستثمر" },
-    { key: "brand", label: "البراند" },
-    { key: "share_pct", label: "النسبة %" },
-    { key: "brand_revenue", label: "إيراد البراند" },
-    { key: "brand_costs", label: "تكاليف البراند" },
-    { key: "brand_profit", label: "ربح البراند" },
-    { key: "investor_profit", label: "نصيب المستثمر" },
+    { key: "investor", label: tr("المستثمر") },
+    { key: "brand", label: tr("البراند") },
+    { key: "share_pct", label: tr("النسبة %") },
+    { key: "brand_revenue", label: tr("إيراد البراند") },
+    { key: "brand_costs", label: tr("تكاليف البراند") },
+    { key: "brand_profit", label: tr("ربح البراند") },
+    { key: "investor_profit", label: tr("نصيب المستثمر") },
   ];
 
   return (
@@ -390,7 +390,7 @@ function InvestorsAuditPage() {
                     return (
                       <TableRow key={b.id}>
                         <TableCell className="font-medium">{b.name}</TableCell>
-                        <TableCell><Badge variant="outline">{b.type === "service" ? "خدمات" : "منتجات"}</Badge></TableCell>
+                        <TableCell><Badge variant="outline">{b.type === "service" ? tr("خدمات") : tr("منتجات")}</Badge></TableCell>
                         <TableCell>{b.investors}</TableCell>
                         <TableCell><Badge variant={b.totalShare > 100 ? "destructive" : "secondary"}>{b.totalShare.toFixed(1)}%</Badge></TableCell>
                         <TableCell className="num">{fmtN(b.revenue)}</TableCell>
@@ -432,7 +432,7 @@ function InvestorsAuditPage() {
                         </TableCell>
                       )}
                       <TableCell className="font-medium">{r.brand_name || "—"}</TableCell>
-                      <TableCell><Badge variant="outline">{r.brand_type === "service" ? "خدمات" : "منتجات"}</Badge></TableCell>
+                      <TableCell><Badge variant="outline">{r.brand_type === "service" ? tr("خدمات") : tr("منتجات")}</Badge></TableCell>
                       <TableCell><Badge variant="secondary">{r.share_percentage.toFixed(2)}%</Badge></TableCell>
                       <TableCell className="num">{fmtN(r.revenue)}</TableCell>
                       <TableCell className="num text-muted-foreground">{fmtN(r.costs)}</TableCell>

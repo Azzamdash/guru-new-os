@@ -152,11 +152,11 @@ export function SupplierDebtAnalytics({
 
 
   const agingData = [
-    { name: "الحالي", value: analytics.buckets.current },
-    { name: "1-30 يوم", value: analytics.buckets.d30 },
-    { name: "31-60 يوم", value: analytics.buckets.d60 },
-    { name: "61-90 يوم", value: analytics.buckets.d90 },
-    { name: "+90 يوم", value: analytics.buckets.d90plus },
+    { name: tr("الحالي"), value: analytics.buckets.current },
+    { name: tr("1-30 يوم"), value: analytics.buckets.d30 },
+    { name: tr("31-60 يوم"), value: analytics.buckets.d60 },
+    { name: tr("61-90 يوم"), value: analytics.buckets.d90 },
+    { name: tr("+90 يوم"), value: analytics.buckets.d90plus },
   ];
   const agingColors = ["hsl(155 55% 55%)", "hsl(45 75% 60%)", "hsl(30 70% 60%)", "hsl(15 75% 55%)", "hsl(0 65% 55%)"];
 

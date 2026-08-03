@@ -17,7 +17,7 @@ import { ChartFrame } from "@/components/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/marketing")({
   head: () => ({ meta: [
-    { title: "تقارير التسويق — e-GURUS" },
+    { title: tr("تقارير التسويق — e-GURUS") },
     { name: "description", content: "تقارير التسويق حسب البراند والمنصات: ميتا، تيك توك، جوجل، واتساب، SMS." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -149,10 +149,10 @@ function MarketingReports() {
             summaryText={`الفترة: ${resolved.dateFrom ?? resolved.year}${resolved.dateTo ? ` → ${resolved.dateTo}` : ""}`}
             rows={(brandId === "all" ? filteredMatrix : platformTotals.map((p) => ({ brand: "—", platform: p.platform, spend: p.spend, revenue: p.revenue, roi: p.roi }))) as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "brand", label: "البراند" },
-              { key: "platform", label: "المنصة", fmt: (v) => PLATFORM_LABELS[String(v)] ?? String(v) },
-              { key: "spend", label: "الإنفاق" },
-              { key: "revenue", label: "الإيراد" },
+              { key: "brand", label: tr("البراند") },
+              { key: "platform", label: tr("المنصة"), fmt: (v) => PLATFORM_LABELS[String(v)] ?? String(v) },
+              { key: "spend", label: tr("الإنفاق") },
+              { key: "revenue", label: tr("الإيراد") },
               { key: "roi", label: "ROI %", fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
             ]}
           />
@@ -173,14 +173,14 @@ function MarketingReports() {
           <div className="text-2xl font-bold mt-1">{fmt(brandTotalRevenue)} {tr("جنيه")}</div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">ROI ({roiBasis === "brand_total" ? "إيراد البراند" : "المنسوب"})</div>
+          <div className="text-xs text-muted-foreground">ROI ({roiBasis === "brand_total" ? tr("إيراد البراند") : tr("المنسوب")})</div>
           <div className={`text-2xl font-bold mt-1 flex items-center gap-1 ${overallRoi >= 0 ? "text-emerald-500" : "text-destructive"}`}>
             {overallRoi >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
             {(overallRoi * 100).toFixed(1)}%
           </div>
         </Card>
         <Card className="card-gradient p-5">
-          <div className="text-xs text-muted-foreground">ROAS ({roiBasis === "brand_total" ? "إيراد البراند" : "المنسوب"})</div>
+          <div className="text-xs text-muted-foreground">ROAS ({roiBasis === "brand_total" ? tr("إيراد البراند") : tr("المنسوب")})</div>
           <div className="text-2xl font-bold mt-1">{overallRoas.toFixed(2)}x</div>
         </Card>
       </div>
@@ -237,7 +237,7 @@ function MarketingReports() {
 
 
       <Card className="card-gradient overflow-hidden">
-        <div className="p-4 border-b border-border font-semibold">{tr("تفاصيل المنصات")} {brandId === "all" ? "(كل البراندات)" : ""}</div>
+        <div className="p-4 border-b border-border font-semibold">{tr("تفاصيل المنصات")} {brandId === "all" ? tr("(كل البراندات)") : ""}</div>
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border text-right text-muted-foreground">
             <th className="p-3">{tr("المنصة")}</th>

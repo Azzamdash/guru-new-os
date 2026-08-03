@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Save, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/data-entry")({
-  head: () => ({ meta: [{ title: "إدخال البيانات — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("إدخال البيانات — e-GURUS") }] }),
   component: DataEntryPage,
 });
 
@@ -96,7 +96,7 @@ function DataEntryPage() {
       qc.invalidateQueries({ queryKey: scopeKey });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحفظ")),
   });
 
 
@@ -130,7 +130,7 @@ function DataEntryPage() {
               <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
               <SelectContent>
                 {(brandsQ.data ?? []).map((b) => (
-                  <SelectItem key={b.id} value={b.id}>{b.name} {b.type === "service" ? "· خدمات" : ""}</SelectItem>
+                  <SelectItem key={b.id} value={b.id}>{b.name} {b.type === "service" ? tr("· خدمات") : ""}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -228,7 +228,7 @@ function DataEntryPage() {
               <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
             </div>
             <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="gap-2">
-              <Save className="w-4 h-4" /> {saveMut.isPending ? "جاري الحفظ..." : "حفظ"}
+              <Save className="w-4 h-4" /> {saveMut.isPending ? tr("جاري الحفظ...") : tr("حفظ")}
             </Button>
           </Card>
         </>

@@ -17,7 +17,7 @@ import { RETURN_STATUS_LABELS } from "@/lib/orders-ops.shared";
 export const Route = createFileRoute("/_authenticated/_app/order-returns")({
   head: () => ({
     meta: [
-      { title: "المرتجعات والاستبدال — e-GURUS" },
+      { title: tr("المرتجعات والاستبدال — e-GURUS") },
       { name: "description", content: "دورة كاملة للمرتجعات: طلب، استلام، إرجاع للمخزون، ورد المبلغ للعميل." },
       { property: "og:title", content: "المرتجعات والاستبدال — e-GURUS" },
       { property: "og:description", content: "إدارة مرتجعات واستبدالات الأوردرات." },
@@ -132,7 +132,7 @@ function OrderReturnsPage() {
               <Link to="/order-view/$id" params={{ id: r.order_id }} className="font-semibold text-primary hover:underline">
                 #{r.order_number ?? r.order_id.slice(0, 8)}
               </Link>
-              <Badge variant="outline">{r.kind === "exchange" ? "استبدال" : "مرتجع"}</Badge>
+              <Badge variant="outline">{r.kind === "exchange" ? tr("استبدال") : tr("مرتجع")}</Badge>
               <Badge>{RETURN_STATUS_LABELS[r.status] ?? r.status}</Badge>
               <span className="text-sm">{r.customer_name ?? "—"}</span>
               <span className="text-sm text-muted-foreground">{tr("قيمة الأوردر:")} {money(r.order_total)}</span>

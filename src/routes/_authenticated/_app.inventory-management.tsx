@@ -11,7 +11,7 @@ import { InventoryIntelligenceTab } from "@/components/inventory/InventoryIntell
 
 export const Route = createFileRoute("/_authenticated/_app/inventory-management")({
   head: () => ({ meta: [
-    { title: "إدارة المخزون — e-GURUS" },
+    { title: tr("إدارة المخزون — e-GURUS") },
     { name: "description", content: "الرئيسية، الكتالوج، نقل المخزون، الموردين، أوامر الشراء، التحليلات، والذكاء — كل حاجة عن المخزون في مكان واحد." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

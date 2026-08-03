@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/_app/my-investments")({
   component: MyInvestments,
   head: () => ({
     meta: [
-      { title: "استثماراتي | e-GURUS" },
+      { title: tr("استثماراتي | e-GURUS") },
       { name: "description", content: "نصيبك من أرباح البراندات المستثمر فيها" },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -86,7 +86,7 @@ function MyInvestments() {
                     <TableCell className="font-medium">
                       {b.brand_name}{" "}
                       <Badge variant="outline" className="mr-1 text-[10px]">
-                        {b.brand_type === "service" ? "خدمي" : "منتج"}
+                        {b.brand_type === "service" ? tr("خدمي") : tr("منتج")}
                       </Badge>
                     </TableCell>
                     <TableCell>{b.share_percentage}%</TableCell>

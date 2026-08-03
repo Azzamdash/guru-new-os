@@ -92,7 +92,7 @@ export function OrderSearchCombobox({
                       {value === o.id ? <Check className="h-4 w-4 mt-1 shrink-0" /> : <span className="w-4 shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium truncate">{o.customer_name ?? "بدون اسم"}</span>
+                          <span className="font-medium truncate">{o.customer_name ?? tr("بدون اسم")}</span>
                           <Badge variant="secondary" className="shrink-0">{o.order_status}</Badge>
                         </div>
                         <div className="text-xs text-muted-foreground truncate" dir="ltr">

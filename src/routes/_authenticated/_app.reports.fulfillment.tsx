@@ -153,12 +153,12 @@ function FulfillmentReports() {
             summaryText={summaryText}
             rows={couriers as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "name", label: "الاسم" },
-              { key: "type", label: "النوع", fmt: (v) => TYPE_LABEL[String(v)] ?? String(v) },
-              { key: "delivered", label: "مُسلَّم" },
-              { key: "returned", label: "مُرتجع" },
-              { key: "collected", label: "التحصيل" },
-              { key: "deliveryRate", label: "معدل التسليم %", fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
+              { key: "name", label: tr("الاسم") },
+              { key: "type", label: tr("النوع"), fmt: (v) => TYPE_LABEL[String(v)] ?? String(v) },
+              { key: "delivered", label: tr("مُسلَّم") },
+              { key: "returned", label: tr("مُرتجع") },
+              { key: "collected", label: tr("التحصيل") },
+              { key: "deliveryRate", label: tr("معدل التسليم %"), fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
             ]}
           />
         </div>

@@ -139,7 +139,7 @@ export function ProductCatalogTab() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل منتج" : "منتج جديد"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? tr("تعديل منتج") : tr("منتج جديد")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
               <div>
@@ -200,7 +200,7 @@ export function ProductCatalogTab() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShopDlg({ open: false, brandId: "" })}>{tr("إلغاء")}</Button>
             <Button onClick={() => syncShop.mutate(shopDlg.brandId)} disabled={!shopDlg.brandId || syncShop.isPending}>
-              {syncShop.isPending ? "جاري السحب…" : "Call all Products"}
+              {syncShop.isPending ? tr("جاري السحب…") : "Call all Products"}
             </Button>
           </DialogFooter>
         </DialogContent>

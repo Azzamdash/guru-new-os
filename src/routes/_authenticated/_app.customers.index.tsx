@@ -13,14 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Users, Repeat, AlertTriangle, TrendingUp, Plus } from "lucide-react";
 import { listCustomers, getCustomersFilterSummary, getCustomersSummary, createCustomer, type CustomerListRow } from "@/lib/customers.functions";
 import { listBrands } from "@/lib/internal.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { toast } from "sonner";
 import { PaginationBar } from "@/components/PaginationBar";
 import { TableSkeleton } from "@/components/TableSkeleton";
 
 export const Route = createFileRoute("/_authenticated/_app/customers/")({
   head: () => ({ meta: [
-    { title: "إدارة العملاء — e-GURUS" },
+    { title: tr("إدارة العملاء — e-GURUS") },
     { name: "description", content: "قائمة موحّدة بكل العملاء عبر البراندات مع LTV والقطاعات." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

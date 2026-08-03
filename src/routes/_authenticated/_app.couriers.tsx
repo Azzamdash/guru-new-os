@@ -21,7 +21,7 @@ import { listCourierRates, upsertCourierRate } from "@/lib/courier-config.functi
 
 export const Route = createFileRoute("/_authenticated/_app/couriers")({
   head: () => ({ meta: [
-    { title: "المناديب وشركات الشحن — e-GURUS" },
+    { title: tr("المناديب وشركات الشحن — e-GURUS") },
     { name: "description", content: "إدارة المناديب وشركات الشحن ومتابعة أدائها لكل براند." },
   ]}),
   component: CouriersPage,
@@ -188,7 +188,7 @@ function CouriersPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل" : "إضافة"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? tr("تعديل") : tr("إضافة")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
               <div><Label>{tr("الاسم")}</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>

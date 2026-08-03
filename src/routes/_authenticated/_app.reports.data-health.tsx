@@ -108,7 +108,7 @@ function DataHealthPage() {
                         </Badge>
                       </td>
                       <td className="p-2 text-muted-foreground">
-                        {i.minutesSinceSync == null ? "لم تتم" : `منذ ${i.minutesSinceSync} د`}
+                        {i.minutesSinceSync == null ? tr("لم تتم") : `منذ ${i.minutesSinceSync} د`}
                       </td>
                       <td className="p-2 text-xs text-red-600 max-w-md truncate" title={i.lastError ?? ""}>
                         {i.lastError ?? "—"}

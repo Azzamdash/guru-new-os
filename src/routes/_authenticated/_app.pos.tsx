@@ -16,7 +16,7 @@ import { listMyOfflineBranches, listBranchProducts, createPosSale, getPosInvoice
 type PosInvoice = Awaited<ReturnType<typeof getPosInvoice>>;
 
 export const Route = createFileRoute("/_authenticated/_app/pos")({
-  head: () => ({ meta: [{ title: "نقطة البيع — e-GURUS" }, { name: "description", content: "شاشة بيع الفروع الأوفلاين" }] }),
+  head: () => ({ meta: [{ title: tr("نقطة البيع — e-GURUS") }, { name: "description", content: "شاشة بيع الفروع الأوفلاين" }] }),
   component: PosPage,
 });
 
@@ -113,13 +113,13 @@ function PosPage() {
         const full = await invFn({ data: { id: res.id } });
         openReceiptModal(full);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "تعذر فتح إيصال الطباعة");
+        toast.error(e instanceof Error ? e.message : tr("تعذر فتح إيصال الطباعة"));
       }
       reset();
     } catch (e) {
       const msg = e instanceof Error ? e.message : typeof e === "string" ? e : JSON.stringify(e);
       console.error("[POS submit] failed:", e);
-      toast.error(msg ? `فشل إتمام البيع: ${msg}` : "فشل إتمام البيع");
+      toast.error(msg ? `فشل إتمام البيع: ${msg}` : tr("فشل إتمام البيع"));
     } finally {
       setSaving(false);
     }
@@ -133,7 +133,7 @@ function PosPage() {
       const full = await invFn({ data: { id } });
       setReceipt(full);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "تعذر فتح الفاتورة");
+      toast.error(e instanceof Error ? e.message : tr("تعذر فتح الفاتورة"));
     }
   };
 
@@ -154,7 +154,7 @@ function PosPage() {
           <div className="min-w-0">
             <h1 className="truncate text-xl sm:text-2xl font-extrabold leading-tight">{tr("نقطة البيع")}</h1>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">
-              {branch ? branch.name : "اختر الفرع للبدء"}
+              {branch ? branch.name : tr("اختر الفرع للبدء")}
             </p>
           </div>
         </div>
@@ -300,9 +300,9 @@ function PosPage() {
               <Label className="text-xs text-muted-foreground">{tr("طريقة الدفع")}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {([
-                  { v: "cash", label: "كاش", Icon: Banknote },
-                  { v: "visa", label: "فيزا", Icon: CreditCard },
-                  { v: "mixed", label: "مختلط", Icon: Layers },
+                  { v: "cash", label: tr("كاش"), Icon: Banknote },
+                  { v: "visa", label: tr("فيزا"), Icon: CreditCard },
+                  { v: "mixed", label: tr("مختلط"), Icon: Layers },
                 ] as const).map(({ v, label, Icon }) => (
                   <button
                     key={v}
@@ -332,7 +332,7 @@ function PosPage() {
               disabled={saving || cart.length === 0}
               onClick={submit}
             >
-              {saving ? "جارٍ الحفظ..." : `إتمام البيع — ${total.toLocaleString("en-US")}`}
+              {saving ? tr("جارٍ الحفظ...") : `إتمام البيع — ${total.toLocaleString("en-US")}`}
             </Button>
           </Card>
         </div>
@@ -411,9 +411,9 @@ function PosPage() {
               <Label className="text-xs text-muted-foreground">{tr("طريقة الدفع")}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {([
-                  { v: "cash", label: "كاش", Icon: Banknote },
-                  { v: "visa", label: "فيزا", Icon: CreditCard },
-                  { v: "mixed", label: "مختلط", Icon: Layers },
+                  { v: "cash", label: tr("كاش"), Icon: Banknote },
+                  { v: "visa", label: tr("فيزا"), Icon: CreditCard },
+                  { v: "mixed", label: tr("مختلط"), Icon: Layers },
                 ] as const).map(({ v, label, Icon }) => (
                   <button
                     key={v}
@@ -442,7 +442,7 @@ function PosPage() {
               disabled={saving || cart.length === 0}
               onClick={async () => { await submit(); setMobileSheetOpen(false); }}
             >
-              {saving ? "جارٍ الحفظ..." : `تأكيد الدفع — ${total.toLocaleString("en-US")}`}
+              {saving ? tr("جارٍ الحفظ...") : `تأكيد الدفع — ${total.toLocaleString("en-US")}`}
             </Button>
           </div>
         </div>

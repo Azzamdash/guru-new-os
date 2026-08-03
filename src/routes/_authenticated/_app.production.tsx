@@ -17,7 +17,7 @@ import { listEmployees } from "@/lib/employees.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/production")({
   head: () => ({ meta: [
-    { title: "الإنتاج والمخزون — e-GURUS" },
+    { title: tr("الإنتاج والمخزون — e-GURUS") },
     { name: "description", content: "تسجيل الإنتاج وحركات المخزون لكل براند." },
   ]}),
   component: ProductionPage,
@@ -104,7 +104,7 @@ function ProductionPage() {
           <div className="md:col-span-2">
             <Label>{tr("المنتج")}</Label>
             <Select value={form.product_id} onValueChange={(v) => setForm({ ...form, product_id: v })} disabled={!brandId}>
-              <SelectTrigger><SelectValue placeholder={brandId ? "اختر" : "اختر البراند"} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={brandId ? tr("اختر") : tr("اختر البراند")} /></SelectTrigger>
               <SelectContent>{filteredProducts.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · {UNITS_LABEL[p.unit] ?? p.unit}</SelectItem>)}</SelectContent>
             </Select>
           </div>
@@ -134,14 +134,14 @@ function ProductionPage() {
               const emp = employees.find((e) => e.id === v);
               setForm({ ...form, employee_id: v, worker_name: emp?.name ?? "" });
             }}>
-              <SelectTrigger><SelectValue placeholder={brandId ? "اختر" : "اختر البراند"} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={brandId ? tr("اختر") : tr("اختر البراند")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{tr("— يدوي —")}</SelectItem>
                 {brandEmployees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div><Label>{tr("اسم يدوي")}</Label><Input value={form.worker_name} onChange={(e) => setForm({ ...form, worker_name: e.target.value, employee_id: "" })} disabled={form.type !== "production" || !!form.employee_id} placeholder={form.type === "production" ? "اختياري" : "—"} /></div>
+          <div><Label>{tr("اسم يدوي")}</Label><Input value={form.worker_name} onChange={(e) => setForm({ ...form, worker_name: e.target.value, employee_id: "" })} disabled={form.type !== "production" || !!form.employee_id} placeholder={form.type === "production" ? tr("اختياري") : "—"} /></div>
           <div><Label>{tr("ملاحظة")}</Label><Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
           <Button onClick={() => save.mutate()} disabled={!form.product_id || form.qty <= 0 || save.isPending}>{tr("تسجيل")}</Button>
         </div>

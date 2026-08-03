@@ -22,7 +22,7 @@ import {
 export const Route = createFileRoute("/_authenticated/_app/courier-settlements")({
   head: () => ({
     meta: [
-      { title: "كشوف تحصيل شركات الشحن — e-GURUS" },
+      { title: tr("كشوف تحصيل شركات الشحن — e-GURUS") },
       { name: "description", content: "رفع كشف تحصيل شركة الشحن ومطابقته آلياً مع أوردرات النظام وترحيل المحصّل للخزنة." },
       { property: "og:title", content: "كشوف تحصيل شركات الشحن — e-GURUS" },
       { property: "og:description", content: "مطابقة تحصيل الدفع عند الاستلام مع أوردرات النظام." },
@@ -124,13 +124,13 @@ function CourierSettlementsPage() {
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold">{s.reference ?? s.id.slice(0, 8)}</span>
               {s.courier_name && <Badge variant="outline">{s.courier_name}</Badge>}
-              <Badge>{s.status === "posted" ? "مُرحّل" : "مسودة"}</Badge>
+              <Badge>{s.status === "posted" ? tr("مُرحّل") : tr("مسودة")}</Badge>
               <span className="text-sm text-muted-foreground">
                 {tr("مطابق")} {s.matched_lines}/{s.lines} {tr("— معلن")} {money(s.declared_total)} {tr("— مطابق")} {money(s.matched_total)}
               </span>
               <div className="ms-auto flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => setOpenId(openId === s.id ? null : s.id)}>
-                  {openId === s.id ? "إخفاء البنود" : "عرض البنود"}
+                  {openId === s.id ? tr("إخفاء البنود") : tr("عرض البنود")}
                 </Button>
                 <Button size="sm" disabled={s.status === "posted" || postM.isPending} onClick={() => postM.mutate(s.id)}>
                   {tr("ترحيل المطابق")}
@@ -167,7 +167,7 @@ function CourierSettlementsPage() {
                           <td className="p-2">
                             {l["order_id"] ? (
                               <Link to="/order-view/$id" params={{ id: String(l["order_id"]) }} className="text-primary hover:underline">
-                                {String(l["order_number"] ?? "عرض")}
+                                {String(l["order_number"] ?? tr("عرض"))}
                               </Link>
                             ) : "—"}
                           </td>
@@ -175,7 +175,7 @@ function CourierSettlementsPage() {
                           <td className="p-2">{money(Number(l["system_amount"] ?? 0))}</td>
                           <td className="p-2">
                             <Badge variant={l["match_status"] === "matched" ? "default" : "destructive"}>
-                              {l["match_status"] === "matched" ? "مطابق" : String(l["diff_reason"] ?? l["match_status"])}
+                              {l["match_status"] === "matched" ? tr("مطابق") : String(l["diff_reason"] ?? l["match_status"])}
                             </Badge>
                           </td>
                         </tr>

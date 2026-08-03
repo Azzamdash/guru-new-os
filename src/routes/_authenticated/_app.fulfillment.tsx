@@ -18,7 +18,7 @@ import { listEmployees } from "@/lib/employees.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/fulfillment")({
   head: () => ({ meta: [
-    { title: "تحضير الأوردرات — e-GURUS" },
+    { title: tr("تحضير الأوردرات — e-GURUS") },
     { name: "description", content: "تسجيل عدد الأوردرات التي حضّرها كل موظف يوميًا." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -103,7 +103,7 @@ function FulfillmentPage() {
               const emp = employees.find((e) => e.id === v);
               setForm({ ...form, employee_id: v, employee_name: emp?.name ?? "" });
             }}>
-              <SelectTrigger><SelectValue placeholder={form.brand_id ? "اختر" : "اختر البراند أولًا"} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={form.brand_id ? tr("اختر") : tr("اختر البراند أولًا")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{tr("— يدوي —")}</SelectItem>
                 {brandEmployees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}

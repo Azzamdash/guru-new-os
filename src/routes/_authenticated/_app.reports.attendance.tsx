@@ -25,7 +25,7 @@ import { ReportActions } from "@/components/ReportActions";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/attendance")({
   head: () => ({ meta: [
-    { title: "تقرير أداء الموظفين — e-GURUS" },
+    { title: tr("تقرير أداء الموظفين — e-GURUS") },
     { name: "description", content: "تقرير أداء الموظفين شهرياً: الغياب، الإجازات، التأخيرات، الخصومات والمكافآت." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -74,7 +74,7 @@ function AttendancePage() {
   const saveEmp = useMutation({
     mutationFn: (d: Parameters<typeof upEmpFn>[0]["data"]) => upEmpFn({ data: d }),
     onSuccess: () => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["employees"] }); qc.invalidateQueries({ queryKey: ["expense-entries"] }); setNewEmp({ name: "", brand_id: "", position: "", salary: 0 }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحفظ")),
   });
   const delEmp = useMutation({
     mutationFn: (id: string) => delEmpFn({ data: { id } }),
@@ -83,7 +83,7 @@ function AttendancePage() {
   const approveMonth = useMutation({
     mutationFn: () => approveFn({ data: { year, month } }),
     onSuccess: (r) => { toast.success(`تم اعتماد ${r.count} سجل`); qc.invalidateQueries({ queryKey: ["expense-entries"] }); qc.invalidateQueries({ queryKey: ["internal-dashboard"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل")),
   });
 
   const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i);
@@ -102,10 +102,10 @@ function AttendancePage() {
     const working = c?.working_days ?? 26;
     const worked = c?.worked_days ?? 0;
     const attendanceRate = working > 0 ? Math.max(0, Math.min(1, (worked + vacation) / working)) : 0;
-    const rating = attendanceRate >= 0.95 && late <= 1 ? { label: "ممتاز", cls: "bg-emerald-500/15 text-emerald-500" }
-      : attendanceRate >= 0.85 && late <= 3 ? { label: "جيد", cls: "bg-blue-500/15 text-blue-500" }
-      : attendanceRate >= 0.7 ? { label: "مقبول", cls: "bg-amber-500/15 text-amber-500" }
-      : { label: "ضعيف", cls: "bg-destructive/15 text-destructive" };
+    const rating = attendanceRate >= 0.95 && late <= 1 ? { label: tr("ممتاز"), cls: "bg-emerald-500/15 text-emerald-500" }
+      : attendanceRate >= 0.85 && late <= 3 ? { label: tr("جيد"), cls: "bg-blue-500/15 text-blue-500" }
+      : attendanceRate >= 0.7 ? { label: tr("مقبول"), cls: "bg-amber-500/15 text-amber-500" }
+      : { label: tr("ضعيف"), cls: "bg-destructive/15 text-destructive" };
     return { emp: e, absent, vacation, late, lateMin, otMin, deductions, bonuses, working, worked, attendanceRate, rating };
   });
 
@@ -150,17 +150,17 @@ function AttendancePage() {
               rating: r.rating.label,
             })) as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "name", label: "الموظف" },
-              { key: "position", label: "الوظيفة" },
-              { key: "brand", label: "البراند" },
-              { key: "worked", label: "أيام عمل" },
-              { key: "absent", label: "غياب" },
-              { key: "vacation", label: "إجازات" },
-              { key: "late", label: "تأخيرات" },
-              { key: "deductions", label: "خصومات" },
-              { key: "bonuses", label: "مكافآت" },
-              { key: "rate", label: "نسبة الانتظام %", fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
-              { key: "rating", label: "التقييم" },
+              { key: "name", label: tr("الموظف") },
+              { key: "position", label: tr("الوظيفة") },
+              { key: "brand", label: tr("البراند") },
+              { key: "worked", label: tr("أيام عمل") },
+              { key: "absent", label: tr("غياب") },
+              { key: "vacation", label: tr("إجازات") },
+              { key: "late", label: tr("تأخيرات") },
+              { key: "deductions", label: tr("خصومات") },
+              { key: "bonuses", label: tr("مكافآت") },
+              { key: "rate", label: tr("نسبة الانتظام %"), fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
+              { key: "rating", label: tr("التقييم") },
             ]}
           />
         </div>
@@ -313,7 +313,7 @@ function AttendancePage() {
                         {canWrite && (
                           <>
                             <Button size="sm" variant="ghost" onClick={() => saveEmp.mutate({ id: e.id, name: e.name, brand_id: e.brand_id, salary: e.salary, position: e.position, active: !e.active, note: e.note })}>
-                              {e.active ? "إيقاف" : "تفعيل"}
+                              {e.active ? tr("إيقاف") : tr("تفعيل")}
                             </Button>
                             <ConfirmDelete onConfirm={() => delEmp.mutate(e.id)} title={tr("حذف الموظف؟")} desc={tr("سيتم حذف الموظف وكل بيانات أدائه المسجلة. لا يمكن التراجع.")} />
                           </>

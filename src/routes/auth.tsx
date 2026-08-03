@@ -1,3 +1,4 @@
+import { tr } from "@/lib/i18n";
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { LoginScreen, safeNextPath } from "@/components/auth/LoginScreen";
 
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/auth")({
 
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول — e-GURUS Dashboard" },
+      { title: tr("تسجيل الدخول — e-GURUS Dashboard") },
       {
         name: "description",
         content: "سجّل الدخول لإدارة براندك وعرض لوحة التحكم المالية والتشغيلية.",

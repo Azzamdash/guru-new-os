@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { listOfflineInvoices, updateOfflineInvoice, updateOfflineInvoiceItems, deleteOfflineInvoice, getPosInvoice, listBranchProducts } from "@/lib/pos.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/offline-invoices")({
-  head: () => ({ meta: [{ title: "فواتير الأوفلاين — e-GURUS" }, { name: "description", content: "سجل فواتير الفروع الأوفلاين مع بيانات العميل والتاريخ" }] }),
+  head: () => ({ meta: [{ title: tr("فواتير الأوفلاين — e-GURUS") }, { name: "description", content: "سجل فواتير الفروع الأوفلاين مع بيانات العميل والتاريخ" }] }),
   component: OfflineInvoicesPage,
 });
 
@@ -82,7 +82,7 @@ function OfflineInvoicesPage() {
       if (editing && editItems.length > 0) {
         try {
           await updateItemsFn({ data: { id: editing.id, items: editItems } });
-        } catch (e) { toast.error(e instanceof Error ? e.message : "فشل حفظ الأصناف"); }
+        } catch (e) { toast.error(e instanceof Error ? e.message : tr("فشل حفظ الأصناف")); }
       }
       toast.success(tr("تم الحفظ"));
       setEditing(null);

@@ -125,7 +125,7 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
                       <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"><I className="w-4 h-4 text-primary" /></div>
                       <div>
                         <div className="font-semibold text-sm">{w.name}</div>
-                        <div className="text-[10px] text-muted-foreground">{KIND_LABEL[w.kind]}{w.active ? "" : " • معطلة"}</div>
+                        <div className="text-[10px] text-muted-foreground">{KIND_LABEL[w.kind]}{w.active ? "" : tr(" • معطلة")}</div>
                       </div>
                     </div>
                     {canWrite && (
@@ -167,7 +167,7 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
 
       <Dialog open={openEdit} onOpenChange={setOpenEdit}>
         <DialogContent dir="rtl">
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل محفظة" : "محفظة جديدة"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? tr("تعديل محفظة") : tr("محفظة جديدة")}</DialogTitle></DialogHeader>
           <div className="grid gap-3">
             <div><Label>{tr("الاسم")}</Label><Input value={editing?.name ?? ""} onChange={(e) => setEditing((f) => f ? { ...f, name: e.target.value } : f)} /></div>
             <div>

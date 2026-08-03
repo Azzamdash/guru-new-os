@@ -10,12 +10,12 @@ import { Activity, AlertTriangle, PackageX, ChevronRight, ChevronLeft, ShoppingB
 import { getOperationsSnapshot, updateInvoiceStage, STAGES, type Stage, assignInvoicePrep } from "@/lib/operations.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { listOrderPrepUsers } from "@/lib/admin.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/operations")({
   head: () => ({ meta: [
-    { title: "تقارير المخزون — e-GURUS" },
+    { title: tr("تقارير المخزون — e-GURUS") },
     { name: "description", content: "حالة المخزون اللحظية، قيمة المخزون لكل براند، ونقاط إعادة الطلب." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

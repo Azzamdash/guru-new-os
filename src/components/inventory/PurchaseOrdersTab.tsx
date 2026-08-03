@@ -287,7 +287,7 @@ function PurchaseOrderDetailDialog({ id, onClose, onChanged, onDelete }: { id: s
   return (
     <Dialog open={!!id} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader><DialogTitle>{po ? `أمر شراء — ${po.supplier_name}` : "أمر شراء"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{po ? `أمر شراء — ${po.supplier_name}` : tr("أمر شراء")}</DialogTitle></DialogHeader>
         {po && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

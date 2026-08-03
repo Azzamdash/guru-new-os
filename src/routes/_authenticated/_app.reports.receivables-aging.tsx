@@ -5,13 +5,13 @@ import { getReceivablesAging, type AgingBucket } from "@/lib/receivables.functio
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/EmptyState";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/receivables-aging")({
   head: () => ({
     meta: [
-      { title: "أعمار الذمم المدينة — e-GURUS" },
+      { title: tr("أعمار الذمم المدينة — e-GURUS") },
       { name: "description", content: "أعمار الذمم المدينة حسب البراند والعميل." },
       { name: "robots", content: "noindex, nofollow" },
     ],

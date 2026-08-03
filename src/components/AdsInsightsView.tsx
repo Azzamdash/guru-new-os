@@ -140,13 +140,13 @@ export function AdsInsightsView({ provider }: { provider: ProviderKey }) {
               className="flex-1"
               onClick={() => {
                 if (!activeBrand) {
-                  toast.error(productBrands.length === 0 ? "لا توجد براندات نشطة. أضف براند أولاً." : "اختر براند أولاً");
+                  toast.error(productBrands.length === 0 ? tr("لا توجد براندات نشطة. أضف براند أولاً.") : tr("اختر براند أولاً"));
                   return;
                 }
                 setConfigOpen(true);
               }}
             >
-              <Settings2 className="w-4 h-4 me-1" /> {connected ? "تعديل" : "ربط"}
+              <Settings2 className="w-4 h-4 me-1" /> {connected ? tr("تعديل") : tr("ربط")}
             </Button>
             {connected && (
               <Button variant="outline" onClick={() => testM.mutate()} disabled={testM.isPending || !activeBrand}>

@@ -20,7 +20,7 @@ export function EmptyState({ title, description, icon = "empty", action, classNa
       className={`flex flex-col items-center justify-center text-center gap-2 py-10 px-4 rounded-md border border-dashed border-border/60 bg-muted/10 ${className ?? ""}`}
     >
       <Icon className={`w-8 h-8 ${tone} ${icon === "loading" ? "animate-spin" : ""}`} />
-      <div className="font-medium text-sm">{title ?? (icon === "loading" ? "جاري التحميل..." : "لا توجد بيانات")}</div>
+      <div className="font-medium text-sm">{title ?? (icon === "loading" ? tr("جاري التحميل...") : tr("لا توجد بيانات"))}</div>
       {description && <div className="text-xs text-muted-foreground max-w-md">{description}</div>}
       {action && (
         <Button variant="outline" size="sm" className="mt-2 gap-1" onClick={action.onClick}>
@@ -64,7 +64,7 @@ export function ChartFrame({
           icon="warn"
           title={tr("حدث خطأ أثناء التحميل")}
           description={msg}
-          action={onRetry ? { label: "إعادة المحاولة", onClick: onRetry } : undefined}
+          action={onRetry ? { label: tr("إعادة المحاولة"), onClick: onRetry } : undefined}
         />
       </div>
     );
@@ -74,8 +74,8 @@ export function ChartFrame({
       <div style={style}>
         <EmptyState
           icon="empty"
-          title={emptyTitle ?? "لا توجد بيانات لعرضها"}
-          description={emptyDescription ?? "جرّب تغيير الفترة الزمنية أو الفلاتر، أو ابدأ بإدخال البيانات."}
+          title={emptyTitle ?? tr("لا توجد بيانات لعرضها")}
+          description={emptyDescription ?? tr("جرّب تغيير الفترة الزمنية أو الفلاتر، أو ابدأ بإدخال البيانات.")}
         />
       </div>
     );
@@ -88,7 +88,7 @@ export function ChartFrame({
           <EmptyState
             icon="warn"
             title={tr("بيانات ناقصة")}
-            description={`الحقول التالية غير متوفرة: ${missing.join("، ")}. أكمل الإدخال ليظهر الرسم بشكل صحيح.`}
+            description={`الحقول التالية غير متوفرة: ${missing.join(tr("، "))}. أكمل الإدخال ليظهر الرسم بشكل صحيح.`}
           />
         </div>
       );

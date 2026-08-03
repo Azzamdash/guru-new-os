@@ -26,7 +26,7 @@ import { Trash2, Plus, Lock, Wallet, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/expenses")({
   head: () => ({ meta: [
-    { title: "المصروفات — e-GURUS" },
+    { title: tr("المصروفات — e-GURUS") },
     { name: "description", content: "إدخال ومتابعة المصروفات لكل براند بفترات متعددة (يومي/أسبوعي/شهري/سنوي/مدة محددة) مع تحديد المنصة والإيراد المنسوب." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -126,14 +126,14 @@ function ExpensesPage() {
     },
 
     onSuccess: () => {
-      toast.success(form.id ? "تم التعديل" : "تمت الإضافة");
+      toast.success(form.id ? tr("تم التعديل") : tr("تمت الإضافة"));
       qc.invalidateQueries({ queryKey: ["expense-entries"] });
       qc.invalidateQueries({ queryKey: ["cash-txns"] });
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
       setForm((f) => ({ ...f, id: undefined, category_id: "", amount: 0, note: "", platform: "", attributed_revenue: 0, supplier_id: "" }));
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحفظ")),
   });
 
   const delMut = useMutation({
@@ -234,7 +234,7 @@ function ExpensesPage() {
           </div>
           {(filterPeriod === "daily" || filterPeriod === "weekly") && (
             <div className="md:col-span-3">
-              <Label>{filterPeriod === "weekly" ? "بداية الأسبوع" : "التاريخ"}</Label>
+              <Label>{filterPeriod === "weekly" ? tr("بداية الأسبوع") : tr("التاريخ")}</Label>
               <Input type="date" value={filterDay} onChange={(e) => setFilterDay(e.target.value)} />
             </div>
           )}
@@ -286,7 +286,7 @@ function ExpensesPage() {
 
       {/* ADD/EDIT */}
       <Card className="card-gradient p-5 space-y-4">
-        <h3 className="font-semibold">{form.id ? "تعديل بند" : "إضافة بند جديد"}</h3>
+        <h3 className="font-semibold">{form.id ? tr("تعديل بند") : tr("إضافة بند جديد")}</h3>
         <div className="grid md:grid-cols-4 gap-3">
           <div>
             <Label>{tr("البراند *")}</Label>
@@ -316,7 +316,7 @@ function ExpensesPage() {
             </Select>
           </div>
           <div>
-            <Label>{form.period_type === "custom" ? "من" : form.period_type === "weekly" ? "بداية الأسبوع" : "التاريخ"}</Label>
+            <Label>{form.period_type === "custom" ? tr("من") : form.period_type === "weekly" ? tr("بداية الأسبوع") : tr("التاريخ")}</Label>
             <Input type="date" value={form.period_date} onChange={(e) => setForm({ ...form, period_date: e.target.value })} />
           </div>
           {form.period_type === "custom" && (
@@ -383,7 +383,7 @@ function ExpensesPage() {
             disabled={saveMut.isPending}
             className="gap-2"
           >
-            <Plus className="w-4 h-4" /> {form.id ? "حفظ التعديل" : "إضافة"}
+            <Plus className="w-4 h-4" /> {form.id ? tr("حفظ التعديل") : tr("إضافة")}
           </Button>
           {form.id && (
             <Button variant="ghost" onClick={() => setForm({ ...form, id: undefined, category_id: "", amount: 0, note: "", platform: "", attributed_revenue: 0, supplier_id: "" })}>{tr("إلغاء")}</Button>

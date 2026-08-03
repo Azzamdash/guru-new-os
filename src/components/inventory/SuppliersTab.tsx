@@ -179,7 +179,7 @@ export function SuppliersTab() {
               </tr>
             ))}
             {filteredRows.length === 0 && (
-              <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">{supplierRows.length === 0 ? "لا موردين. أضف مورد للبدء." : "لا نتائج مطابقة للفلتر."}</td></tr>
+              <tr><td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">{supplierRows.length === 0 ? tr("لا موردين. أضف مورد للبدء.") : tr("لا نتائج مطابقة للفلتر.")}</td></tr>
             )}
           </tbody>
         </table>
@@ -261,18 +261,18 @@ function SupplierDialog({
         opening_balance: Number(form.opening_balance) || 0,
       },
     }).then(() => {
-      toast.success(isEdit ? "تم التعديل" : "تم الحفظ");
+      toast.success(isEdit ? tr("تم التعديل") : tr("تم الحفظ"));
       setOpen(false);
       if (!isEdit) setForm({ name: "", contact: "", notes: "", brand_ids: [], active: true, opening_balance: 0 });
       onSaved();
-    }).catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
+    }).catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("فشل")));
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? <Button className="gap-2"><Plus className="w-4 h-4" /> {tr("إضافة مورد")}</Button>}
       </DialogTrigger>
-      <DialogContent><DialogHeader><DialogTitle>{isEdit ? "تعديل مورد" : "مورد جديد"}</DialogTitle></DialogHeader>
+      <DialogContent><DialogHeader><DialogTitle>{isEdit ? tr("تعديل مورد") : tr("مورد جديد")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>{tr("الاسم")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div>
@@ -325,7 +325,7 @@ function SupplierDialog({
             <Input type="number" dir="ltr" className="text-left" value={form.opening_balance}
               onChange={(e) => setForm({ ...form, opening_balance: parseFloat(e.target.value) || 0 })} />
           </div>
-          <Button onClick={submit} className="w-full">{isEdit ? "حفظ التعديل" : "حفظ"}</Button>
+          <Button onClick={submit} className="w-full">{isEdit ? tr("حفظ التعديل") : tr("حفظ")}</Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -373,17 +373,17 @@ function SupplierDetail({
         note: invForm.note || null,
       },
     }).then(() => {
-      toast.success(invForm.id ? "تم التعديل" : "أضيفت الفاتورة");
+      toast.success(invForm.id ? tr("تم التعديل") : tr("أضيفت الفاتورة"));
       resetInvForm();
       onChanged();
-    }).catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
+    }).catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("فشل")));
   };
 
   const submitPay = () => {
     if (!payFor || payForm.amount <= 0) return;
     upsertPay({ data: { invoice_id: payFor, amount: payForm.amount, paid_at: payForm.paid_at, note: payForm.note || null } })
       .then(() => { toast.success(tr("سُجّلت الدفعة")); setPayFor(null); setPayForm({ amount: 0, paid_at: today, note: "" }); onChanged(); })
-      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
+      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("فشل")));
   };
 
   return (
@@ -391,7 +391,7 @@ function SupplierDetail({
       {isAdmin && (
         <Card className="card-gradient p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">{invForm.id ? "تعديل فاتورة" : "إضافة فاتورة"}</h3>
+            <h3 className="font-semibold">{invForm.id ? tr("تعديل فاتورة") : tr("إضافة فاتورة")}</h3>
             {invForm.id && <Button size="sm" variant="ghost" onClick={resetInvForm}>{tr("إلغاء التعديل")}</Button>}
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -419,7 +419,7 @@ function SupplierDetail({
             </div>
             <div><Label>{tr("ملاحظة")}</Label><Input value={invForm.note} onChange={(e) => setInvForm({ ...invForm, note: e.target.value })} /></div>
           </div>
-          <Button onClick={submitInv} className="w-full gap-2"><Plus className="w-4 h-4" /> {invForm.id ? "حفظ التعديل" : "حفظ الفاتورة"}</Button>
+          <Button onClick={submitInv} className="w-full gap-2"><Plus className="w-4 h-4" /> {invForm.id ? tr("حفظ التعديل") : tr("حفظ الفاتورة")}</Button>
         </Card>
       )}
 
@@ -439,7 +439,7 @@ function SupplierDetail({
                     <span className="text-xs text-muted-foreground">{inv.issued_at}</span>
                     {inv.due_at && <span className={`text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>← {inv.due_at}</span>}
                     {overdue && <Badge variant="destructive" className="gap-1"><AlertTriangle className="w-3 h-3" />{tr("متأخرة")}</Badge>}
-                    <Badge variant={inv.status === "paid" ? "default" : "outline"}>{inv.status === "paid" ? "مدفوعة" : "آجل"}</Badge>
+                    <Badge variant={inv.status === "paid" ? "default" : "outline"}>{inv.status === "paid" ? tr("مدفوعة") : tr("آجل")}</Badge>
                   </div>
                   {isAdmin && (
                     <div className="flex gap-1">

@@ -31,7 +31,7 @@ import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
 
 export const Route = createFileRoute("/_authenticated/_app/orders-center")({
   head: () => ({ meta: [
-    { title: "مركز إدارة الأوردرات — e-GURUS" },
+    { title: tr("مركز إدارة الأوردرات — e-GURUS") },
     { name: "description", content: "مؤشرات الأوردرات، الشحنات والتحصيل، وسجل حالات كل أوردر، بالإضافة لصندوق محادثات واتساب." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -384,7 +384,7 @@ function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
             <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 border-b last:border-0 pb-2">
               <div className="min-w-0">
                 <div className="font-medium truncate">
-                  {r.externalNumber ?? r.id.slice(0, 8)} — {r.customerName ?? "بدون اسم"}
+                  {r.externalNumber ?? r.id.slice(0, 8)} — {r.customerName ?? tr("بدون اسم")}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {r.customerPhone ?? "—"} {tr("· منذ")} {r.daysStuck} {tr("يوم")}
@@ -405,8 +405,8 @@ function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      {section("بدون شحنة", "أوردرات قيد الشحن ومر عليها أكثر من 3 أيام بدون أي محاولة شحن مسجلة", noShipment)}
-      {section("تسليم بدون تحصيل كامل", "أوردرات تم تسليمها ومر عليها أكثر من 5 أيام والمبلغ المحصّل أقل من إجمالي الأوردر", uncollected)}
+      {section(tr("بدون شحنة"), tr("أوردرات قيد الشحن ومر عليها أكثر من 3 أيام بدون أي محاولة شحن مسجلة"), noShipment)}
+      {section(tr("تسليم بدون تحصيل كامل"), tr("أوردرات تم تسليمها ومر عليها أكثر من 5 أيام والمبلغ المحصّل أقل من إجمالي الأوردر"), uncollected)}
     </div>
   );
 }
@@ -471,11 +471,11 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
   });
   const exportSelected = () => {
     exportToCSV(`orders-selected-${formatBusinessDate(new Date())}`, selectedRows, [
-      { key: "customer_name", label: "اسم العميل", fmt: (v) => (v as string) ?? "—" },
-      { key: "customer_phone", label: "التليفون", fmt: (v) => (v as string) ?? "—" },
-      { key: "shipping_governorate", label: "المحافظة", fmt: (v) => (v as string) ?? "—" },
-      { key: "courier_name", label: "شركة الشحن", fmt: (v) => (v as string) ?? "—" },
-      { key: "total_amount", label: "المبلغ", fmt: (v) => String(Number(v ?? 0)) },
+      { key: "customer_name", label: tr("اسم العميل"), fmt: (v) => (v as string) ?? "—" },
+      { key: "customer_phone", label: tr("التليفون"), fmt: (v) => (v as string) ?? "—" },
+      { key: "shipping_governorate", label: tr("المحافظة"), fmt: (v) => (v as string) ?? "—" },
+      { key: "courier_name", label: tr("شركة الشحن"), fmt: (v) => (v as string) ?? "—" },
+      { key: "total_amount", label: tr("المبلغ"), fmt: (v) => String(Number(v ?? 0)) },
     ]);
     toast.success(`تم تصدير ${selectedRows.length} أوردر`);
   };
@@ -587,7 +587,7 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
       ) : null}
 
       <div className="flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">{q.isFetching ? "جارٍ التحميل…" : `صفحة ${page + 1}`}</div>
+        <div className="text-xs text-muted-foreground">{q.isFetching ? tr("جارٍ التحميل…") : `صفحة ${page + 1}`}</div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{tr("السابق")}</Button>
           <Button size="sm" variant="outline" disabled={!q.data?.hasMore} onClick={goNext}>{tr("التالي")}</Button>
@@ -670,7 +670,7 @@ function TimelinePanel({ orderId, setOrderId, row, setRow }: {
           {timeline.data.entries.map((e) => (
             <div key={e.id} className="flex gap-3 border-b last:border-0 pb-2">
               <Badge variant={e.kind === "collection" ? "default" : e.kind === "shipment" ? "secondary" : "outline"}>
-                {e.kind === "collection" ? "تحصيل" : e.kind === "shipment" ? "شحن" : "حالة"}
+                {e.kind === "collection" ? tr("تحصيل") : e.kind === "shipment" ? tr("شحن") : tr("حالة")}
               </Badge>
               <div className="flex-1">
                 <div className="font-medium">{e.title}</div>
@@ -686,13 +686,13 @@ function TimelinePanel({ orderId, setOrderId, row, setRow }: {
 }
 
 const COLLECTION_METHODS = [
-  { value: "cod", label: "دفع عند الاستلام (COD)" },
-  { value: "cash", label: "كاش" },
-  { value: "bank_transfer", label: "تحويل بنكي" },
-  { value: "vodafone_cash", label: "فودافون كاش" },
-  { value: "instapay", label: "إنستاباي" },
-  { value: "card", label: "بطاقة / فيزا" },
-  { value: "other", label: "أخرى" },
+  { value: "cod", label: tr("دفع عند الاستلام (COD)") },
+  { value: "cash", label: tr("كاش") },
+  { value: "bank_transfer", label: tr("تحويل بنكي") },
+  { value: "vodafone_cash", label: tr("فودافون كاش") },
+  { value: "instapay", label: tr("إنستاباي") },
+  { value: "card", label: tr("بطاقة / فيزا") },
+  { value: "other", label: tr("أخرى") },
 ] as const;
 
 function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: (id: string) => void }) {
@@ -831,7 +831,7 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
     onSuccess: (r) => {
       setText("");
       if (r.status === "sent") toast.success(tr("تم الإرسال"));
-      else toast.warning(r.error ?? "الرسالة في الانتظار");
+      else toast.warning(r.error ?? tr("الرسالة في الانتظار"));
       qc.invalidateQueries({ queryKey: ["orders-center", "wa-thread", threadId] });
       qc.invalidateQueries({ queryKey: ["orders-center", "wa"] });
     },
@@ -857,7 +857,7 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
   const linkMut = useMutation({
     mutationFn: (orderId: string | null) => linkFn({ data: { threadId, orderId } }),
     onSuccess: (_r, orderId) => {
-      toast.success(orderId ? "تم ربط المحادثة بالأوردر" : "تم فك الربط");
+      toast.success(orderId ? tr("تم ربط المحادثة بالأوردر") : tr("تم فك الربط"));
       qc.invalidateQueries({ queryKey: ["orders-center", "wa"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -952,7 +952,7 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
                       label={tr("آخر محاولة شحن")}
                       value={lastShipment
                         ? `#${lastShipment.attempt_no} • ${lastShipment.status}${lastShipment.tracking ? ` • ${lastShipment.tracking}` : ""}`
-                        : "لا توجد"}
+                        : tr("لا توجد")}
                     />
                   </div>
                 )}

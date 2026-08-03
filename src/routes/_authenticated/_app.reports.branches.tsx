@@ -13,7 +13,7 @@ import { Store, TrendingUp, Wallet, Boxes, Trophy } from "lucide-react";
 import { getBranchesReport } from "@/lib/pos.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/branches")({
-  head: () => ({ meta: [{ title: "تقارير الفروع الأوفلاين — e-GURUS" }, { name: "description", content: "أداء الفروع الأوفلاين وأعلى البائعين" }] }),
+  head: () => ({ meta: [{ title: tr("تقارير الفروع الأوفلاين — e-GURUS") }, { name: "description", content: "أداء الفروع الأوفلاين وأعلى البائعين" }] }),
   component: BranchesReportPage,
 });
 

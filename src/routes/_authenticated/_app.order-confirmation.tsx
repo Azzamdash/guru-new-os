@@ -18,7 +18,7 @@ import { CONFIRMATION_OUTCOMES } from "@/lib/orders-ops.shared";
 export const Route = createFileRoute("/_authenticated/_app/order-confirmation")({
   head: () => ({
     meta: [
-      { title: "تأكيد الأوردرات — e-GURUS" },
+      { title: tr("تأكيد الأوردرات — e-GURUS") },
       { name: "description", content: "طابور تأكيد الأوردرات بالمكالمات والواتساب قبل الشحن مع تسجيل أسباب الإلغاء." },
       { property: "og:title", content: "تأكيد الأوردرات — e-GURUS" },
       { property: "og:description", content: "طابور تأكيد الأوردرات قبل الشحن." },
@@ -121,7 +121,7 @@ function OrderConfirmationPage() {
               </Link>
               <span className="text-sm">{o.customer_name ?? "—"}</span>
               <span dir="ltr" className="text-sm text-muted-foreground">{o.customer_phone ?? "—"}</span>
-              <Badge variant="outline">{o.governorate ?? "بدون محافظة"}</Badge>
+              <Badge variant="outline">{o.governorate ?? tr("بدون محافظة")}</Badge>
               <Badge>{money(o.total_amount)}</Badge>
               {o.attempts > 0 && <Badge variant="secondary">{tr("محاولات:")} {o.attempts}</Badge>}
               <Badge variant={o.confirmation_status === "confirmed" ? "default" : "outline"}>

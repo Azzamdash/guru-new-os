@@ -16,7 +16,7 @@ import { listMaterials, upsertMaterial, deleteMaterial, listBrands } from "@/lib
 
 export const Route = createFileRoute("/_authenticated/_app/materials")({
   head: () => ({ meta: [
-    { title: "الخامات — e-GURUS" },
+    { title: tr("الخامات — e-GURUS") },
     { name: "description", content: "إدارة الخامات ووحداتها." },
   ]}),
   component: MaterialsPage,
@@ -99,7 +99,7 @@ function MaterialsPage() {
       </Card>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل خامة" : "خامة جديدة"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? tr("تعديل خامة") : tr("خامة جديدة")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-3">
               <div><Label>{tr("الاسم")}</Label><Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>

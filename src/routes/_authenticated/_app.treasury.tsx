@@ -33,7 +33,7 @@ import { useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/_app/treasury")({
   head: () => ({ meta: [
-    { title: "الخزنة — التحصيلات والسحوبات" },
+    { title: tr("الخزنة — التحصيلات والسحوبات") },
     { name: "description", content: "تسجيل تحصيلات المناديب وشركات الشحن، السحوبات الشخصية، والإيداعات مع رصيد الخزنة الحيّ." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -162,13 +162,13 @@ function TreasuryPage() {
     } }),
 
     onSuccess: () => {
-      toast.success(form.id ? "تم التعديل" : "تم الحفظ");
+      toast.success(form.id ? tr("تم التعديل") : tr("تم الحفظ"));
       setForm(initialForm());
       qc.invalidateQueries({ queryKey: ["cash-txns"] });
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحفظ")),
   });
 
   const delMut = useMutation({
@@ -179,7 +179,7 @@ function TreasuryPage() {
       qc.invalidateQueries({ queryKey: ["cash-summary"] });
       qc.invalidateQueries({ queryKey: ["internal-dashboard"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحذف"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحذف")),
   });
 
   const couriersMap = useMemo(() => {
@@ -276,11 +276,11 @@ function TreasuryPage() {
         </Card>
         <Card className="p-4">
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <User className="w-3 h-3" /> {tr("سحوبات مالك/مستثمر")} {onlyMinePersonal ? "(أنا)" : "(الكل)"}
+            <User className="w-3 h-3" /> {tr("سحوبات مالك/مستثمر")} {onlyMinePersonal ? tr("(أنا)") : tr("(الكل)")}
           </div>
           <div className="text-xl sm:text-2xl font-bold mt-1">{fmt(s?.personalTotal ?? 0)}</div>
           <button className="text-xs text-primary underline mt-1" onClick={() => setOnlyMinePersonal((v) => !v)}>
-            {onlyMinePersonal ? "عرض كل المستخدمين" : "خصني بس"}
+            {onlyMinePersonal ? tr("عرض كل المستخدمين") : tr("خصني بس")}
           </button>
         </Card>
       </div>
@@ -296,7 +296,7 @@ function TreasuryPage() {
             <SelectContent>
               <SelectItem value="all">{tr("الكل")}</SelectItem>
               {(actorsQ.data ?? []).map((a) => (
-                <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? "· مستثمر" : "· مالك"}</SelectItem>
+                <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? tr("· مستثمر") : tr("· مالك")}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -306,7 +306,7 @@ function TreasuryPage() {
       {/* Add/Edit form */}
       {canWrite && (
         <Card className="p-4 space-y-4">
-          <div className="flex items-center gap-2 font-semibold"><Plus className="w-4 h-4" /> {form.id ? "تعديل عملية" : "إضافة عملية"}</div>
+          <div className="flex items-center gap-2 font-semibold"><Plus className="w-4 h-4" /> {form.id ? tr("تعديل عملية") : tr("إضافة عملية")}</div>
           <Tabs value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as CashTxnType, courier_id: v === "collection" ? f.courier_id : "" }))}>
             <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0">
               <TabsTrigger value="collection" className="flex-1 min-w-[140px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><HandCoins className="w-4 h-4 ml-1" /> {tr("تحصيل")}</TabsTrigger>
@@ -343,7 +343,7 @@ function TreasuryPage() {
                       <SelectTrigger><SelectValue placeholder={tr("اختر الشخص")} /></SelectTrigger>
                       <SelectContent>
                         {(actorsQ.data ?? []).map((a) => (
-                          <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? "· مستثمر" : "· مالك"}</SelectItem>
+                          <SelectItem key={a.userId} value={a.userId}>{a.name} {a.kind === "investor" ? tr("· مستثمر") : tr("· مالك")}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -469,7 +469,7 @@ function TreasuryPage() {
 
               <div className="flex gap-2 mt-4">
                 <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending || form.amount <= 0 || !form.brand_id || (form.type === "collection" && !form.courier_id) || (form.type === "personal_withdrawal" && canPickActor && !form.for_user_id) || (form.type === "other_out" && !form.category_id) || (form.type === "other_out" && isMarketingCat && !form.platform) || (form.type === "other_out" && isPurchasesCat && !form.supplier_id)}>
-                  {saveMut.isPending ? "..." : (form.id ? "حفظ التعديل" : "حفظ")}
+                  {saveMut.isPending ? "..." : (form.id ? tr("حفظ التعديل") : tr("حفظ"))}
                 </Button>
                 {form.id && <Button variant="outline" onClick={() => setForm(initialForm())}>{tr("إلغاء")}</Button>}
               </div>
@@ -575,7 +575,7 @@ function TreasuryPage() {
                   return (
                     <tr key={r.id} className="border-b last:border-0">
                       <td className="p-2">{r.occurred_at}</td>
-                      <td className="p-2"><span className="inline-flex items-center gap-1"><Icon className="w-3 h-3" /> {isTransfer ? "تحويل بين المحافظ" : TYPE_LABEL[r.type]}</span></td>
+                      <td className="p-2"><span className="inline-flex items-center gap-1"><Icon className="w-3 h-3" /> {isTransfer ? tr("تحويل بين المحافظ") : TYPE_LABEL[r.type]}</span></td>
                       <td className={`p-2 font-semibold ${isTransfer ? "text-amber-500" : (isIn ? "text-emerald-500" : "text-destructive")}`}>{isIn ? "+" : "-"}{fmt(Number(r.amount))}</td>
                       <td className="p-2">{r.courier_id ? couriersMap.get(r.courier_id) ?? "—" : "—"}</td>
                       <td className="p-2">{r.brand_id ? brandsMap.get(r.brand_id) ?? "—" : "—"}</td>

@@ -27,7 +27,7 @@ import { getMyRole } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/hr/attendance")({
   head: () => ({ meta: [
-    { title: "الحضور والانصراف — e-GURUS" },
+    { title: tr("الحضور والانصراف — e-GURUS") },
     { name: "description", content: "تسجيل مواعيد الحضور والانصراف اليومية للموظفين، وحساب التأخير والأوفر تايم يومي/أسبوعي/شهري/سنوي." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -100,7 +100,7 @@ function AttendancePage() {
       qc.invalidateQueries({ queryKey: ["employees"] });
       qc.invalidateQueries({ queryKey: ["hr-linkable-users"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الربط"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الربط")),
   });
 
 
@@ -143,7 +143,7 @@ function AttendancePage() {
   const saveLog = useMutation({
     mutationFn: (d: Parameters<typeof upLogFn>[0]["data"]) => upLogFn({ data: d }),
     onSuccess: () => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["time-logs"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل الحفظ")),
   });
   const delLog = useMutation({
     mutationFn: (id: string) => delLogFn({ data: { id } }),
@@ -152,7 +152,7 @@ function AttendancePage() {
   const saveEmp = useMutation({
     mutationFn: (d: Parameters<typeof upEmpFn>[0]["data"]) => upEmpFn({ data: d }),
     onSuccess: () => { toast.success(tr("تم تحديث الجدول")); qc.invalidateQueries({ queryKey: ["employees"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "فشل"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : tr("فشل")),
   });
 
   // Report aggregation per employee
@@ -403,7 +403,7 @@ function AttendancePage() {
                                   disabled={!!u.linkedEmployeeId && u.linkedEmployeeId !== e.id}
                                 >
                                   {u.email}
-                                  {u.linkedEmployeeId && u.linkedEmployeeId !== e.id ? " (مرتبط بموظف آخر)" : ""}
+                                  {u.linkedEmployeeId && u.linkedEmployeeId !== e.id ? tr(" (مرتبط بموظف آخر)") : ""}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -411,7 +411,7 @@ function AttendancePage() {
                         </td>
                         <td className="p-3 text-center">
                           {e.user_id
-                            ? <Badge variant="secondary">{linkedUser?.email ?? "مرتبط"}</Badge>
+                            ? <Badge variant="secondary">{linkedUser?.email ?? tr("مرتبط")}</Badge>
                             : <Badge variant="outline">{tr("غير مرتبط")}</Badge>}
                         </td>
                       </tr>

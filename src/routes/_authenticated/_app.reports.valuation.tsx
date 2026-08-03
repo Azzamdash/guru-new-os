@@ -14,7 +14,7 @@ import { Building2, TrendingUp, Lock } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/_app/reports/valuation")({
   head: () => ({
     meta: [
-      { title: "تقييم الشركات — e-GURUS" },
+      { title: tr("تقييم الشركات — e-GURUS") },
       { name: "description", content: "تقييم كل براند بناءً على إيرادات آخر ١٢ شهر والأصول." },
     ],
   }),
@@ -56,13 +56,13 @@ function ValuationPage() {
         <ReportActions
           filename="valuation-report"
           summaryTitle={tr("تقييم الشركات")}
-          summaryText={data ? `التقييم الكلي: ${fmt(data.totalCompanyValuation)}` : "تقرير تقييم البراندات"}
+          summaryText={data ? `التقييم الكلي: ${fmt(data.totalCompanyValuation)}` : tr("تقرير تقييم البراندات")}
           rows={rows as unknown as Record<string, unknown>[]}
           columns={[
-            { key: "brand_name", label: "البراند" },
-            { key: "annual_revenue", label: "إيرادات آخر ١٢ شهر", fmt: (v) => fmt(Number(v)) },
-            { key: "assets_net", label: "القيمة الدفترية للأصول", fmt: (v) => fmt(Number(v)) },
-            { key: "valuation", label: "التقييم", fmt: (v) => fmt(Number(v)) },
+            { key: "brand_name", label: tr("البراند") },
+            { key: "annual_revenue", label: tr("إيرادات آخر ١٢ شهر"), fmt: (v) => fmt(Number(v)) },
+            { key: "assets_net", label: tr("القيمة الدفترية للأصول"), fmt: (v) => fmt(Number(v)) },
+            { key: "valuation", label: tr("التقييم"), fmt: (v) => fmt(Number(v)) },
           ]}
         />
       </div>
@@ -117,7 +117,7 @@ function ValuationPage() {
                   {rows.map((r) => (
                     <tr key={r.brand_id} className="border-b border-border/50">
                       <td className="p-3 font-medium">{r.brand_name}</td>
-                      <td className="p-3"><Badge variant="outline">{r.brand_type === "service" ? "خدمات" : "منتجات"}</Badge></td>
+                      <td className="p-3"><Badge variant="outline">{r.brand_type === "service" ? tr("خدمات") : tr("منتجات")}</Badge></td>
                       <td className="p-3 num">{fmt(r.annual_revenue)}</td>
                       <td className="p-3 num text-muted-foreground">{fmt(r.annual_revenue * 1.5)}</td>
                       <td className="p-3 num">{fmt(r.assets_net)}</td>

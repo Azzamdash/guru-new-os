@@ -31,7 +31,7 @@ import {
 export const Route = createFileRoute("/_authenticated/_app/order-distribution")({
   head: () => ({
     meta: [
-      { title: "إدارة توزيع الأوردرات — e-GURUS" },
+      { title: tr("إدارة توزيع الأوردرات — e-GURUS") },
       {
         name: "description",
         content: "توزيع الأوردرات على شركات الشحن والمناديب مع اقتراح تلقائي حسب المحافظة وحمل كل شركة.",
@@ -428,9 +428,9 @@ function OrderDistributionPage() {
                       </Link>
                     </td>
                     <td className="p-2">{r.fromName ?? "—"}</td>
-                    <td className="p-2 font-medium">{r.toName ?? "إلغاء التوزيع"}</td>
+                    <td className="p-2 font-medium">{r.toName ?? tr("إلغاء التوزيع")}</td>
                     <td className="p-2 text-xs">
-                      {r.method === "auto" ? "تلقائي" : r.method === "unassign" ? "إلغاء" : "يدوي"}
+                      {r.method === "auto" ? tr("تلقائي") : r.method === "unassign" ? tr("إلغاء") : tr("يدوي")}
                     </td>
                     <td className="p-2 text-xs text-muted-foreground">{r.reason ?? "—"}</td>
                     <td className="p-2 text-xs">{r.byName ?? "—"}</td>

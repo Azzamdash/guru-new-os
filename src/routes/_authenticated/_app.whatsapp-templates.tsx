@@ -23,7 +23,7 @@ import { WHATSAPP_EVENTS, renderTemplate } from "@/lib/orders-ops.shared";
 export const Route = createFileRoute("/_authenticated/_app/whatsapp-templates")({
   head: () => ({
     meta: [
-      { title: "قوالب رسائل واتساب — e-GURUS" },
+      { title: tr("قوالب رسائل واتساب — e-GURUS") },
       { name: "description", content: "إدارة قوالب رسائل واتساب التلقائية لأحداث الأوردر: التأكيد، الشحن، التسليم والمرتجع." },
       { property: "og:title", content: "قوالب رسائل واتساب — e-GURUS" },
       { property: "og:description", content: "قوالب الرسائل التلقائية لأحداث الأوردرات." },
@@ -126,7 +126,7 @@ function WhatsappTemplatesPage() {
             <Switch checked={draft.autoSend} onCheckedChange={(v) => setDraft({ ...draft, autoSend: v })} /> {tr("إرسال تلقائي")}
           </label>
           <Button size="sm" className="ms-auto" disabled={saveM.isPending} onClick={() => saveM.mutate()}>
-            <Plus className="ml-1 h-4 w-4" /> {draft.id ? "تحديث" : "إضافة"}
+            <Plus className="ml-1 h-4 w-4" /> {draft.id ? tr("تحديث") : tr("إضافة")}
           </Button>
           {draft.id && <Button size="sm" variant="ghost" onClick={() => setDraft(emptyDraft)}>{tr("إلغاء")}</Button>}
         </div>
@@ -137,7 +137,7 @@ function WhatsappTemplatesPage() {
           placeholder={tr("مرحباً {{customer_name}}، أوردرك رقم {{order_number}} خرج للشحن مع {{courier}} — رقم التتبع {{tracking}}.")}
         />
         <div className="text-xs text-muted-foreground">
-          {tr("المتغيرات المتاحة:")} {Object.keys(SAMPLE).map((k) => `{{${k}}}`).join("، ")}
+          {tr("المتغيرات المتاحة:")} {Object.keys(SAMPLE).map((k) => `{{${k}}}`).join(tr("، "))}
         </div>
         {draft.body.trim() && (
           <div className="rounded-md bg-muted/50 p-3 text-sm">

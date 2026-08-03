@@ -21,7 +21,7 @@ import { ChartFrame } from "@/components/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/sales")({
   head: () => ({ meta: [
-    { title: "تقارير الأوردرات — e-GURUS" },
+    { title: tr("تقارير الأوردرات — e-GURUS") },
     { name: "description", content: "أداء الأوردرات: الأكثر مبيعًا، والإيراد، ومقارنات شهرية/تراكمية." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -126,15 +126,15 @@ function SalesReports() {
             summaryText={`الفترة: ${resolved.dateFrom ?? resolved.year}${resolved.dateTo ? ` → ${resolved.dateTo}` : ""} — صافي الإيراد: ${fmt(netRevenue)}`}
             rows={withMoney as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "name", label: "المنتج" },
-              { key: "sold", label: "مباع (قطع)" },
-              { key: "returned", label: "مرتجع" },
-              { key: "stock", label: "المخزون" },
-              { key: "sellPrice", label: "سعر البيع" },
-              { key: "revenue", label: "إجمالي الإيراد" },
-              { key: "returnedValue", label: "قيمة المرتجعات" },
-              { key: "netRevenue", label: "صافي الإيراد" },
-              { key: "produced", label: "إنتاج" },
+              { key: "name", label: tr("المنتج") },
+              { key: "sold", label: tr("مباع (قطع)") },
+              { key: "returned", label: tr("مرتجع") },
+              { key: "stock", label: tr("المخزون") },
+              { key: "sellPrice", label: tr("سعر البيع") },
+              { key: "revenue", label: tr("إجمالي الإيراد") },
+              { key: "returnedValue", label: tr("قيمة المرتجعات") },
+              { key: "netRevenue", label: tr("صافي الإيراد") },
+              { key: "produced", label: tr("إنتاج") },
             ]}
           />
         </div>

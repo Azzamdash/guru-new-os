@@ -7,13 +7,13 @@ type Scope = "all" | "brand" | "own" | "none";
 type Cell = { c: Scope; r: Scope; u: Scope; d: Scope; x: Scope };
 
 const ROLES: { key: string; label: string; color: string }[] = [
-  { key: "admin", label: "مشرف", color: "bg-red-500/15 text-red-600 dark:text-red-400" },
-  { key: "manager", label: "مدير", color: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
-  { key: "accountant", label: "محاسب", color: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
-  { key: "data_entry", label: "إدخال بيانات", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
-  { key: "viewer", label: "مشاهد", color: "bg-slate-500/15 text-slate-600 dark:text-slate-400" },
-  { key: "investor", label: "مستثمر", color: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-  { key: "member", label: "عضو", color: "bg-gray-500/15 text-gray-600 dark:text-gray-400" },
+  { key: "admin", label: tr("مشرف"), color: "bg-red-500/15 text-red-600 dark:text-red-400" },
+  { key: "manager", label: tr("مدير"), color: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
+  { key: "accountant", label: tr("محاسب"), color: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
+  { key: "data_entry", label: tr("إدخال بيانات"), color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  { key: "viewer", label: tr("مشاهد"), color: "bg-slate-500/15 text-slate-600 dark:text-slate-400" },
+  { key: "investor", label: tr("مستثمر"), color: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  { key: "member", label: tr("عضو"), color: "bg-gray-500/15 text-gray-600 dark:text-gray-400" },
 ];
 
 // c=create, r=read, u=update, d=delete, x=export

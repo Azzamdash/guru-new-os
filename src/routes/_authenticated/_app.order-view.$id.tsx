@@ -14,7 +14,7 @@ import { getOrderFull, listWhatsappTemplates, sendOrderTemplate } from "@/lib/or
 export const Route = createFileRoute("/_authenticated/_app/order-view/$id")({
   head: () => ({
     meta: [
-      { title: "تفاصيل الأوردر — e-GURUS" },
+      { title: tr("تفاصيل الأوردر — e-GURUS") },
       { name: "description", content: "عرض موحّد لتفاصيل الأوردر: الأصناف، الشحنة، التحصيل، سجل الحالات، المرتجعات ومحادثة واتساب." },
       { property: "og:title", content: "تفاصيل الأوردر — e-GURUS" },
       { property: "og:description", content: "كل بيانات الأوردر في شاشة واحدة." },

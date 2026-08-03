@@ -17,7 +17,7 @@ type PosInvoice = Awaited<ReturnType<typeof getPosInvoice>>;
 
 export const Route = createFileRoute("/_authenticated/_app/invoice-print")({
   head: () => ({ meta: [
-    { title: "طباعة الفواتير — فروع الأوفلاين" },
+    { title: tr("طباعة الفواتير — فروع الأوفلاين") },
     { name: "description", content: "اطبع أو أرسل عبر واتساب أي فاتورة فرع خلال آخر 14 يوم" },
   ] }),
   component: InvoicePrintPage,
@@ -55,7 +55,7 @@ function InvoicePrintPage() {
 
   const openInvoice = async (id: string) => {
     try { setReceipt(await invFn({ data: { id } })); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "تعذر فتح الفاتورة"); }
+    catch (e) { toast.error(e instanceof Error ? e.message : tr("تعذر فتح الفاتورة")); }
   };
 
   return (
@@ -95,7 +95,7 @@ function InvoicePrintPage() {
         {rows.map((r) => {
           const no = `POS-${String(r.id).slice(0, 8).toUpperCase()}`;
           const when = new Date(r.created_at).toLocaleString("en-GB");
-          const pay = r.payment_method === "cash" ? "كاش" : r.payment_method === "visa" ? "فيزا" : r.payment_method === "mixed" ? "مختلط" : "—";
+          const pay = r.payment_method === "cash" ? tr("كاش") : r.payment_method === "visa" ? tr("فيزا") : r.payment_method === "mixed" ? tr("مختلط") : "—";
           return (
             <div key={r.id} className="flex flex-wrap items-center gap-3 p-3">
               <div className="min-w-0 flex-1">

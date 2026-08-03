@@ -17,7 +17,7 @@ import { ChartFrame } from "@/components/EmptyState";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/production")({
   head: () => ({ meta: [
-    { title: "تقارير الإنتاج — e-GURUS" },
+    { title: tr("تقارير الإنتاج — e-GURUS") },
     { name: "description", content: "أداء العمال والمنتجات الأكثر إنتاجًا." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -69,10 +69,10 @@ function ProductionReports() {
             summaryText={`الفترة: ${resolved.dateFrom ?? resolved.year}${resolved.dateTo ? ` → ${resolved.dateTo}` : ""}`}
             rows={workers.map((w) => ({ ...w, share: totalProduced > 0 ? (w.produced / totalProduced) : 0 })) as unknown as Array<Record<string, unknown>>}
             columns={[
-              { key: "name", label: "العامل" },
-              { key: "produced", label: "إجمالي الإنتاج" },
-              { key: "productCount", label: "عدد المنتجات" },
-              { key: "share", label: "نصيبه %", fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
+              { key: "name", label: tr("العامل") },
+              { key: "produced", label: tr("إجمالي الإنتاج") },
+              { key: "productCount", label: tr("عدد المنتجات") },
+              { key: "share", label: tr("نصيبه %"), fmt: (v) => `${((Number(v)||0) * 100).toFixed(1)}%` },
             ]}
           />
         </div>

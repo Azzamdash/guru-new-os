@@ -13,7 +13,7 @@ import { GitCompareArrows, AlertTriangle, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/revenue-comparison")({
   head: () => ({ meta: [
-    { title: "مقارنة الإيرادات — يدوي مقابل فواتير" },
+    { title: tr("مقارنة الإيرادات — يدوي مقابل فواتير") },
     { name: "description", content: "مقارنة الإيرادات بين إدخالات monthly_entries وفواتير المبيعات (صافية بعد المرتجعات) حسب البراند والشهر." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),

@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/_app/investors")({
   component: InvestorsPage,
   head: () => ({
     meta: [
-      { title: "المستثمرون | e-GURUS" },
+      { title: tr("المستثمرون | e-GURUS") },
       { name: "description", content: "إدارة المستثمرين ونسبهم في البراندات" },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -248,7 +248,7 @@ function InvestorsPage() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing.id ? "تعديل المستثمر" : "مستثمر جديد"}</DialogTitle>
+            <DialogTitle>{editing.id ? tr("تعديل المستثمر") : tr("مستثمر جديد")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>

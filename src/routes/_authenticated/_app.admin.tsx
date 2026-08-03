@@ -51,7 +51,7 @@ export const Route = createFileRoute("/_authenticated/_app/admin")({
   component: AdminPage,
   head: () => ({
     meta: [
-      { title: "إدارة المستخدمين | e-GURUS" },
+      { title: tr("إدارة المستخدمين | e-GURUS") },
       { name: "description", content: "لوحة تحكم المشرف لإدارة المستخدمين والأدوار وكلمات المرور" },
       { name: "robots", content: "noindex, nofollow" },
     ],
@@ -160,16 +160,16 @@ function UserRow({ user }: { user: UserRow }) {
       toast.success(tr("تم تحديث الدور"));
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
+    onError: (e: any) => toast.error(e.message ?? tr("فشل التحديث")),
   });
 
   const banMut = useMutation({
     mutationFn: () => setBannedFn({ data: { userId: user.id, banned: !isBanned } }),
     onSuccess: () => {
-      toast.success(isBanned ? "تم تفعيل الحساب" : "تم إيقاف الحساب");
+      toast.success(isBanned ? tr("تم تفعيل الحساب") : tr("تم إيقاف الحساب"));
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
+    onError: (e: any) => toast.error(e.message ?? tr("فشل التحديث")),
   });
 
   const delMut = useMutation({
@@ -178,7 +178,7 @@ function UserRow({ user }: { user: UserRow }) {
       toast.success(tr("تم حذف المستخدم"));
       invalidate();
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل الحذف"),
+    onError: (e: any) => toast.error(e.message ?? tr("فشل الحذف")),
   });
 
   return (
@@ -251,7 +251,7 @@ function ResetPasswordDialog({ userId, email }: { userId: string; email: string 
       setOpen(false);
       setPassword("");
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
+    onError: (e: any) => toast.error(e.message ?? tr("فشل التحديث")),
   });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -308,7 +308,7 @@ function CreateUserDialog() {
       setRole("member");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (e: any) => toast.error(e.message ?? "فشل الإنشاء"),
+    onError: (e: any) => toast.error(e.message ?? tr("فشل الإنشاء")),
   });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -538,9 +538,9 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                     {pages.map((p) => {
                       const level = pageLevel(p);
                       const opts: { key: "none" | "read" | "write"; label: string }[] = [
-                        { key: "none", label: "مخفي" },
-                        { key: "read", label: "مشاهدة" },
-                        { key: "write", label: "تعديل" },
+                        { key: "none", label: tr("مخفي") },
+                        { key: "read", label: tr("مشاهدة") },
+                        { key: "write", label: tr("تعديل") },
                       ];
                       return (
                         <div

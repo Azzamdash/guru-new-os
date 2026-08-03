@@ -23,7 +23,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/_app/services")({
   head: () => ({ meta: [
-    { title: "براندات الخدمات — e-GURUS" },
+    { title: tr("براندات الخدمات — e-GURUS") },
     { name: "description", content: "إدارة عملاء ومشاريع براندات الخدمات مع تقارير الإيرادات والأرباح." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -150,7 +150,7 @@ function ServicesPage() {
                       <ClientDialog brandId={currentBrand} onSaved={invalidate} existing={c} />
                       <DeleteBtn label={tr("حذف العميل؟")} onConfirm={async () => {
                         try { await useServerFnWrap(deleteServiceClient)({ data: { id: c.id } }); toast.success(tr("حُذف")); invalidate(); }
-                        catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
+                        catch (e) { toast.error(e instanceof Error ? e.message : tr("فشل")); }
                       }} />
                     </td>
                   </tr>
@@ -192,7 +192,7 @@ function ServicesPage() {
                         {STATUS_LABEL[p.status]}
                       </Badge>
                     </td>
-                    <td className="p-3 text-muted-foreground">{p.pricing_type === "commission" ? "عمولة" : "ثابت"}</td>
+                    <td className="p-3 text-muted-foreground">{p.pricing_type === "commission" ? tr("عمولة") : tr("ثابت")}</td>
                     <td className="p-3 num">{fmt(Number(value ?? 0))}</td>
                     <td className="p-3 text-muted-foreground text-xs" dir="ltr">
                       {p.started_at ?? "—"}{p.finished_at ? ` → ${p.finished_at}` : ""}
@@ -201,7 +201,7 @@ function ServicesPage() {
                       <ProjectDialog brandId={currentBrand} clients={clientsQ.data ?? []} onSaved={invalidate} existing={p} />
                       <DeleteBtn label={tr("حذف المشروع؟")} onConfirm={async () => {
                         try { await useServerFnWrap(deleteServiceProject)({ data: { id: p.id } }); toast.success(tr("حُذف")); invalidate(); }
-                        catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
+                        catch (e) { toast.error(e instanceof Error ? e.message : tr("فشل")); }
                       }} />
                     </td>
                   </tr>
@@ -274,7 +274,7 @@ function ClientDialog({ brandId, onSaved, existing }: { brandId: string; onSaved
       } });
       toast.success(tr("تم الحفظ")); onSaved(); setOpen(false);
       if (!existing) setForm({ name: "", contact: "", status: "active", notes: "" });
-    } catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : tr("فشل")); }
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -282,7 +282,7 @@ function ClientDialog({ brandId, onSaved, existing }: { brandId: string; onSaved
         {existing ? <Pencil className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> {tr("عميل جديد")}</>}
       </Button>
       <DialogContent>
-        <DialogHeader><DialogTitle>{existing ? "تعديل عميل" : "عميل جديد"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{existing ? tr("تعديل عميل") : tr("عميل جديد")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>{tr("الاسم")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div><Label>{tr("جهة اتصال (تليفون/إيميل)")}</Label><Input dir="ltr" value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} /></div>
@@ -330,7 +330,7 @@ function ProjectDialog({ brandId, clients, onSaved, existing }: { brandId: strin
         note: form.note || null,
       } });
       toast.success(tr("تم الحفظ")); onSaved(); setOpen(false);
-    } catch (e) { toast.error(e instanceof Error ? e.message : "فشل"); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : tr("فشل")); }
   };
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -338,7 +338,7 @@ function ProjectDialog({ brandId, clients, onSaved, existing }: { brandId: strin
         {existing ? <Pencil className="w-4 h-4" /> : <><Plus className="w-4 h-4" /> {tr("مشروع جديد")}</>}
       </Button>
       <DialogContent>
-        <DialogHeader><DialogTitle>{existing ? "تعديل مشروع" : "مشروع جديد"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{existing ? tr("تعديل مشروع") : tr("مشروع جديد")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div>
             <Label>{tr("العميل")}</Label>

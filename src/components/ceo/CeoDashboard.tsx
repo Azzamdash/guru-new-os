@@ -230,13 +230,13 @@ export function CeoDashboard() {
   const topCustomers = cust?.top ?? [];
 
   const failedQueries = [
-    { label: "مؤشرات الفترة", q: dashQ },
-    { label: "قائمة الدخل", q: isQ },
-    { label: "التقييم", q: valQ },
-    { label: "الأصول", q: assetsQ },
-    { label: "الخزنة", q: cashQ },
-    { label: "أعمار الديون", q: agingQ },
-    { label: "العملاء", q: custQ },
+    { label: tr("مؤشرات الفترة"), q: dashQ },
+    { label: tr("قائمة الدخل"), q: isQ },
+    { label: tr("التقييم"), q: valQ },
+    { label: tr("الأصول"), q: assetsQ },
+    { label: tr("الخزنة"), q: cashQ },
+    { label: tr("أعمار الديون"), q: agingQ },
+    { label: tr("العملاء"), q: custQ },
   ].filter((x) => x.q.isError);
 
   return (
@@ -253,7 +253,7 @@ export function CeoDashboard() {
                 {tr("تعذّر تحميل بعض بيانات اللوحة، جرّب تحديث الصفحة")}
               </p>
               <p className="text-xs text-muted-foreground">
-                {tr("الأقسام المتأثرة:")} {failedQueries.map((x) => x.label).join("، ")} {tr("— الأرقام الظاهرة\n                فيها غير مكتملة (ليست صفرًا فعليًا).")}
+                {tr("الأقسام المتأثرة:")} {failedQueries.map((x) => x.label).join(tr("، "))} {tr("— الأرقام الظاهرة\n                فيها غير مكتملة (ليست صفرًا فعليًا).")}
               </p>
             </div>
           </div>

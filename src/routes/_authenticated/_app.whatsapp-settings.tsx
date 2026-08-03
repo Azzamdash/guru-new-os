@@ -19,7 +19,7 @@ import {
 export const Route = createFileRoute("/_authenticated/_app/whatsapp-settings")({
   head: () => ({
     meta: [
-      { title: "إعدادات واتساب — e-GURUS" },
+      { title: tr("إعدادات واتساب — e-GURUS") },
       {
         name: "description",
         content: "إدارة مفاتيح WhatsApp Cloud API وحالة الاتصال و Webhook الخاص بمركز الأوردرات.",
@@ -169,7 +169,7 @@ function WhatsappSettingsPage() {
           <Card className="space-y-4 p-4">
             <h2 className="font-semibold">{tr("اختبار الاتصال")}</h2>
             <Button onClick={() => testM.mutate()} disabled={testM.isPending}>
-              {testM.isPending ? "جاري الفحص..." : "فحص الاتصال بحساب واتساب"}
+              {testM.isPending ? tr("جاري الفحص...") : tr("فحص الاتصال بحساب واتساب")}
             </Button>
             <div className="space-y-2">
               <Label htmlFor="test-phone">{tr("إرسال رسالة اختبار إلى رقم (صيغة دولية بدون +)")}</Label>

@@ -9,7 +9,7 @@ import { PeriodFilter, defaultPeriod, resolvePeriod, type PeriodValue } from "@/
 import { usePersistedPeriod } from "@/lib/global-period";
 import { getExecutiveSnapshot } from "@/lib/executive.functions";
 import { listBrands } from "@/lib/internal.functions";
-import { useLang } from "@/lib/i18n";
+import { useLang, tr } from "@/lib/i18n";
 import { LayoutDashboard, TrendingUp, TrendingDown, Wallet, Scale, Boxes, AlertTriangle, AlertCircle, Info, ArrowRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 
@@ -77,7 +77,7 @@ function Page() {
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-xl sm:text-2xl font-extrabold leading-tight">Financial Dashboard</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{L("ملخص شامل للأداء المالي والتشغيلي", "Full financial & operational snapshot")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{L(tr("ملخص شامل للأداء المالي والتشغيلي"), "Full financial & operational snapshot")}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
@@ -85,7 +85,7 @@ function Page() {
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="min-w-[180px] h-9 rounded-full bg-card/60 backdrop-blur-md border-border/60"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{L("كل البراندات", "All brands")}</SelectItem>
+              <SelectItem value="all">{L(tr("كل البراندات"), "All brands")}</SelectItem>
               {(brandsQ.data ?? []).filter((b) => b.active).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -97,7 +97,7 @@ function Page() {
           <div className="sticky top-0 z-10 mb-3 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 to-amber-500/0 px-3 py-2 flex items-center gap-2">
             <span className="w-1.5 h-5 rounded-full bg-amber-500" />
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-bold tracking-wide">{L("تنبيهات تلقائية", "Automated Alerts")}</span>
+            <span className="text-sm font-bold tracking-wide">{L(tr("تنبيهات تلقائية"), "Automated Alerts")}</span>
           </div>
           <div className="space-y-2">
             {(d?.alerts ?? []).map((a, i) => (
@@ -111,7 +111,7 @@ function Page() {
                 <span className="flex-1">{a.message}</span>
                 {a.link && (
                   <Link to={a.link} className="text-primary hover:underline text-xs flex items-center gap-1">
-                    {L("افتح", "Open")} <ArrowRight className="w-3 h-3" />
+                    {L(tr("افتح"), "Open")} <ArrowRight className="w-3 h-3" />
                   </Link>
                 )}
               </div>
@@ -121,29 +121,29 @@ function Page() {
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Kpi icon={TrendingUp} label={L("الإيراد الصافي", "Net Revenue")} value={nf(d?.income.netRevenue ?? 0)} sub="EGP" />
-        <Kpi icon={TrendingDown} label={L("تكلفة البضاعة (COGS)", "COGS")} value={nf(d?.income.cogs ?? 0)} sub="EGP" tone="text-amber-500" />
-        <Kpi icon={TrendingDown} label={L("الربح الإجمالي", "Gross Profit")} value={nf(d?.income.grossProfit ?? 0)}
+        <Kpi icon={TrendingUp} label={L(tr("الإيراد الصافي"), "Net Revenue")} value={nf(d?.income.netRevenue ?? 0)} sub="EGP" />
+        <Kpi icon={TrendingDown} label={L(tr("تكلفة البضاعة (COGS)"), "COGS")} value={nf(d?.income.cogs ?? 0)} sub="EGP" tone="text-amber-500" />
+        <Kpi icon={TrendingDown} label={L(tr("الربح الإجمالي"), "Gross Profit")} value={nf(d?.income.grossProfit ?? 0)}
              sub={`${((d?.income.grossMargin ?? 0) * 100).toFixed(1)}%`} tone="text-emerald-500" />
-        <Kpi icon={TrendingUp} label={L("صافي الربح", "Net Profit")} value={nf(d?.income.netProfit ?? 0)}
+        <Kpi icon={TrendingUp} label={L(tr("صافي الربح"), "Net Profit")} value={nf(d?.income.netProfit ?? 0)}
              sub={`${((d?.income.netMargin ?? 0) * 100).toFixed(1)}%`}
              tone={(d?.income.netProfit ?? 0) >= 0 ? "text-emerald-500" : "text-destructive"} />
-        <Kpi icon={Wallet} label={L("صافي التدفق النقدي", "Net Cash Flow")} value={nf(d?.cashFlow.net ?? 0)} sub="EGP"
+        <Kpi icon={Wallet} label={L(tr("صافي التدفق النقدي"), "Net Cash Flow")} value={nf(d?.cashFlow.net ?? 0)} sub="EGP"
              tone={(d?.cashFlow.net ?? 0) >= 0 ? "text-emerald-500" : "text-destructive"} />
-        <Kpi icon={Scale} label={L("المتوقع COD", "Expected COD")} value={nf(d?.reconciliation.expected ?? 0)} sub="EGP" />
-        <Kpi icon={Scale} label={L("المودَع", "Deposited")} value={nf(d?.reconciliation.deposited ?? 0)} sub="EGP" tone="text-emerald-500" />
-        <Kpi icon={AlertTriangle} label={L("فرق التسوية", "Recon Variance")} value={nf(d?.reconciliation.variance ?? 0)}
+        <Kpi icon={Scale} label={L(tr("المتوقع COD"), "Expected COD")} value={nf(d?.reconciliation.expected ?? 0)} sub="EGP" />
+        <Kpi icon={Scale} label={L(tr("المودَع"), "Deposited")} value={nf(d?.reconciliation.deposited ?? 0)} sub="EGP" tone="text-emerald-500" />
+        <Kpi icon={AlertTriangle} label={L(tr("فرق التسوية"), "Recon Variance")} value={nf(d?.reconciliation.variance ?? 0)}
              sub={`${((d?.reconciliation.variancePct ?? 0) * 100).toFixed(1)}%`}
              tone={Math.abs(d?.reconciliation.variance ?? 0) < 1 ? "text-emerald-500" : "text-destructive"} />
-        <Kpi icon={Boxes} label={L("قيمة المخزون", "Inventory Value")} value={nf(d?.inventory.valuation ?? 0)}
-             sub={`${nf(d?.inventory.units ?? 0)} ${L("قطعة", "units")}`} />
+        <Kpi icon={Boxes} label={L(tr("قيمة المخزون"), "Inventory Value")} value={nf(d?.inventory.valuation ?? 0)}
+             sub={`${nf(d?.inventory.units ?? 0)} ${L(tr("قطعة"), "units")}`} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-5 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl shadow-2xl shadow-black/10">
           <div className="mb-3 rounded-2xl border border-border/60 bg-gradient-to-r from-primary/15 to-primary/0 px-3 py-2 flex items-center gap-2">
             <span className="w-1.5 h-5 rounded-full bg-primary" />
-            <h3 className="text-sm font-bold tracking-wide">{L("قائمة الدخل (ملخص)", "P&L Summary")}</h3>
+            <h3 className="text-sm font-bold tracking-wide">{L(tr("قائمة الدخل (ملخص)"), "P&L Summary")}</h3>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -165,7 +165,7 @@ function Page() {
         <Card className="p-5 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl shadow-2xl shadow-black/10">
           <div className="mb-3 rounded-2xl border border-border/60 bg-gradient-to-r from-sky-500/15 to-sky-500/0 px-3 py-2 flex items-center gap-2">
             <span className="w-1.5 h-5 rounded-full bg-sky-500" />
-            <h3 className="text-sm font-bold tracking-wide">{L("التدفق النقدي", "Cash Flow")}</h3>
+            <h3 className="text-sm font-bold tracking-wide">{L(tr("التدفق النقدي"), "Cash Flow")}</h3>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -188,17 +188,17 @@ function Page() {
       <Card className="p-5 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl shadow-2xl shadow-black/10">
         <div className="mb-3 rounded-2xl border border-border/60 bg-gradient-to-r from-emerald-500/15 to-emerald-500/0 px-3 py-2 flex items-center gap-2">
           <span className="w-1.5 h-5 rounded-full bg-emerald-500" />
-          <h3 className="text-sm font-bold tracking-wide">{L("روابط سريعة للتقارير التفصيلية", "Quick Links to Detailed Reports")}</h3>
+          <h3 className="text-sm font-bold tracking-wide">{L(tr("روابط سريعة للتقارير التفصيلية"), "Quick Links to Detailed Reports")}</h3>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <QuickLink to="/reports/income-statement" label={L("قائمة الدخل", "Income Statement")} />
-          <QuickLink to="/reports/cash-flow" label={L("التدفقات النقدية", "Cash Flow")} />
-          <QuickLink to="/reports/reconciliation" label={L("تسوية شركات الشحن", "Reconciliation")} />
-          <QuickLink to="/reports/inventory-valuation" label={L("تقييم المخزون", "Inventory Valuation")} />
-          <QuickLink to="/reports/profits" label={L("الأرباح", "Profits")} />
-          <QuickLink to="/reports/couriers" label={L("شركات الشحن", "Couriers")} />
-          <QuickLink to="/reports/audit" label={L("سجل التدقيق", "Audit Log")} />
-          <QuickLink to="/reports/brands-comparison" label={L("مقارنة البراندات", "Brands Comparison")} />
+          <QuickLink to="/reports/income-statement" label={L(tr("قائمة الدخل"), "Income Statement")} />
+          <QuickLink to="/reports/cash-flow" label={L(tr("التدفقات النقدية"), "Cash Flow")} />
+          <QuickLink to="/reports/reconciliation" label={L(tr("تسوية شركات الشحن"), "Reconciliation")} />
+          <QuickLink to="/reports/inventory-valuation" label={L(tr("تقييم المخزون"), "Inventory Valuation")} />
+          <QuickLink to="/reports/profits" label={L(tr("الأرباح"), "Profits")} />
+          <QuickLink to="/reports/couriers" label={L(tr("شركات الشحن"), "Couriers")} />
+          <QuickLink to="/reports/audit" label={L(tr("سجل التدقيق"), "Audit Log")} />
+          <QuickLink to="/reports/brands-comparison" label={L(tr("مقارنة البراندات"), "Brands Comparison")} />
         </div>
       </Card>
     </div>

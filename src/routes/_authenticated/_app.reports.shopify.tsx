@@ -14,7 +14,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { RefreshCw, ShoppingBag, DollarSign, PackageCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/shopify")({
-  head: () => ({ meta: [{ title: "تقارير Shopify — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("تقارير Shopify — e-GURUS") }] }),
   component: ShopifyReportPage,
 });
 
@@ -97,8 +97,8 @@ function ShopifyReportPage() {
         <EmptyState
           icon="warn"
           title={tr("تعذر جلب بيانات Shopify")}
-          description={ordersQ.error instanceof Error ? ordersQ.error.message : "خطأ غير معروف"}
-          action={{ label: "إعادة المحاولة", onClick: () => ordersQ.refetch() }}
+          description={ordersQ.error instanceof Error ? ordersQ.error.message : tr("خطأ غير معروف")}
+          action={{ label: tr("إعادة المحاولة"), onClick: () => ordersQ.refetch() }}
         />
       ) : (
         <>

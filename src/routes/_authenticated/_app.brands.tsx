@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Trash2, Lock, Pencil, Layers } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/brands")({
-  head: () => ({ meta: [{ title: "البراندات — e-GURUS" }] }),
+  head: () => ({ meta: [{ title: tr("البراندات — e-GURUS") }] }),
   component: BrandsPage,
 });
 
@@ -74,7 +74,7 @@ function BrandsPage() {
             {(brandsQ.data ?? []).map((b) => (
               <tr key={b.id} className="border-b border-border/50">
                 <td className="p-3 font-medium">{b.name}</td>
-                <td className="p-3"><Badge variant="outline">{b.type === "service" ? "خدمات" : b.type === "offline_branch" ? "فرع أوفلاين" : "منتجات"}</Badge></td>
+                <td className="p-3"><Badge variant="outline">{b.type === "service" ? tr("خدمات") : b.type === "offline_branch" ? tr("فرع أوفلاين") : tr("منتجات")}</Badge></td>
                 <td className="p-3 num">{b.sort_order}</td>
                 <td className="p-3 num">{b.cogs_percent_default != null ? `${b.cogs_percent_default}%` : "—"}</td>
                 <td className="p-3">{b.active ? <Badge>{tr("مفعّل")}</Badge> : <Badge variant="secondary">{tr("موقوف")}</Badge>}</td>
@@ -122,13 +122,13 @@ function BrandDialogInner({ editing, onClose, save, onSaved }: { editing: Brand;
     const payload: Partial<Brand> = { name: form.name, slug: form.slug, type: form.type, active: form.active, sort_order: form.sort_order, cogs_percent_default: form.cogs_percent_default ?? null };
     if (form.id) payload.id = form.id;
     save({ data: payload }).then(() => { toast.success(tr("تم الحفظ")); onSaved(); onClose(); })
-      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
+      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : tr("فشل")));
   };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogTrigger className="hidden" />
       <DialogContent>
-        <DialogHeader><DialogTitle>{form.id ? "تعديل براند" : "براند جديد"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{form.id ? tr("تعديل براند") : tr("براند جديد")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label>{tr("الاسم")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div><Label>{tr("الرابط المختصر (slug)")}</Label><Input value={form.slug} dir="ltr" onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>

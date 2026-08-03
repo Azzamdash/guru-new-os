@@ -24,7 +24,7 @@ import { PaginatedTable, type Column } from "@/components/PaginatedTable";
 
 export const Route = createFileRoute("/_authenticated/_app/suppliers/payments")({
   head: () => ({ meta: [
-    { title: "دفعات الموردين — e-GURUS" },
+    { title: tr("دفعات الموردين — e-GURUS") },
     { name: "description", content: "تسجيل دفعة لمورد: اختر المورد والبراند والفاتورة والمبلغ — يخصم من مديونيات المورد ومن الخزنة تلقائيًا." },
     { name: "robots", content: "noindex, nofollow" },
   ]}),
@@ -149,7 +149,7 @@ function SupplierPaymentsPage() {
       } });
     },
     onSuccess: () => {
-      toast.success(editingId ? "تم تعديل الدفعة وتحديث الخزنة" : "تم تسجيل الدفعة وخصمها من مديونيات المورد ومن الخزنة");
+      toast.success(editingId ? tr("تم تعديل الدفعة وتحديث الخزنة") : tr("تم تسجيل الدفعة وخصمها من مديونيات المورد ومن الخزنة"));
       qc.invalidateQueries({ queryKey: ["supplier-payments"] });
       qc.invalidateQueries({ queryKey: ["supplier-payments-all"] });
       qc.invalidateQueries({ queryKey: ["supplier-invoices"] });
@@ -293,7 +293,7 @@ function SupplierPaymentsPage() {
         <Card className="p-5 border-primary/30">
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             {editingId ? <Pencil className="w-5 h-5 text-primary" /> : <ArrowDownCircle className="w-5 h-5 text-primary" />}
-            <h2 className="text-lg font-semibold">{editingId ? `تعديل الدفعة (${editingId.slice(0,8).toUpperCase()})` : "دفعة جديدة"}</h2>
+            <h2 className="text-lg font-semibold">{editingId ? `تعديل الدفعة (${editingId.slice(0,8).toUpperCase()})` : tr("دفعة جديدة")}</h2>
             {editingId && <Badge variant="outline" className="ms-2">{tr("وضع التعديل")}</Badge>}
             <label className="ms-auto flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={standalone} onChange={(e) => { setStandalone(e.target.checked); setForm((f) => ({ ...f, invoice_id: "", brand_id: "" })); }} />
@@ -314,7 +314,7 @@ function SupplierPaymentsPage() {
               <div>
                 <Label>{tr("البراند *")}</Label>
                 <Select value={form.brand_id} onValueChange={(v) => setForm({ ...form, brand_id: v })} disabled={!form.supplier_id}>
-                  <SelectTrigger><SelectValue placeholder={form.supplier_id ? "اختر البراند" : "اختر المورد أولاً"} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={form.supplier_id ? tr("اختر البراند") : tr("اختر المورد أولاً")} /></SelectTrigger>
                   <SelectContent>
                     {(brandsForSupplier.length > 0 ? brandsForSupplier : brands).map((b) => (
                       <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
@@ -327,7 +327,7 @@ function SupplierPaymentsPage() {
             <div>
               <Label>{tr("البراند")}</Label>
               <Select value={form.brand_id || "all"} onValueChange={(v) => setForm({ ...form, brand_id: v === "all" ? "" : v, invoice_id: "", amount: 0 })} disabled={!form.supplier_id}>
-                <SelectTrigger><SelectValue placeholder={form.supplier_id ? "كل البراندات" : "اختر المورد أولاً"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={form.supplier_id ? tr("كل البراندات") : tr("اختر المورد أولاً")} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
                   {brandsForSupplier.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
@@ -341,7 +341,7 @@ function SupplierPaymentsPage() {
                 const rem = inv ? remainingOf(inv.id, Number(inv.amount)) : 0;
                 setForm({ ...form, invoice_id: v, amount: rem });
               }} disabled={!form.supplier_id}>
-                <SelectTrigger><SelectValue placeholder={form.supplier_id ? "اختر فاتورة مفتوحة" : "اختر المورد أولاً"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={form.supplier_id ? tr("اختر فاتورة مفتوحة") : tr("اختر المورد أولاً")} /></SelectTrigger>
                 <SelectContent>
                   {openInvoicesForFilter.map((i) => {
                     const rem = remainingOf(i.id, Number(i.amount));
@@ -394,7 +394,7 @@ function SupplierPaymentsPage() {
               )}
               {!editingId && <Button variant="ghost" onClick={resetForm} disabled={save.isPending}>{tr("مسح")}</Button>}
               <Button onClick={() => save.mutate()} disabled={!canSubmit || save.isPending}>
-                {save.isPending ? "جاري الحفظ…" : (editingId ? "حفظ التعديل" : "تسجيل الدفعة")}
+                {save.isPending ? tr("جاري الحفظ…") : (editingId ? tr("حفظ التعديل") : tr("تسجيل الدفعة"))}
               </Button>
             </div>
           </div>
@@ -508,15 +508,15 @@ function SupplierPaymentsPage() {
           })}
           searchKeys={["supplier", "brand", "invoice_short", "note", "paid_at"]}
           columns={[
-            { key: "paid_at", header: "تاريخ الدفع", render: (r) => <span className="num" dir="ltr">{r.paid_at}</span> },
-            { key: "supplier", header: "المورد", render: (r) => <span className="font-medium">{r.supplier}</span> },
-            { key: "brand", header: "البراند" },
-            { key: "invoice_short", header: "الفاتورة", render: (r) => <span className="text-xs text-muted-foreground" dir="ltr">{r.invoice_short}</span> },
-            { key: "invoice_issued_at", header: "تاريخ الفاتورة", render: (r) => <span className="num text-xs" dir="ltr">{r.invoice_issued_at}</span> },
-            { key: "invoice_amount", header: "قيمة الفاتورة", render: (r) => <span className="num">{nf(r.invoice_amount)}</span> },
-            { key: "amount", header: "المبلغ المدفوع", render: (r) => <span className="num font-semibold text-emerald-500">{nf(r.amount)}</span> },
-            { key: "cash_linked", header: "الخزنة", render: (r) => r.cash_linked ? <Badge variant="secondary" className="gap-1"><Wallet className="w-3 h-3" /> {tr("مسجَّل")}</Badge> : <Badge variant="outline">—</Badge> },
-            { key: "note", header: "ملاحظة", render: (r) => <span className="text-xs text-muted-foreground">{r.note || "—"}</span> },
+            { key: "paid_at", header: tr("تاريخ الدفع"), render: (r) => <span className="num" dir="ltr">{r.paid_at}</span> },
+            { key: "supplier", header: tr("المورد"), render: (r) => <span className="font-medium">{r.supplier}</span> },
+            { key: "brand", header: tr("البراند") },
+            { key: "invoice_short", header: tr("الفاتورة"), render: (r) => <span className="text-xs text-muted-foreground" dir="ltr">{r.invoice_short}</span> },
+            { key: "invoice_issued_at", header: tr("تاريخ الفاتورة"), render: (r) => <span className="num text-xs" dir="ltr">{r.invoice_issued_at}</span> },
+            { key: "invoice_amount", header: tr("قيمة الفاتورة"), render: (r) => <span className="num">{nf(r.invoice_amount)}</span> },
+            { key: "amount", header: tr("المبلغ المدفوع"), render: (r) => <span className="num font-semibold text-emerald-500">{nf(r.amount)}</span> },
+            { key: "cash_linked", header: tr("الخزنة"), render: (r) => r.cash_linked ? <Badge variant="secondary" className="gap-1"><Wallet className="w-3 h-3" /> {tr("مسجَّل")}</Badge> : <Badge variant="outline">—</Badge> },
+            { key: "note", header: tr("ملاحظة"), render: (r) => <span className="text-xs text-muted-foreground">{r.note || "—"}</span> },
             { key: "actions", header: "", render: (r) => (
               <div className="flex items-center gap-1">
                 <Button size="icon" variant="ghost" title={tr("طباعة إيصال PDF")} onClick={() => printReceipt({ id: r._raw.id, invoice_id: r._raw.invoice_id, amount: Number(r._raw.amount), paid_at: r._raw.paid_at, note: r._raw.note })}>
@@ -568,13 +568,13 @@ function SupplierPaymentsPage() {
               }))}
             searchKeys={["supplier", "brand", "note", "issued_at"]}
             columns={[
-              { key: "issued_at", header: "التاريخ", render: (r) => <span className="num" dir="ltr">{r.issued_at}</span> },
-              { key: "supplier", header: "المورد", render: (r) => <span className="font-medium">{r.supplier}</span> },
-              { key: "brand", header: "البراند" },
-              { key: "amount", header: "قيمة الفاتورة", render: (r) => <span className="num">{nf(r.amount)}</span> },
-              { key: "paid", header: "المدفوع", render: (r) => <span className="num text-emerald-500">{nf(r.paid)}</span> },
-              { key: "remaining", header: "المتبقي", render: (r) => <span className="num text-destructive">{nf(r.remaining)}</span> },
-              { key: "status", header: "الحالة", render: (r) => <Badge variant={r.status === "paid" ? "secondary" : "outline"}>{r.status === "paid" ? "مدفوعة" : "أجل"}</Badge> },
+              { key: "issued_at", header: tr("التاريخ"), render: (r) => <span className="num" dir="ltr">{r.issued_at}</span> },
+              { key: "supplier", header: tr("المورد"), render: (r) => <span className="font-medium">{r.supplier}</span> },
+              { key: "brand", header: tr("البراند") },
+              { key: "amount", header: tr("قيمة الفاتورة"), render: (r) => <span className="num">{nf(r.amount)}</span> },
+              { key: "paid", header: tr("المدفوع"), render: (r) => <span className="num text-emerald-500">{nf(r.paid)}</span> },
+              { key: "remaining", header: tr("المتبقي"), render: (r) => <span className="num text-destructive">{nf(r.remaining)}</span> },
+              { key: "status", header: tr("الحالة"), render: (r) => <Badge variant={r.status === "paid" ? "secondary" : "outline"}>{r.status === "paid" ? tr("مدفوعة") : tr("أجل")}</Badge> },
               { key: "actions", header: "", render: (r) => (
                 <Button size="icon" variant="ghost" title={tr("حذف الفاتورة")} onClick={() => setConfirmDelInvoice(r.id)}>
                   <Trash2 className="w-4 h-4 text-destructive" />
@@ -657,7 +657,7 @@ function StatementDialog({
     type Row = { date: string; kind: "opening" | "invoice" | "payment"; label: string; debit: number; credit: number; balance: number };
     const rows: Row[] = [];
     if (!from || opening !== 0) {
-      rows.push({ date: from || "—", kind: "opening", label: "رصيد افتتاحي", debit: opening > 0 ? opening : 0, credit: opening < 0 ? -opening : 0, balance: opening });
+      rows.push({ date: from || "—", kind: "opening", label: tr("رصيد افتتاحي"), debit: opening > 0 ? opening : 0, credit: opening < 0 ? -opening : 0, balance: opening });
     }
     const events: Array<{ date: string; kind: "invoice" | "payment"; row: StmtInvoice | StmtPayment }> = [
       ...invs.map((i) => ({ date: i.issued_at, kind: "invoice" as const, row: i })),
