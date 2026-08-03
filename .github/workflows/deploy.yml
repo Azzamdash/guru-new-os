@@ -1,130 +1,104 @@
-name: Deploy to DigitalOcean
+name: Deploy to Servers
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["Build & Push Image"]
+    types: [completed]
   workflow_dispatch:
-
-concurrency:
-  group: production-deployment
-  cancel-in-progress: false
-
-permissions:
-  contents: read
+    inputs:
+      target_ip:
+        description: 'Single target IP (overrides SERVER_IPS)'
+        required: false
+        type: string
+      release_version:
+        description: 'Release version tag to deploy'
+        required: false
+        type: string
 
 jobs:
-  # 1) Build + smoke test. Nothing touches the server unless this passes.
-  verify:
-    name: Build and smoke test
+  check:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
+    outputs:
+      should_deploy: ${{ steps.gate.outputs.should_deploy }}
+      servers: ${{ steps.gate.outputs.servers }}
+      version: ${{ steps.gate.outputs.version }}
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Lint
-        run: bun run lint --if-present
-
-      - name: Build Node production bundle
-        run: NITRO_PRESET=node-server bun run build
-
-      - name: Assert server bundle exists
-        run: test -f .output/server/index.mjs
-
-      - name: Smoke test the built server
+      - name: Resolve targets and version
+        id: gate
         env:
-          PORT: 3000
+          SERVER_IPS: ${{ secrets.SERVER_IPS }}
+          MANUAL_IP: ${{ inputs.target_ip }}
         run: |
-          node .output/server/index.mjs &
-          SERVER_PID=$!
-          for i in $(seq 1 30); do
-            if curl -fsS -o /dev/null "http://127.0.0.1:3000/"; then
-              echo "server responded on attempt $i"
-              kill "$SERVER_PID" || true
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "server did not become healthy in time" >&2
-          kill "$SERVER_PID" || true
-          exit 1
+          if [[ -n "$MANUAL_IP" ]]; then
+            echo "servers=[\"$MANUAL_IP\"]" >> "$GITHUB_OUTPUT"
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$SERVER_IPS" ]]; then
+            JSON=$(echo "$SERVER_IPS" | tr ',' '\n' | sed '/^$/d' | jq -R . | jq -sc .)
+            echo "servers=$JSON" >> "$GITHUB_OUTPUT"
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No SERVER_IPS secret configured — skipping deploy."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          fi
 
-  # 2) Deploy only after verify succeeds.
+      - name: Determine version
+        id: ver
+        run: |
+          if [[ -n "${{ inputs.release_version }}" ]]; then
+            echo "version=${{ inputs.release_version }}" >> "$GITHUB_OUTPUT"
+          else
+            V=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              https://api.github.com/repos/${{ github.repository }}/releases/latest \
+              | jq -r .tag_name | sed 's/^v//')
+            echo "version=$V" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: echo "version=${{ steps.ver.outputs.version }}" >> "$GITHUB_OUTPUT"
+        id: gate2
+
   deploy:
-    name: Deploy over SSH
-    needs: verify
+    needs: check
+    if: needs.check.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment: production
-
+    strategy:
+      matrix:
+        target_ip: ${{ fromJson(needs.check.outputs.servers) }}
+      fail-fast: false
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+      TARGET_IP: ${{ matrix.target_ip }}
+      SSH_USER: ${{ secrets.SSH_USERNAME }}
     steps:
-      - name: Ensure deployment secrets are present
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        run: |
-          missing=0
-          for name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS; do
-            if [ -z "${!name}" ]; then
-              echo "missing required secret: $name" >&2
-              missing=1
-            fi
-          done
-          exit "$missing"
+      - uses: actions/checkout@v4
 
-      - name: Configure deployment SSH
-        env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-        run: |
-          install -d -m 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Verify SSH connectivity (no changes made)
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      - name: Add host key
         run: |
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            "$DEPLOY_USER@$DEPLOY_HOST" \
-            'test -x /usr/local/bin/deploy-guru-recall || { echo "deploy script missing on server"; exit 1; }'
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$TARGET_IP" >> ~/.ssh/known_hosts
 
-      - name: Pull and deploy exact commit
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      - name: Sync compose files
         run: |
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            "$DEPLOY_USER@$DEPLOY_HOST" \
-            "/usr/local/bin/deploy-guru-recall '$GITHUB_SHA'"
+          ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/app"
+          scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/app/"
 
-      - name: Post-deploy health check
-        env:
-          HEALTH_URL: ${{ secrets.DEPLOY_HEALTH_URL || 'https://egurus.info/' }}
+      - name: Write env and deploy
         run: |
-          for i in $(seq 1 20); do
-            code=$(curl -sS -L --max-redirs 5 -o /dev/null -w '%{http_code}' "$HEALTH_URL" || true)
-            echo "attempt $i -> $code"
-            if [ "$code" = "200" ]; then exit 0; fi
-            sleep 5
-          done
-          echo "site did not return 200 after deploy" >&2
-          exit 1
+          ssh "$SSH_USER@$TARGET_IP" bash -s -- <<EOF
+            set -e
+            cat > /opt/app/.env <<ENV
+            GITHUB_REPOSITORY=${{ github.repository }}
+            VERSION=$VERSION
+            DOMAIN=${{ secrets.DOMAIN }}
+            SUPABASE_SERVICE_ROLE=${{ secrets.SUPABASE_SERVICE_ROLE }}
+            ENV
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            cd /opt/app
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -f
+          EOF
