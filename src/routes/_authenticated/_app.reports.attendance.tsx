@@ -171,7 +171,7 @@ function AttendancePage() {
         <Kpi label="أيام غياب" value={totals.absent} color="text-destructive" />
         <Kpi label="أيام إجازات" value={totals.vacation} color="text-blue-500" />
         <Kpi label="تأخيرات" value={totals.late} color="text-amber-500" />
-        <Kpi label="صافي مكافآت − خصومات" value={(totals.bonuses - totals.deductions).toLocaleString()} color={totals.bonuses - totals.deductions >= 0 ? "text-emerald-500" : "text-destructive"} />
+        <Kpi label="صافي مكافآت − خصومات" value={(totals.bonuses - totals.deductions).toLocaleString("en-US")} color={totals.bonuses - totals.deductions >= 0 ? "text-emerald-500" : "text-destructive"} />
       </div>
 
       <Tabs defaultValue="report" dir="rtl">
@@ -229,8 +229,8 @@ function AttendancePage() {
                       <td className="p-3 text-center text-amber-500">{r.late}</td>
                       <td className="p-3 text-center text-amber-500 num">{r.lateMin}</td>
                       <td className="p-3 text-center text-emerald-500 num">{r.otMin}</td>
-                      <td className="p-3 text-center num text-destructive">{r.deductions.toLocaleString()}</td>
-                      <td className="p-3 text-center num text-emerald-500">{r.bonuses.toLocaleString()}</td>
+                      <td className="p-3 text-center num text-destructive">{r.deductions.toLocaleString("en-US")}</td>
+                      <td className="p-3 text-center num text-emerald-500">{r.bonuses.toLocaleString("en-US")}</td>
                       <td className="p-3 text-center font-semibold">{(r.attendanceRate * 100).toFixed(1)}%</td>
                       <td className="p-3 text-center"><Badge variant="secondary" className={r.rating.cls}>{r.rating.label}</Badge></td>
                     </tr>
@@ -306,7 +306,7 @@ function AttendancePage() {
                       <td className="p-3 font-medium">{e.name}</td>
                       <td className="p-3 text-muted-foreground">{e.position ?? "—"}</td>
                       <td className="p-3">{brandName(e.brand_id)}</td>
-                      <td className="p-3 text-center num">{Number(e.salary || 0).toLocaleString()}</td>
+                      <td className="p-3 text-center num">{Number(e.salary || 0).toLocaleString("en-US")}</td>
                       <td className="p-3">{e.active ? <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-500">نشط</Badge> : <Badge variant="secondary">موقوف</Badge>}</td>
                       <td className="p-3 text-left flex gap-1 justify-end">
                         {canWrite && (

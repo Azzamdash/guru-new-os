@@ -117,7 +117,7 @@ function CouriersPage() {
                   <p className="text-xs text-muted-foreground">يخدم: {courierBrandsLabel(c)}</p>
                   {Number(c.opening_balance ?? 0) !== 0 && (
                     <p className="text-xs mt-1">
-                      رصيد افتتاحي: <span className={`num font-semibold ${Number(c.opening_balance) > 0 ? "text-emerald-600" : "text-destructive"}`}>{Number(c.opening_balance).toLocaleString()}</span>
+                      رصيد افتتاحي: <span className={`num font-semibold ${Number(c.opening_balance) > 0 ? "text-emerald-600" : "text-destructive"}`}>{Number(c.opening_balance).toLocaleString("en-US")}</span>
                     </p>
                   )}
                 </div>
@@ -172,10 +172,10 @@ function CouriersPage() {
                   <tr key={item.id} className="border-b border-border/50">
                     <td className="p-2">{item.couriers?.name ?? "—"}</td>
                     <td className="p-2">{item.governorate}</td>
-                    <td className="p-2 num">{Number(item.delivery_fee).toLocaleString()}</td>
-                    <td className="p-2 num">{Number(item.customer_return_fee).toLocaleString()}</td>
-                    <td className="p-2 num">{Number(item.failed_delivery_fee).toLocaleString()}</td>
-                    <td className="p-2 num">{Number(item.exchange_fee).toLocaleString()}</td>
+                    <td className="p-2 num">{Number(item.delivery_fee).toLocaleString("en-US")}</td>
+                    <td className="p-2 num">{Number(item.customer_return_fee).toLocaleString("en-US")}</td>
+                    <td className="p-2 num">{Number(item.failed_delivery_fee).toLocaleString("en-US")}</td>
+                    <td className="p-2 num">{Number(item.exchange_fee).toLocaleString("en-US")}</td>
                     <td className="p-2"><Button size="icon" variant="ghost" onClick={() => { setRate({ id: item.id, courierId: item.courier_id, governorate: item.governorate, deliveryFee: Number(item.delivery_fee), customerReturnFee: Number(item.customer_return_fee), failedDeliveryFee: Number(item.failed_delivery_fee), exchangeFee: Number(item.exchange_fee), effectiveFrom: item.effective_from }); setRateOpen(true); }}><Pencil className="w-4 h-4" /></Button></td>
                   </tr>
                 ))}

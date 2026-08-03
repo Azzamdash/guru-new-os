@@ -221,7 +221,7 @@ function CustomerProfile() {
                     <Trash2 className="w-3.5 h-3.5 text-destructive" />
                   </Button>
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-1" dir="ltr">{new Date(n.created_at).toLocaleString()}</div>
+                <div className="text-[10px] text-muted-foreground mt-1" dir="ltr">{new Date(n.created_at).toLocaleString("en-US")}</div>
               </div>
             ))}
           </div>
@@ -247,8 +247,8 @@ function CustomerProfile() {
                   <td className="p-3">{i.brandName}</td>
                   <td className="p-3"><Badge variant={i.type === "sale" ? "default" : "destructive"}>{i.type}</Badge></td>
                   <td className="p-3 num">{Number(i.qty)}</td>
-                  <td className="p-3 num">{Number(i.total_amount).toLocaleString()}</td>
-                  <td className="p-3 num">{Number(i.collected_amount).toLocaleString()}</td>
+                  <td className="p-3 num">{Number(i.total_amount).toLocaleString("en-US")}</td>
+                  <td className="p-3 num">{Number(i.collected_amount).toLocaleString("en-US")}</td>
                 </tr>
               ))}
               {invoices.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">—</td></tr>}

@@ -152,7 +152,7 @@ function ProductionPage() {
           {visibleStockProducts.map((p) => (
             <div key={p.id} className="rounded border border-border p-3">
               <div className="text-xs text-muted-foreground truncate">{p.name}</div>
-              <div className="text-2xl font-bold num mt-1">{(stockMap.get(p.id) ?? 0).toLocaleString()}</div>
+              <div className="text-2xl font-bold num mt-1">{(stockMap.get(p.id) ?? 0).toLocaleString("en-US")}</div>
               <div className="text-xs text-muted-foreground mt-1">{UNITS_LABEL[p.unit] ?? p.unit}</div>
             </div>
           ))}

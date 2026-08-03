@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_authenticated/_app/order-distribution")(
   component: OrderDistributionPage,
 });
 
-const money = (n: number) => `${Math.round(n).toLocaleString("ar-EG")} ج`;
+const money = (n: number) => `${Math.round(n).toLocaleString("en-US")} ج`;
 
 function OrderDistributionPage() {
   const qc = useQueryClient();
@@ -419,7 +419,7 @@ function OrderDistributionPage() {
                 {(logQ.data ?? []).map((r) => (
                   <tr key={r.id} className="border-t">
                     <td className="p-2 whitespace-nowrap text-xs">
-                      {new Date(r.createdAt).toLocaleString("ar-EG")}
+                      {new Date(r.createdAt).toLocaleString("en-US")}
                     </td>
                     <td className="p-2">
                       <Link to="/order-view/$id" params={{ id: r.orderId }} className="text-primary hover:underline">

@@ -650,7 +650,7 @@ function OrdersPage() {
                     </div>
                   ))}
                   <div className="text-right text-sm text-muted-foreground num" dir="ltr">
-                    Total: {(form.items.reduce((s, i) => s + (Number(i.qty) || 0) * (Number(i.unit_price) || 0), 0) + Number(form.shipping_amount || 0) - Number(form.discount_amount || 0)).toLocaleString()}
+                    Total: {(form.items.reduce((s, i) => s + (Number(i.qty) || 0) * (Number(i.unit_price) || 0), 0) + Number(form.shipping_amount || 0) - Number(form.discount_amount || 0)).toLocaleString("en-US")}
                   </div>
                 </div>
                 <div>

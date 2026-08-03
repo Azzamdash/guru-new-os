@@ -304,7 +304,7 @@ function CommentsTab({ projectId }: { projectId: string }) {
       <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto">
         {(q.data ?? []).map((c: { id: string; body: string; author_id: string | null; created_at: string }) => (
           <div key={c.id} className="p-3 rounded-xl bg-muted/40">
-            <div className="text-[10px] text-muted-foreground mb-1">{(c.author_id ?? "").slice(0,8)} • {new Date(c.created_at).toLocaleString()}</div>
+            <div className="text-[10px] text-muted-foreground mb-1">{(c.author_id ?? "").slice(0,8)} • {new Date(c.created_at).toLocaleString("en-US")}</div>
             <div className="text-sm whitespace-pre-wrap">{c.body}</div>
           </div>
         ))}
@@ -392,7 +392,7 @@ function PrivateTab({ projectId }: { projectId: string }) {
         {(q.data ?? []).map((n: { id: string; body: string; created_at: string; author_id: string | null }) => (
           <div key={n.id} className="p-3 rounded-xl bg-background/60 border border-amber-500/20">
             <div className="flex items-center justify-between mb-1">
-              <div className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString()}</div>
+              <div className="text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString("en-US")}</div>
               <Button size="sm" variant="ghost" onClick={async () => { await delFn({ data: { id: n.id } }); invalidate(); }}>
                 <Trash2 className="w-3 h-3" />
               </Button>

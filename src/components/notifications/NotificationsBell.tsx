@@ -96,7 +96,7 @@ export function NotificationsBell({ className }: { className?: string }) {
                 <p className="font-medium">{n.title}</p>
                 {n.body && <p className="text-xs text-muted-foreground">{n.body}</p>}
                 <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  {new Date(n.created_at).toLocaleString("ar-EG")}
+                  {new Date(n.created_at).toLocaleString("en-US")}
                 </p>
               </div>
             );

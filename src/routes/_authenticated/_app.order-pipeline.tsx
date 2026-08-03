@@ -52,7 +52,7 @@ function openPrintWindow(inv: PrintInvoice, lang: "ar" | "en") {
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
         <h1>${t("فاتورة تحضير أوردر", "Order prep slip")}</h1>
-        <div class="muted">${esc(inv.brandName)} · ${new Date(inv.occurredAt).toLocaleString(isAr ? "en-US" : "en-US")}</div>
+        <div class="muted">${esc(inv.brandName)} · ${new Date(inv.occurredAt).toLocaleString("en-US")}</div>
       </div>
       <div style="text-align:${isAr ? "left" : "right"}">
         <div style="font-size:20px;font-weight:700">${esc(inv.code)}</div>

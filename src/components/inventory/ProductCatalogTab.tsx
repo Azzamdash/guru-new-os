@@ -112,8 +112,8 @@ export function ProductCatalogTab() {
                   <td className="p-3">{brandName(p.brand_id)}</td>
                   <td className="p-3 text-muted-foreground">{unitLabel(p.unit)}</td>
                   <td className="p-3 num text-muted-foreground">{p.sku ?? "—"}</td>
-                  <td className="p-3 num text-left">{p.sell_price.toLocaleString()}</td>
-                  <td className="p-3 num text-left">{p.cogs_override != null ? p.cogs_override.toLocaleString() : "—"}</td>
+                  <td className="p-3 num text-left">{p.sell_price.toLocaleString("en-US")}</td>
+                  <td className="p-3 num text-left">{p.cogs_override != null ? p.cogs_override.toLocaleString("en-US") : "—"}</td>
                   <td className="p-3 num text-left">{p.cogs_percent != null ? `${p.cogs_percent}%` : "—"}</td>
                   <td className="p-3">{p.active ? <Badge>مفعّل</Badge> : <Badge variant="secondary">معطّل</Badge>}</td>
                   <td className="p-3 flex gap-2 justify-end">
@@ -253,14 +253,14 @@ function BOMDialog({ productId, onClose, materials }: { productId: string | null
                 <tr key={r.id} className="border-b border-border/50">
                   <td className="p-2">{r.materials?.name}</td>
                   <td className="p-2 num text-left">{r.qty_per_unit}</td>
-                  <td className="p-2 num text-left">{(r.qty_per_unit * (r.materials?.unit_cost ?? 0)).toLocaleString()}</td>
+                  <td className="p-2 num text-left">{(r.qty_per_unit * (r.materials?.unit_cost ?? 0)).toLocaleString("en-US")}</td>
                   <td className="p-2 text-left"><Button size="icon" variant="ghost" onClick={() => remove.mutate(r.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button></td>
                 </tr>
               ))}
               {rows.length === 0 && <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">لا خامات مضافة.</td></tr>}
             </tbody>
             <tfoot>
-              <tr className="font-semibold"><td className="p-2" colSpan={2}>إجمالي تكلفة الوحدة</td><td className="p-2 num text-left" colSpan={2}>{totalCogs.toLocaleString()}</td></tr>
+              <tr className="font-semibold"><td className="p-2" colSpan={2}>إجمالي تكلفة الوحدة</td><td className="p-2 num text-left" colSpan={2}>{totalCogs.toLocaleString("en-US")}</td></tr>
             </tfoot>
           </table>
         </div>

@@ -270,12 +270,12 @@ function ExpensesPage() {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="card-gradient p-5">
           <div className="text-xs text-muted-foreground">إجمالي المصروفات</div>
-          <div className="text-2xl font-bold mt-1">{totalSpend.toLocaleString()} جنيه</div>
+          <div className="text-2xl font-bold mt-1">{totalSpend.toLocaleString("en-US")} جنيه</div>
           <div className="text-xs text-muted-foreground mt-1">{rangeLabel}</div>
         </Card>
         <Card className="card-gradient p-5">
           <div className="text-xs text-muted-foreground">الإيراد المنسوب للحملات</div>
-          <div className="text-2xl font-bold mt-1">{totalAttributed.toLocaleString()} جنيه</div>
+          <div className="text-2xl font-bold mt-1">{totalAttributed.toLocaleString("en-US")} جنيه</div>
         </Card>
         <Card className="card-gradient p-5">
           <div className="text-xs text-muted-foreground">عدد بنود المصروفات</div>
@@ -427,8 +427,8 @@ function ExpensesPage() {
                     <td className="p-3">{brandName(e.brand_id)}</td>
                     <td className="p-3">{cat?.name ?? "—"}</td>
                     <td className="p-3">{e.platform ? <Badge variant="secondary">{PLATFORM_LABELS[e.platform] ?? e.platform}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</td>
-                    <td className="p-3 num text-left">{Number(e.amount).toLocaleString()}</td>
-                    <td className="p-3 num text-left">{Number(e.attributed_revenue || 0).toLocaleString()}</td>
+                    <td className="p-3 num text-left">{Number(e.amount).toLocaleString("en-US")}</td>
+                    <td className="p-3 num text-left">{Number(e.attributed_revenue || 0).toLocaleString("en-US")}</td>
                     <td className="p-3 text-muted-foreground">{e.note ?? ""}</td>
                     <td className="p-3 text-left flex gap-1 justify-end">
                       <Button size="icon" variant="ghost" onClick={() => startEdit(e)}><Pencil className="w-4 h-4" /></Button>
