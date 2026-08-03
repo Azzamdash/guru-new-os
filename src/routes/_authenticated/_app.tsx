@@ -252,14 +252,14 @@ function AppLayout() {
             return (
               <div key={group.key} className="space-y-1">
                 <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {lang === "ar" ? group.ar : group.en}
+                  {group.en}
                 </div>
                 {groupHubs.map((hub) => (
                   <HubNavItem
                     key={hub.key}
                     to={hub.key === "services" ? "/services-dashboard" : `/hub/${hub.key}`}
                     icon={hub.icon}
-                    label={lang === "ar" ? hub.ar : hub.en}
+                    label={hub.en}
                   />
                 ))}
               </div>
