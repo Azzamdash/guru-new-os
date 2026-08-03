@@ -17,7 +17,7 @@ import { listOrders, getOrdersFilterSummary, getOrdersSummary, runShopifySyncNow
 import { dispatchOrderToBestCourier, recommendCourierForOrder } from "@/lib/couriers.functions";
 import { sendBostaShipment, pullBostaShipmentStatus, syncAllBostaShipments, attachBostaTracking } from "@/lib/integrations.functions";
 import { listBrands, listProducts, listCouriers } from "@/lib/internal.functions";
-import { useLang, tr } from "@/lib/i18n";
+import { useLang } from "@/lib/i18n";
 import { toast } from "sonner";
 import { PaginationBar } from "@/components/PaginationBar";
 import { TableSkeleton } from "@/components/TableSkeleton";
@@ -289,7 +289,7 @@ function OrdersPage() {
       } catch {
         consecutiveFailuresRef.current += 1;
         if (consecutiveFailuresRef.current >= 3 && !hasWarnedRef.current) {
-          toast.warning(tr("تعذّرت مزامنة Shopify، تحقق من الاتصال"));
+          toast.warning("تعذّرت مزامنة Shopify، تحقق من الاتصال");
           hasWarnedRef.current = true;
         }
       }

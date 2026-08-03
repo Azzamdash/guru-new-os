@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { formatBusinessDate } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
@@ -140,19 +139,19 @@ function OrdersCenterPage() {
         { key: "c5", label: "" },
       ],
     );
-    toast.success(tr("تم تصدير المؤشرات"));
+    toast.success("تم تصدير المؤشرات");
   };
 
 
   return (
     <div className="p-4 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">{tr("مركز إدارة الأوردرات")}</h1>
+        <h1 className="text-xl font-bold">مركز إدارة الأوردرات</h1>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
+              <SelectItem value="all">كل البراندات</SelectItem>
               {(brands.data ?? []).map((b: { id: string; name: string }) => (
                 <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
               ))}
@@ -161,7 +160,8 @@ function OrdersCenterPage() {
           <PeriodFilter value={period} onChange={setPeriod} />
           {tab === "kpis" ? (
             <Button variant="outline" size="sm" onClick={exportOverviewCsv} disabled={!o} className="gap-1.5">
-              <Download className="h-4 w-4" /> ت{tr("تصدير CSV")}            </Button>
+              <Download className="h-4 w-4" /> تصدير CSV
+            </Button>
           ) : null}
           <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["orders-center"] })}>
             <RefreshCw className="h-4 w-4" />
@@ -171,22 +171,22 @@ function OrdersCenterPage() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="kpis">{tr("المؤشرات")}</TabsTrigger>
+          <TabsTrigger value="kpis">المؤشرات</TabsTrigger>
           <TabsTrigger value="attention" className="relative">
             يحتاج تدخل
-  {tr("يحتاج تدخل")}{stuckCount > 0 && (
+            {stuckCount > 0 && (
               <span className="absolute -top-1 -end-1 min-w-4 rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
                 {stuckCount > 99 ? "99+" : stuckCount}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="orders">{tr("الأوردرات")}</TabsTrigger>
-          <TabsTrigger value="ops">{tr("الشحن والتحصيل")}</TabsTrigger>
-          <TabsTrigger value="timeline">{tr("سجل الأوردر")}</TabsTrigger>
+          <TabsTrigger value="orders">الأوردرات</TabsTrigger>
+          <TabsTrigger value="ops">الشحن والتحصيل</TabsTrigger>
+          <TabsTrigger value="timeline">سجل الأوردر</TabsTrigger>
 
           <TabsTrigger value="wa" className="relative">
             واتساب
-      {tr("واتساب")}{waUnread > 0 && (
+            {waUnread > 0 && (
               <span className="absolute -top-1 -end-1 min-w-4 rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
                 {waUnread > 9 ? "9+" : waUnread}
               </span>
@@ -200,37 +200,40 @@ function OrdersCenterPage() {
               <div className="flex items-center gap-2 text-destructive">
                 <AlertTriangle className="h-5 w-5" />
                 <span className="font-semibold">
-                  {stuckCount} أ{tr("أوردر يحتاج تدخل عاجل")}                  {" — "}
-                  {(stuck.data?.noShipment.length ?? 0)} ب{tr("بدون شحن أكثر من 3 أيام،")}                  {" "}
-                  {(stuck.data?.uncollected.length ?? 0)} ت{tr("تم تسليمها بدون تحصيل كامل")}                </span>
+                  {stuckCount} أوردر يحتاج تدخل عاجل
+                  {" — "}
+                  {(stuck.data?.noShipment.length ?? 0)} بدون شحن أكثر من 3 أيام،
+                  {" "}
+                  {(stuck.data?.uncollected.length ?? 0)} تم تسليمها بدون تحصيل كامل
+                </span>
               </div>
-              <Button size="sm" variant="destructive" onClick={() => setTab("attention")}>{tr("عرض التفاصيل")}</Button>
+              <Button size="sm" variant="destructive" onClick={() => setTab("attention")}>عرض التفاصيل</Button>
             </Card>
           ) : null}
-          {overview.isLoading ? <Card className="p-6 text-muted-foreground">{tr("جارٍ التحميل…")}</Card> : null}
+          {overview.isLoading ? <Card className="p-6 text-muted-foreground">جارٍ التحميل…</Card> : null}
           {o ? (
             <>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <Kpi label={tr("عدد الأوردرات")} value={nf(o.totals.orders)} icon={Activity} />
-                <Kpi label={tr("إجمالي المبيعات")} value={nf(o.totals.revenue)} hint={`متوسط الأوردر ${nf(o.totals.avgOrderValue)}`} icon={Wallet} />
-                <Kpi label={tr("نسبة التسليم")} value={pct(o.delivery.deliveryRate)} hint={`${nf(o.delivery.delivered)} تم تسليمها`} icon={Truck} />
-                <Kpi label={tr("نسبة المرتجع")} value={pct(o.delivery.returnRate)} hint={`${nf(o.delivery.returned)} مرتجع`} icon={Truck} />
-                <Kpi label={tr("المتوقع تحصيله")} value={nf(o.collection.expected)} icon={Wallet} />
-                <Kpi label={tr("المحصّل فعليًا")} value={nf(o.collection.collected)} hint={pct(o.collection.collectionRate)} icon={Wallet} />
-                <Kpi label={tr("المتبقي")} value={nf(o.collection.outstanding)} icon={Wallet} />
-                <Kpi label={tr("قيد التنفيذ")} value={nf(o.delivery.open)} hint={`${nf(o.delivery.cancelled)} ملغي`} icon={Activity} />
+                <Kpi label="عدد الأوردرات" value={nf(o.totals.orders)} icon={Activity} />
+                <Kpi label="إجمالي المبيعات" value={nf(o.totals.revenue)} hint={`متوسط الأوردر ${nf(o.totals.avgOrderValue)}`} icon={Wallet} />
+                <Kpi label="نسبة التسليم" value={pct(o.delivery.deliveryRate)} hint={`${nf(o.delivery.delivered)} تم تسليمها`} icon={Truck} />
+                <Kpi label="نسبة المرتجع" value={pct(o.delivery.returnRate)} hint={`${nf(o.delivery.returned)} مرتجع`} icon={Truck} />
+                <Kpi label="المتوقع تحصيله" value={nf(o.collection.expected)} icon={Wallet} />
+                <Kpi label="المحصّل فعليًا" value={nf(o.collection.collected)} hint={pct(o.collection.collectionRate)} icon={Wallet} />
+                <Kpi label="المتبقي" value={nf(o.collection.outstanding)} icon={Wallet} />
+                <Kpi label="قيد التنفيذ" value={nf(o.delivery.open)} hint={`${nf(o.delivery.cancelled)} ملغي`} icon={Activity} />
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="p-4">
-                  <div className="font-semibold mb-2">{tr("حسب الحالة")}</div>
+                  <div className="font-semibold mb-2">حسب الحالة</div>
                   <table className="w-full text-sm">
                     <tbody>
                       {o.byStatus.map((r) => (
                         <tr
                           key={r.status}
                           onClick={() => drillTo({ status: r.status })}
-                          title={tr("اضغط لعرض أوردرات هذه الحالة")}
+                          title="اضغط لعرض أوردرات هذه الحالة"
                           className="border-b last:border-0 cursor-pointer transition-colors hover:bg-accent/60"
                         >
                           <td className="py-1">{r.status}</td>
@@ -242,17 +245,17 @@ function OrdersCenterPage() {
                   </table>
                 </Card>
                 <Card className="p-4">
-                  <div className="font-semibold mb-2">{tr("أداء شركات الشحن")}</div>
+                  <div className="font-semibold mb-2">أداء شركات الشحن</div>
                   <table className="w-full text-sm">
                     <thead className="text-muted-foreground">
-                      <tr><th className="text-start">{tr("الشركة")}</th><th>{tr("أوردرات")}</th><th>{tr("تسليم")}</th><th>{tr("مرتجع")}</th><th>{tr("النسبة")}</th></tr>
+                      <tr><th className="text-start">الشركة</th><th>أوردرات</th><th>تسليم</th><th>مرتجع</th><th>النسبة</th></tr>
                     </thead>
                     <tbody>
                       {o.byCourier.map((r) => (
                         <tr
                           key={r.name}
                           onClick={() => drillTo({ courier: r.name })}
-                          title={tr("اضغط لعرض أوردرات شركة الشحن دي")}
+                          title="اضغط لعرض أوردرات شركة الشحن دي"
                           className="border-b last:border-0 text-center cursor-pointer transition-colors hover:bg-accent/60"
                         >
                           <td className="py-1 text-start">{r.name}</td>
@@ -266,17 +269,17 @@ function OrdersCenterPage() {
                   </table>
                 </Card>
                 <Card className="p-4 lg:col-span-2">
-                  <div className="font-semibold mb-2">{tr("التوزيع الجغرافي")}</div>
+                  <div className="font-semibold mb-2">التوزيع الجغرافي</div>
                   <table className="w-full text-sm">
                     <thead className="text-muted-foreground">
-                      <tr><th className="text-start">{tr("المحافظة")}</th><th>{tr("أوردرات")}</th><th>{tr("تم التسليم")}</th><th>{tr("القيمة")}</th></tr>
+                      <tr><th className="text-start">المحافظة</th><th>أوردرات</th><th>تم التسليم</th><th>القيمة</th></tr>
                     </thead>
                     <tbody>
                       {o.byGovernorate.map((r) => (
                         <tr
                           key={r.name}
                           onClick={() => drillTo({ gov: r.name })}
-                          title={tr("اضغط لعرض أوردرات المحافظة دي")}
+                          title="اضغط لعرض أوردرات المحافظة دي"
                           className="border-b last:border-0 text-center cursor-pointer transition-colors hover:bg-accent/60"
                         >
                           <td className="py-1 text-start">{r.name}</td>
@@ -373,7 +376,7 @@ function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
         <div className="text-xs text-muted-foreground">{hint}</div>
       </div>
       {rows.length === 0 ? (
-        <div className="text-sm text-muted-foreground">{tr("لا توجد حالات هنا. 👌")}</div>
+        <div className="text-sm text-muted-foreground">لا توجد حالات هنا. 👌</div>
       ) : (
         <div className="space-y-2">
           {rows.map((r) => (
@@ -383,11 +386,13 @@ function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
                   {r.externalNumber ?? r.id.slice(0, 8)} — {r.customerName ?? "بدون اسم"}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {r.customerPhone ?? "—"} ·{tr("· منذ")}{r.daysStuck} ي{tr("يوم")}                  {r.kind === "uncollected" ? ` · متبقٍ ${nf(r.outstanding)} من ${nf(r.totalAmount)}` : ` · ${nf(r.totalAmount)} ج.م`}
+                  {r.customerPhone ?? "—"} · منذ {r.daysStuck} يوم
+                  {r.kind === "uncollected" ? ` · متبقٍ ${nf(r.outstanding)} من ${nf(r.totalAmount)}` : ` · ${nf(r.totalAmount)} ج.م`}
                 </div>
               </div>
               <Button size="sm" variant="outline" onClick={() => onOpen(r.id)}>
-                <Truck className="h-3 w-3 me-1" /> ا{tr("الشحن والتحصيل")}              </Button>
+                <Truck className="h-3 w-3 me-1" /> الشحن والتحصيل
+              </Button>
             </div>
           ))}
         </div>
@@ -395,7 +400,7 @@ function AttentionPanel({ loading, noShipment, uncollected, onOpen }: {
     </Card>
   );
 
-  if (loading) return <Card className="p-6 text-muted-foreground">{tr("جارٍ فحص الأوردرات…")}</Card>;
+  if (loading) return <Card className="p-6 text-muted-foreground">جارٍ فحص الأوردرات…</Card>;
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -489,23 +494,23 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
     <Card className="p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-44"><SelectValue placeholder={tr("الحالة")} /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="الحالة" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{tr("كل الحالات")}</SelectItem>
+            <SelectItem value="all">كل الحالات</SelectItem>
             {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={courier} onValueChange={setCourier}>
-          <SelectTrigger className="w-44"><SelectValue placeholder={tr("شركة الشحن")} /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="شركة الشحن" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{tr("كل شركات الشحن")}</SelectItem>
+            <SelectItem value="all">كل شركات الشحن</SelectItem>
             {couriers.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={gov} onValueChange={setGov}>
-          <SelectTrigger className="w-44"><SelectValue placeholder={tr("المحافظة")} /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="المحافظة" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{tr("كل المحافظات")}</SelectItem>
+            <SelectItem value="all">كل المحافظات</SelectItem>
             {governorates.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -519,17 +524,17 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={(v) => toggleAll(v === true)}
-                  aria-label={tr("تحديد الكل")}
+                  aria-label="تحديد الكل"
                 />
               </th>
-              <th className="text-start py-1">{tr("رقم الأوردر")}</th>
-              <th className="text-start">{tr("العميل")}</th>
-              <th className="text-start">{tr("البراند")}</th>
-              <th className="text-start">{tr("الحالة")}</th>
-              <th className="text-start">{tr("شركة الشحن")}</th>
-              <th className="text-start">{tr("المحافظة")}</th>
-              <th className="text-end">{tr("المبلغ")}</th>
-              <th className="text-end">{tr("التاريخ")}</th>
+              <th className="text-start py-1">رقم الأوردر</th>
+              <th className="text-start">العميل</th>
+              <th className="text-start">البراند</th>
+              <th className="text-start">الحالة</th>
+              <th className="text-start">شركة الشحن</th>
+              <th className="text-start">المحافظة</th>
+              <th className="text-end">المبلغ</th>
+              <th className="text-end">التاريخ</th>
               <th></th>
             </tr>
           </thead>
@@ -540,7 +545,7 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
                   <Checkbox
                     checked={selected.has(r.id)}
                     onCheckedChange={(v) => toggleOne(r.id, v === true)}
-                    aria-label={tr("تحديد الأوردر")}
+                    aria-label="تحديد الأوردر"
                   />
                 </td>
                 <td className="py-1">{r.external_order_number ?? r.id.slice(0, 8)}</td>
@@ -553,14 +558,16 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
                 <td className="text-end tabular-nums">{new Date(r.occurred_at).toLocaleDateString("en-GB")}</td>
                 <td className="text-end whitespace-nowrap">
                   <Button size="sm" variant="outline" className="me-1" onClick={() => onOpen("ops", r)}>
-                    <Truck className="h-3 w-3 me-1" /> ا{tr("الشحن والتحصيل")}                  </Button>
+                    <Truck className="h-3 w-3 me-1" /> الشحن والتحصيل
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => onOpen("timeline", r)}>
-                    <Activity className="h-3 w-3 me-1" /> ا{tr("السجل")}                  </Button>
+                    <Activity className="h-3 w-3 me-1" /> السجل
+                  </Button>
                 </td>
               </tr>
             ))}
             {!q.isLoading && rows.length === 0 ? (
-              <tr><td colSpan={10} className="py-6 text-center text-muted-foreground">{tr("لا توجد أوردرات مطابقة.")}</td></tr>
+              <tr><td colSpan={10} className="py-6 text-center text-muted-foreground">لا توجد أوردرات مطابقة.</td></tr>
             ) : null}
           </tbody>
         </table>
@@ -568,11 +575,12 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
 
       {selectedRows.length > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2">
-          <div className="text-sm">{tr("تم تحديد")} {selectedRows.length} أ{tr("أوردر")}/div>
+          <div className="text-sm">تم تحديد {selectedRows.length} أوردر</div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>{tr("إلغاء التحديد")}</Button>
+            <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>إلغاء التحديد</Button>
             <Button size="sm" onClick={exportSelected}>
-              <Download className="h-3 w-3 me-1" /> ت{tr("تصدير المحدد CSV")}            </Button>
+              <Download className="h-3 w-3 me-1" /> تصدير المحدد CSV
+            </Button>
           </div>
         </div>
       ) : null}
@@ -580,8 +588,8 @@ function OrdersListPanel({ dateFrom, dateTo, brandId, statuses, couriers, govern
       <div className="flex items-center justify-between">
         <div className="text-xs text-muted-foreground">{q.isFetching ? "جارٍ التحميل…" : `صفحة ${page + 1}`}</div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>{tr("السابق")}</Button>
-          <Button size="sm" variant="outline" disabled={!q.data?.hasMore} onClick={goNext}>{tr("التالي")}</Button>
+          <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>السابق</Button>
+          <Button size="sm" variant="outline" disabled={!q.data?.hasMore} onClick={goNext}>التالي</Button>
         </div>
       </div>
     </Card>
@@ -620,7 +628,7 @@ function TimelinePanel({ orderId, setOrderId, row, setRow }: {
     <div className="space-y-4">
       <Card className="p-4 flex flex-wrap items-end gap-2">
         <div className="space-y-1">
-          <Label>{tr("ابحث عن الأوردر")}</Label>
+          <Label>ابحث عن الأوردر</Label>
           <OrderSearchCombobox
             value={active}
             onSelect={(row) => {
@@ -634,21 +642,21 @@ function TimelinePanel({ orderId, setOrderId, row, setRow }: {
       {active ? (
         <Card className="p-4">
           {order.isLoading ? (
-            <div className="text-sm text-muted-foreground">{tr("جارٍ تحميل بيانات الأوردر…")}</div>
+            <div className="text-sm text-muted-foreground">جارٍ تحميل بيانات الأوردر…</div>
           ) : order.isError ? (
-            <div className="text-sm text-destructive">{tr("تعذّر تحميل بيانات الأوردر")}</div>
+            <div className="text-sm text-destructive">تعذّر تحميل بيانات الأوردر</div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-3">
-              <Field label={tr("العميل")} value={o?.customer_name ?? selectedRow?.customer_name ?? "—"} />
-              <Field label={tr("التليفون")} value={o?.customer_phone ?? selectedRow?.customer_phone ?? "—"} />
-              <Field label={tr("البراند")} value={selectedRow?.brand_name ?? "—"} />
+              <Field label="العميل" value={o?.customer_name ?? selectedRow?.customer_name ?? "—"} />
+              <Field label="التليفون" value={o?.customer_phone ?? selectedRow?.customer_phone ?? "—"} />
+              <Field label="البراند" value={selectedRow?.brand_name ?? "—"} />
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">{tr("الحالة الحالية")}</div>
+                <div className="text-xs text-muted-foreground">الحالة الحالية</div>
                 <Badge variant="secondary">{selectedRow?.order_status ?? o?.fulfillment_status ?? "—"}</Badge>
               </div>
-              <Field label={tr("إجمالي المبلغ")} value={`${Number(total).toLocaleString("en-GB", { maximumFractionDigits: 2 })} ج.م`} />
-              <Field label={tr("شركة الشحن")} value={selectedRow?.courier_name ?? "—"} />
-              {o?.external_order_number ? <Field label={tr("رقم الأوردر")} value={o.external_order_number} /> : null}
+              <Field label="إجمالي المبلغ" value={`${Number(total).toLocaleString("en-GB", { maximumFractionDigits: 2 })} ج.م`} />
+              <Field label="شركة الشحن" value={selectedRow?.courier_name ?? "—"} />
+              {o?.external_order_number ? <Field label="رقم الأوردر" value={o.external_order_number} /> : null}
             </div>
           )}
         </Card>
@@ -657,7 +665,7 @@ function TimelinePanel({ orderId, setOrderId, row, setRow }: {
 
       {timeline.data ? (
         <Card className="p-4 space-y-3">
-          {timeline.data.entries.length === 0 ? <div className="text-muted-foreground">{tr("لا يوجد سجل بعد.")}</div> : null}
+          {timeline.data.entries.length === 0 ? <div className="text-muted-foreground">لا يوجد سجل بعد.</div> : null}
           {timeline.data.entries.map((e) => (
             <div key={e.id} className="flex gap-3 border-b last:border-0 pb-2">
               <Badge variant={e.kind === "collection" ? "default" : e.kind === "shipment" ? "secondary" : "outline"}>
@@ -702,12 +710,12 @@ function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: 
 
   const shipMut = useMutation({
     mutationFn: () => addShip({ data: { orderId: active, tracking: tracking || null } }),
-    onSuccess: () => { toast.success(tr("تم تسجيل محاولة شحن جديدة")); setTracking(""); qc.invalidateQueries({ queryKey: ["orders-center", "timeline", active] }); },
+    onSuccess: () => { toast.success("تم تسجيل محاولة شحن جديدة"); setTracking(""); qc.invalidateQueries({ queryKey: ["orders-center", "timeline", active] }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const collMut = useMutation({
     mutationFn: () => addColl({ data: { orderId: active, amount: Number(amount), method } }),
-    onSuccess: () => { toast.success(tr("تم تسجيل التحصيل")); setAmount(""); qc.invalidateQueries({ queryKey: ["orders-center", "timeline", active] }); },
+    onSuccess: () => { toast.success("تم تسجيل التحصيل"); setAmount(""); qc.invalidateQueries({ queryKey: ["orders-center", "timeline", active] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -716,7 +724,7 @@ function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: 
     <div className="space-y-4">
       <Card className="p-4 flex flex-wrap items-end gap-2">
         <div className="space-y-1">
-          <Label>{tr("ابحث عن الأوردر")}</Label>
+          <Label>ابحث عن الأوردر</Label>
           <OrderSearchCombobox value={active} onSelect={(o) => setActive(o.id)} />
         </div>
       </Card>
@@ -725,9 +733,9 @@ function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: 
       {active ? (
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="p-4 space-y-3">
-            <div className="font-semibold">{tr("محاولات الشحن")}</div>
+            <div className="font-semibold">محاولات الشحن</div>
             <table className="w-full text-sm">
-              <thead className="text-muted-foreground"><tr><th>#</th><th>{tr("الحالة")}</th><th>{tr("التتبع")}</th><th>{tr("المتوقع")}</th></tr></thead>
+              <thead className="text-muted-foreground"><tr><th>#</th><th>الحالة</th><th>التتبع</th><th>المتوقع</th></tr></thead>
               <tbody>
                 {(timeline.data?.shipments ?? []).map((s) => (
                   <tr key={s.id} className="border-b last:border-0 text-center">
@@ -741,18 +749,19 @@ function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: 
             </table>
             <div className="flex items-end gap-2">
               <div className="space-y-1 flex-1">
-                <Label>{tr("رقم التتبع")}</Label>
+                <Label>رقم التتبع</Label>
                 <Input value={tracking} onChange={(e) => setTracking(e.target.value)} />
               </div>
               <Button onClick={() => shipMut.mutate()} disabled={shipMut.isPending}>
-                <Truck className="h-4 w-4 me-1" /> م{tr("محاولة شحن")}              </Button>
+                <Truck className="h-4 w-4 me-1" /> محاولة شحن
+              </Button>
             </div>
           </Card>
 
           <Card className="p-4 space-y-3">
-            <div className="font-semibold">{tr("التحصيلات")}</div>
+            <div className="font-semibold">التحصيلات</div>
             <table className="w-full text-sm">
-              <thead className="text-muted-foreground"><tr><th>{tr("المبلغ")}</th><th>{tr("الطريقة")}</th><th>{tr("التاريخ")}</th></tr></thead>
+              <thead className="text-muted-foreground"><tr><th>المبلغ</th><th>الطريقة</th><th>التاريخ</th></tr></thead>
               <tbody>
                 {(timeline.data?.collections ?? []).map((c) => (
                   <tr key={c.id} className="border-b last:border-0 text-center">
@@ -765,11 +774,11 @@ function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: 
             </table>
             <div className="flex flex-wrap items-end gap-2">
               <div className="space-y-1 flex-1 min-w-[120px]">
-                <Label>{tr("المبلغ المحصّل")}</Label>
+                <Label>المبلغ المحصّل</Label>
                 <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
               </div>
               <div className="space-y-1 min-w-[150px]">
-                <Label>{tr("طريقة التحصيل")}</Label>
+                <Label>طريقة التحصيل</Label>
                 <Select value={method} onValueChange={setMethod}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -780,7 +789,8 @@ function ShipmentsPanel({ orderId, setOrderId }: { orderId: string; setOrderId: 
                 </Select>
               </div>
               <Button onClick={() => collMut.mutate()} disabled={collMut.isPending}>
-                <Wallet className="h-4 w-4 me-1" /> ت{tr("تسجيل تحصيل")}              </Button>
+                <Wallet className="h-4 w-4 me-1" /> تسجيل تحصيل
+              </Button>
             </div>
 
           </Card>
@@ -819,7 +829,7 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
     mutationFn: () => sendFn({ data: { threadId, body: text } }),
     onSuccess: (r) => {
       setText("");
-      if (r.status === "sent") toast.success(tr("تم الإرسال"));
+      if (r.status === "sent") toast.success("تم الإرسال");
       else toast.warning(r.error ?? "الرسالة في الانتظار");
       qc.invalidateQueries({ queryKey: ["orders-center", "wa-thread", threadId] });
       qc.invalidateQueries({ queryKey: ["orders-center", "wa"] });
@@ -866,7 +876,7 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
       <Card className="p-3 space-y-3">
-        <Input placeholder={tr("بحث برقم أو اسم")} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Input placeholder="بحث برقم أو اسم" value={search} onChange={(e) => setSearch(e.target.value)} />
         <div className="space-y-1 max-h-[420px] overflow-auto">
           {(threads.data ?? []).map((t) => (
             <button
@@ -875,26 +885,26 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
               className={`w-full text-start p-2 rounded-md border ${threadId === t.id ? "bg-accent" : ""}`}
             >
               <div className="font-medium text-sm flex items-center gap-1">
-                {t.order_id ? <Link2 className="h-3.5 w-3.5 text-primary shrink-0" aria-label={tr("مرتبطة بأوردر")} /> : null}
+                {t.order_id ? <Link2 className="h-3.5 w-3.5 text-primary shrink-0" aria-label="مرتبطة بأوردر" /> : null}
                 <span className="truncate">{t.display_name ?? t.phone}</span>
               </div>
               <div className="text-xs text-muted-foreground truncate">{t.last_message_preview ?? "—"}</div>
 
             </button>
           ))}
-          {(threads.data ?? []).length === 0 ? <div className="text-sm text-muted-foreground p-2">{tr("لا توجد محادثات.")}</div> : null}
+          {(threads.data ?? []).length === 0 ? <div className="text-sm text-muted-foreground p-2">لا توجد محادثات.</div> : null}
         </div>
         <div className="space-y-2 border-t pt-3">
-          <Label>{tr("محادثة جديدة")}</Label>
+          <Label>محادثة جديدة</Label>
           <Select value={newBrand} onValueChange={setNewBrand}>
-            <SelectTrigger><SelectValue placeholder={tr("البراند")} /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="البراند" /></SelectTrigger>
             <SelectContent>
               {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
           <div className="flex gap-2">
-            <Input placeholder={tr("رقم الهاتف")} value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
-            <Button onClick={() => start.mutate()} disabled={!newBrand || !newPhone || start.isPending}>{tr("بدء")}</Button>
+            <Input placeholder="رقم الهاتف" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
+            <Button onClick={() => start.mutate()} disabled={!newBrand || !newPhone || start.isPending}>بدء</Button>
           </div>
         </div>
       </Card>
@@ -902,7 +912,8 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
       <Card className="p-4 flex flex-col min-h-[420px]">
         {!threadId ? (
           <div className="m-auto text-muted-foreground flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" /> ا{tr("اختر محادثة")}          </div>
+            <MessageCircle className="h-4 w-4" /> اختر محادثة
+          </div>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-2 pb-3 mb-3 border-b">
@@ -914,11 +925,12 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
                     {linkedOrder.data ? ` • ${linkedOrder.data.fulfillment_status}` : ""}
                   </Badge>
                   <Button variant="ghost" size="sm" onClick={() => linkMut.mutate(null)} disabled={linkMut.isPending}>
-                    <Unlink className="h-4 w-4 me-1" /> ف{tr("فك الربط")}                  </Button>
+                    <Unlink className="h-4 w-4 me-1" /> فك الربط
+                  </Button>
                 </>
               ) : (
                 <>
-                  <span className="text-sm text-muted-foreground">{tr("ربط بأوردر:")}</span>
+                  <span className="text-sm text-muted-foreground">ربط بأوردر:</span>
                   <OrderSearchCombobox className="w-[280px]" onSelect={(o) => linkMut.mutate(o.id)} />
                 </>
               )}
@@ -926,17 +938,17 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
             {linkedOrderId ? (
               <div className="mb-3 rounded-lg border bg-muted/40 p-3">
                 {linkedOrder.isLoading || linkedTimeline.isLoading ? (
-                  <div className="text-xs text-muted-foreground">{tr("جارٍ تحميل بيانات الأوردر…")}</div>
+                  <div className="text-xs text-muted-foreground">جارٍ تحميل بيانات الأوردر…</div>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-4 text-sm">
                     <div className="space-y-1">
-                      <div className="text-xs text-muted-foreground">{tr("الحالة")}</div>
+                      <div className="text-xs text-muted-foreground">الحالة</div>
                       <Badge variant="secondary">{lo?.fulfillment_status ?? "—"}</Badge>
                     </div>
-                    <Field label={tr("المبلغ الإجمالي")} value={`${nf(linkedTotal)} ج.م`} />
-                    <Field label={tr("المتوقع تحصيله")} value={`${nf(linkedOutstanding)} ج.م`} />
+                    <Field label="المبلغ الإجمالي" value={`${nf(linkedTotal)} ج.م`} />
+                    <Field label="المتوقع تحصيله" value={`${nf(linkedOutstanding)} ج.م`} />
                     <Field
-                      label={tr("آخر محاولة شحن")}
+                      label="آخر محاولة شحن"
                       value={lastShipment
                         ? `#${lastShipment.attempt_no} • ${lastShipment.status}${lastShipment.tracking ? ` • ${lastShipment.tracking}` : ""}`
                         : "لا توجد"}
@@ -957,7 +969,7 @@ function WhatsappPanel({ brands }: { brands: Array<{ id: string; name: string }>
               ))}
             </div>
             <div className="flex gap-2 pt-3 border-t mt-3">
-              <Input value={text} onChange={(e) => setText(e.target.value)} placeholder={tr("اكتب رسالة…")} />
+              <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب رسالة…" />
               <Button onClick={() => send.mutate()} disabled={!text.trim() || send.isPending}>
                 <Send className="h-4 w-4" />
               </Button>

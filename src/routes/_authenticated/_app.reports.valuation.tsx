@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,7 +33,7 @@ function ValuationPage() {
       <div className="p-10 max-w-2xl mx-auto">
         <Card className="p-8 text-center card-gradient">
           <Lock className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-          <h2 className="text-xl font-bold">{tr("مقصور على المدير والمشرف")}</h2>
+          <h2 className="text-xl font-bold">مقصور على المدير والمشرف</h2>
         </Card>
       </div>
     );
@@ -48,13 +47,14 @@ function ValuationPage() {
     <div className="p-6 md:p-8 space-y-6 max-w-7xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><Building2 className="w-7 h-7 text-primary" /> ت{tr("تقييم الشركات")}/h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><Building2 className="w-7 h-7 text-primary" /> تقييم الشركات</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            المعادلة: قيم{tr("المعادلة: قيمة البراند = (إيرادات آخر ١٢ شهر × 1.5) + القيمة الدفترية للأصول الخاصة بالبراند.")}p>
+            المعادلة: قيمة البراند = (إيرادات آخر ١٢ شهر × 1.5) + القيمة الدفترية للأصول الخاصة بالبراند.
+          </p>
         </div>
         <ReportActions
           filename="valuation-report"
-          summaryTitle={tr("تقييم الشركات")}
+          summaryTitle="تقييم الشركات"
           summaryText={data ? `التقييم الكلي: ${fmt(data.totalCompanyValuation)}` : "تقرير تقييم البراندات"}
           rows={rows as unknown as Record<string, unknown>[]}
           columns={[
@@ -67,22 +67,22 @@ function ValuationPage() {
       </div>
 
       {q.isLoading ? (
-        <Card className="p-10 text-center text-muted-foreground">{tr("جارٍ الحساب…")}</Card>
+        <Card className="p-10 text-center text-muted-foreground">جارٍ الحساب…</Card>
       ) : !data || rows.length === 0 ? (
-        <Card className="card-gradient"><EmptyState title={tr("لا توجد بيانات كافية")} description={tr("أضف براندات وفواتير مبيعات وأصول لبدء الحساب.")} /></Card>
+        <Card className="card-gradient"><EmptyState title="لا توجد بيانات كافية" description="أضف براندات وفواتير مبيعات وأصول لبدء الحساب." /></Card>
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Kpi label={tr("عدد البراندات")} value={String(rows.length)} />
-            <Kpi label={tr("إجمالي إيرادات آخر ١٢ شهر")} value={fmt(data.totals.annual_revenue)} />
-            <Kpi label={tr("أصول عامة للشركة (صافي)")} value={fmt(data.companyWide.net)} />
-            <Kpi label={tr("التقييم الإجمالي للشركة")} value={fmt(data.totalCompanyValuation)} highlight />
+            <Kpi label="عدد البراندات" value={String(rows.length)} />
+            <Kpi label="إجمالي إيرادات آخر ١٢ شهر" value={fmt(data.totals.annual_revenue)} />
+            <Kpi label="أصول عامة للشركة (صافي)" value={fmt(data.companyWide.net)} />
+            <Kpi label="التقييم الإجمالي للشركة" value={fmt(data.totalCompanyValuation)} highlight />
           </div>
 
           <Card className="card-gradient p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-primary" />
-              <h3 className="font-semibold">{tr("تقييم البراندات")}</h3>
+              <h3 className="font-semibold">تقييم البراندات</h3>
             </div>
             <div className="h-72">
               <ResponsiveContainer>
@@ -91,9 +91,9 @@ function ValuationPage() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip formatter={(v: number) => fmt(v)} />
-                  <Bar dataKey="valuation" name={tr("التقييم")} fill="hsl(175 60% 55%)" />
-                  <Bar dataKey="revenue" name={tr("الإيرادات")} fill="hsl(85 65% 60%)" />
-                  <Bar dataKey="assets" name={tr("الأصول")} fill="hsl(305 55% 65%)" />
+                  <Bar dataKey="valuation" name="التقييم" fill="hsl(175 60% 55%)" />
+                  <Bar dataKey="revenue" name="الإيرادات" fill="hsl(85 65% 60%)" />
+                  <Bar dataKey="assets" name="الأصول" fill="hsl(305 55% 65%)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -104,12 +104,12 @@ function ValuationPage() {
               <table className="w-full text-sm min-w-[720px]">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">{tr("البراند")}</th>
-                    <th className="p-3">{tr("النوع")}</th>
-                    <th className="p-3">{tr("إيرادات آخر ١٢ شهر")}</th>
+                    <th className="p-3">البراند</th>
+                    <th className="p-3">النوع</th>
+                    <th className="p-3">إيرادات آخر ١٢ شهر</th>
                     <th className="p-3">× 1.5</th>
-                    <th className="p-3">{tr("أصول (صافي)")}</th>
-                    <th className="p-3">{tr("التقييم")}</th>
+                    <th className="p-3">أصول (صافي)</th>
+                    <th className="p-3">التقييم</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -126,7 +126,7 @@ function ValuationPage() {
                 </tbody>
                 <tfoot>
                   <tr className="bg-muted/30 font-semibold">
-                    <td className="p-3">{tr("الإجمالي")}</td>
+                    <td className="p-3">الإجمالي</td>
                     <td></td>
                     <td className="p-3 num">{fmt(data.totals.annual_revenue)}</td>
                     <td></td>
@@ -134,11 +134,11 @@ function ValuationPage() {
                     <td className="p-3 num text-primary">{fmt(data.totals.valuation)}</td>
                   </tr>
                   <tr className="bg-primary/5">
-                    <td className="p-3 text-xs text-muted-foreground" colSpan={5}>{tr("+ أصول عامة للشركة (لا تخص براند)")}</td>
+                    <td className="p-3 text-xs text-muted-foreground" colSpan={5}>+ أصول عامة للشركة (لا تخص براند)</td>
                     <td className="p-3 num">{fmt(data.companyWide.net)}</td>
                   </tr>
                   <tr className="bg-primary/10 font-bold">
-                    <td className="p-3" colSpan={5}>{tr("التقييم الإجمالي للشركة")}</td>
+                    <td className="p-3" colSpan={5}>التقييم الإجمالي للشركة</td>
                     <td className="p-3 num text-primary">{fmt(data.totalCompanyValuation)}</td>
                   </tr>
                 </tfoot>

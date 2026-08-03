@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -51,7 +50,7 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
       note: editing?.note || null,
     } }),
     onSuccess: () => {
-      toast.success(tr("تم الحفظ"));
+      toast.success("تم الحفظ");
       setOpenEdit(false);
       qc.invalidateQueries({ queryKey: ["wallets"] });
       qc.invalidateQueries({ queryKey: ["wallet-balances"] });
@@ -61,7 +60,7 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
 
   const delMut = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
-    onSuccess: () => { toast.success(tr("تم الحذف")); qc.invalidateQueries({ queryKey: ["wallets"] }); qc.invalidateQueries({ queryKey: ["wallet-balances"] }); },
+    onSuccess: () => { toast.success("تم الحذف"); qc.invalidateQueries({ queryKey: ["wallets"] }); qc.invalidateQueries({ queryKey: ["wallet-balances"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -70,7 +69,7 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
   const xferMut = useMutation({
     mutationFn: () => xferFn({ data: { ...xfer, amount: Number(xfer.amount) || 0 } }),
     onSuccess: () => {
-      toast.success(tr("تم التحويل"));
+      toast.success("تم التحويل");
       setXferOpen(false);
       setXfer({ from_wallet_id: "", to_wallet_id: "", amount: 0, occurred_at: today(), note: "" });
       qc.invalidateQueries({ queryKey: ["wallet-balances"] });
@@ -90,20 +89,20 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Wallet className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">{tr("المحافظ والخزائن")}</h2>
-          <Badge variant="outline">{tr("الإجمالي:")} <span className="num ms-1">{fmt(totalBal)}</span></Badge>
+          <h2 className="text-lg font-semibold">المحافظ والخزائن</h2>
+          <Badge variant="outline">الإجمالي: <span className="num ms-1">{fmt(totalBal)}</span></Badge>
         </div>
         {canWrite && (
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => setXferOpen(true)}><ArrowLeftRight className="w-4 h-4 me-1" /> ت{tr("تحويل")}/Button>
-            <Button size="sm" onClick={openNew}><Plus className="w-4 h-4 me-1" /> م{tr("محفظة جديدة")}/Button>
+            <Button size="sm" variant="outline" onClick={() => setXferOpen(true)}><ArrowLeftRight className="w-4 h-4 me-1" /> تحويل</Button>
+            <Button size="sm" onClick={openNew}><Plus className="w-4 h-4 me-1" /> محفظة جديدة</Button>
           </div>
         )}
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap h-auto">
-          <TabsTrigger value="all">{tr("الكل (")}{fmt(totalBal)})</TabsTrigger>
+          <TabsTrigger value="all">الكل ({fmt(totalBal)})</TabsTrigger>
           {bals.map((w) => {
             const I = KIND_ICON[w.kind];
             return (
@@ -131,33 +130,33 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
                     {canWrite && (
                       <div className="flex items-center gap-1">
                         <Button size="icon" variant="ghost" onClick={() => openEditW(w)}><Pencil className="w-3.5 h-3.5" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => { if (confirm(tr("تأكيد حذف المحفظة؟"))) delMut.mutate(w.id); }}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => { if (confirm("تأكيد حذف المحفظة؟")) delMut.mutate(w.id); }}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                       </div>
                     )}
                   </div>
                   <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-                    <div><div className="text-[10px] text-muted-foreground">{tr("افتتاحي")}</div><div className="num font-semibold">{fmt(w.opening_balance)}</div></div>
-                    <div><div className="text-[10px] text-muted-foreground">{tr("داخل الفترة")}</div><div className="num font-semibold text-emerald-500">{fmt(w.periodIn)}</div></div>
-                    <div><div className="text-[10px] text-muted-foreground">{tr("خارج الفترة")}</div><div className="num font-semibold text-rose-500">{fmt(w.periodOut)}</div></div>
+                    <div><div className="text-[10px] text-muted-foreground">افتتاحي</div><div className="num font-semibold">{fmt(w.opening_balance)}</div></div>
+                    <div><div className="text-[10px] text-muted-foreground">داخل الفترة</div><div className="num font-semibold text-emerald-500">{fmt(w.periodIn)}</div></div>
+                    <div><div className="text-[10px] text-muted-foreground">خارج الفترة</div><div className="num font-semibold text-rose-500">{fmt(w.periodOut)}</div></div>
                   </div>
                   <div className="mt-2 border-t border-border/40 pt-2 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{tr("الرصيد الحالي")}</span>
+                    <span className="text-xs text-muted-foreground">الرصيد الحالي</span>
                     <span className={`num text-lg font-bold ${w.balance < 0 ? "text-destructive" : "text-primary"}`}>{fmt(w.balance)}</span>
                   </div>
                 </Card>
               );
             })}
-            {bals.length === 0 && <div className="col-span-full text-sm text-muted-foreground text-center p-8">{tr("أضف محفظتك الأولى للبدء.")}</div>}
+            {bals.length === 0 && <div className="col-span-full text-sm text-muted-foreground text-center p-8">أضف محفظتك الأولى للبدء.</div>}
           </div>
         </TabsContent>
         {bals.map((w) => (
           <TabsContent key={w.id} value={w.id} className="mt-3">
             <Card className="p-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div><div className="text-xs text-muted-foreground">{tr("النوع")}</div><div className="font-semibold">{KIND_LABEL[w.kind]}</div></div>
-                <div><div className="text-xs text-muted-foreground">{tr("افتتاحي")}</div><div className="num font-semibold">{fmt(w.opening_balance)}</div></div>
-                <div><div className="text-xs text-muted-foreground">{tr("داخل / خارج (الفترة)")}</div><div className="num"><span className="text-emerald-500">{fmt(w.periodIn)}</span> / <span className="text-rose-500">{fmt(w.periodOut)}</span></div></div>
-                <div><div className="text-xs text-muted-foreground">{tr("الرصيد الحالي")}</div><div className={`num text-xl font-bold ${w.balance < 0 ? "text-destructive" : "text-primary"}`}>{fmt(w.balance)}</div></div>
+                <div><div className="text-xs text-muted-foreground">النوع</div><div className="font-semibold">{KIND_LABEL[w.kind]}</div></div>
+                <div><div className="text-xs text-muted-foreground">افتتاحي</div><div className="num font-semibold">{fmt(w.opening_balance)}</div></div>
+                <div><div className="text-xs text-muted-foreground">داخل / خارج (الفترة)</div><div className="num"><span className="text-emerald-500">{fmt(w.periodIn)}</span> / <span className="text-rose-500">{fmt(w.periodOut)}</span></div></div>
+                <div><div className="text-xs text-muted-foreground">الرصيد الحالي</div><div className={`num text-xl font-bold ${w.balance < 0 ? "text-destructive" : "text-primary"}`}>{fmt(w.balance)}</div></div>
               </div>
               {w.note && <p className="text-xs text-muted-foreground mt-2">{w.note}</p>}
             </Card>
@@ -169,54 +168,54 @@ export function WalletsPanel({ canWrite, from, to }: { canWrite: boolean; from: 
         <DialogContent dir="rtl">
           <DialogHeader><DialogTitle>{editing?.id ? "تعديل محفظة" : "محفظة جديدة"}</DialogTitle></DialogHeader>
           <div className="grid gap-3">
-            <div><Label>{tr("الاسم")}</Label><Input value={editing?.name ?? ""} onChange={(e) => setEditing((f) => f ? { ...f, name: e.target.value } : f)} /></div>
+            <div><Label>الاسم</Label><Input value={editing?.name ?? ""} onChange={(e) => setEditing((f) => f ? { ...f, name: e.target.value } : f)} /></div>
             <div>
-              <Label>{tr("النوع")}</Label>
+              <Label>النوع</Label>
               <Select value={editing?.kind ?? "cash"} onValueChange={(v) => setEditing((f) => f ? { ...f, kind: v as WalletKind } : f)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cash">{tr("خزنة كاش")}</SelectItem>
-                  <SelectItem value="bank">{tr("حساب بنكي")}</SelectItem>
-                  <SelectItem value="ewallet">{tr("محفظة إلكترونية")}</SelectItem>
+                  <SelectItem value="cash">خزنة كاش</SelectItem>
+                  <SelectItem value="bank">حساب بنكي</SelectItem>
+                  <SelectItem value="ewallet">محفظة إلكترونية</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>{tr("الرصيد الافتتاحي (اسمح بالسالب)")}</Label><Input type="number" step="any" value={editing?.opening_balance ?? 0} onChange={(e) => setEditing((f) => f ? { ...f, opening_balance: Number(e.target.value) } : f)} /></div>
-            <div><Label>{tr("ملاحظة")}</Label><Input value={editing?.note ?? ""} onChange={(e) => setEditing((f) => f ? { ...f, note: e.target.value } : f)} /></div>
-            <div className="flex items-center gap-2"><input id="active" type="checkbox" checked={editing?.active ?? true} onChange={(e) => setEditing((f) => f ? { ...f, active: e.target.checked } : f)} /><Label htmlFor="active">{tr("مفعّلة")}</Label></div>
+            <div><Label>الرصيد الافتتاحي (اسمح بالسالب)</Label><Input type="number" step="any" value={editing?.opening_balance ?? 0} onChange={(e) => setEditing((f) => f ? { ...f, opening_balance: Number(e.target.value) } : f)} /></div>
+            <div><Label>ملاحظة</Label><Input value={editing?.note ?? ""} onChange={(e) => setEditing((f) => f ? { ...f, note: e.target.value } : f)} /></div>
+            <div className="flex items-center gap-2"><input id="active" type="checkbox" checked={editing?.active ?? true} onChange={(e) => setEditing((f) => f ? { ...f, active: e.target.checked } : f)} /><Label htmlFor="active">مفعّلة</Label></div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpenEdit(false)}>{tr("إلغاء")}</Button>
-            <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending || !editing?.name}>{tr("حفظ")}</Button>
+            <Button variant="ghost" onClick={() => setOpenEdit(false)}>إلغاء</Button>
+            <Button onClick={() => saveMut.mutate()} disabled={saveMut.isPending || !editing?.name}>حفظ</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={xferOpen} onOpenChange={setXferOpen}>
         <DialogContent dir="rtl">
-          <DialogHeader><DialogTitle>{tr("تحويل بين المحافظ")}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>تحويل بين المحافظ</DialogTitle></DialogHeader>
           <div className="grid gap-3">
             <div>
-              <Label>{tr("من محفظة")}</Label>
+              <Label>من محفظة</Label>
               <Select value={xfer.from_wallet_id} onValueChange={(v) => setXfer((f) => ({ ...f, from_wallet_id: v }))}>
-                <SelectTrigger><SelectValue placeholder={tr("اختر المحفظة المصدر")} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر المحفظة المصدر" /></SelectTrigger>
                 <SelectContent>{wallets.filter((w) => w.active).map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <Label>{tr("إلى محفظة")}</Label>
+              <Label>إلى محفظة</Label>
               <Select value={xfer.to_wallet_id} onValueChange={(v) => setXfer((f) => ({ ...f, to_wallet_id: v }))}>
-                <SelectTrigger><SelectValue placeholder={tr("اختر المحفظة الهدف")} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر المحفظة الهدف" /></SelectTrigger>
                 <SelectContent>{wallets.filter((w) => w.active && w.id !== xfer.from_wallet_id).map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div><Label>{tr("المبلغ")}</Label><Input type="number" step="any" value={xfer.amount} onChange={(e) => setXfer((f) => ({ ...f, amount: Number(e.target.value) }))} /></div>
-            <div><Label>{tr("التاريخ")}</Label><Input type="date" value={xfer.occurred_at} onChange={(e) => setXfer((f) => ({ ...f, occurred_at: e.target.value }))} /></div>
-            <div><Label>{tr("ملاحظة")}</Label><Input value={xfer.note} onChange={(e) => setXfer((f) => ({ ...f, note: e.target.value }))} /></div>
+            <div><Label>المبلغ</Label><Input type="number" step="any" value={xfer.amount} onChange={(e) => setXfer((f) => ({ ...f, amount: Number(e.target.value) }))} /></div>
+            <div><Label>التاريخ</Label><Input type="date" value={xfer.occurred_at} onChange={(e) => setXfer((f) => ({ ...f, occurred_at: e.target.value }))} /></div>
+            <div><Label>ملاحظة</Label><Input value={xfer.note} onChange={(e) => setXfer((f) => ({ ...f, note: e.target.value }))} /></div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setXferOpen(false)}>{tr("إلغاء")}</Button>
-            <Button onClick={() => xferMut.mutate()} disabled={xferMut.isPending || !xfer.from_wallet_id || !xfer.to_wallet_id || !(xfer.amount > 0)}>{tr("تحويل")}</Button>
+            <Button variant="ghost" onClick={() => setXferOpen(false)}>إلغاء</Button>
+            <Button onClick={() => xferMut.mutate()} disabled={xferMut.isPending || !xfer.from_wallet_id || !xfer.to_wallet_id || !(xfer.amount > 0)}>تحويل</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

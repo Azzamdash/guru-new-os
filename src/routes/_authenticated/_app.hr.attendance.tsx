@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -96,7 +95,7 @@ function AttendancePage() {
   const linkUser = useMutation({
     mutationFn: (d: { employeeId: string; userId: string | null }) => linkFn({ data: d }),
     onSuccess: () => {
-      toast.success(tr("تم تحديث الربط"));
+      toast.success("تم تحديث الربط");
       qc.invalidateQueries({ queryKey: ["employees"] });
       qc.invalidateQueries({ queryKey: ["hr-linkable-users"] });
     },
@@ -142,16 +141,16 @@ function AttendancePage() {
 
   const saveLog = useMutation({
     mutationFn: (d: Parameters<typeof upLogFn>[0]["data"]) => upLogFn({ data: d }),
-    onSuccess: () => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["time-logs"] }); },
+    onSuccess: () => { toast.success("تم الحفظ"); qc.invalidateQueries({ queryKey: ["time-logs"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
   });
   const delLog = useMutation({
     mutationFn: (id: string) => delLogFn({ data: { id } }),
-    onSuccess: () => { toast.success(tr("تم الحذف")); qc.invalidateQueries({ queryKey: ["time-logs"] }); },
+    onSuccess: () => { toast.success("تم الحذف"); qc.invalidateQueries({ queryKey: ["time-logs"] }); },
   });
   const saveEmp = useMutation({
     mutationFn: (d: Parameters<typeof upEmpFn>[0]["data"]) => upEmpFn({ data: d }),
-    onSuccess: () => { toast.success(tr("تم تحديث الجدول")); qc.invalidateQueries({ queryKey: ["employees"] }); },
+    onSuccess: () => { toast.success("تم تحديث الجدول"); qc.invalidateQueries({ queryKey: ["employees"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "فشل"),
   });
 
@@ -184,25 +183,27 @@ function AttendancePage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <Clock className="w-7 h-7 text-primary" /> ا{tr("الحضور والانصراف")}          </h1>
+            <Clock className="w-7 h-7 text-primary" /> الحضور والانصراف
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            سجّل مواعيد د{tr("سجّل مواعيد دخول وخروج كل موظف، والنظام يحسب التأخير والأوفر تايم والخصم أو المكافأة بالساعة.")}p>
+            سجّل مواعيد دخول وخروج كل موظف، والنظام يحسب التأخير والأوفر تايم والخصم أو المكافأة بالساعة.
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Select value={period} onValueChange={(v: "day" | "week" | "month" | "year") => setPeriod(v)}>
             <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="day">{tr("يومي")}</SelectItem>
-              <SelectItem value="week">{tr("أسبوعي")}</SelectItem>
-              <SelectItem value="month">{tr("شهري")}</SelectItem>
-              <SelectItem value="year">{tr("سنوي")}</SelectItem>
+              <SelectItem value="day">يومي</SelectItem>
+              <SelectItem value="week">أسبوعي</SelectItem>
+              <SelectItem value="month">شهري</SelectItem>
+              <SelectItem value="year">سنوي</SelectItem>
             </SelectContent>
           </Select>
           <Input type="date" dir="ltr" className="w-40" value={anchor} onChange={(e) => setAnchor(e.target.value)} />
           <Select value={empFilter} onValueChange={setEmpFilter}>
-            <SelectTrigger className="w-48"><SelectValue placeholder={tr("كل الموظفين")} /></SelectTrigger>
+            <SelectTrigger className="w-48"><SelectValue placeholder="كل الموظفين" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{tr("كل الموظفين")}</SelectItem>
+              <SelectItem value="all">كل الموظفين</SelectItem>
               {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -210,18 +211,18 @@ function AttendancePage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Kpi label={tr("عدد السجلات")} value={logs.length} />
-        <Kpi label={tr("إجمالي التأخير")} value={fmtDur(totals.late)} color="text-amber-500" />
-        <Kpi label={tr("إجمالي الأوفر تايم")} value={fmtDur(totals.overtime)} color="text-emerald-500" />
-        <Kpi label={tr("صافي مكافآت − خصومات")} value={Math.round(totals.overtimePay - totals.lateDeduction).toLocaleString("en-US")} color={totals.overtimePay - totals.lateDeduction >= 0 ? "text-emerald-500" : "text-destructive"} />
+        <Kpi label="عدد السجلات" value={logs.length} />
+        <Kpi label="إجمالي التأخير" value={fmtDur(totals.late)} color="text-amber-500" />
+        <Kpi label="إجمالي الأوفر تايم" value={fmtDur(totals.overtime)} color="text-emerald-500" />
+        <Kpi label="صافي مكافآت − خصومات" value={Math.round(totals.overtimePay - totals.lateDeduction).toLocaleString("en-US")} color={totals.overtimePay - totals.lateDeduction >= 0 ? "text-emerald-500" : "text-destructive"} />
       </div>
 
       <Tabs defaultValue="log" dir="rtl">
         <TabsList>
-          <TabsTrigger value="log">{tr("تسجيل يومي")}</TabsTrigger>
-          <TabsTrigger value="report">{tr("تقرير التأخير/الأوفر تايم")}</TabsTrigger>
-          <TabsTrigger value="schedule">{tr("جداول العمل")}</TabsTrigger>
-          <TabsTrigger value="links">{tr("ربط الحسابات")}</TabsTrigger>
+          <TabsTrigger value="log">تسجيل يومي</TabsTrigger>
+          <TabsTrigger value="report">تقرير التأخير/الأوفر تايم</TabsTrigger>
+          <TabsTrigger value="schedule">جداول العمل</TabsTrigger>
+          <TabsTrigger value="links">ربط الحسابات</TabsTrigger>
 
         </TabsList>
 
@@ -230,20 +231,20 @@ function AttendancePage() {
           {canWrite && <QuickLogForm employees={employees} onSave={(d) => saveLog.mutate(d)} />}
           <Card className="card-gradient overflow-hidden">
             <div className="p-4 border-b border-border font-semibold">
-              السجلات من {fro{tr("السجلات من")}لى")}{to} ({logs.length})
+              السجلات من {from} إلى {to} ({logs.length})
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">{tr("التاريخ")}</th>
-                    <th className="p-3">{tr("الموظف")}</th>
-                    <th className="p-3 text-center">{tr("حضور")}</th>
-                    <th className="p-3 text-center">{tr("انصراف")}</th>
-                    <th className="p-3 text-center">{tr("ساعات عمل")}</th>
-                    <th className="p-3 text-center">{tr("تأخير")}</th>
-                    <th className="p-3 text-center">{tr("أوفر تايم")}</th>
-                    <th className="p-3">{tr("ملاحظة")}</th>
+                    <th className="p-3">التاريخ</th>
+                    <th className="p-3">الموظف</th>
+                    <th className="p-3 text-center">حضور</th>
+                    <th className="p-3 text-center">انصراف</th>
+                    <th className="p-3 text-center">ساعات عمل</th>
+                    <th className="p-3 text-center">تأخير</th>
+                    <th className="p-3 text-center">أوفر تايم</th>
+                    <th className="p-3">ملاحظة</th>
                     <th className="p-3"></th>
                   </tr>
                 </thead>
@@ -270,7 +271,7 @@ function AttendancePage() {
                     );
                   })}
                   {logs.length === 0 && (
-                    <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{tr("لا يوجد سجلات في هذه الفترة.")}</td></tr>
+                    <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">لا يوجد سجلات في هذه الفترة.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -281,20 +282,20 @@ function AttendancePage() {
         {/* REPORT */}
         <TabsContent value="report" className="space-y-4 mt-4">
           <Card className="card-gradient overflow-hidden">
-            <div className="p-4 border-b border-border font-semibold">{tr("تقرير الفترة (")}{from} — {to})</div>
+            <div className="p-4 border-b border-border font-semibold">تقرير الفترة ({from} — {to})</div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">{tr("الموظف")}</th>
-                    <th className="p-3 text-center">{tr("أيام مسجلة")}</th>
-                    <th className="p-3 text-center">{tr("إجمالي عمل")}</th>
-                    <th className="p-3 text-center">{tr("إجمالي تأخير")}</th>
-                    <th className="p-3 text-center">{tr("إجمالي أوفر تايم")}</th>
-                    <th className="p-3 text-center">{tr("سعر الساعة")}</th>
-                    <th className="p-3 text-center">{tr("خصم التأخير")}</th>
-                    <th className="p-3 text-center">{tr("مكافأة الأوفر تايم")}</th>
-                    <th className="p-3 text-center">{tr("الصافي")}</th>
+                    <th className="p-3">الموظف</th>
+                    <th className="p-3 text-center">أيام مسجلة</th>
+                    <th className="p-3 text-center">إجمالي عمل</th>
+                    <th className="p-3 text-center">إجمالي تأخير</th>
+                    <th className="p-3 text-center">إجمالي أوفر تايم</th>
+                    <th className="p-3 text-center">سعر الساعة</th>
+                    <th className="p-3 text-center">خصم التأخير</th>
+                    <th className="p-3 text-center">مكافأة الأوفر تايم</th>
+                    <th className="p-3 text-center">الصافي</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -305,20 +306,22 @@ function AttendancePage() {
                       <td className="p-3 text-center">{fmtDur(r.worked)}</td>
                       <td className="p-3 text-center text-amber-500">{fmtDur(r.late)}</td>
                       <td className="p-3 text-center text-emerald-500">{fmtDur(r.overtime)}</td>
-                      <td className="p-3 text-center num">{r.rate ? r.rate.toFixed(2) : <span className="text-muted-foreground">{tr("حدد الجدول")}</span>}</td>
+                      <td className="p-3 text-center num">{r.rate ? r.rate.toFixed(2) : <span className="text-muted-foreground">حدد الجدول</span>}</td>
                       <td className="p-3 text-center num text-destructive">{Math.round(r.lateDeduction).toLocaleString("en-US")}</td>
                       <td className="p-3 text-center num text-emerald-500">{Math.round(r.overtimePay).toLocaleString("en-US")}</td>
                       <td className={`p-3 text-center num font-semibold ${r.net >= 0 ? "text-emerald-500" : "text-destructive"}`}>{Math.round(r.net).toLocaleString("en-US")}</td>
                     </tr>
                   ))}
                   {report.length === 0 && (
-                    <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">{tr("لا بيانات في هذه الفترة.")}</td></tr>
+                    <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">لا بيانات في هذه الفترة.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
             <p className="text-xs text-muted-foreground p-3 border-t border-border">
-              * سعر الساعة = {tr("* سعر الساعة = المرتب الشهري ÷ ساعات العمل الشهرية للموظف (من تبويب \"جداول العمل\").\n              * الخصم / المكافأة = الوقت × سعر الساعة.")}p>
+              * سعر الساعة = المرتب الشهري ÷ ساعات العمل الشهرية للموظف (من تبويب "جداول العمل").
+              * الخصم / المكافأة = الوقت × سعر الساعة.
+            </p>
           </Card>
         </TabsContent>
 
@@ -326,18 +329,19 @@ function AttendancePage() {
         <TabsContent value="schedule" className="space-y-4 mt-4">
           <Card className="card-gradient overflow-hidden">
             <div className="p-4 border-b border-border font-semibold flex items-center gap-2">
-              <Settings2 className="w-4 h-4" /> ج{tr("جداول عمل الموظفين")}            </div>
+              <Settings2 className="w-4 h-4" /> جداول عمل الموظفين
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">{tr("الموظف")}</th>
-                    <th className="p-3 text-center">{tr("بداية الدوام")}</th>
-                    <th className="p-3 text-center">{tr("نهاية الدوام")}</th>
-                    <th className="p-3 text-center">{tr("ساعات شهرية")}</th>
-                    <th className="p-3 text-center">{tr("أيام الإجازة الأسبوعية")}</th>
-                    <th className="p-3 text-center">{tr("سعر الساعة يدوي")}</th>
-                    <th className="p-3 text-center">{tr("سعر الساعة الفعلي")}</th>
+                    <th className="p-3">الموظف</th>
+                    <th className="p-3 text-center">بداية الدوام</th>
+                    <th className="p-3 text-center">نهاية الدوام</th>
+                    <th className="p-3 text-center">ساعات شهرية</th>
+                    <th className="p-3 text-center">أيام الإجازة الأسبوعية</th>
+                    <th className="p-3 text-center">سعر الساعة يدوي</th>
+                    <th className="p-3 text-center">سعر الساعة الفعلي</th>
                     <th className="p-3"></th>
                   </tr>
                 </thead>
@@ -350,7 +354,7 @@ function AttendancePage() {
                       })} />
                   ))}
                   {employees.length === 0 && (
-                    <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">{tr("لا يوجد موظفون. أضفهم من تقرير الأداء.")}</td></tr>
+                    <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">لا يوجد موظفون. أضفهم من تقرير الأداء.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -362,15 +366,16 @@ function AttendancePage() {
         <TabsContent value="links" className="space-y-4 mt-4">
           <Card className="card-gradient overflow-hidden">
             <div className="p-4 border-b border-border font-semibold flex items-center gap-2">
-              <LinkIcon className="w-4 h-4" /> ر{tr("ربط الموظفين بحسابات المستخدمين")}            </div>
+              <LinkIcon className="w-4 h-4" /> ربط الموظفين بحسابات المستخدمين
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">{tr("الموظف")}</th>
-                    <th className="p-3">{tr("الوظيفة")}</th>
-                    <th className="p-3">{tr("حساب المستخدم (الإيميل)")}</th>
-                    <th className="p-3 text-center">{tr("الحالة")}</th>
+                    <th className="p-3">الموظف</th>
+                    <th className="p-3">الوظيفة</th>
+                    <th className="p-3">حساب المستخدم (الإيميل)</th>
+                    <th className="p-3 text-center">الحالة</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -388,9 +393,9 @@ function AttendancePage() {
                               linkUser.mutate({ employeeId: e.id, userId: v === "none" ? null : v })
                             }
                           >
-                            <SelectTrigger className="w-64"><SelectValue placeholder={tr("غير مرتبط")} /></SelectTrigger>
+                            <SelectTrigger className="w-64"><SelectValue placeholder="غير مرتبط" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">{tr("غير مرتبط")}</SelectItem>
+                              <SelectItem value="none">غير مرتبط</SelectItem>
                               {users.map((u) => (
                                 <SelectItem
                                   key={u.id}
@@ -407,19 +412,20 @@ function AttendancePage() {
                         <td className="p-3 text-center">
                           {e.user_id
                             ? <Badge variant="secondary">{linkedUser?.email ?? "مرتبط"}</Badge>
-                            : <Badge variant="outline">{tr("غير مرتبط")}</Badge>}
+                            : <Badge variant="outline">غير مرتبط</Badge>}
                         </td>
                       </tr>
                     );
                   })}
                   {employees.length === 0 && (
-                    <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{tr("لا يوجد موظفون.")}</td></tr>
+                    <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا يوجد موظفون.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
             <p className="text-xs text-muted-foreground p-3 border-t border-border">
-              * الربط بيخلي ا{tr("* الربط بيخلي الموظف يقدر يقدّم طلبات سلف وإجازات من حسابه، وتظهر بياناته في الحضور والتقارير.")}p>
+              * الربط بيخلي الموظف يقدر يقدّم طلبات سلف وإجازات من حسابه، وتظهر بياناته في الحضور والتقارير.
+            </p>
           </Card>
         </TabsContent>
       </Tabs>
@@ -441,39 +447,39 @@ function QuickLogForm({ employees, onSave }: {
   return (
     <Card className="card-gradient p-4">
       <div className="flex items-center justify-between gap-2">
-        <div className="font-semibold">{tr("تسجيل حضور/انصراف")}</div>
+        <div className="font-semibold">تسجيل حضور/انصراف</div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="w-4 h-4" /> س{tr("سجل جديد")}/Button>
+            <Button className="gap-2"><Plus className="w-4 h-4" /> سجل جديد</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>{tr("تسجيل حضور/انصراف")}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>تسجيل حضور/انصراف</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div>
-                <Label>{tr("الموظف *")}</Label>
+                <Label>الموظف *</Label>
                 <Select value={employeeId} onValueChange={setEmployeeId}>
-                  <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
                   <SelectContent>
                     {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div><Label>{tr("التاريخ")}</Label><Input type="date" dir="ltr" value={logDate} onChange={(e) => setLogDate(e.target.value)} /></div>
-                <div><Label>{tr("حضور")}</Label><Input type="time" dir="ltr" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} /></div>
-                <div><Label>{tr("انصراف")}</Label><Input type="time" dir="ltr" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} /></div>
+                <div><Label>التاريخ</Label><Input type="date" dir="ltr" value={logDate} onChange={(e) => setLogDate(e.target.value)} /></div>
+                <div><Label>حضور</Label><Input type="time" dir="ltr" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} /></div>
+                <div><Label>انصراف</Label><Input type="time" dir="ltr" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} /></div>
               </div>
-              <div><Label>{tr("ملاحظة")}</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
+              <div><Label>ملاحظة</Label><Input value={note} onChange={(e) => setNote(e.target.value)} /></div>
               <Button className="w-full gap-2" onClick={() => {
-                if (!employeeId) return toast.error(tr("اختر الموظف"));
-                if (!checkIn && !checkOut) return toast.error(tr("أدخل حضور أو انصراف على الأقل"));
+                if (!employeeId) return toast.error("اختر الموظف");
+                if (!checkIn && !checkOut) return toast.error("أدخل حضور أو انصراف على الأقل");
                 onSave({
                   employee_id: employeeId, log_date: logDate,
                   check_in: checkIn || null, check_out: checkOut || null,
                   note: note || null,
                 });
                 setOpen(false); setCheckIn(""); setCheckOut(""); setNote("");
-              }}><Save className="w-4 h-4" /> ح{tr("حفظ")}/Button>
+              }}><Save className="w-4 h-4" /> حفظ</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -500,7 +506,7 @@ function ScheduleRow({ emp, canWrite, onSave }: {
   };
   return (
     <tr className="border-b border-border/50">
-      <td className="p-3 font-medium">{emp.name}<div className="text-xs text-muted-foreground">{tr("مرتب:")} {Number(emp.salary || 0).toLocaleString("en-US")}</div></td>
+      <td className="p-3 font-medium">{emp.name}<div className="text-xs text-muted-foreground">مرتب: {Number(emp.salary || 0).toLocaleString("en-US")}</div></td>
       <td className="p-2 text-center">
         <Input type="time" dir="ltr" disabled={!canWrite} className="w-28 mx-auto"
           value={v.work_start_time} onChange={(e) => setV({ ...v, work_start_time: e.target.value })} />
@@ -526,11 +532,11 @@ function ScheduleRow({ emp, canWrite, onSave }: {
       </td>
       <td className="p-2 text-center">
         <Input type="number" step="0.01" dir="ltr" disabled={!canWrite} className="w-24 mx-auto text-left"
-          placeholder={tr("تلقائي")}
+          placeholder="تلقائي"
           value={v.hourly_rate || ""} onChange={(e) => setV({ ...v, hourly_rate: parseFloat(e.target.value) || 0 })} />
       </td>
       <td className="p-3 text-center">
-        {rate > 0 ? <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-500">{rate.toFixed(2)} /{tr("/ س")}/Badge> : <span className="text-xs text-muted-foreground">—</span>}
+        {rate > 0 ? <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-500">{rate.toFixed(2)} / س</Badge> : <span className="text-xs text-muted-foreground">—</span>}
       </td>
       <td className="p-2 text-left">
         {canWrite && (
@@ -540,7 +546,7 @@ function ScheduleRow({ emp, canWrite, onSave }: {
             monthly_work_hours: v.monthly_work_hours || null,
             off_days: v.off_days,
             hourly_rate: v.hourly_rate > 0 ? v.hourly_rate : null,
-          })}><Save className="w-3 h-3" /> ح{tr("حفظ")}/Button>
+          })}><Save className="w-3 h-3" /> حفظ</Button>
         )}
       </td>
     </tr>
@@ -555,12 +561,12 @@ function ConfirmDelete({ onConfirm }: { onConfirm: () => void }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{tr("حذف السجل؟")}</AlertDialogTitle>
-          <AlertDialogDescription>{tr("سيتم حذف سجل الحضور/الانصراف نهائياً.")}</AlertDialogDescription>
+          <AlertDialogTitle>حذف السجل؟</AlertDialogTitle>
+          <AlertDialogDescription>سيتم حذف سجل الحضور/الانصراف نهائياً.</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{tr("حذف")}</AlertDialogAction>
+          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>حذف</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

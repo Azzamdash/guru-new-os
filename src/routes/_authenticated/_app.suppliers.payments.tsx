@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -213,7 +212,7 @@ function SupplierPaymentsPage() {
 <script>window.addEventListener('load',()=>setTimeout(()=>window.print(),300));</script>
 </body></html>`;
     const w = window.open("", "_blank", "width=800,height=900");
-    if (!w) { toast.error(tr("افتح النوافذ المنبثقة للطباعة")); return; }
+    if (!w) { toast.error("افتح النوافذ المنبثقة للطباعة"); return; }
     w.document.open(); w.document.write(html); w.document.close();
   };
 
@@ -222,7 +221,7 @@ function SupplierPaymentsPage() {
   const remove = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
     onSuccess: () => {
-      toast.success(tr("تم الحذف"));
+      toast.success("تم الحذف");
       qc.invalidateQueries({ queryKey: ["supplier-payments"] });
       qc.invalidateQueries({ queryKey: ["supplier-payments-all"] });
       qc.invalidateQueries({ queryKey: ["supplier-invoices"] });
@@ -236,7 +235,7 @@ function SupplierPaymentsPage() {
   const removeInvoice = useMutation({
     mutationFn: (id: string) => delInvoiceFn({ data: { id } }),
     onSuccess: () => {
-      toast.success(tr("تم حذف الفاتورة"));
+      toast.success("تم حذف الفاتورة");
       qc.invalidateQueries({ queryKey: ["supplier-invoices"] });
       qc.invalidateQueries({ queryKey: ["supplier-payments"] });
       qc.invalidateQueries({ queryKey: ["supplier-payments-all"] });
@@ -267,23 +266,23 @@ function SupplierPaymentsPage() {
     <div className="p-6 md:p-8 space-y-6" dir="rtl">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><HandCoins className="w-7 h-7 text-primary" /> د{tr("دفعات الموردين")}/h1>
-          <p className="text-muted-foreground text-sm mt-1">{tr("سجّل دفعة لمورد — تُخصم من مديونيات المورد ومن الخزنة تلقائيًا.")}</p>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><HandCoins className="w-7 h-7 text-primary" /> دفعات الموردين</h1>
+          <p className="text-muted-foreground text-sm mt-1">سجّل دفعة لمورد — تُخصم من مديونيات المورد ومن الخزنة تلقائيًا.</p>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">{tr("إجمالي المدفوع خلال الفترة")}</div>
+          <div className="text-xs text-muted-foreground">إجمالي المدفوع خلال الفترة</div>
           <div className="text-2xl font-bold mt-1 text-emerald-500">{nf(totalPeriod)}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">{tr("عدد الدفعات")}</div>
+          <div className="text-xs text-muted-foreground">عدد الدفعات</div>
           <div className="text-2xl font-bold mt-1">{rows.length}</div>
         </Card>
         <Card className="p-4">
-          <div className="text-xs text-muted-foreground">{tr("إجمالي مديونيات مفتوحة")}</div>
+          <div className="text-xs text-muted-foreground">إجمالي مديونيات مفتوحة</div>
           <div className="text-2xl font-bold mt-1 text-destructive">{nf(totalOpenDebt)}</div>
         </Card>
       </div>
@@ -294,16 +293,17 @@ function SupplierPaymentsPage() {
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             {editingId ? <Pencil className="w-5 h-5 text-primary" /> : <ArrowDownCircle className="w-5 h-5 text-primary" />}
             <h2 className="text-lg font-semibold">{editingId ? `تعديل الدفعة (${editingId.slice(0,8).toUpperCase()})` : "دفعة جديدة"}</h2>
-            {editingId && <Badge variant="outline" className="ms-2">{tr("وضع التعديل")}</Badge>}
+            {editingId && <Badge variant="outline" className="ms-2">وضع التعديل</Badge>}
             <label className="ms-auto flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={standalone} onChange={(e) => { setStandalone(e.target.checked); setForm((f) => ({ ...f, invoice_id: "", brand_id: "" })); }} />
-              دفعة على المديو{tr("دفعة على المديونية (بدون تحديد فاتورة)")}label>
+              دفعة على المديونية (بدون تحديد فاتورة)
+            </label>
           </div>
           <div className="grid md:grid-cols-3 gap-3">
             <div>
-              <Label>{tr("اسم المورد *")}</Label>
+              <Label>اسم المورد *</Label>
               <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v, brand_id: "", invoice_id: "", amount: 0 })}>
-                <SelectTrigger><SelectValue placeholder={tr("اختر المورد")} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
                 <SelectContent>
                   {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
@@ -311,7 +311,7 @@ function SupplierPaymentsPage() {
             </div>
             {standalone && (
               <div>
-                <Label>{tr("البراند *")}</Label>
+                <Label>البراند *</Label>
                 <Select value={form.brand_id} onValueChange={(v) => setForm({ ...form, brand_id: v })} disabled={!form.supplier_id}>
                   <SelectTrigger><SelectValue placeholder={form.supplier_id ? "اختر البراند" : "اختر المورد أولاً"} /></SelectTrigger>
                   <SelectContent>
@@ -324,17 +324,17 @@ function SupplierPaymentsPage() {
             )}
             {!standalone && (<>
             <div>
-              <Label>{tr("البراند")}</Label>
+              <Label>البراند</Label>
               <Select value={form.brand_id || "all"} onValueChange={(v) => setForm({ ...form, brand_id: v === "all" ? "" : v, invoice_id: "", amount: 0 })} disabled={!form.supplier_id}>
                 <SelectTrigger><SelectValue placeholder={form.supplier_id ? "كل البراندات" : "اختر المورد أولاً"} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{tr("كل البراندات")}</SelectItem>
+                  <SelectItem value="all">كل البراندات</SelectItem>
                   {brandsForSupplier.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>{tr("الفاتورة *")}</Label>
+              <Label>الفاتورة *</Label>
               <Select value={form.invoice_id} onValueChange={(v) => {
                 const inv = invoices.find((i) => i.id === v);
                 const rem = inv ? remainingOf(inv.id, Number(inv.amount)) : 0;
@@ -346,49 +346,52 @@ function SupplierPaymentsPage() {
                     const rem = remainingOf(i.id, Number(i.amount));
                     return (
                       <SelectItem key={i.id} value={i.id}>
-                        {i.issued_at} — {brandName(i.brand_id)} —{tr("— متبقي")}{nf(rem)} EGP
+                        {i.issued_at} — {brandName(i.brand_id)} — متبقي {nf(rem)} EGP
                       </SelectItem>
                     );
                   })}
                   {editingId && selectedInvoice && !openInvoicesForFilter.some((i) => i.id === selectedInvoice.id) && (
                     <SelectItem value={selectedInvoice.id}>
-                      {selectedInvoice.issued_at} — {brandName(selectedInvoice.brand_id)} —{tr("— (فاتورة الدفعة الحالية)")}                    </SelectItem>
+                      {selectedInvoice.issued_at} — {brandName(selectedInvoice.brand_id)} — (فاتورة الدفعة الحالية)
+                    </SelectItem>
                   )}
                   {openInvoicesForFilter.length === 0 && !editingId && form.supplier_id && (
-                    <div className="p-2 text-xs text-muted-foreground">{tr("لا فواتير مفتوحة.")}</div>
+                    <div className="p-2 text-xs text-muted-foreground">لا فواتير مفتوحة.</div>
                   )}
                 </SelectContent>
               </Select>
             </div>
             </>)}
             <div>
-              <Label>{tr("المبلغ المدفوع *")}</Label>
+              <Label>المبلغ المدفوع *</Label>
               <Input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} />
               {selectedInvoice && (
                 <div className="text-xs text-muted-foreground mt-1">
-                  المتبقي على الفاتور{tr("المتبقي على الفاتورة:")}um font-semibold text-foreground">{nf(selectedRemaining)}</span> EGP
-                  {editingId && <> —{tr("— الحد الأقصى للتعديل:")}<span className="num font-semibold text-foreground">{nf(maxAllowed)}</span> EGP</>}
+                  المتبقي على الفاتورة: <span className="num font-semibold text-foreground">{nf(selectedRemaining)}</span> EGP
+                  {editingId && <> — الحد الأقصى للتعديل: <span className="num font-semibold text-foreground">{nf(maxAllowed)}</span> EGP</>}
                 </div>
               )}
             </div>
             <div>
-              <Label>{tr("تاريخ الدفع *")}</Label>
+              <Label>تاريخ الدفع *</Label>
               <Input type="date" value={form.paid_at} onChange={(e) => setForm({ ...form, paid_at: e.target.value })} />
             </div>
             <div>
-              <Label>{tr("ملاحظة")}</Label>
-              <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder={tr("اختياري")} />
+              <Label>ملاحظة</Label>
+              <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="اختياري" />
             </div>
           </div>
           <div className="flex items-center justify-between mt-4 gap-3 flex-wrap">
             <p className="text-xs text-muted-foreground bg-muted/30 px-3 py-2 rounded">
-              الدفعة تُسجَّل {tr("الدفعة تُسجَّل تلقائيًا في الخزنة تحت فئة «دفعات الموردين» وتُخصم من مديونيات المورد.")}p>
+              الدفعة تُسجَّل تلقائيًا في الخزنة تحت فئة «دفعات الموردين» وتُخصم من مديونيات المورد.
+            </p>
             <div className="flex gap-2">
               {editingId && (
                 <Button variant="outline" onClick={resetForm} disabled={save.isPending} className="gap-1">
-                  <X className="w-4 h-4" /> إ{tr("إلغاء التعديل")}                </Button>
+                  <X className="w-4 h-4" /> إلغاء التعديل
+                </Button>
               )}
-              {!editingId && <Button variant="ghost" onClick={resetForm} disabled={save.isPending}>{tr("مسح")}</Button>}
+              {!editingId && <Button variant="ghost" onClick={resetForm} disabled={save.isPending}>مسح</Button>}
               <Button onClick={() => save.mutate()} disabled={!canSubmit || save.isPending}>
                 {save.isPending ? "جاري الحفظ…" : (editingId ? "حفظ التعديل" : "تسجيل الدفعة")}
               </Button>
@@ -401,11 +404,11 @@ function SupplierPaymentsPage() {
       <Card className="p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex-1 min-w-[220px]">
-            <Label>{tr("كشف حساب مورد")}</Label>
+            <Label>كشف حساب مورد</Label>
             <Select value={supplierFilter} onValueChange={setSupplierFilter}>
-              <SelectTrigger><SelectValue placeholder={tr("اختر المورد")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tr("— اختر المورد —")}</SelectItem>
+                <SelectItem value="all">— اختر المورد —</SelectItem>
                 {suppliers.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -416,7 +419,8 @@ function SupplierPaymentsPage() {
             onClick={() => setStatementSupplierId(supplierFilter)}
             className="gap-1"
           >
-            <ScrollText className="w-4 h-4" /> ع{tr("عرض كشف الحساب")}          </Button>
+            <ScrollText className="w-4 h-4" /> عرض كشف الحساب
+          </Button>
         </div>
       </Card>
 
@@ -427,13 +431,13 @@ function SupplierPaymentsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border text-right text-muted-foreground">
-              <th className="p-3">{tr("التاريخ")}</th>
-              <th className="p-3">{tr("المورد")}</th>
-              <th className="p-3">{tr("البراند")}</th>
-              <th className="p-3">{tr("الفاتورة")}</th>
-              <th className="p-3 text-left">{tr("المبلغ")}</th>
-              <th className="p-3">{tr("الخزنة")}</th>
-              <th className="p-3">{tr("ملاحظة")}</th>
+              <th className="p-3">التاريخ</th>
+              <th className="p-3">المورد</th>
+              <th className="p-3">البراند</th>
+              <th className="p-3">الفاتورة</th>
+              <th className="p-3 text-left">المبلغ</th>
+              <th className="p-3">الخزنة</th>
+              <th className="p-3">ملاحظة</th>
               <th className="p-3"></th>
             </tr></thead>
             <tbody>
@@ -445,20 +449,20 @@ function SupplierPaymentsPage() {
                   <td className="p-3 text-muted-foreground text-xs" dir="ltr">{(r.invoice_id ?? "").slice(0, 8)}</td>
                   <td className="p-3 num text-left font-semibold text-emerald-500">{nf(Number(r.amount))}</td>
                   <td className="p-3">
-                    {r.cash_transaction_id ? <Badge variant="secondary" className="gap-1"><Wallet className="w-3 h-3" /> م{tr("مسجَّل")}/Badge> : <Badge variant="outline">—</Badge>}
+                    {r.cash_transaction_id ? <Badge variant="secondary" className="gap-1"><Wallet className="w-3 h-3" /> مسجَّل</Badge> : <Badge variant="outline">—</Badge>}
                   </td>
                   <td className="p-3 text-muted-foreground text-xs">{r.note ?? "—"}</td>
                   <td className="p-3 text-left">
                     <div className="flex items-center justify-end gap-1">
-                      <Button size="icon" variant="ghost" title={tr("طباعة إيصال PDF")} onClick={() => printReceipt({ id: r.id, invoice_id: r.invoice_id, amount: Number(r.amount), paid_at: r.paid_at, note: r.note })}>
+                      <Button size="icon" variant="ghost" title="طباعة إيصال PDF" onClick={() => printReceipt({ id: r.id, invoice_id: r.invoice_id, amount: Number(r.amount), paid_at: r.paid_at, note: r.note })}>
                         <Printer className="w-4 h-4" />
                       </Button>
                       {canWrite && (
                         <>
-                          <Button size="icon" variant="ghost" title={tr("تعديل")} onClick={() => loadForEdit({ id: r.id, invoice_id: r.invoice_id, amount: Number(r.amount), paid_at: r.paid_at, note: r.note })}>
+                          <Button size="icon" variant="ghost" title="تعديل" onClick={() => loadForEdit({ id: r.id, invoice_id: r.invoice_id, amount: Number(r.amount), paid_at: r.paid_at, note: r.note })}>
                             <Pencil className="w-4 h-4 text-primary" />
                           </Button>
-                          <Button size="icon" variant="ghost" title={tr("إلغاء / حذف")} onClick={() => setConfirmDel(r.id)}>
+                          <Button size="icon" variant="ghost" title="إلغاء / حذف" onClick={() => setConfirmDel(r.id)}>
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
                         </>
@@ -467,7 +471,7 @@ function SupplierPaymentsPage() {
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">{tr("لا دفعات في هذه الفترة.")}</td></tr>}
+              {rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">لا دفعات في هذه الفترة.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -477,10 +481,10 @@ function SupplierPaymentsPage() {
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <ScrollText className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">{tr("السجل الكامل لكل الدفعات")}</h2>
+          <h2 className="text-lg font-semibold">السجل الكامل لكل الدفعات</h2>
           <Badge variant="outline" className="ms-2">{allPayments.length}</Badge>
           <div className="ms-auto text-xs text-muted-foreground">
-            إجمالي المدفو{tr("إجمالي المدفوع:")}ame="num font-semibold text-emerald-500">{nf(allPayments.reduce((a, r) => a + Number(r.amount || 0), 0))}</span> EGP
+            إجمالي المدفوع: <span className="num font-semibold text-emerald-500">{nf(allPayments.reduce((a, r) => a + Number(r.amount || 0), 0))}</span> EGP
           </div>
         </div>
         <PaginatedTable
@@ -510,19 +514,19 @@ function SupplierPaymentsPage() {
             { key: "invoice_issued_at", header: "تاريخ الفاتورة", render: (r) => <span className="num text-xs" dir="ltr">{r.invoice_issued_at}</span> },
             { key: "invoice_amount", header: "قيمة الفاتورة", render: (r) => <span className="num">{nf(r.invoice_amount)}</span> },
             { key: "amount", header: "المبلغ المدفوع", render: (r) => <span className="num font-semibold text-emerald-500">{nf(r.amount)}</span> },
-            { key: "cash_linked", header: "الخزنة", render: (r) => r.cash_linked ? <Badge variant="secondary" className="gap-1"><Wallet className="w-3 h-3" /> م{tr("مسجَّل")}/Badge> : <Badge variant="outline">—</Badge> },
+            { key: "cash_linked", header: "الخزنة", render: (r) => r.cash_linked ? <Badge variant="secondary" className="gap-1"><Wallet className="w-3 h-3" /> مسجَّل</Badge> : <Badge variant="outline">—</Badge> },
             { key: "note", header: "ملاحظة", render: (r) => <span className="text-xs text-muted-foreground">{r.note || "—"}</span> },
             { key: "actions", header: "", render: (r) => (
               <div className="flex items-center gap-1">
-                <Button size="icon" variant="ghost" title={tr("طباعة إيصال PDF")} onClick={() => printReceipt({ id: r._raw.id, invoice_id: r._raw.invoice_id, amount: Number(r._raw.amount), paid_at: r._raw.paid_at, note: r._raw.note })}>
+                <Button size="icon" variant="ghost" title="طباعة إيصال PDF" onClick={() => printReceipt({ id: r._raw.id, invoice_id: r._raw.invoice_id, amount: Number(r._raw.amount), paid_at: r._raw.paid_at, note: r._raw.note })}>
                   <Printer className="w-4 h-4" />
                 </Button>
                 {canWrite && (
                   <>
-                    <Button size="icon" variant="ghost" title={tr("تعديل")} onClick={() => loadForEdit({ id: r._raw.id, invoice_id: r._raw.invoice_id, amount: Number(r._raw.amount), paid_at: r._raw.paid_at, note: r._raw.note })}>
+                    <Button size="icon" variant="ghost" title="تعديل" onClick={() => loadForEdit({ id: r._raw.id, invoice_id: r._raw.invoice_id, amount: Number(r._raw.amount), paid_at: r._raw.paid_at, note: r._raw.note })}>
                       <Pencil className="w-4 h-4 text-primary" />
                     </Button>
-                    <Button size="icon" variant="ghost" title={tr("إلغاء / حذف")} onClick={() => setConfirmDel(r._raw.id)}>
+                    <Button size="icon" variant="ghost" title="إلغاء / حذف" onClick={() => setConfirmDel(r._raw.id)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </>
@@ -531,7 +535,7 @@ function SupplierPaymentsPage() {
             )},
           ] as Column<{ id: string; _raw: { id: string; invoice_id: string | null; amount: number; paid_at: string; note: string | null }; paid_at: string; supplier: string; brand: string; invoice_short: string; invoice_amount: number; invoice_issued_at: string; amount: number; cash_linked: boolean; note: string }>[]}
           pageSize={25}
-          emptyText={tr("لا توجد دفعات مسجّلة بعد.")}
+          emptyText="لا توجد دفعات مسجّلة بعد."
         />
       </Card>
 
@@ -540,7 +544,7 @@ function SupplierPaymentsPage() {
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-3">
             <ScrollText className="w-5 h-5 text-destructive" />
-            <h2 className="text-lg font-semibold">{tr("فواتير الموردين — حذف")}</h2>
+            <h2 className="text-lg font-semibold">فواتير الموردين — حذف</h2>
             <Badge variant="outline" className="ms-2">
               {invoices.filter((i) => supplierFilter === "all" || i.supplier_id === supplierFilter).length}
             </Badge>
@@ -571,13 +575,13 @@ function SupplierPaymentsPage() {
               { key: "remaining", header: "المتبقي", render: (r) => <span className="num text-destructive">{nf(r.remaining)}</span> },
               { key: "status", header: "الحالة", render: (r) => <Badge variant={r.status === "paid" ? "secondary" : "outline"}>{r.status === "paid" ? "مدفوعة" : "أجل"}</Badge> },
               { key: "actions", header: "", render: (r) => (
-                <Button size="icon" variant="ghost" title={tr("حذف الفاتورة")} onClick={() => setConfirmDelInvoice(r.id)}>
+                <Button size="icon" variant="ghost" title="حذف الفاتورة" onClick={() => setConfirmDelInvoice(r.id)}>
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               )},
             ] as Column<{ id: string; issued_at: string; supplier: string; brand: string; amount: number; paid: number; remaining: number; status: string; note: string }>[]}
             pageSize={25}
-            emptyText={tr("لا فواتير.")}
+            emptyText="لا فواتير."
           />
         </Card>
       )}
@@ -585,12 +589,12 @@ function SupplierPaymentsPage() {
       <AlertDialog open={!!confirmDel} onOpenChange={(o) => !o && setConfirmDel(null)}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>{tr("حذف الدفعة")}</AlertDialogTitle>
-            <AlertDialogDescription>{tr("ستُلغى حركة الخزنة المرتبطة وتتحدّث حالة الفاتورة. متأكد؟")}</AlertDialogDescription>
+            <AlertDialogTitle>حذف الدفعة</AlertDialogTitle>
+            <AlertDialogDescription>ستُلغى حركة الخزنة المرتبطة وتتحدّث حالة الفاتورة. متأكد؟</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmDel && remove.mutate(confirmDel)}>{tr("حذف")}</AlertDialogAction>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDel && remove.mutate(confirmDel)}>حذف</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -598,12 +602,12 @@ function SupplierPaymentsPage() {
       <AlertDialog open={!!confirmDelInvoice} onOpenChange={(o) => !o && setConfirmDelInvoice(null)}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>{tr("حذف الفاتورة")}</AlertDialogTitle>
-            <AlertDialogDescription>{tr("سيتم حذف الفاتورة وكل بنودها ودفعاتها المرتبطة وحركات الخزنة الخاصة بها. متأكد؟")}</AlertDialogDescription>
+            <AlertDialogTitle>حذف الفاتورة</AlertDialogTitle>
+            <AlertDialogDescription>سيتم حذف الفاتورة وكل بنودها ودفعاتها المرتبطة وحركات الخزنة الخاصة بها. متأكد؟</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => confirmDelInvoice && removeInvoice.mutate(confirmDelInvoice)}>{tr("حذف")}</AlertDialogAction>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDelInvoice && removeInvoice.mutate(confirmDelInvoice)}>حذف</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -696,24 +700,24 @@ function StatementDialog({
     <Dialog open={!!supplierId} onOpenChange={(o) => !o && onClose()}>
       <DialogContent dir="rtl" className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><ScrollText className="w-5 h-5 text-primary" /> ك{tr("كشف حساب —")}{supplierId ? supplierName(supplierId) : ""}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><ScrollText className="w-5 h-5 text-primary" /> كشف حساب — {supplierId ? supplierName(supplierId) : ""}</DialogTitle>
         </DialogHeader>
         <div className="flex gap-2 items-end flex-wrap">
-          <div><Label className="text-xs">{tr("من")}</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40 mt-1" /></div>
-          <div><Label className="text-xs">{tr("إلى")}</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40 mt-1" /></div>
-          {(from || to) && <Button variant="ghost" size="sm" onClick={() => { setFrom(""); setTo(""); }}>{tr("مسح")}</Button>}
+          <div><Label className="text-xs">من</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40 mt-1" /></div>
+          <div><Label className="text-xs">إلى</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40 mt-1" /></div>
+          {(from || to) && <Button variant="ghost" size="sm" onClick={() => { setFrom(""); setTo(""); }}>مسح</Button>}
           <div className="ms-auto flex gap-2">
-            <Button variant="outline" size="sm" onClick={print} className="gap-1"><Printer className="w-4 h-4" /> ط{tr("طباعة")}/Button>
+            <Button variant="outline" size="sm" onClick={print} className="gap-1"><Printer className="w-4 h-4" /> طباعة</Button>
           </div>
         </div>
         <div className="overflow-auto border rounded mt-2">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 sticky top-0"><tr>
-              <th className="p-2 text-right">{tr("التاريخ")}</th>
-              <th className="p-2 text-right">{tr("البيان")}</th>
-              <th className="p-2 text-left">{tr("مدين (له)")}</th>
-              <th className="p-2 text-left">{tr("دائن (عليه)")}</th>
-              <th className="p-2 text-left">{tr("الرصيد")}</th>
+              <th className="p-2 text-right">التاريخ</th>
+              <th className="p-2 text-right">البيان</th>
+              <th className="p-2 text-left">مدين (له)</th>
+              <th className="p-2 text-left">دائن (عليه)</th>
+              <th className="p-2 text-left">الرصيد</th>
             </tr></thead>
             <tbody>
               {data.rows.map((r, idx) => (
@@ -725,11 +729,11 @@ function StatementDialog({
                   <td className="p-2 num text-left font-semibold">{nf(r.balance)}</td>
                 </tr>
               ))}
-              {data.rows.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{tr("لا حركات في الفترة المحددة.")}</td></tr>}
+              {data.rows.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا حركات في الفترة المحددة.</td></tr>}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-border font-semibold bg-muted/30">
-                <td className="p-2" colSpan={2}>{tr("الإجماليات")}</td>
+                <td className="p-2" colSpan={2}>الإجماليات</td>
                 <td className="p-2 num text-left">{nf(data.totals.debit)}</td>
                 <td className="p-2 num text-left text-emerald-500">{nf(data.totals.credit)}</td>
                 <td className="p-2 num text-left">{nf(data.totals.balance)}</td>

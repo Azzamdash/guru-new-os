@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -62,33 +61,35 @@ function InvoicePrintPage() {
     <div className="p-4 md:p-6 space-y-4">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-          <ReceiptText className="w-6 h-6" /> ط{tr("طباعة الفواتير")}        </h1>
+          <ReceiptText className="w-6 h-6" /> طباعة الفواتير
+        </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          فواتير الفر{tr("فواتير الفروع خلال آخر 14 يوم — طباعة أو إرسال عبر واتساب فقط.")}p>
+          فواتير الفروع خلال آخر 14 يوم — طباعة أو إرسال عبر واتساب فقط.
+        </p>
       </div>
 
       <Card className="p-3 grid gap-2 md:grid-cols-4">
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger><SelectValue placeholder={tr("الفرع")} /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="الفرع" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{tr("كل الفروع")}</SelectItem>
+            <SelectItem value="all">كل الفروع</SelectItem>
             {(q.data?.branches ?? []).map((b) => (
               <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder={tr("من")} />
-        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder={tr("إلى")} />
+        <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="من" />
+        <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="إلى" />
         <div className="relative">
           <SearchIcon className="w-4 h-4 absolute top-1/2 -translate-y-1/2 rtl:right-3 ltr:left-3 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr("اسم العميل / الهاتف / الفرع")} className="rtl:pr-9 ltr:pl-9" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="اسم العميل / الهاتف / الفرع" className="rtl:pr-9 ltr:pl-9" />
         </div>
       </Card>
 
       <Card className="divide-y divide-border/60">
-        {q.isLoading && <div className="p-4 text-sm text-muted-foreground">{tr("جاري التحميل...")}</div>}
+        {q.isLoading && <div className="p-4 text-sm text-muted-foreground">جاري التحميل...</div>}
         {!q.isLoading && rows.length === 0 && (
-          <div className="p-6 text-center text-sm text-muted-foreground">{tr("لا فواتير في هذه الفترة.")}</div>
+          <div className="p-6 text-center text-sm text-muted-foreground">لا فواتير في هذه الفترة.</div>
         )}
         {rows.map((r) => {
           const no = `POS-${String(r.id).slice(0, 8).toUpperCase()}`;
@@ -108,9 +109,11 @@ function InvoicePrintPage() {
               <div className="text-primary font-bold num">{Number(r.total_amount).toLocaleString("en-US")}</div>
               <div className="flex gap-1">
                 <Button size="sm" variant="outline" onClick={() => openInvoice(r.id)} className="gap-1">
-                  <Printer className="w-4 h-4" /> ع{tr("عرض / طباعة")}                </Button>
+                  <Printer className="w-4 h-4" /> عرض / طباعة
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => openInvoice(r.id)} className="gap-1">
-                  <MessageCircle className="w-4 h-4" /> و{tr("واتساب")}                </Button>
+                  <MessageCircle className="w-4 h-4" /> واتساب
+                </Button>
               </div>
             </div>
           );
@@ -119,16 +122,18 @@ function InvoicePrintPage() {
 
       <Dialog open={!!receipt} onOpenChange={(o) => !o && setReceipt(null)}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{tr("تفاصيل الفاتورة")}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>تفاصيل الفاتورة</DialogTitle></DialogHeader>
           {receipt && <ReceiptView inv={receipt} />}
           <DialogFooter className="gap-2 flex-wrap">
-            <Button variant="ghost" onClick={() => setReceipt(null)}>{tr("إغلاق")}</Button>
+            <Button variant="ghost" onClick={() => setReceipt(null)}>إغلاق</Button>
             {receipt && (
               <>
                 <Button variant="outline" onClick={() => printReceipt(receipt)} className="gap-1">
-                  <Printer className="w-4 h-4" /> ط{tr("طباعة")}                </Button>
+                  <Printer className="w-4 h-4" /> طباعة
+                </Button>
                 <Button onClick={() => whatsappReceipt(receipt)} className="gap-1">
-                  <MessageCircle className="w-4 h-4" /> و{tr("واتساب")}                </Button>
+                  <MessageCircle className="w-4 h-4" /> واتساب
+                </Button>
               </>
             )}
           </DialogFooter>
@@ -142,13 +147,13 @@ function ReceiptView({ inv }: { inv: PosInvoice }) {
   const no = `POS-${String(inv.id).slice(0, 8).toUpperCase()}`;
   return (
     <div className="space-y-2 text-sm">
-      <div className="flex justify-between"><span className="text-muted-foreground">{tr("رقم")}</span><span dir="ltr">{no}</span></div>
-      <div className="flex justify-between"><span className="text-muted-foreground">{tr("الفرع")}</span><span>{inv.brand_name}</span></div>
-      <div className="flex justify-between"><span className="text-muted-foreground">{tr("التاريخ")}</span><span dir="ltr">{new Date(inv.created_at).toLocaleString("en-GB")}</span></div>
-      <div className="flex justify-between"><span className="text-muted-foreground">{tr("العميل")}</span><span>{inv.customer_name ?? "—"}</span></div>
-      <div className="flex justify-between"><span className="text-muted-foreground">{tr("الهاتف")}</span><span dir="ltr">{inv.customer_phone ?? "—"}</span></div>
+      <div className="flex justify-between"><span className="text-muted-foreground">رقم</span><span dir="ltr">{no}</span></div>
+      <div className="flex justify-between"><span className="text-muted-foreground">الفرع</span><span>{inv.brand_name}</span></div>
+      <div className="flex justify-between"><span className="text-muted-foreground">التاريخ</span><span dir="ltr">{new Date(inv.created_at).toLocaleString("en-GB")}</span></div>
+      <div className="flex justify-between"><span className="text-muted-foreground">العميل</span><span>{inv.customer_name ?? "—"}</span></div>
+      <div className="flex justify-between"><span className="text-muted-foreground">الهاتف</span><span dir="ltr">{inv.customer_phone ?? "—"}</span></div>
       <table className="w-full text-xs mt-2">
-        <thead><tr className="border-b"><th className="text-right p-1">{tr("الصنف")}</th><th className="p-1">{tr("كمية")}</th><th className="p-1">{tr("سعر")}</th><th className="p-1">{tr("إجمالي")}</th></tr></thead>
+        <thead><tr className="border-b"><th className="text-right p-1">الصنف</th><th className="p-1">كمية</th><th className="p-1">سعر</th><th className="p-1">إجمالي</th></tr></thead>
         <tbody>
           {inv.items.map((it) => (
             <tr key={it.id} className="border-b border-border/40">
@@ -160,10 +165,10 @@ function ReceiptView({ inv }: { inv: PosInvoice }) {
           ))}
         </tbody>
       </table>
-      <div className="font-bold flex justify-between pt-2 border-t"><span>{tr("الإجمالي")}</span><span className="num">{Number(inv.total_amount).toLocaleString("en-US")}</span></div>
+      <div className="font-bold flex justify-between pt-2 border-t"><span>الإجمالي</span><span className="num">{Number(inv.total_amount).toLocaleString("en-US")}</span></div>
       <div className="flex justify-between text-xs">
         <Badge variant="secondary">{inv.payment_method ?? "—"}</Badge>
-        <span className="num">{tr("كاش")} {Number(inv.cash_amount ?? 0).toLocaleString("en-US")} /{tr("/ فيزا")}{Number(inv.card_amount ?? 0).toLocaleString("en-US")}</span>
+        <span className="num">كاش {Number(inv.cash_amount ?? 0).toLocaleString("en-US")} / فيزا {Number(inv.card_amount ?? 0).toLocaleString("en-US")}</span>
       </div>
     </div>
   );

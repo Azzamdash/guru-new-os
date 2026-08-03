@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,11 +80,14 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
           </Link>
 
           <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-            حوّل بياناتك {tr("حوّل بياناتك إلى")}<br />
-            <span className="text-gradient-primary">{tr("لوحة تحكم حية")}</span>
+            حوّل بياناتك إلى
+            <br />
+            <span className="text-gradient-primary">لوحة تحكم حية</span>
           </h1>
           <p className="text-muted-foreground text-base md:text-lg">
-            اربط متاجرك أ{tr("اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في\n            رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.")}p>
+            اربط متاجرك أو البيزنس الخاص بيك، وشاهد الإيرادات وصافي الربح والمركز النقدي لكل فرع في
+            رسوم بيانية تفاعلية — من غير معادلات ولا نسخ ولصق.
+          </p>
           <div className="grid grid-cols-2 gap-3 mt-2">
             {[
               { icon: TrendingUp, label: "مؤشرات KPI مباشرة" },
@@ -117,14 +119,15 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
           </div>
 
           <div className="relative">
-            <h2 className="text-2xl font-bold">{tr("تسجيل الدخول")}</h2>
+            <h2 className="text-2xl font-bold">تسجيل الدخول</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              أدخل بريدك وكلم{tr("أدخل بريدك وكلمة المرور للمتابعة. الحسابات يُنشئها المشرف فقط.")}p>
+              أدخل بريدك وكلمة المرور للمتابعة. الحسابات يُنشئها المشرف فقط.
+            </p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4 relative">
             <div className="space-y-2">
-              <Label htmlFor="email">{tr("البريد الإلكتروني")}</Label>
+              <Label htmlFor="email">البريد الإلكتروني</Label>
               <Input
                 id="email"
                 type="email"
@@ -136,7 +139,7 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{tr("كلمة المرور")}</Label>
+              <Label htmlFor="password">كلمة المرور</Label>
               <Input
                 id="password"
                 type="password"
@@ -153,7 +156,8 @@ export function LoginScreen({ next = "" }: LoginScreenProps) {
           </form>
 
           <p className="text-center text-xs text-muted-foreground relative">
-            التسجيل الذات{tr("التسجيل الذاتي مغلق — تواصل مع المشرف لإنشاء حسابك.")}p>
+            التسجيل الذاتي مغلق — تواصل مع المشرف لإنشاء حسابك.
+          </p>
         </Card>
       </div>
     </main>

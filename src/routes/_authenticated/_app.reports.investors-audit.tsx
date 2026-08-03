@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -166,9 +165,11 @@ function InvestorsAuditPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <HandCoins className="w-7 h-7 text-primary" />
-            تدقيق وتحليلا{tr("تدقيق وتحليلات المستثمرين")}h1>
+            تدقيق وتحليلات المستثمرين
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            نسبة كل مستثم{tr("نسبة كل مستثمر في كل براند، وتاريخ آخر تعديل، بالإضافة إلى تحليل أرباحه/خسائره خلال الفترة المختارة.")}p>
+            نسبة كل مستثمر في كل براند، وتاريخ آخر تعديل، بالإضافة إلى تحليل أرباحه/خسائره خلال الفترة المختارة.
+          </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <PeriodFilter value={period} onChange={setPeriod} />
@@ -176,7 +177,7 @@ function InvestorsAuditPage() {
             filename={`investors-pnl-${resolved.year}.csv`}
             rows={csvRows}
             columns={csvColumns}
-            summaryTitle={tr("تحليلات المستثمرين")}
+            summaryTitle="تحليلات المستثمرين"
             summaryText={`أرباح المستثمرين خلال ${resolved.dateFrom ?? resolved.year} → ${resolved.dateTo ?? ""}`}
           />
         </div>
@@ -185,11 +186,11 @@ function InvestorsAuditPage() {
       {/* Filters — dropdowns from existing data */}
       <Card className="p-4 flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-[220px]">
-          <label className="text-xs text-muted-foreground mb-1 block">{tr("المستثمر")}</label>
+          <label className="text-xs text-muted-foreground mb-1 block">المستثمر</label>
           <Select value={investorFilter} onValueChange={setInvestorFilter}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{tr("كل المستثمرين (")}{investorOptions.length})</SelectItem>
+              <SelectItem value="all">كل المستثمرين ({investorOptions.length})</SelectItem>
               {investorOptions.map((i) => (
                 <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
               ))}
@@ -197,11 +198,11 @@ function InvestorsAuditPage() {
           </Select>
         </div>
         <div className="flex-1 min-w-[220px]">
-          <label className="text-xs text-muted-foreground mb-1 block">{tr("البراند / الشركة")}</label>
+          <label className="text-xs text-muted-foreground mb-1 block">البراند / الشركة</label>
           <Select value={brandFilter} onValueChange={setBrandFilter}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{tr("كل البراندات (")}{brandOptions.length})</SelectItem>
+              <SelectItem value="all">كل البراندات ({brandOptions.length})</SelectItem>
               {brandOptions.map((b) => (
                 <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
               ))}
@@ -214,7 +215,7 @@ function InvestorsAuditPage() {
             onClick={() => { setInvestorFilter("all"); setBrandFilter("all"); }}
           >
             إعادة الضبط
- {tr("إعادة الضبط")}button>
+          </button>
         )}
       </Card>
 
@@ -222,50 +223,50 @@ function InvestorsAuditPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("إجمالي أرباح/خسائر المستثمرين")}</span>
+            <span>إجمالي أرباح/خسائر المستثمرين</span>
             {totals.profit >= 0 ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingDown className="w-4 h-4 text-destructive" />}
           </div>
           <div className={`text-2xl font-bold mt-2 num ${totals.profit >= 0 ? "text-success" : "text-destructive"}`}>{fmtN(totals.profit)}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("الإيراد المنسوب")}</span>
+            <span>الإيراد المنسوب</span>
             <Wallet className="w-4 h-4 text-primary" />
           </div>
           <div className="text-2xl font-bold mt-2 num">{fmtN(totals.revenue)}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">{tr("من إجمالي براند")} {fmtN(totals.brandRevenue)}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">من إجمالي براند {fmtN(totals.brandRevenue)}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("التكاليف المنسوبة")}</span>
+            <span>التكاليف المنسوبة</span>
             <Wallet className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-2xl font-bold mt-2 num text-amber-500">{fmtN(totals.costs)}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("هامش الربح")}</span>
+            <span>هامش الربح</span>
             <Percent className="w-4 h-4 text-primary" />
           </div>
           <div className="text-2xl font-bold mt-2 num">{totals.revenue > 0 ? fmtPct((totals.profit / totals.revenue) * 100) : "—"}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("عدد المستثمرين")}</span>
+            <span>عدد المستثمرين</span>
             <Users className="w-4 h-4 text-primary" />
           </div>
           <div className="text-2xl font-bold mt-2 num">{byInvestor.length}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("عدد البراندات النشطة")}</span>
+            <span>عدد البراندات النشطة</span>
             <Building2 className="w-4 h-4 text-primary" />
           </div>
           <div className="text-2xl font-bold mt-2 num">{byBrand.length}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("أعلى مستثمر ربحًا")}</span>
+            <span>أعلى مستثمر ربحًا</span>
             <Trophy className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="text-sm font-bold mt-2 truncate">{topInvestor?.name || "—"}</div>
@@ -273,7 +274,7 @@ function InvestorsAuditPage() {
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{tr("أعلى براند ربحًا")}</span>
+            <span>أعلى براند ربحًا</span>
             <Trophy className="w-4 h-4 text-primary" />
           </div>
           <div className="text-sm font-bold mt-2 truncate">{topBrand?.name || "—"}</div>
@@ -282,15 +283,15 @@ function InvestorsAuditPage() {
       </div>
 
       {pnlQ.isLoading ? (
-        <div className="p-8 text-muted-foreground">{tr("جاري التحميل...")}</div>
+        <div className="p-8 text-muted-foreground">جاري التحميل...</div>
       ) : byInvestor.length === 0 ? (
-        <EmptyState title={tr("لا توجد نتائج")} description={tr("لا توجد استثمارات ضمن الفلاتر أو الفترة الحالية.")} />
+        <EmptyState title="لا توجد نتائج" description="لا توجد استثمارات ضمن الفلاتر أو الفترة الحالية." />
       ) : (
         <>
           {/* Charts row */}
           <div className="grid lg:grid-cols-2 gap-4">
             <Card className="p-5">
-              <h3 className="font-semibold mb-3">{tr("أرباح/خسائر كل مستثمر")}</h3>
+              <h3 className="font-semibold mb-3">أرباح/خسائر كل مستثمر</h3>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={byInvestor.slice(0, 12).map((r) => ({ name: r.name || "—", value: Math.round(r.profit) }))}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" />
@@ -298,7 +299,7 @@ function InvestorsAuditPage() {
                   <YAxis fontSize={11} tickFormatter={(v) => fmtN(v)} />
                   <Tooltip formatter={(v: number) => fmtN(v)} contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="value" name={tr("نصيب المستثمر")} radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="value" name="نصيب المستثمر" radius={[6, 6, 0, 0]}>
                     {byInvestor.slice(0, 12).map((r, i) => (
                       <Cell key={i} fill={r.profit >= 0 ? COLORS[i % COLORS.length] : "hsl(0 65% 55%)"} />
                     ))}
@@ -308,7 +309,7 @@ function InvestorsAuditPage() {
             </Card>
 
             <Card className="p-5">
-              <h3 className="font-semibold mb-3">{tr("توزيع الأرباح على البراندات")}</h3>
+              <h3 className="font-semibold mb-3">توزيع الأرباح على البراندات</h3>
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
@@ -325,18 +326,18 @@ function InvestorsAuditPage() {
 
           {/* Per-investor totals — expanded columns */}
           <Card className="overflow-hidden">
-            <div className="px-4 py-3 border-b border-border font-semibold text-sm">{tr("ملخص أرباح كل مستثمر")}</div>
+            <div className="px-4 py-3 border-b border-border font-semibold text-sm">ملخص أرباح كل مستثمر</div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">{tr("المستثمر")}</TableHead>
-                    <TableHead className="text-right">{tr("عدد البراندات")}</TableHead>
-                    <TableHead className="text-right">{tr("الإيراد المنسوب")}</TableHead>
-                    <TableHead className="text-right">{tr("التكاليف المنسوبة")}</TableHead>
-                    <TableHead className="text-right">{tr("نصيبه من الربح")}</TableHead>
-                    <TableHead className="text-right">{tr("الهامش")}</TableHead>
-                    <TableHead className="text-right">{tr("% من الإجمالي")}</TableHead>
+                    <TableHead className="text-right">المستثمر</TableHead>
+                    <TableHead className="text-right">عدد البراندات</TableHead>
+                    <TableHead className="text-right">الإيراد المنسوب</TableHead>
+                    <TableHead className="text-right">التكاليف المنسوبة</TableHead>
+                    <TableHead className="text-right">نصيبه من الربح</TableHead>
+                    <TableHead className="text-right">الهامش</TableHead>
+                    <TableHead className="text-right">% من الإجمالي</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -367,19 +368,19 @@ function InvestorsAuditPage() {
 
           {/* Per-brand aggregate */}
           <Card className="overflow-hidden">
-            <div className="px-4 py-3 border-b border-border font-semibold text-sm">{tr("ملخص أداء البراندات (ضمن الفلاتر)")}</div>
+            <div className="px-4 py-3 border-b border-border font-semibold text-sm">ملخص أداء البراندات (ضمن الفلاتر)</div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">{tr("البراند")}</TableHead>
-                    <TableHead className="text-right">{tr("النوع")}</TableHead>
-                    <TableHead className="text-right">{tr("عدد المستثمرين")}</TableHead>
-                    <TableHead className="text-right">{tr("مجموع النسب")}</TableHead>
-                    <TableHead className="text-right">{tr("الإيراد")}</TableHead>
-                    <TableHead className="text-right">{tr("التكاليف")}</TableHead>
-                    <TableHead className="text-right">{tr("الربح")}</TableHead>
-                    <TableHead className="text-right">{tr("الهامش")}</TableHead>
+                    <TableHead className="text-right">البراند</TableHead>
+                    <TableHead className="text-right">النوع</TableHead>
+                    <TableHead className="text-right">عدد المستثمرين</TableHead>
+                    <TableHead className="text-right">مجموع النسب</TableHead>
+                    <TableHead className="text-right">الإيراد</TableHead>
+                    <TableHead className="text-right">التكاليف</TableHead>
+                    <TableHead className="text-right">الربح</TableHead>
+                    <TableHead className="text-right">الهامش</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -405,19 +406,19 @@ function InvestorsAuditPage() {
 
           {/* Detailed per brand */}
           <Card className="overflow-hidden">
-            <div className="px-4 py-3 border-b border-border font-semibold text-sm">{tr("تفاصيل الأرباح لكل مستثمر × براند")}</div>
+            <div className="px-4 py-3 border-b border-border font-semibold text-sm">تفاصيل الأرباح لكل مستثمر × براند</div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    {isAdmin && <TableHead className="text-right">{tr("المستثمر")}</TableHead>}
-                    <TableHead className="text-right">{tr("البراند")}</TableHead>
-                    <TableHead className="text-right">{tr("النوع")}</TableHead>
-                    <TableHead className="text-right">{tr("النسبة")}</TableHead>
-                    <TableHead className="text-right">{tr("إيراد البراند")}</TableHead>
-                    <TableHead className="text-right">{tr("تكاليف البراند")}</TableHead>
-                    <TableHead className="text-right">{tr("ربح البراند")}</TableHead>
-                    <TableHead className="text-right">{tr("نصيب المستثمر")}</TableHead>
+                    {isAdmin && <TableHead className="text-right">المستثمر</TableHead>}
+                    <TableHead className="text-right">البراند</TableHead>
+                    <TableHead className="text-right">النوع</TableHead>
+                    <TableHead className="text-right">النسبة</TableHead>
+                    <TableHead className="text-right">إيراد البراند</TableHead>
+                    <TableHead className="text-right">تكاليف البراند</TableHead>
+                    <TableHead className="text-right">ربح البراند</TableHead>
+                    <TableHead className="text-right">نصيب المستثمر</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -449,8 +450,9 @@ function InvestorsAuditPage() {
             <Card className="p-4 border-destructive/40 bg-destructive/5 flex items-center gap-3">
               <TrendingDown className="w-5 h-5 text-destructive" />
               <div className="text-sm">
-                <span className="font-semibold">{worstInvestor.name}</span> ي{tr("يسجل أعلى خسارة بقيمة")}" "}
-                <span className="num font-bold text-destructive">{fmtN(worstInvestor.profit)}</span> خ{tr("خلال هذه الفترة.")}              </div>
+                <span className="font-semibold">{worstInvestor.name}</span> يسجل أعلى خسارة بقيمة{" "}
+                <span className="num font-bold text-destructive">{fmtN(worstInvestor.profit)}</span> خلال هذه الفترة.
+              </div>
             </Card>
           )}
         </>
@@ -460,8 +462,8 @@ function InvestorsAuditPage() {
       {valQ.data && valQ.data.rows.length > 0 && (
         <Card className="overflow-hidden">
           <div className="px-4 py-3 border-b border-border font-semibold text-sm flex items-center gap-2">
-            <Landmark className="w-4 h-4 text-primary" /> {tr("نصيب المستثمرين من التقييم الحالي")}
-            <span className="text-xs text-muted-foreground font-normal ms-2">— {tr("تقييم كل براند = الإيرادات السنوية × 1.5 + صافي الأصول")}</span>
+            <Landmark className="w-4 h-4 text-primary" /> {"نصيب المستثمرين من التقييم الحالي"}
+            <span className="text-xs text-muted-foreground font-normal ms-2">— {"تقييم كل براند = الإيرادات السنوية × 1.5 + صافي الأصول"}</span>
           </div>
           <div className="p-4 space-y-5">
             {valQ.data.rows.map((row) => (
@@ -472,19 +474,19 @@ function InvestorsAuditPage() {
                     {row.investor_email && <div className="text-xs text-muted-foreground" dir="ltr">{row.investor_email}</div>}
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-sm">
-                    <span className="text-muted-foreground">{tr("إجمالي تقييم الشركة")}: <b className="num text-foreground">{fmtN(row.total_company_valuation)}</b></span>
-                    <span className="text-muted-foreground">{tr("الملكية الفعلية")}: <b className="num text-foreground">{fmtPct(row.effective_ownership_pct)}</b></span>
-                    <Badge className="num">{tr("نصيب المستثمر")}: {fmtN(row.investor_company_share)}</Badge>
+                    <span className="text-muted-foreground">{"إجمالي تقييم الشركة"}: <b className="num text-foreground">{fmtN(row.total_company_valuation)}</b></span>
+                    <span className="text-muted-foreground">{"الملكية الفعلية"}: <b className="num text-foreground">{fmtPct(row.effective_ownership_pct)}</b></span>
+                    <Badge className="num">{"نصيب المستثمر"}: {fmtN(row.investor_company_share)}</Badge>
                   </div>
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-right">{tr("البراند")}</TableHead>
-                        <TableHead className="text-right">{tr("النسبة %")}</TableHead>
-                        <TableHead className="text-right">{tr("تقييم البراند")}</TableHead>
-                        <TableHead className="text-right">{tr("نصيب المستثمر")}</TableHead>
+                        <TableHead className="text-right">{"البراند"}</TableHead>
+                        <TableHead className="text-right">{"النسبة %"}</TableHead>
+                        <TableHead className="text-right">{"تقييم البراند"}</TableHead>
+                        <TableHead className="text-right">{"نصيب المستثمر"}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -508,14 +510,15 @@ function InvestorsAuditPage() {
       {auditQ.isLoading ? null : auditRows.length === 0 ? null : (
         <Card className="overflow-hidden">
           <div className="px-4 py-3 border-b border-border font-semibold text-sm flex items-center gap-2">
-            <Clock className="w-4 h-4" /> ت{tr("تدقيق آخر تعديل للنسب")}          </div>
+            <Clock className="w-4 h-4" /> تدقيق آخر تعديل للنسب
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">{tr("المستثمر")}</TableHead>
-                <TableHead className="text-right">{tr("عدد البراندات")}</TableHead>
-                <TableHead className="text-right">{tr("مجموع النسب")}</TableHead>
-                <TableHead className="text-right">{tr("آخر تعديل")}</TableHead>
+                <TableHead className="text-right">المستثمر</TableHead>
+                <TableHead className="text-right">عدد البراندات</TableHead>
+                <TableHead className="text-right">مجموع النسب</TableHead>
+                <TableHead className="text-right">آخر تعديل</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -73,12 +72,12 @@ function AttendancePage() {
 
   const saveEmp = useMutation({
     mutationFn: (d: Parameters<typeof upEmpFn>[0]["data"]) => upEmpFn({ data: d }),
-    onSuccess: () => { toast.success(tr("تم الحفظ")); qc.invalidateQueries({ queryKey: ["employees"] }); qc.invalidateQueries({ queryKey: ["expense-entries"] }); setNewEmp({ name: "", brand_id: "", position: "", salary: 0 }); },
+    onSuccess: () => { toast.success("تم الحفظ"); qc.invalidateQueries({ queryKey: ["employees"] }); qc.invalidateQueries({ queryKey: ["expense-entries"] }); setNewEmp({ name: "", brand_id: "", position: "", salary: 0 }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "فشل الحفظ"),
   });
   const delEmp = useMutation({
     mutationFn: (id: string) => delEmpFn({ data: { id } }),
-    onSuccess: () => { toast.success(tr("تم الحذف")); qc.invalidateQueries({ queryKey: ["employees"] }); qc.invalidateQueries({ queryKey: ["attendance-computed"] }); },
+    onSuccess: () => { toast.success("تم الحذف"); qc.invalidateQueries({ queryKey: ["employees"] }); qc.invalidateQueries({ queryKey: ["attendance-computed"] }); },
   });
   const approveMonth = useMutation({
     mutationFn: () => approveFn({ data: { year, month } }),
@@ -119,8 +118,9 @@ function AttendancePage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-            <UserCheck className="w-7 h-7 text-primary" /> ا{tr("انتظام الموظفين")}          </h1>
-          <p className="text-muted-foreground text-sm mt-1">{tr("تقرير تلقائي محسوب من سجلات الحضور والانصراف وطلبات الإجازة — لا يحتاج إدخال يدوي.")}</p>
+            <UserCheck className="w-7 h-7 text-primary" /> انتظام الموظفين
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">تقرير تلقائي محسوب من سجلات الحضور والانصراف وطلبات الإجازة — لا يحتاج إدخال يدوي.</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={String(year)} onValueChange={(v) => setYear(parseInt(v, 10))}>
@@ -167,32 +167,34 @@ function AttendancePage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Kpi label={tr("عدد الموظفين")} value={employees.length} />
-        <Kpi label={tr("أيام غياب")} value={totals.absent} color="text-destructive" />
-        <Kpi label={tr("أيام إجازات")} value={totals.vacation} color="text-blue-500" />
-        <Kpi label={tr("تأخيرات")} value={totals.late} color="text-amber-500" />
-        <Kpi label={tr("صافي مكافآت − خصومات")} value={(totals.bonuses - totals.deductions).toLocaleString("en-US")} color={totals.bonuses - totals.deductions >= 0 ? "text-emerald-500" : "text-destructive"} />
+        <Kpi label="عدد الموظفين" value={employees.length} />
+        <Kpi label="أيام غياب" value={totals.absent} color="text-destructive" />
+        <Kpi label="أيام إجازات" value={totals.vacation} color="text-blue-500" />
+        <Kpi label="تأخيرات" value={totals.late} color="text-amber-500" />
+        <Kpi label="صافي مكافآت − خصومات" value={(totals.bonuses - totals.deductions).toLocaleString("en-US")} color={totals.bonuses - totals.deductions >= 0 ? "text-emerald-500" : "text-destructive"} />
       </div>
 
       <Tabs defaultValue="report" dir="rtl">
         <TabsList>
-          <TabsTrigger value="report">{tr("تقرير الأداء (تلقائي)")}</TabsTrigger>
-          <TabsTrigger value="employees"><Users className="w-4 h-4 ml-1" /> ا{tr("الموظفون")}/TabsTrigger>
+          <TabsTrigger value="report">تقرير الأداء (تلقائي)</TabsTrigger>
+          <TabsTrigger value="employees"><Users className="w-4 h-4 ml-1" /> الموظفون</TabsTrigger>
         </TabsList>
 
         {/* REPORT (auto-computed) */}
         <TabsContent value="report" className="space-y-4 mt-4">
           <Card className="card-gradient overflow-hidden">
             <div className="p-4 border-b border-border font-semibold flex items-center justify-between gap-2 flex-wrap">
-              <span>{tr("تقرير أداء")} {MONTHS[month - 1]} {year} —{tr("— محسوب تلقائياً")}/span>
+              <span>تقرير أداء {MONTHS[month - 1]} {year} — محسوب تلقائياً</span>
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="ghost" className="gap-1"
                   onClick={() => qc.invalidateQueries({ queryKey: ["attendance-computed", year, month] })}>
-                  <RefreshCw className="w-3 h-3" /> ت{tr("تحديث")}                </Button>
+                  <RefreshCw className="w-3 h-3" /> تحديث
+                </Button>
                 {canWrite && (
                   <Button size="sm" className="gap-1" disabled={approveMonth.isPending}
                     onClick={() => approveMonth.mutate()}>
-                    <CheckCircle2 className="w-4 h-4" /> ا{tr("اعتماد ومزامنة مع المرتبات")}                  </Button>
+                    <CheckCircle2 className="w-4 h-4" /> اعتماد ومزامنة مع المرتبات
+                  </Button>
                 )}
               </div>
             </div>
@@ -200,19 +202,19 @@ function AttendancePage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">{tr("الموظف")}</th>
-                    <th className="p-3">{tr("البراند")}</th>
-                    <th className="p-3 text-center">{tr("أيام العمل")}</th>
-                    <th className="p-3 text-center">{tr("أيام حضور")}</th>
-                    <th className="p-3 text-center">{tr("غياب")}</th>
-                    <th className="p-3 text-center">{tr("إجازات")}</th>
-                    <th className="p-3 text-center">{tr("تأخيرات")}</th>
-                    <th className="p-3 text-center">{tr("دقائق تأخير")}</th>
-                    <th className="p-3 text-center">{tr("دقائق أوفر تايم")}</th>
-                    <th className="p-3 text-center">{tr("خصومات")}</th>
-                    <th className="p-3 text-center">{tr("مكافآت")}</th>
-                    <th className="p-3 text-center">{tr("الانتظام")}</th>
-                    <th className="p-3 text-center">{tr("التقييم")}</th>
+                    <th className="p-3">الموظف</th>
+                    <th className="p-3">البراند</th>
+                    <th className="p-3 text-center">أيام العمل</th>
+                    <th className="p-3 text-center">أيام حضور</th>
+                    <th className="p-3 text-center">غياب</th>
+                    <th className="p-3 text-center">إجازات</th>
+                    <th className="p-3 text-center">تأخيرات</th>
+                    <th className="p-3 text-center">دقائق تأخير</th>
+                    <th className="p-3 text-center">دقائق أوفر تايم</th>
+                    <th className="p-3 text-center">خصومات</th>
+                    <th className="p-3 text-center">مكافآت</th>
+                    <th className="p-3 text-center">الانتظام</th>
+                    <th className="p-3 text-center">التقييم</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -234,13 +236,14 @@ function AttendancePage() {
                     </tr>
                   ))}
                   {report.length === 0 && (
-                    <tr><td colSpan={13} className="p-6 text-center text-muted-foreground">{tr("لا بيانات.")}</td></tr>
+                    <tr><td colSpan={13} className="p-6 text-center text-muted-foreground">لا بيانات.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
             <p className="text-xs text-muted-foreground p-3 border-t border-border">
-              * محسوب تلقائيا{tr("* محسوب تلقائياً من الحضور والانصراف · الغياب = أيام العمل − (حضور + إجازات) · خصم التأخير = دقائق × سعر الساعة ÷ 60 · مكافأة الأوفر تايم = دقائق × سعر الساعة ÷ 60 · خصم الغياب = مرتب/أيام العمل × عدد أيام الغياب.")}p>
+              * محسوب تلقائياً من الحضور والانصراف · الغياب = أيام العمل − (حضور + إجازات) · خصم التأخير = دقائق × سعر الساعة ÷ 60 · مكافأة الأوفر تايم = دقائق × سعر الساعة ÷ 60 · خصم الغياب = مرتب/أيام العمل × عدد أيام الغياب.
+            </p>
           </Card>
         </TabsContent>
 
@@ -248,52 +251,52 @@ function AttendancePage() {
         <TabsContent value="employees" className="space-y-4 mt-4">
           {canWrite && (
             <Card className="card-gradient p-5">
-              <h3 className="font-semibold mb-3">{tr("إضافة موظف")}</h3>
+              <h3 className="font-semibold mb-3">إضافة موظف</h3>
               <div className="grid md:grid-cols-5 gap-3">
                 <div>
-                  <Label>{tr("الاسم *")}</Label>
+                  <Label>الاسم *</Label>
                   <Input value={newEmp.name} onChange={(e) => setNewEmp({ ...newEmp, name: e.target.value })} />
                 </div>
                 <div>
-                  <Label>{tr("البراند *")}</Label>
+                  <Label>البراند *</Label>
                   <Select value={newEmp.brand_id} onValueChange={(v) => setNewEmp({ ...newEmp, brand_id: v })}>
-                    <SelectTrigger><SelectValue placeholder={tr("اختر")} /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
                     <SelectContent>
                       {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>{tr("الوظيفة")}</Label>
-                  <Input value={newEmp.position} onChange={(e) => setNewEmp({ ...newEmp, position: e.target.value })} placeholder={tr("محاسب / مندوب / تحضير...")} />
+                  <Label>الوظيفة</Label>
+                  <Input value={newEmp.position} onChange={(e) => setNewEmp({ ...newEmp, position: e.target.value })} placeholder="محاسب / مندوب / تحضير..." />
                 </div>
                 <div>
-                  <Label>{tr("المرتب الشهري *")}</Label>
+                  <Label>المرتب الشهري *</Label>
                   <Input type="number" dir="ltr" className="text-left" value={newEmp.salary}
                     onChange={(e) => setNewEmp({ ...newEmp, salary: parseFloat(e.target.value) || 0 })} />
                 </div>
                 <div className="flex items-end">
                   <Button onClick={() => {
-                    if (!newEmp.name.trim()) return toast.error(tr("أدخل الاسم"));
-                    if (!newEmp.brand_id) return toast.error(tr("اختر البراند"));
-                    if (newEmp.salary <= 0) return toast.error(tr("أدخل المرتب"));
+                    if (!newEmp.name.trim()) return toast.error("أدخل الاسم");
+                    if (!newEmp.brand_id) return toast.error("اختر البراند");
+                    if (newEmp.salary <= 0) return toast.error("أدخل المرتب");
                     saveEmp.mutate({ name: newEmp.name.trim(), brand_id: newEmp.brand_id, position: newEmp.position || null, salary: newEmp.salary, active: true });
-                  }} className="gap-2 w-full"><Plus className="w-4 h-4" /> إ{tr("إضافة")}/Button>
+                  }} className="gap-2 w-full"><Plus className="w-4 h-4" /> إضافة</Button>
                 </div>
               </div>
             </Card>
           )}
           <Card className="card-gradient overflow-hidden">
-            <div className="p-4 border-b border-border font-semibold">{tr("قائمة الموظفين (")}{employees.length})</div>
+            <div className="p-4 border-b border-border font-semibold">قائمة الموظفين ({employees.length})</div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-right border-b border-border">
-                    <th className="p-3">{tr("الاسم")}</th>
-                    <th className="p-3">{tr("الوظيفة")}</th>
-                    <th className="p-3">{tr("البراند")}</th>
-                    <th className="p-3 text-center">{tr("المرتب")}</th>
-                    <th className="p-3">{tr("الحالة")}</th>
+                    <th className="p-3">الاسم</th>
+                    <th className="p-3">الوظيفة</th>
+                    <th className="p-3">البراند</th>
+                    <th className="p-3 text-center">المرتب</th>
+                    <th className="p-3">الحالة</th>
                     <th className="p-3"></th>
                   </tr>
                 </thead>
@@ -304,21 +307,21 @@ function AttendancePage() {
                       <td className="p-3 text-muted-foreground">{e.position ?? "—"}</td>
                       <td className="p-3">{brandName(e.brand_id)}</td>
                       <td className="p-3 text-center num">{Number(e.salary || 0).toLocaleString("en-US")}</td>
-                      <td className="p-3">{e.active ? <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-500">{tr("نشط")}</Badge> : <Badge variant="secondary">{tr("موقوف")}</Badge>}</td>
+                      <td className="p-3">{e.active ? <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-500">نشط</Badge> : <Badge variant="secondary">موقوف</Badge>}</td>
                       <td className="p-3 text-left flex gap-1 justify-end">
                         {canWrite && (
                           <>
                             <Button size="sm" variant="ghost" onClick={() => saveEmp.mutate({ id: e.id, name: e.name, brand_id: e.brand_id, salary: e.salary, position: e.position, active: !e.active, note: e.note })}>
                               {e.active ? "إيقاف" : "تفعيل"}
                             </Button>
-                            <ConfirmDelete onConfirm={() => delEmp.mutate(e.id)} title={tr("حذف الموظف؟")} desc={tr("سيتم حذف الموظف وكل بيانات أدائه المسجلة. لا يمكن التراجع.")} />
+                            <ConfirmDelete onConfirm={() => delEmp.mutate(e.id)} title="حذف الموظف؟" desc="سيتم حذف الموظف وكل بيانات أدائه المسجلة. لا يمكن التراجع." />
                           </>
                         )}
                       </td>
                     </tr>
                   ))}
                   {employees.length === 0 && (
-                    <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{tr("لا يوجد موظفون بعد.")}</td></tr>
+                    <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">لا يوجد موظفون بعد.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -343,8 +346,8 @@ function ConfirmDelete({ onConfirm, title = "تأكيد الحذف", desc = "ل�
           <AlertDialogDescription>{desc}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{tr("إلغاء")}</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{tr("حذف")}</AlertDialogAction>
+          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>حذف</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

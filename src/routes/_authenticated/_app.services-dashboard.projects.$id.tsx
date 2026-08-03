@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute, useSearch, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -60,35 +59,36 @@ function ProjectDetailPage() {
         </Link>
         <Dialog open={invOpen} onOpenChange={(o) => { setInvOpen(o); if (o) { setInvTotal(Number(p.cost) || 0); setInvId(null); } }}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">{tr("إنشاء فاتورة من المشروع")}</Button>
+            <Button variant="outline" size="sm">إنشاء فاتورة من المشروع</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{tr("إنشاء فاتورة من المشروع")}</DialogTitle>
+              <DialogTitle>إنشاء فاتورة من المشروع</DialogTitle>
             </DialogHeader>
             {invId ? (
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">{tr("تم إنشاء الفاتورة بنجاح.")}</p>
+                <p className="text-sm text-muted-foreground">تم إنشاء الفاتورة بنجاح.</p>
                 <a
                   href={`/invoice-print?ids=${invId}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                 >
-                  <ExternalLink className="w-4 h-4" /> ع{tr("عرض / طباعة الفاتورة")}                </a>
+                  <ExternalLink className="w-4 h-4" /> عرض / طباعة الفاتورة
+                </a>
               </div>
             ) : (
               <div className="space-y-3">
                 <div>
-                  <Label className="text-xs">{tr("البراند")}</Label>
+                  <Label className="text-xs">البراند</Label>
                   <div className="text-sm mt-1">{p.brand_id}</div>
                 </div>
                 <div>
-                  <Label className="text-xs">{tr("العميل")}</Label>
+                  <Label className="text-xs">العميل</Label>
                   <div className="text-sm mt-1">{p.service_clients?.name ?? "—"}</div>
                 </div>
                 <div>
-                  <Label className="text-xs">{tr("إجمالي الفاتورة")}</Label>
+                  <Label className="text-xs">إجمالي الفاتورة</Label>
                   <Input
                     type="number"
                     min={0}
@@ -101,7 +101,7 @@ function ProjectDetailPage() {
             )}
             <DialogFooter>
               {invId ? (
-                <Button onClick={() => setInvOpen(false)}>{tr("إغلاق")}</Button>
+                <Button onClick={() => setInvOpen(false)}>إغلاق</Button>
               ) : (
                 <Button
                   onClick={async () => {
@@ -109,14 +109,14 @@ function ProjectDetailPage() {
                       const res = await invoiceFn({ data: { projectId: id, totalAmount: invTotal } });
                       setInvId(res.invoiceId);
                       qc.invalidateQueries({ queryKey: ["sd-project", id] });
-                      toast.success(tr("تم إنشاء الفاتورة"));
+                      toast.success("تم إنشاء الفاتورة");
                     } catch (e) {
                       toast.error(e instanceof Error ? e.message : "فشل الإنشاء");
                     }
                   }}
                 >
                   إنشاء
-             {tr("إنشاء")}Button>
+                </Button>
               )}
             </DialogFooter>
           </DialogContent>

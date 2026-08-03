@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell } from "lucide-react";
@@ -66,7 +65,7 @@ export function NotificationsBell({ className }: { className?: string }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className={cn("relative", className)} aria-label={tr("الإشعارات")}>
+        <Button variant="ghost" size="icon" className={cn("relative", className)} aria-label="الإشعارات">
           <Bell className="h-5 w-5" />
           {unread > 0 && (
             <span className="absolute -top-0.5 -end-0.5 min-w-4 rounded-full bg-destructive px-1 text-[10px] font-bold leading-4 text-destructive-foreground">
@@ -77,14 +76,14 @@ export function NotificationsBell({ className }: { className?: string }) {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0" dir="rtl">
         <div className="flex items-center justify-between border-b px-3 py-2">
-          <span className="text-sm font-semibold">{tr("الإشعارات")}</span>
+          <span className="text-sm font-semibold">الإشعارات</span>
           <Button variant="ghost" size="sm" onClick={markAllRead} disabled={!unread}>
             تعليم كمقروء
-{tr("تعليم كمقروء")}Button>
+          </Button>
         </div>
         <div className="max-h-80 overflow-auto">
           {items.length === 0 && (
-            <p className="p-4 text-center text-sm text-muted-foreground">{tr("لا توجد إشعارات")}</p>
+            <p className="p-4 text-center text-sm text-muted-foreground">لا توجد إشعارات</p>
           )}
           {items.map((n) => {
             const inner = (

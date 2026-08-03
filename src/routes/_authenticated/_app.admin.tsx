@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -67,7 +66,7 @@ function AdminPage() {
 
   useEffect(() => {
     if (roleQuery.data && !roleQuery.data.isAdmin) {
-      toast.error(tr("هذه الصفحة للمشرفين فقط"));
+      toast.error("هذه الصفحة للمشرفين فقط");
       navigate({ to: "/dashboard" });
     }
   }, [roleQuery.data, navigate]);
@@ -79,7 +78,7 @@ function AdminPage() {
   });
 
   if (roleQuery.isLoading || !roleQuery.data?.isAdmin) {
-    return <div className="p-8 text-muted-foreground">{tr("جاري التحقق من الصلاحيات...")}</div>;
+    return <div className="p-8 text-muted-foreground">جاري التحقق من الصلاحيات...</div>;
   }
 
   return (
@@ -88,9 +87,11 @@ function AdminPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <ShieldCheck className="w-7 h-7 text-primary" />
-            إدارة المستخد{tr("إدارة المستخدمين")}h1>
+            إدارة المستخدمين
+          </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            إنشاء المستخد{tr("إنشاء المستخدمين، تعيين الأدوار، إعادة تعيين كلمات المرور وإيقاف الحسابات")}p>
+            إنشاء المستخدمين، تعيين الأدوار، إعادة تعيين كلمات المرور وإيقاف الحسابات
+          </p>
         </div>
         <CreateUserDialog />
       </div>
@@ -99,11 +100,11 @@ function AdminPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-right">{tr("البريد الإلكتروني")}</TableHead>
-              <TableHead className="text-right">{tr("الدور")}</TableHead>
-              <TableHead className="text-right">{tr("الحالة")}</TableHead>
-              <TableHead className="text-right">{tr("آخر دخول")}</TableHead>
-              <TableHead className="text-right">{tr("إجراءات")}</TableHead>
+              <TableHead className="text-right">البريد الإلكتروني</TableHead>
+              <TableHead className="text-right">الدور</TableHead>
+              <TableHead className="text-right">الحالة</TableHead>
+              <TableHead className="text-right">آخر دخول</TableHead>
+              <TableHead className="text-right">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -111,7 +112,7 @@ function AdminPage() {
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                   جاري التحميل...
-   {tr("جاري التحميل...")}TableCell>
+                </TableCell>
               </TableRow>
             )}
             {usersQuery.data?.map((u) => (
@@ -155,7 +156,7 @@ function UserRow({ user }: { user: UserRow }) {
   const roleMut = useMutation({
     mutationFn: (role: Role) => setRoleFn({ data: { userId: user.id, role } }),
     onSuccess: () => {
-      toast.success(tr("تم تحديث الدور"));
+      toast.success("تم تحديث الدور");
       invalidate();
     },
     onError: (e: any) => toast.error(e.message ?? "فشل التحديث"),
@@ -173,7 +174,7 @@ function UserRow({ user }: { user: UserRow }) {
   const delMut = useMutation({
     mutationFn: () => deleteFn({ data: { userId: user.id } }),
     onSuccess: () => {
-      toast.success(tr("تم حذف المستخدم"));
+      toast.success("تم حذف المستخدم");
       invalidate();
     },
     onError: (e: any) => toast.error(e.message ?? "فشل الحذف"),
@@ -200,11 +201,11 @@ function UserRow({ user }: { user: UserRow }) {
       </TableCell>
       <TableCell>
         {isBanned ? (
-          <Badge variant="destructive">{tr("موقوف")}</Badge>
+          <Badge variant="destructive">موقوف</Badge>
         ) : (
           <Badge variant="secondary" className="bg-green-500/15 text-green-500">
             نشط
-         {tr("نشط")}Badge>
+          </Badge>
         )}
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
@@ -245,7 +246,7 @@ function ResetPasswordDialog({ userId, email }: { userId: string; email: string 
   const mut = useMutation({
     mutationFn: () => updateFn({ data: { userId, password } }),
     onSuccess: () => {
-      toast.success(tr("تم تحديث كلمة المرور"));
+      toast.success("تم تحديث كلمة المرور");
       setOpen(false);
       setPassword("");
     },
@@ -260,29 +261,29 @@ function ResetPasswordDialog({ userId, email }: { userId: string; email: string 
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{tr("تغيير كلمة المرور")}</DialogTitle>
+          <DialogTitle>تغيير كلمة المرور</DialogTitle>
           <DialogDescription dir="ltr" className="text-right">
             {email}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="pw">{tr("كلمة المرور الجديدة")}</Label>
+          <Label htmlFor="pw">كلمة المرور الجديدة</Label>
           <Input
             id="pw"
             type="text"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={tr("6 أحرف على الأقل")}
+            placeholder="6 أحرف على الأقل"
             dir="ltr"
           />
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
             إلغاء
-       {tr("إلغاء")}Button>
+          </Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending || password.length < 6}>
             حفظ
-         {tr("حفظ")}Button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -299,7 +300,7 @@ function CreateUserDialog() {
   const mut = useMutation({
     mutationFn: () => createFn({ data: { email, password, role } }),
     onSuccess: () => {
-      toast.success(tr("تم إنشاء المستخدم"));
+      toast.success("تم إنشاء المستخدم");
       setOpen(false);
       setEmail("");
       setPassword("");
@@ -313,15 +314,16 @@ function CreateUserDialog() {
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="w-4 h-4 ml-2" />
-          مستخدم جديد{tr("مستخدم جديد")}Button>
+          مستخدم جديد
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{tr("إنشاء مستخدم جديد")}</DialogTitle>
+          <DialogTitle>إنشاء مستخدم جديد</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">{tr("البريد الإلكتروني")}</Label>
+            <Label htmlFor="email">البريد الإلكتروني</Label>
             <Input
               id="email"
               type="email"
@@ -331,18 +333,18 @@ function CreateUserDialog() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="npw">{tr("كلمة المرور")}</Label>
+            <Label htmlFor="npw">كلمة المرور</Label>
             <Input
               id="npw"
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               dir="ltr"
-              placeholder={tr("6 أحرف على الأقل")}
+              placeholder="6 أحرف على الأقل"
             />
           </div>
           <div className="space-y-2">
-            <Label>{tr("الدور")}</Label>
+            <Label>الدور</Label>
             <Select value={role} onValueChange={(v) => setRole(v as Role)}>
               <SelectTrigger>
                 <SelectValue />
@@ -356,19 +358,21 @@ function CreateUserDialog() {
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              مشرف: صلاحيات ك{tr("مشرف: صلاحيات كاملة على كل شيء · مستخدم: يفتح فقط الصفحات التي تسمح له بها، وأنت تحدد\n              إن كان يستطيع إدخال بيانات أم مشاهدة فقط.")}p>
+              مشرف: صلاحيات كاملة على كل شيء · مستخدم: يفتح فقط الصفحات التي تسمح له بها، وأنت تحدد
+              إن كان يستطيع إدخال بيانات أم مشاهدة فقط.
+            </p>
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
             إلغاء
-       {tr("إلغاء")}Button>
+          </Button>
           <Button
             onClick={() => mut.mutate()}
             disabled={mut.isPending || !email || password.length < 6}
           >
             إنشاء
-       {tr("إنشاء")}Button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -424,7 +428,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
       await setAccessFn({ data: { userId, sections, brandIds } });
     },
     onSuccess: () => {
-      toast.success(tr("تم حفظ الصلاحيات"));
+      toast.success("تم حفظ الصلاحيات");
       qc.invalidateQueries({ queryKey: ["user-access", userId] });
 
       setOpen(false);
@@ -471,25 +475,29 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" title={tr("صلاحيات")}>
+        <Button size="sm" variant="outline" title="صلاحيات">
           <Lock className="w-4 h-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            الصلاحيات — <{tr("الصلاحيات —")}tr">{email}</span>
+            الصلاحيات — <span dir="ltr">{email}</span>
           </DialogTitle>
           <DialogDescription>
-            المستخدم لا ي{tr("المستخدم لا يرى أي صفحة إلا ما تحدده هنا صراحةً، ولكل صفحة تختار: مخفي / مشاهدة فقط /\n            تعديل.")}DialogDescription>
+            المستخدم لا يرى أي صفحة إلا ما تحدده هنا صراحةً، ولكل صفحة تختار: مخفي / مشاهدة فقط /
+            تعديل.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-sm">
-            لا توجد صلاحي{tr("لا توجد صلاحيات افتراضية: أي صفحة غير محددة تكون مخفية. «مشاهدة فقط» تمنع الإضافة\n            والتعديل والحذف على مستوى السيرفر.")}div>
+            لا توجد صلاحيات افتراضية: أي صفحة غير محددة تكون مخفية. «مشاهدة فقط» تمنع الإضافة
+            والتعديل والحذف على مستوى السيرفر.
+          </div>
 
           <div className="space-y-4">
-            <div className="text-sm font-semibold">{tr("صلاحيات الصفحات")}</div>
+            <div className="text-sm font-semibold">صلاحيات الصفحات</div>
             {pagesByHub.map(({ hub, pages }) => {
               return (
                 <div key={hub.key} className="rounded-xl border border-border/60 bg-card/40 p-3">
@@ -508,7 +516,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         onClick={() => setPagesLevel(pages, "none")}
                       >
                         إخفاء الكل
-              {tr("إخفاء الكل")}Button>
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -516,7 +524,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         onClick={() => setPagesLevel(pages, "read")}
                       >
                         مشاهدة الكل
-             {tr("مشاهدة الكل")}Button>
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -524,7 +532,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
                         onClick={() => setPagesLevel(pages, "write")}
                       >
                         تعديل الكل
-              {tr("تعديل الكل")}Button>
+                      </Button>
                     </div>
                   </div>
 
@@ -583,7 +591,7 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
               if (extra.length === 0) return null;
               return (
                 <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-                  <div className="text-sm font-semibold mb-2">{tr("أقسام عامة إضافية")}</div>
+                  <div className="text-sm font-semibold mb-2">أقسام عامة إضافية</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {extra.map((s) => (
                       <label
@@ -605,9 +613,10 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
 
           {/* Brand access */}
           <div>
-            <div className="font-semibold text-sm mb-2">{tr("البراندات المسموحة")}</div>
+            <div className="font-semibold text-sm mb-2">البراندات المسموحة</div>
             <p className="text-xs text-muted-foreground mb-2">
-              لا تحدد أي بران{tr("لا تحدد أي براند = وصول لكل البراندات.")}p>
+              لا تحدد أي براند = وصول لكل البراندات.
+            </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
               {(brandsQ.data ?? []).map((b) => (
                 <label key={b.id} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -625,10 +634,10 @@ function PermissionsDialog({ userId, email }: { userId: string; email: string })
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
             إلغاء
-       {tr("إلغاء")}Button>
+          </Button>
           <Button onClick={() => mut.mutate()} disabled={mut.isPending}>
             حفظ
-         {tr("حفظ")}Button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

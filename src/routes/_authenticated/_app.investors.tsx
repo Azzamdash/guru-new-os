@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -85,7 +84,7 @@ function InvestorsPage() {
         },
       }),
     onSuccess: () => {
-      toast.success(tr("تم الحفظ"));
+      toast.success("تم الحفظ");
       setEditOpen(false);
       qc.invalidateQueries({ queryKey: ["investors"] });
     },
@@ -95,7 +94,7 @@ function InvestorsPage() {
   const delMut = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
     onSuccess: () => {
-      toast.success(tr("تم الحذف"));
+      toast.success("تم الحذف");
       qc.invalidateQueries({ queryKey: ["investors"] });
     },
   });
@@ -104,7 +103,7 @@ function InvestorsPage() {
     mutationFn: () =>
       sharesFn({ data: { investor_id: sharesInvId!, shares: sharesDraft.filter((s) => s.brand_id) } }),
     onSuccess: () => {
-      toast.success(tr("تم حفظ النسب"));
+      toast.success("تم حفظ النسب");
       setSharesOpen(false);
       qc.invalidateQueries({ queryKey: ["investors"] });
     },
@@ -126,7 +125,7 @@ function InvestorsPage() {
   if (!roleQ.isLoading && !isAdmin) {
     return (
       <div className="p-6">
-        <EmptyState title={tr("غير مسموح")} description={tr("هذه الصفحة للمشرفين فقط")} />
+        <EmptyState title="غير مسموح" description="هذه الصفحة للمشرفين فقط" />
       </div>
     );
   }
@@ -159,29 +158,31 @@ function InvestorsPage() {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-primary" /> ا{tr("المستثمرون")}          </h1>
-          <p className="text-sm text-muted-foreground">{tr("أدر بيانات المستثمرين ونسبهم في البراندات")}</p>
+            <TrendingUp className="w-6 h-6 text-primary" /> المستثمرون
+          </h1>
+          <p className="text-sm text-muted-foreground">أدر بيانات المستثمرين ونسبهم في البراندات</p>
         </div>
         <Button onClick={() => openEdit()} className="gap-2">
-          <Plus className="w-4 h-4" /> م{tr("مستثمر جديد")}        </Button>
+          <Plus className="w-4 h-4" /> مستثمر جديد
+        </Button>
       </div>
 
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{tr("الاسم")}</TableHead>
-              <TableHead>{tr("البريد / الهاتف")}</TableHead>
-              <TableHead>{tr("البراندات ونسبها")}</TableHead>
-              <TableHead>{tr("حساب مرتبط")}</TableHead>
-              <TableHead className="text-left">{tr("إجراءات")}</TableHead>
+              <TableHead>الاسم</TableHead>
+              <TableHead>البريد / الهاتف</TableHead>
+              <TableHead>البراندات ونسبها</TableHead>
+              <TableHead>حساب مرتبط</TableHead>
+              <TableHead className="text-left">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {(invQ.data?.investors ?? []).length === 0 && (
               <TableRow>
                 <TableCell colSpan={5}>
-                  <EmptyState title={tr("لا يوجد مستثمرون")} description={tr("ابدأ بإضافة مستثمر جديد")} />
+                  <EmptyState title="لا يوجد مستثمرون" description="ابدأ بإضافة مستثمر جديد" />
                 </TableCell>
               </TableRow>
             )}
@@ -197,7 +198,7 @@ function InvestorsPage() {
                   </TableCell>
                   <TableCell>
                     {shares.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">{tr("لا يوجد")}</span>
+                      <span className="text-xs text-muted-foreground">لا يوجد</span>
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {shares.map((s) => (
@@ -214,10 +215,12 @@ function InvestorsPage() {
                   <TableCell className="text-left">
                     <div className="flex gap-1 justify-end">
                       <Button size="sm" variant="outline" onClick={() => openShares(inv.id)} className="gap-1">
-                        <Percent className="w-3 h-3" /> ا{tr("النسب")}                      </Button>
+                        <Percent className="w-3 h-3" /> النسب
+                      </Button>
                       <Link to="/investors/$id" params={{ id: inv.id }}>
                         <Button size="sm" variant="outline" className="gap-1">
-                          <TrendingUp className="w-3 h-3" /> ع{tr("عرض")}                        </Button>
+                          <TrendingUp className="w-3 h-3" /> عرض
+                        </Button>
                       </Link>
                       <Button size="sm" variant="outline" onClick={() => openEdit(inv)}>
                         <Pencil className="w-3 h-3" />
@@ -226,7 +229,7 @@ function InvestorsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          if (confirm(tr("حذف المستثمر؟"))) delMut.mutate(inv.id);
+                          if (confirm("حذف المستثمر؟")) delMut.mutate(inv.id);
                         }}
                       >
                         <Trash2 className="w-3 h-3" />
@@ -248,30 +251,30 @@ function InvestorsPage() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label>{tr("الاسم *")}</Label>
+              <Label>الاسم *</Label>
               <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label>{tr("البريد")}</Label>
+                <Label>البريد</Label>
                 <Input value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} />
               </div>
               <div>
-                <Label>{tr("الهاتف")}</Label>
+                <Label>الهاتف</Label>
                 <Input value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} />
               </div>
             </div>
             <div>
-              <Label>{tr("الحساب المرتبط (اختياري)")}</Label>
+              <Label>الحساب المرتبط (اختياري)</Label>
               <Select
                 value={editing.user_id || "none"}
                 onValueChange={(v) => setEditing({ ...editing, user_id: v === "none" ? "" : v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={tr("لا يوجد")} />
+                  <SelectValue placeholder="لا يوجد" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{tr("— بدون حساب —")}</SelectItem>
+                  <SelectItem value="none">— بدون حساب —</SelectItem>
                   {usersQ.data?.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       {u.email}
@@ -280,18 +283,19 @@ function InvestorsPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                اربط الحساب بيوزر{tr("اربط الحساب بيوزر بدور \"مستثمر\" حتى يستطيع رؤية داش بورده الخاص.")}p>
+                اربط الحساب بيوزر بدور "مستثمر" حتى يستطيع رؤية داش بورده الخاص.
+              </p>
             </div>
             <div>
-              <Label>{tr("ملاحظات")}</Label>
+              <Label>ملاحظات</Label>
               <Textarea value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>{tr("إلغاء")}</Button>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>إلغاء</Button>
             <Button onClick={() => saveMut.mutate()} disabled={!editing.name.trim() || saveMut.isPending}>
               حفظ
-           {tr("حفظ")}Button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -300,13 +304,13 @@ function InvestorsPage() {
       <Dialog open={sharesOpen} onOpenChange={setSharesOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{tr("نسب المستثمر في البراندات")}</DialogTitle>
+            <DialogTitle>نسب المستثمر في البراندات</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-[60vh] overflow-y-auto">
             {sharesDraft.map((s, idx) => (
               <div key={idx} className="flex gap-2 items-end">
                 <div className="flex-1">
-                  <Label className="text-xs">{tr("البراند")}</Label>
+                  <Label className="text-xs">البراند</Label>
                   <Select
                     value={s.brand_id}
                     onValueChange={(v) => {
@@ -316,7 +320,7 @@ function InvestorsPage() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={tr("اختر")} />
+                      <SelectValue placeholder="اختر" />
                     </SelectTrigger>
                     <SelectContent>
                       {brandsQ.data?.map((b) => (
@@ -326,7 +330,7 @@ function InvestorsPage() {
                   </Select>
                 </div>
                 <div className="w-24">
-                  <Label className="text-xs">{tr("النسبة %")}</Label>
+                  <Label className="text-xs">النسبة %</Label>
                   <Input
                     type="number"
                     min="0.01"
@@ -355,11 +359,12 @@ function InvestorsPage() {
               onClick={() => setSharesDraft([...sharesDraft, { brand_id: "", share_percentage: 10 }])}
               className="gap-1"
             >
-              <Plus className="w-4 h-4" /> إ{tr("إضافة براند")}            </Button>
+              <Plus className="w-4 h-4" /> إضافة براند
+            </Button>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSharesOpen(false)}>{tr("إلغاء")}</Button>
-            <Button onClick={() => sharesMut.mutate()} disabled={sharesMut.isPending}>{tr("حفظ النسب")}</Button>
+            <Button variant="outline" onClick={() => setSharesOpen(false)}>إلغاء</Button>
+            <Button onClick={() => sharesMut.mutate()} disabled={sharesMut.isPending}>حفظ النسب</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

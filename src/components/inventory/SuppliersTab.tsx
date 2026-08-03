@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -107,12 +106,12 @@ export function SuppliersTab() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold">{tr("الموردين والمديونيات")}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{tr("إدارة الموردين والفواتير المستحقة والمدفوعات مع تحليلات المديونيات.")}</p>
+          <h1 className="text-3xl font-bold">الموردين والمديونيات</h1>
+          <p className="text-muted-foreground text-sm mt-1">إدارة الموردين والفواتير المستحقة والمدفوعات مع تحليلات المديونيات.</p>
         </div>
         <div className="flex items-end gap-2 flex-wrap">
           <div>
-            <Label className="text-xs">{tr("تاريخ العرض")}</Label>
+            <Label className="text-xs">تاريخ العرض</Label>
             <Input
               type="date"
               value={asOfDate}
@@ -121,11 +120,11 @@ export function SuppliersTab() {
             />
           </div>
           <div>
-            <Label className="text-xs">{tr("بحث باسم المورد أو البراند")}</Label>
+            <Label className="text-xs">بحث باسم المورد أو البراند</Label>
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={tr("اكتب اسم مورد أو براند...")}
+              placeholder="اكتب اسم مورد أو براند..."
               className="mt-1 w-64"
             />
           </div>
@@ -139,11 +138,11 @@ export function SuppliersTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground text-right border-b border-border">
-              <th className="p-3">{tr("المورد")}</th>
-              <th className="p-3">{tr("التواصل")}</th>
-              <th className="p-3 text-left">{tr("فواتير")}</th>
-              <th className="p-3 text-left">{tr("الرصيد المستحق")}</th>
-              <th className="p-3 text-left">{tr("متأخر")}</th>
+              <th className="p-3">المورد</th>
+              <th className="p-3">التواصل</th>
+              <th className="p-3 text-left">فواتير</th>
+              <th className="p-3 text-left">الرصيد المستحق</th>
+              <th className="p-3 text-left">متأخر</th>
               <th className="p-3"></th>
             </tr>
           </thead>
@@ -166,10 +165,10 @@ export function SuppliersTab() {
                         brands={productBrands}
                         onSaved={invalidateAll}
                         supplier={s}
-                        trigger={<Button size="sm" variant="secondary">{tr("تعديل")}</Button>}
+                        trigger={<Button size="sm" variant="secondary">تعديل</Button>}
                       />
                       <Button size="sm" variant="ghost" onClick={() => {
-                        if (confirm(tr("حذف المورد وكل فواتيره؟"))) delSupFn({ data: { id: s.id } }).then(invalidateAll);
+                        if (confirm("حذف المورد وكل فواتيره؟")) delSupFn({ data: { id: s.id } }).then(invalidateAll);
                       }}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
@@ -248,7 +247,7 @@ function SupplierDialog({
   }, [brands, brandSearch]);
 
   const submit = () => {
-    if (!form.name.trim()) return toast.error(tr("الاسم مطلوب"));
+    if (!form.name.trim()) return toast.error("الاسم مطلوب");
     save({
       data: {
         ...(isEdit ? { id: supplier!.id } : {}),
@@ -270,13 +269,13 @@ function SupplierDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger ?? <Button className="gap-2"><Plus className="w-4 h-4" /> إ{tr("إضافة مورد")}/Button>}
+        {trigger ?? <Button className="gap-2"><Plus className="w-4 h-4" /> إضافة مورد</Button>}
       </DialogTrigger>
       <DialogContent><DialogHeader><DialogTitle>{isEdit ? "تعديل مورد" : "مورد جديد"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>{tr("الاسم")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div><Label>الاسم</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div>
-            <Label className="mb-1.5 block">{tr("البراندات")}</Label>
+            <Label className="mb-1.5 block">البراندات</Label>
             <div className="flex flex-wrap gap-2 mb-2">
               {selectedBrands.map((b) => (
                 <Badge key={b.id} variant="secondary" className="gap-1 pl-1">
@@ -286,23 +285,24 @@ function SupplierDialog({
                   </button>
                 </Badge>
               ))}
-              {selectedBrands.length === 0 && <span className="text-sm text-muted-foreground">{tr("لم يتم اختيار براند")}</span>}
+              {selectedBrands.length === 0 && <span className="text-sm text-muted-foreground">لم يتم اختيار براند</span>}
             </div>
             <Popover open={addOpen} onOpenChange={setAddOpen}>
               <PopoverTrigger asChild>
                 <Button type="button" variant="outline" size="sm" className="gap-1">
-                  <Plus className="w-4 h-4" /> إ{tr("إضافة براند")}                </Button>
+                  <Plus className="w-4 h-4" /> إضافة براند
+                </Button>
               </PopoverTrigger>
               <PopoverContent className="w-64 p-2" align="start">
                 <Input
-                  placeholder={tr("بحث...")}
+                  placeholder="بحث..."
                   value={brandSearch}
                   onChange={(e) => setBrandSearch(e.target.value)}
                   className="mb-2"
                 />
                 <div className="max-h-48 overflow-y-auto space-y-0.5">
                   {filteredBrands.length === 0 && (
-                    <div className="text-sm text-muted-foreground text-center py-3">{tr("لا يوجد براندات")}</div>
+                    <div className="text-sm text-muted-foreground text-center py-3">لا يوجد براندات</div>
                   )}
                   {filteredBrands.map((b) => (
                     <label key={b.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer text-sm">
@@ -317,10 +317,10 @@ function SupplierDialog({
               </PopoverContent>
             </Popover>
           </div>
-          <div><Label>{tr("التواصل")}</Label><Input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} /></div>
-          <div><Label>{tr("ملاحظات")}</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div><Label>التواصل</Label><Input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} /></div>
+          <div><Label>ملاحظات</Label><Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           <div>
-            <Label>{tr("الرصيد الافتتاحي (موجب = مستحق للمورد، سالب = له عندنا رصيد)")}</Label>
+            <Label>الرصيد الافتتاحي (موجب = مستحق للمورد، سالب = له عندنا رصيد)</Label>
             <Input type="number" dir="ltr" className="text-left" value={form.opening_balance}
               onChange={(e) => setForm({ ...form, opening_balance: parseFloat(e.target.value) || 0 })} />
           </div>
@@ -359,7 +359,7 @@ function SupplierDetail({
   const [payForm, setPayForm] = useState({ amount: 0, paid_at: today, note: "" });
 
   const submitInv = () => {
-    if (invForm.amount <= 0) return toast.error(tr("المبلغ مطلوب"));
+    if (invForm.amount <= 0) return toast.error("المبلغ مطلوب");
     upsertInv({
       data: {
         ...(invForm.id ? { id: invForm.id } : {}),
@@ -381,7 +381,7 @@ function SupplierDetail({
   const submitPay = () => {
     if (!payFor || payForm.amount <= 0) return;
     upsertPay({ data: { invoice_id: payFor, amount: payForm.amount, paid_at: payForm.paid_at, note: payForm.note || null } })
-      .then(() => { toast.success(tr("سُجّلت الدفعة")); setPayFor(null); setPayForm({ amount: 0, paid_at: today, note: "" }); onChanged(); })
+      .then(() => { toast.success("سُجّلت الدفعة"); setPayFor(null); setPayForm({ amount: 0, paid_at: today, note: "" }); onChanged(); })
       .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "فشل"));
   };
 
@@ -391,11 +391,11 @@ function SupplierDetail({
         <Card className="card-gradient p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">{invForm.id ? "تعديل فاتورة" : "إضافة فاتورة"}</h3>
-            {invForm.id && <Button size="sm" variant="ghost" onClick={resetInvForm}>{tr("إلغاء التعديل")}</Button>}
+            {invForm.id && <Button size="sm" variant="ghost" onClick={resetInvForm}>إلغاء التعديل</Button>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>{tr("البراند (اختياري)")}</Label>
+              <Label>البراند (اختياري)</Label>
               <Select value={invForm.brand_id} onValueChange={(v) => setInvForm({ ...invForm, brand_id: v })}>
                 <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
                 <SelectContent>
@@ -403,27 +403,27 @@ function SupplierDetail({
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>{tr("المبلغ")}</Label><Input type="number" dir="ltr" className="text-left" value={invForm.amount} onChange={(e) => setInvForm({ ...invForm, amount: parseFloat(e.target.value) || 0 })} /></div>
-            <div><Label>{tr("تاريخ الإصدار")}</Label><Input type="date" value={invForm.issued_at} onChange={(e) => setInvForm({ ...invForm, issued_at: e.target.value })} /></div>
-            <div><Label>{tr("تاريخ الاستحقاق")}</Label><Input type="date" value={invForm.due_at} onChange={(e) => setInvForm({ ...invForm, due_at: e.target.value })} /></div>
+            <div><Label>المبلغ</Label><Input type="number" dir="ltr" className="text-left" value={invForm.amount} onChange={(e) => setInvForm({ ...invForm, amount: parseFloat(e.target.value) || 0 })} /></div>
+            <div><Label>تاريخ الإصدار</Label><Input type="date" value={invForm.issued_at} onChange={(e) => setInvForm({ ...invForm, issued_at: e.target.value })} /></div>
+            <div><Label>تاريخ الاستحقاق</Label><Input type="date" value={invForm.due_at} onChange={(e) => setInvForm({ ...invForm, due_at: e.target.value })} /></div>
             <div>
-              <Label>{tr("الحالة")}</Label>
+              <Label>الحالة</Label>
               <Select value={invForm.status} onValueChange={(v) => setInvForm({ ...invForm, status: v as typeof invForm.status })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="open">{tr("آجل")}</SelectItem>
-                  <SelectItem value="paid">{tr("مدفوعة")}</SelectItem>
+                  <SelectItem value="open">آجل</SelectItem>
+                  <SelectItem value="paid">مدفوعة</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>{tr("ملاحظة")}</Label><Input value={invForm.note} onChange={(e) => setInvForm({ ...invForm, note: e.target.value })} /></div>
+            <div><Label>ملاحظة</Label><Input value={invForm.note} onChange={(e) => setInvForm({ ...invForm, note: e.target.value })} /></div>
           </div>
           <Button onClick={submitInv} className="w-full gap-2"><Plus className="w-4 h-4" /> {invForm.id ? "حفظ التعديل" : "حفظ الفاتورة"}</Button>
         </Card>
       )}
 
       <Card className="card-gradient p-5 space-y-3">
-        <h3 className="font-semibold">{tr("فواتير المورد")}</h3>
+        <h3 className="font-semibold">فواتير المورد</h3>
         <div className="space-y-2">
           {invoices.map((inv) => {
             const paid = paidByInv.get(inv.id) ?? 0;
@@ -437,7 +437,7 @@ function SupplierDetail({
                     <span className="text-muted-foreground">·</span>
                     <span className="text-xs text-muted-foreground">{inv.issued_at}</span>
                     {inv.due_at && <span className={`text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>← {inv.due_at}</span>}
-                    {overdue && <Badge variant="destructive" className="gap-1"><AlertTriangle className="w-3 h-3" />{tr("متأخرة")}</Badge>}
+                    {overdue && <Badge variant="destructive" className="gap-1"><AlertTriangle className="w-3 h-3" />متأخرة</Badge>}
                     <Badge variant={inv.status === "paid" ? "default" : "outline"}>{inv.status === "paid" ? "مدفوعة" : "آجل"}</Badge>
                   </div>
                   {isAdmin && (
@@ -450,23 +450,23 @@ function SupplierDetail({
                         due_at: inv.due_at ?? "",
                         status: inv.status,
                         note: inv.note ?? "",
-                      })}>{tr("تعديل")}</Button>
+                      })}>تعديل</Button>
                       <Button size="sm" variant="outline" onClick={() => { setPayFor(inv.id); setPayForm({ amount: remaining, paid_at: today, note: "" }); }}>
                         دفعة
-                    {tr("دفعة")}Button>
+                      </Button>
                       <Button size="sm" variant="ghost" onClick={() => {
-                        if (confirm(tr("حذف الفاتورة؟"))) delInv({ data: { id: inv.id } }).then(onChanged);
+                        if (confirm("حذف الفاتورة؟")) delInv({ data: { id: inv.id } }).then(onChanged);
                       }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </div>
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  مدفوع: <span classN{tr("مدفوع:")}um">{paid.toLocaleString("en-US")}</span> ·{tr("· متبقي:")}<span className="num font-semibold">{remaining.toLocaleString("en-US")}</span>
+                  مدفوع: <span className="num">{paid.toLocaleString("en-US")}</span> · متبقي: <span className="num font-semibold">{remaining.toLocaleString("en-US")}</span>
                   {inv.note && <> · {inv.note}</>}
                 </div>
                 {payments.filter((p) => p.invoice_id === inv.id).map((p) => (
                   <div key={p.id} className="flex items-center justify-between mt-1 pl-3 text-xs text-muted-foreground border-r-2 border-primary/30 pr-2">
-                    <span>{tr("دفعة")} {Number(p.amount).toLocaleString("en-US")} · {p.paid_at} {p.note ? `· ${p.note}` : ""}</span>
+                    <span>دفعة {Number(p.amount).toLocaleString("en-US")} · {p.paid_at} {p.note ? `· ${p.note}` : ""}</span>
                     {isAdmin && (
                       <Button size="sm" variant="ghost" onClick={() => delPay({ data: { id: p.id } }).then(onChanged)}>
                         <Trash2 className="w-3 h-3 text-destructive" />
@@ -477,20 +477,20 @@ function SupplierDetail({
               </div>
             );
           })}
-          {invoices.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">{tr("لا فواتير لهذا المورد.")}</p>}
+          {invoices.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">لا فواتير لهذا المورد.</p>}
         </div>
 
         {payFor && (
           <div className="p-3 rounded-md border border-primary/30 bg-primary/5 space-y-2">
-            <div className="text-sm font-semibold">{tr("تسجيل دفعة")}</div>
+            <div className="text-sm font-semibold">تسجيل دفعة</div>
             <div className="grid grid-cols-2 gap-2">
-              <Input type="number" dir="ltr" className="text-left" placeholder={tr("المبلغ")} value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: parseFloat(e.target.value) || 0 })} />
+              <Input type="number" dir="ltr" className="text-left" placeholder="المبلغ" value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: parseFloat(e.target.value) || 0 })} />
               <Input type="date" value={payForm.paid_at} onChange={(e) => setPayForm({ ...payForm, paid_at: e.target.value })} />
-              <Input placeholder={tr("ملاحظة")} value={payForm.note} onChange={(e) => setPayForm({ ...payForm, note: e.target.value })} className="col-span-2" />
+              <Input placeholder="ملاحظة" value={payForm.note} onChange={(e) => setPayForm({ ...payForm, note: e.target.value })} className="col-span-2" />
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={submitPay}>{tr("حفظ")}</Button>
-              <Button size="sm" variant="ghost" onClick={() => setPayFor(null)}>{tr("إلغاء")}</Button>
+              <Button size="sm" onClick={submitPay}>حفظ</Button>
+              <Button size="sm" variant="ghost" onClick={() => setPayFor(null)}>إلغاء</Button>
             </div>
           </div>
         )}

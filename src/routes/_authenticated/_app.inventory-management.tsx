@@ -1,4 +1,3 @@
-import { tr } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InventoryDashboardTab } from "@/components/inventory/InventoryDashboardTab";
@@ -22,19 +21,19 @@ function InventoryManagementPage() {
   return (
     <div className="p-6 md:p-8 space-y-4">
       <div>
-        <h1 className="text-3xl font-bold">{tr("إدارة المخزون")}</h1>
-        <p className="text-muted-foreground text-sm mt-1">{tr("كل حاجة عن المخزون: المنتجات، النقل بين البراندات والفروع، الموردين، أوامر الشراء، والتحليلات.")}</p>
+        <h1 className="text-3xl font-bold">إدارة المخزون</h1>
+        <p className="text-muted-foreground text-sm mt-1">كل حاجة عن المخزون: المنتجات، النقل بين البراندات والفروع، الموردين، أوامر الشراء، والتحليلات.</p>
       </div>
 
       <Tabs defaultValue="dashboard">
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="dashboard">{tr("الرئيسية")}</TabsTrigger>
-          <TabsTrigger value="catalog">{tr("الكتالوج")}</TabsTrigger>
-          <TabsTrigger value="transfers">{tr("نقل المخزون")}</TabsTrigger>
-          <TabsTrigger value="suppliers">{tr("الموردين")}</TabsTrigger>
-          <TabsTrigger value="purchase-orders">{tr("أوامر الشراء")}</TabsTrigger>
-          <TabsTrigger value="analytics">{tr("التحليلات")}</TabsTrigger>
-          <TabsTrigger value="intelligence">{tr("الذكاء")}</TabsTrigger>
+          <TabsTrigger value="dashboard">الرئيسية</TabsTrigger>
+          <TabsTrigger value="catalog">الكتالوج</TabsTrigger>
+          <TabsTrigger value="transfers">نقل المخزون</TabsTrigger>
+          <TabsTrigger value="suppliers">الموردين</TabsTrigger>
+          <TabsTrigger value="purchase-orders">أوامر الشراء</TabsTrigger>
+          <TabsTrigger value="analytics">التحليلات</TabsTrigger>
+          <TabsTrigger value="intelligence">الذكاء</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="pt-4"><InventoryDashboardTab /></TabsContent>
