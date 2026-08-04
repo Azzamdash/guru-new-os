@@ -704,12 +704,11 @@ export const NAV_PAGES: NavPage[] = [
     ar: "مؤشرات الأوردرات",
     en: "Orders KPIs",
     icon: Activity,
-    hub: "overview",
+    hub: "sales",
     section: "reports_orders_overview",
     privilegedOnly: true,
     descAr: "مؤشرات شاملة للأوردرات: المبيعات، التسليم والتحصيل",
     descEn: "Comprehensive order KPIs: sales, delivery & collection",
-    group: "sales_marketing",
   },
   {
     to: "/reports/sales",
