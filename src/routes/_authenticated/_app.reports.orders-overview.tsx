@@ -19,8 +19,10 @@ import { usePersistedPeriod } from "@/lib/global-period";
 import { queryPresets } from "@/lib/query-presets";
 import { listBrands } from "@/lib/internal.functions";
 import { getOrdersOverview } from "@/lib/orders-management.functions";
+import { getEmployeeOrdersPerformance } from "@/lib/distribution.functions";
 import { useLang } from "@/lib/i18n";
 import { useQueryClient } from "@tanstack/react-query";
+import { Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/_app/reports/orders-overview")({
   head: () => ({
@@ -93,6 +95,26 @@ function OrdersOverviewReport() {
 
   const o = overview.data;
 
+  const employeePerfFn = useServerFn(getEmployeeOrdersPerformance);
+  const employeePerf = useQuery({
+    queryKey: [
+      "reports-orders-overview",
+      "employee-perf",
+      resolved.dateFrom,
+      resolved.dateTo,
+      brandId,
+    ],
+    queryFn: () =>
+      employeePerfFn({
+        data: {
+          dateFrom: resolved.dateFrom,
+          dateTo: resolved.dateTo,
+          brandId: brandId === "all" ? null : brandId,
+        },
+      }),
+    ...queryPresets.report,
+  });
+
   const exportOverviewCsv = () => {
     if (!o) return;
     const rows: Array<Record<string, unknown>> = [];
@@ -130,6 +152,21 @@ function OrdersOverviewReport() {
       t("القيمة", "Amount"),
     );
     o.byGovernorate.forEach((r) => push(r.name, r.count, r.delivered, r.amount));
+    push("");
+
+    if (employeePerf.data && employeePerf.data.length > 0) {
+      push(t("أداء الموظفين", "Employee performance"));
+      push(
+        t("الموظف", "Employee"),
+        t("إجمالي الأوردرات", "Total orders"),
+        t("تم بنجاح", "Succeeded"),
+        t("ملغي", "Cancelled"),
+        t("مؤكد", "Confirmed"),
+      );
+      employeePerf.data.forEach((r) =>
+        push(r.employeeName, r.total, r.succeeded, r.cancelled, r.confirmed),
+      );
+    }
 
     exportToCSV(`orders-overview-${resolved.dateFrom ?? ""}_${resolved.dateTo ?? ""}`, rows, [
       { key: "c1", label: "" },
@@ -306,6 +343,44 @@ function OrdersOverviewReport() {
               </table>
             </Card>
           </div>
+
+          <Card className="p-4">
+            <div className="font-semibold mb-2 flex items-center gap-2">
+              <Users className="h-4 w-4" /> {t("أداء الموظفين", "Employee performance")}
+            </div>
+            {employeePerf.isLoading ? (
+              <div className="text-sm text-muted-foreground">{t("جارٍ التحميل…", "Loading…")}</div>
+            ) : !employeePerf.data || employeePerf.data.length === 0 ? (
+              <div className="text-sm text-muted-foreground">
+                {t("لا توجد أوردرات موزّعة في هذه الفترة", "No assigned orders in this period")}
+              </div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="text-muted-foreground">
+                  <tr>
+                    <th className="text-start">{t("الموظف", "Employee")}</th>
+                    <th>{t("إجمالي الأوردرات", "Total orders")}</th>
+                    <th>{t("تم بنجاح", "Succeeded")}</th>
+                    <th>{t("ملغي", "Cancelled")}</th>
+                    <th>{t("مؤكد", "Confirmed")}</th>
+                    <th>{t("بانتظار التأكيد", "Pending confirmation")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeePerf.data.map((r) => (
+                    <tr key={r.employeeId} className="border-b last:border-0 text-center">
+                      <td className="py-1 text-start">{r.employeeName}</td>
+                      <td className="tabular-nums">{nf(r.total)}</td>
+                      <td className="tabular-nums">{nf(r.succeeded)}</td>
+                      <td className="tabular-nums">{nf(r.cancelled)}</td>
+                      <td className="tabular-nums">{nf(r.confirmed)}</td>
+                      <td className="tabular-nums">{nf(r.pendingConfirmation)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Card>
         </>
       ) : null}
     </div>

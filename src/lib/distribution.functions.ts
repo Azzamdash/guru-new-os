@@ -110,9 +110,11 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
     );
     const staffName = new Map<string, string>(staff.map((e) => [e.id, e.name]));
 
-
     const brandsOfCourier = new Map<string, string[]>();
-    for (const cb of (courierBrandsRes.data ?? []) as Array<{ courier_id: string; brand_id: string }>) {
+    for (const cb of (courierBrandsRes.data ?? []) as Array<{
+      courier_id: string;
+      brand_id: string;
+    }>) {
       const arr = brandsOfCourier.get(cb.courier_id) ?? [];
       arr.push(cb.brand_id);
       brandsOfCourier.set(cb.courier_id, arr);
@@ -137,14 +139,19 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       }
     }
 
-    const couriers: Array<{ id: string; name: string; serves_all_brands: boolean; brandIds: string[] }> = (
-      couriersRes.data ?? []
-    ).map((c: { id: string; name: string; serves_all_brands: boolean }) => ({
-      id: c.id,
-      name: c.name,
-      serves_all_brands: c.serves_all_brands,
-      brandIds: brandsOfCourier.get(c.id) ?? [],
-    }));
+    const couriers: Array<{
+      id: string;
+      name: string;
+      serves_all_brands: boolean;
+      brandIds: string[];
+    }> = (couriersRes.data ?? []).map(
+      (c: { id: string; name: string; serves_all_brands: boolean }) => ({
+        id: c.id,
+        name: c.name,
+        serves_all_brands: c.serves_all_brands,
+        brandIds: brandsOfCourier.get(c.id) ?? [],
+      }),
+    );
 
     const canServe = (courierId: string, brandId: string) => {
       const c = couriers.find((x) => x.id === courierId);
@@ -264,7 +271,9 @@ export const assignOrdersCourier = createServerFn({ method: "POST" })
 
 export const assignOrdersEmployee = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { orderIds: string[]; employeeId: string | null; reason?: string }) => input)
+  .inputValidator(
+    (input: { orderIds: string[]; employeeId: string | null; reason?: string }) => input,
+  )
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
     await assertPageWrite(ctx, DISTRIBUTION_PAGE);
@@ -306,7 +315,10 @@ export const autoAssignOrders = createServerFn({ method: "POST" })
     let updated = 0;
     let failed = 0;
     for (const [courierId, ids] of byCourier) {
-      const { error } = await ctx.supabase.from("orders").update({ courier_id: courierId }).in("id", ids);
+      const { error } = await ctx.supabase
+        .from("orders")
+        .update({ courier_id: courierId })
+        .in("id", ids);
       if (error) failed += ids.length;
       else updated += ids.length;
     }
@@ -367,7 +379,6 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
     return { updated, failed, staffCount: staffIds.length };
   });
 
-
 export type AssignmentLogRow = {
   id: string;
   createdAt: string;
@@ -388,7 +399,9 @@ export const listAssignmentLog = createServerFn({ method: "GET" })
     const ctx = context as unknown as Ctx;
     let q = ctx.supabase
       .from("order_assignment_log")
-      .select("id, created_at, order_id, previous_assigned_user_id, assigned_user_id, method, reason, performed_by")
+      .select(
+        "id, created_at, order_id, previous_assigned_user_id, assigned_user_id, method, reason, performed_by",
+      )
       .order("created_at", { ascending: false })
       .limit(Math.min(Math.max(data.limit ?? 100, 1), 300));
     if (data.orderId) q = q.eq("order_id", data.orderId);
@@ -409,11 +422,17 @@ export const listAssignmentLog = createServerFn({ method: "GET" })
     if (!list.length) return [];
 
     const [{ data: orders }, staff] = await Promise.all([
-      ctx.supabase.from("orders").select("id, external_order_number").in("id", [...new Set(list.map((r) => r.order_id))]),
+      ctx.supabase
+        .from("orders")
+        .select("id, external_order_number")
+        .in("id", [...new Set(list.map((r) => r.order_id))]),
       getEligibleStaff(),
     ]);
     const orderNum = new Map(
-      ((orders ?? []) as Array<{ id: string; external_order_number: string | null }>).map((o) => [o.id, o.external_order_number]),
+      ((orders ?? []) as Array<{ id: string; external_order_number: string | null }>).map((o) => [
+        o.id,
+        o.external_order_number,
+      ]),
     );
     const byUser = new Map(staff.map((s) => [s.id, s.name]));
 
@@ -422,10 +441,152 @@ export const listAssignmentLog = createServerFn({ method: "GET" })
       createdAt: r.created_at,
       orderId: r.order_id,
       orderNumber: orderNum.get(r.order_id) ?? null,
-      fromName: r.previous_assigned_user_id ? byUser.get(r.previous_assigned_user_id) ?? null : null,
-      toName: r.assigned_user_id ? byUser.get(r.assigned_user_id) ?? null : null,
+      fromName: r.previous_assigned_user_id
+        ? (byUser.get(r.previous_assigned_user_id) ?? null)
+        : null,
+      toName: r.assigned_user_id ? (byUser.get(r.assigned_user_id) ?? null) : null,
       method: r.method,
       reason: r.reason,
-      byName: r.performed_by ? byUser.get(r.performed_by) ?? null : null,
+      byName: r.performed_by ? (byUser.get(r.performed_by) ?? null) : null,
     }));
+  });
+
+export type MyOrderRow = {
+  id: string;
+  brandId: string;
+  brandName: string;
+  orderNumber: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  total: number;
+  orderStatus: string;
+  confirmationStatus: string;
+  courierId: string | null;
+  courierName: string | null;
+  occurredAt: string;
+};
+
+/** Orders currently assigned to the calling user — for their own "My Orders" view. */
+export const getMyAssignedOrders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { status?: string | null; limit?: number } = {}) => input)
+  .handler(async ({ data, context }): Promise<MyOrderRow[]> => {
+    const ctx = context as unknown as Ctx;
+    const limit = Math.min(Math.max(data.limit ?? 200, 1), 500);
+
+    let q = ctx.supabase
+      .from("orders")
+      .select(
+        "id, brand_id, external_order_number, customer_name, customer_phone, total_amount, order_status, confirmation_status, courier_id, occurred_at",
+      )
+      .eq("assigned_user_id", ctx.userId)
+      .order("occurred_at", { ascending: false })
+      .limit(limit);
+    if (data.status && data.status !== "all") q = q.eq("order_status", data.status);
+
+    const [{ data: rows, error }, brandsRes, couriersRes] = await Promise.all([
+      q,
+      ctx.supabase.from("brands").select("id, name"),
+      ctx.supabase.from("couriers").select("id, name"),
+    ]);
+    if (error) throw new Error(error.message);
+
+    const brandName = new Map<string, string>(
+      (brandsRes.data ?? []).map((b: { id: string; name: string }) => [b.id, b.name]),
+    );
+    const courierName = new Map<string, string>(
+      (couriersRes.data ?? []).map((c: { id: string; name: string }) => [c.id, c.name]),
+    );
+
+    return ((rows ?? []) as Array<Record<string, unknown>>).map((o) => {
+      const brandId = o["brand_id"] as string;
+      const courierId = (o["courier_id"] as string | null) ?? null;
+      return {
+        id: o["id"] as string,
+        brandId,
+        brandName: brandName.get(brandId) ?? "—",
+        orderNumber: (o["external_order_number"] as string | null) ?? null,
+        customerName: (o["customer_name"] as string | null) ?? null,
+        customerPhone: (o["customer_phone"] as string | null) ?? null,
+        total: Number(o["total_amount"] ?? 0),
+        orderStatus: (o["order_status"] as string) ?? "new",
+        confirmationStatus: (o["confirmation_status"] as string) ?? "pending",
+        courierId,
+        courierName: courierId ? (courierName.get(courierId) ?? "—") : null,
+        occurredAt: o["occurred_at"] as string,
+      };
+    });
+  });
+
+export type EmployeeOrdersPerformanceRow = {
+  employeeId: string;
+  employeeName: string;
+  total: number;
+  succeeded: number;
+  cancelled: number;
+  confirmed: number;
+  pendingConfirmation: number;
+};
+
+/** Per-employee order counts for the selected period — how each rep's assigned orders are progressing. */
+export const getEmployeeOrdersPerformance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { dateFrom?: string | null; dateTo?: string | null; brandId?: string | null }) => input,
+  )
+  .handler(async ({ data, context }): Promise<EmployeeOrdersPerformanceRow[]> => {
+    const ctx = context as unknown as Ctx;
+
+    let q = ctx.supabase
+      .from("orders")
+      .select("assigned_user_id, order_status, confirmation_status")
+      .not("assigned_user_id", "is", null);
+    if (data.dateFrom) q = q.gte("occurred_at", data.dateFrom);
+    if (data.dateTo) q = q.lte("occurred_at", `${data.dateTo}T23:59:59.999Z`);
+    if (data.brandId) q = q.eq("brand_id", data.brandId);
+
+    const [{ data: rows, error }, staff] = await Promise.all([q, getEligibleStaff(ctx.supabase)]);
+    if (error) throw new Error(error.message);
+
+    const staffName = new Map(staff.map((s) => [s.id, s.name]));
+
+    const byUser = new Map<
+      string,
+      {
+        total: number;
+        succeeded: number;
+        cancelled: number;
+        confirmed: number;
+        pendingConfirmation: number;
+      }
+    >();
+    for (const r of (rows ?? []) as Array<{
+      assigned_user_id: string;
+      order_status: string | null;
+      confirmation_status: string | null;
+    }>) {
+      const id = r.assigned_user_id;
+      const entry = byUser.get(id) ?? {
+        total: 0,
+        succeeded: 0,
+        cancelled: 0,
+        confirmed: 0,
+        pendingConfirmation: 0,
+      };
+      entry.total += 1;
+      if (r.order_status === "succeeded") entry.succeeded += 1;
+      if (r.order_status === "cancelled") entry.cancelled += 1;
+      if (r.confirmation_status === "confirmed") entry.confirmed += 1;
+      if (!r.confirmation_status || r.confirmation_status === "pending")
+        entry.pendingConfirmation += 1;
+      byUser.set(id, entry);
+    }
+
+    return [...byUser.entries()]
+      .map(([employeeId, stats]) => ({
+        employeeId,
+        employeeName: staffName.get(employeeId) ?? employeeId.slice(0, 8),
+        ...stats,
+      }))
+      .sort((a, b) => b.total - a.total);
   });
