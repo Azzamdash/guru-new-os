@@ -10,6 +10,14 @@ import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
+async function assertManager(ctx: Ctx) {
+  for (const role of ["admin", "manager"] as const) {
+    const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: role });
+    if (data) return;
+  }
+  throw new Error("Forbidden");
+}
+
 async function courierServesBrand(context: Ctx, courierId: string, brandId: string) {
   const { data, error } = await context.supabase.rpc("courier_serves_brand", {
     _courier_id: courierId,
@@ -59,6 +67,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
     ) => d,
   )
   .handler(async ({ data, context }) => {
+    await assertManager(context as unknown as Ctx);
     const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? formatBusinessDate(new Date(Date.now() - 30 * 86400000));
 

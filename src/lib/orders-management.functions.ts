@@ -7,6 +7,14 @@ import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
+async function assertManager(ctx: Ctx) {
+  for (const role of ["admin", "manager"] as const) {
+    const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: role });
+    if (data) return;
+  }
+  throw new Error("Forbidden");
+}
+
 function dayRange(from: string | null, to: string | null) {
   const start = from ? new Date(`${from}T00:00:00.000Z`) : new Date(Date.now() - 30 * 86400000);
   const end = to ? new Date(`${to}T23:59:59.999Z`) : new Date();
@@ -49,6 +57,7 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<OrdersOverview> => {
     const ctx = context as unknown as Ctx;
+    await assertManager(ctx);
     const { start, end } = dayRange(data.dateFrom, data.dateTo);
 
     let q = ctx.supabase
