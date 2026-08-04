@@ -417,11 +417,17 @@ export const NAV_PAGES: NavPage[] = [
   },
 
   // INVOICING & FINANCE
-  // Purchases + Suppliers moved into the "إدارة المخزون" (Inventory
-  // Management) hub, which now has fuller Suppliers and Purchase Orders
-  // tabs — keeping separate nav cards here would just duplicate them.
-  // Supplier Payments stays: it's a more complete dedicated tool than the
-  // simple per-invoice payment form embedded in the Suppliers tab.
+  {
+    to: "/purchases",
+    ar: "فواتير المشتريات",
+    en: "Purchase Invoices",
+    icon: ShoppingCart,
+    hub: "invoicing",
+    section: "suppliers",
+    requiresWrite: true,
+    descAr: "فواتير الموردين وبنودها",
+    descEn: "Supplier purchase invoices & items",
+  },
   {
     to: "/suppliers/payments",
     ar: "دفعات الموردين",
