@@ -68,27 +68,27 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "$TARGET_IP" >> ~/.ssh/known_hosts
 
-      - name: Sync compose files
-        run: |
-          ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/app"
-          scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/app/"
-
       - name: Lowercase repository name
         id: repo
         run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Sync compose files
+        run: |
+          ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/${{ steps.repo.outputs.repo }}"
+          scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/${{ steps.repo.outputs.repo }}/"
 
       - name: Write env and deploy
         run: |
           ssh "$SSH_USER@$TARGET_IP" bash -s -- <<EOF
             set -e
-            cat > /opt/app/.env <<ENV
+            cat > /opt/${{ steps.repo.outputs.repo }}/.env <<ENV
             GITHUB_REPOSITORY=${{ steps.repo.outputs.repo }}
             VERSION=$VERSION
             DOMAIN=${{ secrets.DOMAIN }}
             SUPABASE_SERVICE_ROLE=${{ secrets.SUPABASE_SERVICE_ROLE }}
             ENV
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            cd /opt/app
+            cd /opt/${{ steps.repo.outputs.repo }}
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
