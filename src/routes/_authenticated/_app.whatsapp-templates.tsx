@@ -158,12 +158,18 @@ function WhatsappTemplatesPage() {
             />{" "}
             {T("مُفعّل", "Active")}
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label
+            className="flex items-center gap-2 text-sm"
+            title={T(
+              "علامة داخلية فقط حاليًا — لا يوجد إرسال تلقائي فعلي عند تغيّر حالة الأوردر",
+              "Internal flag only for now — nothing actually auto-sends on order status changes yet",
+            )}
+          >
             <Switch
               checked={draft.autoSend}
               onCheckedChange={(v) => setDraft({ ...draft, autoSend: v })}
             />{" "}
-            {T("إرسال تلقائي", "Auto-send")}
+            {T("إرسال تلقائي (غير مُفعّل في النظام بعد)", "Auto-send (not wired up yet)")}
           </label>
           <Button
             size="sm"
@@ -210,7 +216,17 @@ function WhatsappTemplatesPage() {
                 {WHATSAPP_EVENTS.find((e) => e.key === t["event_key"])?.label ??
                   String(t["event_key"])}
               </Badge>
-              {t["auto_send"] ? <Badge>{T("تلقائي", "Auto")}</Badge> : null}
+              {t["auto_send"] ? (
+                <Badge
+                  variant="secondary"
+                  title={T(
+                    "علامة داخلية فقط — لا يوجد إرسال تلقائي فعلي حاليًا",
+                    "Internal flag only — nothing actually auto-sends yet",
+                  )}
+                >
+                  {T("معلَّم كتلقائي (غير مُفعّل)", "Marked auto (not wired up)")}
+                </Badge>
+              ) : null}
               {!t["active"] && <Badge variant="secondary">{T("موقوف", "Inactive")}</Badge>}
               <div className="ms-auto flex gap-1">
                 <Button

@@ -2,13 +2,24 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
 import { balanceAssignments, getEligibleStaff, recordAssignments } from "./distribution.server";
+import { ORDER_WORKFLOW_STATUSES, SHIPMENT_OUTCOMES } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
 const DISTRIBUTION_PAGE = "/order-distribution";
 
-const OPEN_STATUSES = ["new", "confirmed", "processing", "ready", "in_transit"];
+// Non-terminal order statuses — every real order_status value except the two
+// terminal ones. Previously listed made-up values ("confirmed", "ready",
+// "in_transit") that don't exist in ORDER_WORKFLOW_STATUSES, so "postponed"
+// and "awaiting_response" orders silently never showed up in the distribution
+// queue or the open-load count.
+const OPEN_STATUSES = ORDER_WORKFLOW_STATUSES.filter((s) => s !== "succeeded" && s !== "cancelled");
+
+// Terminal shipment outcomes — a closed order's courier attribution must not
+// be silently rewritten by bulk (re)assignment, or courier performance
+// analytics drift from what actually happened.
+const TERMINAL_SHIPMENT_OUTCOMES_FILTER = `(${SHIPMENT_OUTCOMES.filter((s) => s !== "open").join(",")})`;
 
 function norm(v: string | null | undefined) {
   return (v ?? "").trim().toLowerCase();
@@ -267,7 +278,8 @@ export const assignOrdersCourier = createServerFn({ method: "POST" })
     const { error } = await ctx.supabase
       .from("orders")
       .update({ courier_id: data.courierId })
-      .in("id", ids);
+      .in("id", ids)
+      .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER);
     if (error) throw new Error(error.message);
     return { updated: ids.length };
   });
@@ -321,7 +333,8 @@ export const autoAssignOrders = createServerFn({ method: "POST" })
       const { error } = await ctx.supabase
         .from("orders")
         .update({ courier_id: courierId })
-        .in("id", ids);
+        .in("id", ids)
+        .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER);
       if (error) failed += ids.length;
       else updated += ids.length;
     }

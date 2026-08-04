@@ -396,6 +396,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     if (isTerminalShipmentOutcome(order.shipment_outcome)) {
       throw new Error("لا يمكن إسناد أوردر حالته نهائية لشركة شحن");
     }
+    if (!order.shipping_address?.trim() || !order.customer_phone?.trim()) {
+      throw new Error("لا يمكن إسناد الأوردر بدون عنوان ورقم تليفون للعميل");
+    }
 
     let courierId = data.courierId ?? null;
     let courierName = "";
