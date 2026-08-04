@@ -461,6 +461,7 @@ export type MyOrderRow = {
   orderNumber: string | null;
   customerName: string | null;
   customerPhone: string | null;
+  governorate: string | null;
   total: number;
   orderStatus: string;
   confirmationStatus: string;
@@ -480,7 +481,7 @@ export const getMyAssignedOrders = createServerFn({ method: "GET" })
     let q = ctx.supabase
       .from("orders")
       .select(
-        "id, brand_id, external_order_number, customer_name, customer_phone, total_amount, order_status, confirmation_status, courier_id, occurred_at",
+        "id, brand_id, external_order_number, customer_name, customer_phone, shipping_governorate, total_amount, order_status, confirmation_status, courier_id, occurred_at",
       )
       .eq("assigned_user_id", ctx.userId)
       .order("occurred_at", { ascending: false })
@@ -511,6 +512,7 @@ export const getMyAssignedOrders = createServerFn({ method: "GET" })
         orderNumber: (o["external_order_number"] as string | null) ?? null,
         customerName: (o["customer_name"] as string | null) ?? null,
         customerPhone: (o["customer_phone"] as string | null) ?? null,
+        governorate: (o["shipping_governorate"] as string | null) ?? null,
         total: Number(o["total_amount"] ?? 0),
         orderStatus: (o["order_status"] as string) ?? "new",
         confirmationStatus: (o["confirmation_status"] as string) ?? "pending",
