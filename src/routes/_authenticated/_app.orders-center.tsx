@@ -30,10 +30,12 @@ import {
   Unlink,
   AlertTriangle,
   Download,
+  Pencil,
 } from "lucide-react";
 import { exportToCSV } from "@/lib/export-utils";
 import { queryPresets } from "@/lib/query-presets";
-import { listBrands } from "@/lib/internal.functions";
+import { listBrands, listCouriers } from "@/lib/internal.functions";
+import { dispatchOrderToBestCourier } from "@/lib/couriers.functions";
 import {
   getOrdersOverview,
   getOrderTimeline,
@@ -51,6 +53,12 @@ import { getOrder, updateOrderStatus, type OrderRow } from "@/lib/orders.functio
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
 import { getMyAssignedOrders } from "@/lib/distribution.functions";
 import { ORDER_STATUS_LABELS_AR, type OrderWorkflowStatus } from "@/lib/order-lifecycle.shared";
+import { OrderEditDialog } from "@/components/orders/OrderEditDialog";
+import {
+  DispatchDialog,
+  type CourierRow,
+  type DispatchOrder,
+} from "@/components/orders/OrdersListTab";
 
 export const Route = createFileRoute("/_authenticated/_app/orders-center")({
   head: () => ({
@@ -336,6 +344,36 @@ function MyOrdersPanel() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [editOpen, setEditOpen] = useState(false);
+  const [editOrderId, setEditOrderId] = useState<string | null>(null);
+
+  const listCouriersFn = useServerFn(listCouriers);
+  const couriersQ = useQuery({
+    queryKey: ["couriers"],
+    queryFn: () => listCouriersFn(),
+    ...queryPresets.reference,
+  });
+  const dispatchFn = useServerFn(dispatchOrderToBestCourier);
+  const [dispatchDlg, setDispatchDlg] = useState<{ open: boolean; order: DispatchOrder | null }>({
+    open: false,
+    order: null,
+  });
+  const [pickedCourierId, setPickedCourierId] = useState("");
+  const dispatch = useMutation({
+    mutationFn: (v: { orderId: string; courierId?: string | null }) => dispatchFn({ data: v }),
+    onSuccess: (r) => {
+      toast.success(
+        t("تم الإسناد إلى: ", "Dispatched to: ") +
+          (r.courier?.name ?? "—") +
+          (r.externalNote ?? ""),
+      );
+      setDispatchDlg({ open: false, order: null });
+      setPickedCourierId("");
+      qc.invalidateQueries({ queryKey: ["orders-center", "my-orders"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const rows = myOrders.data ?? [];
 
   return (
@@ -386,6 +424,7 @@ function MyOrdersPanel() {
                 <th className="p-3 text-start">{t("الحالة", "Status")}</th>
                 <th className="p-3 text-start">{t("التأكيد", "Confirmation")}</th>
                 <th className="p-3 text-start">{t("شركة الشحن", "Courier")}</th>
+                <th className="p-3 text-start">{t("إجراءات", "Actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -437,6 +476,43 @@ function MyOrdersPanel() {
                       </Select>
                     </td>
                     <td className="p-3">{r.courierName ?? "—"}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setEditOrderId(r.id);
+                            setEditOpen(true);
+                          }}
+                          title={t("تعديل", "Edit")}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7"
+                          onClick={() => {
+                            setPickedCourierId("");
+                            setDispatchDlg({
+                              open: true,
+                              order: {
+                                id: r.id,
+                                brand_id: r.brandId,
+                                governorate: r.governorate,
+                                total_amount: r.total,
+                              },
+                            });
+                          }}
+                          disabled={dispatch.isPending}
+                          title={t("اختر شركة شحن / مندوب", "Choose courier / rep")}
+                        >
+                          <Send className="w-3.5 h-3.5 text-primary" />
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -444,6 +520,29 @@ function MyOrdersPanel() {
           </table>
         )}
       </Card>
+
+      <OrderEditDialog
+        open={editOpen}
+        orderId={editOrderId}
+        onOpenChange={setEditOpen}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["orders-center", "my-orders"] })}
+      />
+      <DispatchDialog
+        open={dispatchDlg.open}
+        order={dispatchDlg.order}
+        onOpenChange={(v) => {
+          if (!v) setDispatchDlg({ open: false, order: null });
+        }}
+        couriers={(couriersQ.data ?? []) as CourierRow[]}
+        picked={pickedCourierId}
+        setPicked={setPickedCourierId}
+        onConfirm={(cid) => {
+          if (!dispatchDlg.order) return;
+          dispatch.mutate({ orderId: dispatchDlg.order.id, courierId: cid || null });
+        }}
+        pending={dispatch.isPending}
+        lang={lang}
+      />
     </div>
   );
 }
