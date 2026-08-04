@@ -56,6 +56,7 @@ USING (
   OR public.has_role(auth.uid(),'manager')
 );
 
+DROP TRIGGER IF EXISTS update_company_assets_updated_at ON public.company_assets;
 CREATE TRIGGER update_company_assets_updated_at
 BEFORE UPDATE ON public.company_assets
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

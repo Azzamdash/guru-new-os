@@ -17,6 +17,7 @@ DROP POLICY IF EXISTS "service_clients read by brand access" ON public.service_c
 CREATE POLICY "service_clients read by brand access" ON public.service_clients FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "service_clients write by writers" ON public.service_clients;
 CREATE POLICY "service_clients write by writers" ON public.service_clients FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
+DROP TRIGGER IF EXISTS trg_service_clients_updated ON public.service_clients;
 CREATE TRIGGER trg_service_clients_updated BEFORE UPDATE ON public.service_clients FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS idx_service_clients_brand ON public.service_clients(brand_id);
 
@@ -42,6 +43,7 @@ DROP POLICY IF EXISTS "service_projects read by brand access" ON public.service_
 CREATE POLICY "service_projects read by brand access" ON public.service_projects FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "service_projects write by writers" ON public.service_projects;
 CREATE POLICY "service_projects write by writers" ON public.service_projects FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
+DROP TRIGGER IF EXISTS trg_service_projects_updated ON public.service_projects;
 CREATE TRIGGER trg_service_projects_updated BEFORE UPDATE ON public.service_projects FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS idx_service_projects_brand ON public.service_projects(brand_id);
 CREATE INDEX IF NOT EXISTS idx_service_projects_client ON public.service_projects(client_id);

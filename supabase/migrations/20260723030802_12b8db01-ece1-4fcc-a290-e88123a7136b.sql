@@ -21,6 +21,7 @@ DROP POLICY IF EXISTS "investors self read" ON public.investors;
 CREATE POLICY "investors self read" ON public.investors FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 
+DROP TRIGGER IF EXISTS investors_updated ON public.investors;
 CREATE TRIGGER investors_updated BEFORE UPDATE ON public.investors
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -44,6 +45,7 @@ DROP POLICY IF EXISTS "shares self read" ON public.investor_brand_shares;
 CREATE POLICY "shares self read" ON public.investor_brand_shares FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.investors i WHERE i.id = investor_brand_shares.investor_id AND i.user_id = auth.uid()));
 
+DROP TRIGGER IF EXISTS investor_shares_updated ON public.investor_brand_shares;
 CREATE TRIGGER investor_shares_updated BEFORE UPDATE ON public.investor_brand_shares
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

@@ -25,6 +25,7 @@ DROP POLICY IF EXISTS "customers write" ON public.customers;
 CREATE POLICY "customers write" ON public.customers FOR ALL TO authenticated
   USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 
+DROP TRIGGER IF EXISTS customers_updated_at ON public.customers;
 CREATE TRIGGER customers_updated_at BEFORE UPDATE ON public.customers
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -45,6 +46,7 @@ CREATE POLICY "notes read" ON public.customer_notes FOR SELECT TO authenticated 
 DROP POLICY IF EXISTS "notes write" ON public.customer_notes;
 CREATE POLICY "notes write" ON public.customer_notes FOR ALL TO authenticated
   USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
+DROP TRIGGER IF EXISTS cnotes_updated_at ON public.customer_notes;
 CREATE TRIGGER cnotes_updated_at BEFORE UPDATE ON public.customer_notes
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -87,6 +89,7 @@ BEGIN
   RETURN NEW;
 END $$;
 
+DROP TRIGGER IF EXISTS sales_invoices_link_customer ON public.sales_invoices;
 CREATE TRIGGER sales_invoices_link_customer
 BEFORE INSERT OR UPDATE OF customer_phone, customer_email, customer_name
 ON public.sales_invoices

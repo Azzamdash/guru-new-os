@@ -57,10 +57,12 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS update_app_user_connections_updated_at ON public.app_user_connections;
 CREATE TRIGGER update_app_user_connections_updated_at
   BEFORE UPDATE ON public.app_user_connections
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_user_sheet_config_updated_at ON public.user_sheet_config;
 CREATE TRIGGER update_user_sheet_config_updated_at
   BEFORE UPDATE ON public.user_sheet_config
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

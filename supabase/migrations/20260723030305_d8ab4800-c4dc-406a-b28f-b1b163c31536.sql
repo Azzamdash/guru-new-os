@@ -20,6 +20,7 @@ DROP POLICY IF EXISTS "brands write admin" ON public.brands;
 CREATE POLICY "brands write admin" ON public.brands FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP TRIGGER IF EXISTS brands_updated_at ON public.brands;
 CREATE TRIGGER brands_updated_at BEFORE UPDATE ON public.brands FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TABLE IF NOT EXISTS public.expense_categories (
@@ -40,6 +41,7 @@ DROP POLICY IF EXISTS "cats write admin" ON public.expense_categories;
 CREATE POLICY "cats write admin" ON public.expense_categories FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP TRIGGER IF EXISTS cats_updated_at ON public.expense_categories;
 CREATE TRIGGER cats_updated_at BEFORE UPDATE ON public.expense_categories FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TABLE IF NOT EXISTS public.suppliers (
@@ -60,6 +62,7 @@ DROP POLICY IF EXISTS "suppliers write admin" ON public.suppliers;
 CREATE POLICY "suppliers write admin" ON public.suppliers FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP TRIGGER IF EXISTS suppliers_updated_at ON public.suppliers;
 CREATE TRIGGER suppliers_updated_at BEFORE UPDATE ON public.suppliers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TABLE IF NOT EXISTS public.monthly_entries (
@@ -89,6 +92,7 @@ DROP POLICY IF EXISTS "me write admin" ON public.monthly_entries;
 CREATE POLICY "me write admin" ON public.monthly_entries FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP TRIGGER IF EXISTS me_updated_at ON public.monthly_entries;
 CREATE TRIGGER me_updated_at BEFORE UPDATE ON public.monthly_entries FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS me_brand_year_month_idx ON public.monthly_entries(brand_id, year, month);
 
@@ -112,6 +116,7 @@ DROP POLICY IF EXISTS "ee write admin" ON public.expense_entries;
 CREATE POLICY "ee write admin" ON public.expense_entries FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP TRIGGER IF EXISTS ee_updated_at ON public.expense_entries;
 CREATE TRIGGER ee_updated_at BEFORE UPDATE ON public.expense_entries FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS ee_brand_year_month_idx ON public.expense_entries(brand_id, year, month);
 CREATE INDEX IF NOT EXISTS ee_category_idx ON public.expense_entries(category_id);
@@ -137,6 +142,7 @@ DROP POLICY IF EXISTS "si write admin" ON public.supplier_invoices;
 CREATE POLICY "si write admin" ON public.supplier_invoices FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP TRIGGER IF EXISTS si_updated_at ON public.supplier_invoices;
 CREATE TRIGGER si_updated_at BEFORE UPDATE ON public.supplier_invoices FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS si_supplier_idx ON public.supplier_invoices(supplier_id);
 CREATE INDEX IF NOT EXISTS si_brand_idx ON public.supplier_invoices(brand_id);
@@ -159,6 +165,7 @@ DROP POLICY IF EXISTS "sp write admin" ON public.supplier_payments;
 CREATE POLICY "sp write admin" ON public.supplier_payments FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
+DROP TRIGGER IF EXISTS sp_updated_at ON public.supplier_payments;
 CREATE TRIGGER sp_updated_at BEFORE UPDATE ON public.supplier_payments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS sp_invoice_idx ON public.supplier_payments(invoice_id);
 

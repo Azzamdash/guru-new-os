@@ -340,6 +340,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS refresh_courier_charges_after_rate ON public.courier_governorate_rates;
 CREATE TRIGGER refresh_courier_charges_after_rate
 AFTER INSERT OR UPDATE OF delivery_fee, return_fee, active, effective_from, effective_to
 ON public.courier_governorate_rates

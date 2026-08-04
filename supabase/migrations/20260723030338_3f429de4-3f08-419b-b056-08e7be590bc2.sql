@@ -20,6 +20,7 @@ CREATE POLICY "read materials" ON public.materials FOR SELECT TO authenticated U
 DROP POLICY IF EXISTS "admin write materials" ON public.materials;
 CREATE POLICY "admin write materials" ON public.materials FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS materials_updated_at ON public.materials;
 CREATE TRIGGER materials_updated_at BEFORE UPDATE ON public.materials
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -42,6 +43,7 @@ CREATE POLICY "read products" ON public.products FOR SELECT TO authenticated USI
 DROP POLICY IF EXISTS "admin write products" ON public.products;
 CREATE POLICY "admin write products" ON public.products FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS products_updated_at ON public.products;
 CREATE TRIGGER products_updated_at BEFORE UPDATE ON public.products
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -62,6 +64,7 @@ CREATE POLICY "read pm" ON public.product_materials FOR SELECT TO authenticated 
 DROP POLICY IF EXISTS "admin write pm" ON public.product_materials;
 CREATE POLICY "admin write pm" ON public.product_materials FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS product_materials_updated_at ON public.product_materials;
 CREATE TRIGGER product_materials_updated_at BEFORE UPDATE ON public.product_materials
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -83,6 +86,7 @@ CREATE POLICY "read im" ON public.inventory_movements FOR SELECT TO authenticate
 DROP POLICY IF EXISTS "admin write im" ON public.inventory_movements;
 CREATE POLICY "admin write im" ON public.inventory_movements FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS im_updated_at ON public.inventory_movements;
 CREATE TRIGGER im_updated_at BEFORE UPDATE ON public.inventory_movements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -104,6 +108,7 @@ CREATE POLICY "read couriers" ON public.couriers FOR SELECT TO authenticated USI
 DROP POLICY IF EXISTS "admin write couriers" ON public.couriers;
 CREATE POLICY "admin write couriers" ON public.couriers FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS couriers_updated_at ON public.couriers;
 CREATE TRIGGER couriers_updated_at BEFORE UPDATE ON public.couriers
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -129,6 +134,7 @@ CREATE POLICY "read sales" ON public.sales_invoices FOR SELECT TO authenticated 
 DROP POLICY IF EXISTS "admin write sales" ON public.sales_invoices;
 CREATE POLICY "admin write sales" ON public.sales_invoices FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP TRIGGER IF EXISTS sales_updated_at ON public.sales_invoices;
 CREATE TRIGGER sales_updated_at BEFORE UPDATE ON public.sales_invoices
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

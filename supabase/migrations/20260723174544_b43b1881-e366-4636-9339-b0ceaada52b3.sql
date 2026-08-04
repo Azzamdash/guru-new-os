@@ -46,6 +46,7 @@ CREATE POLICY "prod_tasks_assignee_update" ON public.production_tasks
   USING (assignee_id = auth.uid())
   WITH CHECK (assignee_id = auth.uid());
 
+DROP TRIGGER IF EXISTS trg_production_tasks_updated_at ON public.production_tasks;
 CREATE TRIGGER trg_production_tasks_updated_at
   BEFORE UPDATE ON public.production_tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -72,6 +73,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS trg_production_tasks_field_lock ON public.production_tasks;
 CREATE TRIGGER trg_production_tasks_field_lock
   BEFORE UPDATE ON public.production_tasks
   FOR EACH ROW EXECUTE FUNCTION public.production_tasks_prevent_field_tampering();
@@ -141,6 +143,7 @@ CREATE POLICY "requests_hr_update_all" ON public.employee_requests
     OR EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role::text = 'hr')
   );
 
+DROP TRIGGER IF EXISTS trg_employee_requests_updated_at ON public.employee_requests;
 CREATE TRIGGER trg_employee_requests_updated_at
   BEFORE UPDATE ON public.employee_requests
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -163,6 +166,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS trg_employee_requests_validate ON public.employee_requests;
 CREATE TRIGGER trg_employee_requests_validate
   BEFORE INSERT OR UPDATE ON public.employee_requests
   FOR EACH ROW EXECUTE FUNCTION public.employee_requests_validate();

@@ -39,6 +39,7 @@ WITH CHECK (
   AND public.has_brand_access(auth.uid(), brand_id)
 );
 
+DROP TRIGGER IF EXISTS trg_brand_integrations_updated ON public.brand_integrations;
 CREATE TRIGGER trg_brand_integrations_updated
 BEFORE UPDATE ON public.brand_integrations
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

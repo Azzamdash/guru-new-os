@@ -30,6 +30,7 @@ DROP POLICY IF EXISTS "assets_delete_admin_manager" ON public.company_assets;
 CREATE POLICY "assets_delete_admin_manager" ON public.company_assets FOR DELETE TO authenticated
 USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));
 
+DROP TRIGGER IF EXISTS update_company_assets_updated_at ON public.company_assets;
 CREATE TRIGGER update_company_assets_updated_at BEFORE UPDATE ON public.company_assets
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -83,6 +84,7 @@ DROP POLICY IF EXISTS "cash_txn_write_delete" ON public.cash_transactions;
 CREATE POLICY "cash_txn_write_delete" ON public.cash_transactions FOR DELETE TO authenticated
 USING (public.is_writer(auth.uid()) AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS trg_cash_txn_updated_at ON public.cash_transactions;
 CREATE TRIGGER trg_cash_txn_updated_at BEFORE UPDATE ON public.cash_transactions
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

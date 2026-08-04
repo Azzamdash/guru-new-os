@@ -21,6 +21,7 @@ CREATE POLICY wallets_write ON public.wallets FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'));
 
+DROP TRIGGER IF EXISTS wallets_updated_at ON public.wallets;
 CREATE TRIGGER wallets_updated_at BEFORE UPDATE ON public.wallets
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

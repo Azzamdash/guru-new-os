@@ -33,6 +33,7 @@ CREATE POLICY "invoice items write for writers"
   USING (public.is_writer(auth.uid()))
   WITH CHECK (public.is_writer(auth.uid()));
 
+DROP TRIGGER IF EXISTS trg_supplier_invoice_items_updated ON public.supplier_invoice_items;
 CREATE TRIGGER trg_supplier_invoice_items_updated
   BEFORE UPDATE ON public.supplier_invoice_items
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

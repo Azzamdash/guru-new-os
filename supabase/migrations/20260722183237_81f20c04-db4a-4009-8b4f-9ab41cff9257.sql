@@ -74,6 +74,7 @@ USING (
   AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id))
 );
 
+DROP TRIGGER IF EXISTS trg_cash_txn_updated_at ON public.cash_transactions;
 CREATE TRIGGER trg_cash_txn_updated_at
 BEFORE UPDATE ON public.cash_transactions
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

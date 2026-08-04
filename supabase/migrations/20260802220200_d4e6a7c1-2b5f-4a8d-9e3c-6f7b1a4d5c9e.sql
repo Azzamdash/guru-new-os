@@ -26,6 +26,7 @@ DROP POLICY IF EXISTS "write purchase_orders privileged" ON public.purchase_orde
 CREATE POLICY "write purchase_orders privileged" ON public.purchase_orders FOR ALL TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id) AND public.is_writer(auth.uid()))
   WITH CHECK (public.has_brand_access(auth.uid(), brand_id) AND public.is_writer(auth.uid()));
+DROP TRIGGER IF EXISTS purchase_orders_updated_at ON public.purchase_orders;
 CREATE TRIGGER purchase_orders_updated_at BEFORE UPDATE ON public.purchase_orders
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS po_supplier_idx ON public.purchase_orders(supplier_id);
@@ -53,6 +54,7 @@ DROP POLICY IF EXISTS "write purchase_order_items privileged" ON public.purchase
 CREATE POLICY "write purchase_order_items privileged" ON public.purchase_order_items FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id) AND public.is_writer(auth.uid())))
   WITH CHECK (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id) AND public.is_writer(auth.uid())));
+DROP TRIGGER IF EXISTS purchase_order_items_updated_at ON public.purchase_order_items;
 CREATE TRIGGER purchase_order_items_updated_at BEFORE UPDATE ON public.purchase_order_items
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX IF NOT EXISTS poi_po_idx ON public.purchase_order_items(purchase_order_id);

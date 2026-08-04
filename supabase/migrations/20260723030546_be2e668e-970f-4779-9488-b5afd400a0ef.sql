@@ -62,6 +62,7 @@ CREATE POLICY "auth manage articles" ON public.articles FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));
 
+DROP TRIGGER IF EXISTS trg_articles_updated ON public.articles;
 CREATE TRIGGER trg_articles_updated BEFORE UPDATE ON public.articles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -103,6 +104,7 @@ CREATE POLICY "Assignees update status" ON public.tasks FOR UPDATE TO authentica
   USING (assignee_id = auth.uid())
   WITH CHECK (assignee_id = auth.uid());
 
+DROP TRIGGER IF EXISTS update_tasks_updated_at ON public.tasks;
 CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON public.tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -184,6 +186,7 @@ CREATE POLICY "write fulfillment" ON public.fulfillment_entries FOR ALL TO authe
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
 
+DROP TRIGGER IF EXISTS trg_fulfillment_updated ON public.fulfillment_entries;
 CREATE TRIGGER trg_fulfillment_updated BEFORE UPDATE ON public.fulfillment_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

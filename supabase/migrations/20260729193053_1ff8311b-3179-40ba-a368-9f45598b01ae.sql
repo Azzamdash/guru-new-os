@@ -20,6 +20,7 @@ CREATE POLICY "admin_manage_settings" ON public.user_settings
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
 
+DROP TRIGGER IF EXISTS trg_user_settings_updated ON public.user_settings;
 CREATE TRIGGER trg_user_settings_updated
   BEFORE UPDATE ON public.user_settings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

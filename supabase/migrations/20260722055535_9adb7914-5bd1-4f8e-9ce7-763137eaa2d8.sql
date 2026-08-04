@@ -35,6 +35,7 @@ CREATE POLICY "Assignees update status" ON public.tasks FOR UPDATE TO authentica
   USING (assignee_id = auth.uid())
   WITH CHECK (assignee_id = auth.uid());
 
+DROP TRIGGER IF EXISTS update_tasks_updated_at ON public.tasks;
 CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON public.tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

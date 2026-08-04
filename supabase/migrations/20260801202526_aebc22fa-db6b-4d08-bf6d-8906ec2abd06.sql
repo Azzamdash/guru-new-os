@@ -32,6 +32,7 @@ CREATE POLICY "courier_settlements_update" ON public.courier_settlements FOR UPD
 DROP POLICY IF EXISTS "courier_settlements_delete" ON public.courier_settlements;
 CREATE POLICY "courier_settlements_delete" ON public.courier_settlements FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP TRIGGER IF EXISTS courier_settlements_updated_at ON public.courier_settlements;
 CREATE TRIGGER courier_settlements_updated_at BEFORE UPDATE ON public.courier_settlements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -70,6 +71,7 @@ CREATE POLICY "courier_settlement_lines_update" ON public.courier_settlement_lin
 DROP POLICY IF EXISTS "courier_settlement_lines_delete" ON public.courier_settlement_lines;
 CREATE POLICY "courier_settlement_lines_delete" ON public.courier_settlement_lines FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP TRIGGER IF EXISTS courier_settlement_lines_updated_at ON public.courier_settlement_lines;
 CREATE TRIGGER courier_settlement_lines_updated_at BEFORE UPDATE ON public.courier_settlement_lines
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -110,6 +112,7 @@ CREATE POLICY "order_returns_update" ON public.order_returns FOR UPDATE TO authe
 DROP POLICY IF EXISTS "order_returns_delete" ON public.order_returns;
 CREATE POLICY "order_returns_delete" ON public.order_returns FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP TRIGGER IF EXISTS order_returns_updated_at ON public.order_returns;
 CREATE TRIGGER order_returns_updated_at BEFORE UPDATE ON public.order_returns
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -179,6 +182,7 @@ DROP POLICY IF EXISTS "whatsapp_templates_delete" ON public.whatsapp_templates;
 CREATE POLICY "whatsapp_templates_delete" ON public.whatsapp_templates FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders'))
          AND (brand_id IS NULL OR (SELECT public.has_brand_access(auth.uid(), brand_id))));
+DROP TRIGGER IF EXISTS whatsapp_templates_updated_at ON public.whatsapp_templates;
 CREATE TRIGGER whatsapp_templates_updated_at BEFORE UPDATE ON public.whatsapp_templates
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -201,6 +205,7 @@ DROP POLICY IF EXISTS "order_sla_rules_write" ON public.order_sla_rules;
 CREATE POLICY "order_sla_rules_write" ON public.order_sla_rules FOR ALL TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')));
+DROP TRIGGER IF EXISTS order_sla_rules_updated_at ON public.order_sla_rules;
 CREATE TRIGGER order_sla_rules_updated_at BEFORE UPDATE ON public.order_sla_rules
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

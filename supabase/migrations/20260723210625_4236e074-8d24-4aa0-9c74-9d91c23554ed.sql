@@ -39,6 +39,7 @@ DROP POLICY IF EXISTS "pt_write" ON public.project_tasks;
 CREATE POLICY "pt_write" ON public.project_tasks FOR ALL TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id))
   WITH CHECK (public.can_access_service_project(auth.uid(), project_id));
+DROP TRIGGER IF EXISTS pt_touch ON public.project_tasks;
 CREATE TRIGGER pt_touch BEFORE UPDATE ON public.project_tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -106,6 +107,7 @@ DROP POLICY IF EXISTS "pr_write" ON public.project_revisions;
 CREATE POLICY "pr_write" ON public.project_revisions FOR ALL TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id))
   WITH CHECK (public.can_access_service_project(auth.uid(), project_id));
+DROP TRIGGER IF EXISTS pr_touch ON public.project_revisions;
 CREATE TRIGGER pr_touch BEFORE UPDATE ON public.project_revisions
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -137,6 +139,7 @@ CREATE POLICY "ppn_pm_admin_write" ON public.project_private_notes FOR ALL TO au
     public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager')
     OR EXISTS (SELECT 1 FROM public.service_projects p WHERE p.id = project_id AND p.pm_user_id = auth.uid())
   );
+DROP TRIGGER IF EXISTS ppn_touch ON public.project_private_notes;
 CREATE TRIGGER ppn_touch BEFORE UPDATE ON public.project_private_notes
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -165,6 +168,7 @@ DROP POLICY IF EXISTS "pe_write" ON public.project_events;
 CREATE POLICY "pe_write" ON public.project_events FOR ALL TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id))
   WITH CHECK (public.has_brand_access(auth.uid(), brand_id));
+DROP TRIGGER IF EXISTS pe_touch ON public.project_events;
 CREATE TRIGGER pe_touch BEFORE UPDATE ON public.project_events
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -206,6 +210,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END; $$;
+DROP TRIGGER IF EXISTS pt_notify_assign ON public.project_tasks;
 CREATE TRIGGER pt_notify_assign AFTER INSERT OR UPDATE OF assignee_id ON public.project_tasks
   FOR EACH ROW EXECUTE FUNCTION public.notify_task_assigned();
 
@@ -221,6 +226,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END; $$;
+DROP TRIGGER IF EXISTS pr_notify_open ON public.project_revisions;
 CREATE TRIGGER pr_notify_open AFTER INSERT ON public.project_revisions
   FOR EACH ROW EXECUTE FUNCTION public.notify_revision_opened();
 

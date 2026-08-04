@@ -41,6 +41,7 @@ CREATE POLICY "write fulfillment"
     OR public.has_role(auth.uid(),'data_entry')
   );
 
+DROP TRIGGER IF EXISTS trg_fulfillment_updated ON public.fulfillment_entries;
 CREATE TRIGGER trg_fulfillment_updated
   BEFORE UPDATE ON public.fulfillment_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

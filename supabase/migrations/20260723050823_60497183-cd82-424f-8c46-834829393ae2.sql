@@ -47,6 +47,7 @@ CREATE INDEX IF NOT EXISTS orders_brand_occurred_idx ON public.orders (brand_id,
 CREATE INDEX IF NOT EXISTS orders_customer_idx ON public.orders (customer_id);
 CREATE INDEX IF NOT EXISTS orders_fulfillment_idx ON public.orders (fulfillment_status);
 
+DROP TRIGGER IF EXISTS orders_updated_at ON public.orders;
 CREATE TRIGGER orders_updated_at BEFORE UPDATE ON public.orders
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -108,6 +109,7 @@ BEGIN
   RETURN NEW;
 END $$;
 
+DROP TRIGGER IF EXISTS orders_link_customer ON public.orders;
 CREATE TRIGGER orders_link_customer BEFORE INSERT OR UPDATE ON public.orders
   FOR EACH ROW EXECUTE FUNCTION public.link_order_customer();
 

@@ -41,6 +41,7 @@ DROP POLICY IF EXISTS "order_shipments_delete" ON public.order_shipments;
 CREATE POLICY "order_shipments_delete" ON public.order_shipments FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS order_shipments_updated_at ON public.order_shipments;
 CREATE TRIGGER order_shipments_updated_at BEFORE UPDATE ON public.order_shipments
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -80,6 +81,7 @@ DROP POLICY IF EXISTS "order_collections_delete" ON public.order_collections;
 CREATE POLICY "order_collections_delete" ON public.order_collections FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS order_collections_updated_at ON public.order_collections;
 CREATE TRIGGER order_collections_updated_at BEFORE UPDATE ON public.order_collections
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -120,6 +122,7 @@ DROP POLICY IF EXISTS "whatsapp_threads_delete" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_delete" ON public.whatsapp_threads FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS whatsapp_threads_updated_at ON public.whatsapp_threads;
 CREATE TRIGGER whatsapp_threads_updated_at BEFORE UPDATE ON public.whatsapp_threads
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

@@ -48,6 +48,7 @@ CREATE POLICY "HR staff write time logs" ON public.employee_time_logs
     OR EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role::text = 'hr')
   );
 
+DROP TRIGGER IF EXISTS trg_employee_time_logs_updated ON public.employee_time_logs;
 CREATE TRIGGER trg_employee_time_logs_updated
   BEFORE UPDATE ON public.employee_time_logs
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
