@@ -1160,9 +1160,8 @@ function OrdersPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <Kpi label={t("orders_title")} value={nf(sumQ.data?.totalOrders ?? 0)} />
-        <Kpi label={t("cogs_revenue")} value={nf(Math.round(sumQ.data?.revenue ?? 0))} />
         <Kpi
           label={`${t("ff_delivered")} / ${t("ff_returned")}`}
           value={`${nf(sumQ.data?.delivered ?? 0)} / ${nf(sumQ.data?.returned ?? 0)}`}
@@ -1684,47 +1683,6 @@ function OrdersPage() {
         pending={dispatch.isPending}
         lang={lang}
       />
-
-      {/* Per-brand breakdown */}
-      {sumQ.data && sumQ.data.perBrand.length > 0 && (
-        <Card className="card-gradient p-5">
-          <h3 className="font-semibold mb-4">
-            {lang === "ar" ? "تفصيل آخر 30 يوم حسب البراند" : "Last 30d breakdown per brand"}
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="p-2 text-start">{t("brand")}</th>
-                  <th className="p-2 text-start">{t("orders_title")}</th>
-                  <th className="p-2 text-start">{t("cogs_revenue")}</th>
-                  <th className="p-2 text-start">{t("cogs_cost")}</th>
-                  <th className="p-2 text-start">{t("cogs_gross_profit")}</th>
-                  <th className="p-2 text-start">{t("ff_delivered")}</th>
-                  <th className="p-2 text-start">{t("ff_returned")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sumQ.data.perBrand.map((b) => (
-                  <tr key={b.brandId} className="border-b border-border/50">
-                    <td className="p-2">{b.name}</td>
-                    <td className="p-2 num">{nf(b.count)}</td>
-                    <td className="p-2 num">{nf(Math.round(b.revenue))}</td>
-                    <td className="p-2 num text-muted-foreground">{nf(Math.round(b.cogs))}</td>
-                    <td
-                      className={`p-2 num ${b.revenue - b.cogs >= 0 ? "text-emerald-500" : "text-destructive"}`}
-                    >
-                      {nf(Math.round(b.revenue - b.cogs))}
-                    </td>
-                    <td className="p-2 num">{nf(b.delivered)}</td>
-                    <td className="p-2 num">{nf(b.returned)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

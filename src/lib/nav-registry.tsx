@@ -349,17 +349,6 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "All sales orders, create and edit",
   },
   {
-    to: "/order-confirmation",
-    ar: "تأكيد الأوردرات",
-    en: "Order Confirmation",
-    icon: UserCheck,
-    hub: "sales",
-    requiresWrite: true,
-    extraRoles: ["customer_service", "operation_manager"],
-    descAr: "طابور تأكيد الأوردرات قبل الشحن وأسباب الإلغاء",
-    descEn: "Confirmation queue before shipping",
-  },
-  {
     to: "/order-distribution",
     ar: "توزيع الأوردرات",
     en: "Order Distribution",
