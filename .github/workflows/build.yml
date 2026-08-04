@@ -18,6 +18,7 @@ concurrency:
 permissions:
   contents: read
   packages: write
+  actions: write
 
 jobs:
   build-and-push:
@@ -59,3 +60,11 @@ jobs:
             VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
             VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
             VITE_SUPABASE_PROJECT_ID=${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+
+      - name: Trigger deploy workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run deploy.yml \
+            --ref ${{ github.ref_name }} \
+            -f release_version=${{ steps.version.outputs.version }}
