@@ -589,6 +589,97 @@ export const postSettlement = createServerFn({ method: "POST" })
     return { ok: true, posted: inserts.length, skipped: rows.length - inserts.length };
   });
 
+export type CollectionGapRow = {
+  orderId: string;
+  orderNumber: string | null;
+  customerName: string | null;
+  brandName: string;
+  courierName: string | null;
+  totalAmount: number;
+  collected: number;
+  outstanding: number;
+  occurredAt: string;
+};
+
+/**
+ * Delivered orders whose recorded collections (order_collections) fall short
+ * of the order total — a read-only reconciliation view, not a new ledger.
+ * Surfaces COD that should have come in but hasn't been recorded, without
+ * touching or unifying order_collections / cash_transactions / sales_invoices.
+ */
+export const getCollectionGaps = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { brandId?: string | null; from?: string | null; to?: string | null } = {}) => input,
+  )
+  .handler(async ({ data, context }): Promise<CollectionGapRow[]> => {
+    const ctx = context as unknown as Ctx;
+    await assertPageWrite(ctx, ORDERS_PAGE);
+
+    let q = ctx.supabase
+      .from("orders")
+      .select(
+        "id, brand_id, external_order_number, customer_name, courier_id, total_amount, occurred_at",
+      )
+      .eq("fulfillment_status", "delivered")
+      .gt("total_amount", 0)
+      .order("occurred_at", { ascending: false })
+      .limit(500);
+    if (data.brandId) q = q.eq("brand_id", data.brandId);
+    if (data.from) q = q.gte("occurred_at", data.from);
+    if (data.to) q = q.lte("occurred_at", `${data.to.slice(0, 10)}T23:59:59.999Z`);
+
+    const { data: orders, error } = await q;
+    if (error) throw new Error(error.message);
+    const rows = (orders ?? []) as Row[];
+    if (!rows.length) return [];
+
+    const orderIds = rows.map((r) => r["id"] as string);
+    const brandIds = [...new Set(rows.map((r) => r["brand_id"] as string))];
+    const courierIds = [...new Set(rows.map((r) => r["courier_id"]).filter(Boolean))] as string[];
+
+    const [{ data: collections }, { data: brands }, { data: couriers }] = await Promise.all([
+      ctx.supabase.from("order_collections").select("order_id, amount").in("order_id", orderIds),
+      ctx.supabase.from("brands").select("id, name").in("id", brandIds),
+      courierIds.length
+        ? ctx.supabase.from("couriers").select("id, name").in("id", courierIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const collectedByOrder = new Map<string, number>();
+    for (const c of (collections ?? []) as Array<{ order_id: string; amount: number }>) {
+      collectedByOrder.set(
+        c.order_id,
+        (collectedByOrder.get(c.order_id) ?? 0) + Number(c.amount ?? 0),
+      );
+    }
+    const brandName = new Map<string, string>(
+      (brands ?? []).map((b: { id: string; name: string }) => [b.id, b.name]),
+    );
+    const courierName = new Map<string, string>(
+      (couriers ?? []).map((c: { id: string; name: string }) => [c.id, c.name]),
+    );
+
+    return rows
+      .map((r) => {
+        const total = Number(r["total_amount"] ?? 0);
+        const collected = collectedByOrder.get(r["id"] as string) ?? 0;
+        return {
+          orderId: r["id"] as string,
+          orderNumber: (r["external_order_number"] as string | null) ?? null,
+          customerName: (r["customer_name"] as string | null) ?? null,
+          brandName: brandName.get(r["brand_id"] as string) ?? "—",
+          courierName: r["courier_id"] ? (courierName.get(r["courier_id"] as string) ?? "—") : null,
+          totalAmount: total,
+          collected,
+          outstanding: total - collected,
+          occurredAt: r["occurred_at"] as string,
+        };
+      })
+      .filter((r) => r.outstanding > 0.01)
+      .sort((a, b) => b.outstanding - a.outstanding);
+  });
+
 /* ============================ 4) WhatsApp templates =========================== */
 
 export const listWhatsappTemplates = createServerFn({ method: "POST" })
