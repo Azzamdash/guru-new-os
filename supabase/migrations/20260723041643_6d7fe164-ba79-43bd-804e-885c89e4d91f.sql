@@ -1,6 +1,6 @@
 
 -- 1) Customers unified across brands
-CREATE TABLE public.customers (
+CREATE TABLE IF NOT EXISTS public.customers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   phone text,
@@ -13,21 +13,24 @@ CREATE TABLE public.customers (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX customers_phone_uidx ON public.customers(phone_norm) WHERE phone_norm <> '';
-CREATE UNIQUE INDEX customers_email_uidx ON public.customers(email_norm) WHERE email_norm <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS customers_phone_uidx ON public.customers(phone_norm) WHERE phone_norm <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS customers_email_uidx ON public.customers(email_norm) WHERE email_norm <> '';
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.customers TO authenticated;
 GRANT ALL ON public.customers TO service_role;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "customers read" ON public.customers;
 CREATE POLICY "customers read" ON public.customers FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "customers write" ON public.customers;
 CREATE POLICY "customers write" ON public.customers FOR ALL TO authenticated
   USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 
+DROP TRIGGER IF EXISTS customers_updated_at ON public.customers;
 CREATE TRIGGER customers_updated_at BEFORE UPDATE ON public.customers
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- 2) Notes on customers
-CREATE TABLE public.customer_notes (
+CREATE TABLE IF NOT EXISTS public.customer_notes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
   author_id uuid,
@@ -38,19 +41,22 @@ CREATE TABLE public.customer_notes (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.customer_notes TO authenticated;
 GRANT ALL ON public.customer_notes TO service_role;
 ALTER TABLE public.customer_notes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "notes read" ON public.customer_notes;
 CREATE POLICY "notes read" ON public.customer_notes FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "notes write" ON public.customer_notes;
 CREATE POLICY "notes write" ON public.customer_notes FOR ALL TO authenticated
   USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
+DROP TRIGGER IF EXISTS cnotes_updated_at ON public.customer_notes;
 CREATE TRIGGER cnotes_updated_at BEFORE UPDATE ON public.customer_notes
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- 3) Extend sales_invoices with customer contact + link
 ALTER TABLE public.sales_invoices
-  ADD COLUMN customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  ADD COLUMN customer_name text,
-  ADD COLUMN customer_phone text,
-  ADD COLUMN customer_email text;
-CREATE INDEX sales_invoices_customer_idx ON public.sales_invoices(customer_id);
+  ADD COLUMN IF NOT EXISTS customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS customer_name text,
+  ADD COLUMN IF NOT EXISTS customer_phone text,
+  ADD COLUMN IF NOT EXISTS customer_email text;
+CREATE INDEX IF NOT EXISTS sales_invoices_customer_idx ON public.sales_invoices(customer_id);
 
 -- 4) Trigger: on insert/update of a sales invoice, upsert/link a customer by phone or email
 CREATE OR REPLACE FUNCTION public.link_sales_invoice_customer()
@@ -83,6 +89,7 @@ BEGIN
   RETURN NEW;
 END $$;
 
+DROP TRIGGER IF EXISTS sales_invoices_link_customer ON public.sales_invoices;
 CREATE TRIGGER sales_invoices_link_customer
 BEFORE INSERT OR UPDATE OF customer_phone, customer_email, customer_name
 ON public.sales_invoices

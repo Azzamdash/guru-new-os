@@ -4,7 +4,7 @@ ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'production_manager';
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'hr';
 
 -- 2) Production tasks
-CREATE TABLE public.production_tasks (
+CREATE TABLE IF NOT EXISTS public.production_tasks (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -22,6 +22,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.production_tasks TO authenticated
 GRANT ALL ON public.production_tasks TO service_role;
 ALTER TABLE public.production_tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "prod_tasks_manage_all" ON public.production_tasks;
 CREATE POLICY "prod_tasks_manage_all" ON public.production_tasks
   FOR ALL TO authenticated
   USING (
@@ -35,14 +36,17 @@ CREATE POLICY "prod_tasks_manage_all" ON public.production_tasks
     OR EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role::text = 'production_manager')
   );
 
+DROP POLICY IF EXISTS "prod_tasks_assignee_read" ON public.production_tasks;
 CREATE POLICY "prod_tasks_assignee_read" ON public.production_tasks
   FOR SELECT TO authenticated USING (assignee_id = auth.uid());
 
+DROP POLICY IF EXISTS "prod_tasks_assignee_update" ON public.production_tasks;
 CREATE POLICY "prod_tasks_assignee_update" ON public.production_tasks
   FOR UPDATE TO authenticated
   USING (assignee_id = auth.uid())
   WITH CHECK (assignee_id = auth.uid());
 
+DROP TRIGGER IF EXISTS trg_production_tasks_updated_at ON public.production_tasks;
 CREATE TRIGGER trg_production_tasks_updated_at
   BEFORE UPDATE ON public.production_tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -69,15 +73,20 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS trg_production_tasks_field_lock ON public.production_tasks;
 CREATE TRIGGER trg_production_tasks_field_lock
   BEFORE UPDATE ON public.production_tasks
   FOR EACH ROW EXECUTE FUNCTION public.production_tasks_prevent_field_tampering();
 
 -- 3) Employee requests
-CREATE TYPE public.employee_request_type AS ENUM ('leave','advance');
-CREATE TYPE public.employee_request_status AS ENUM ('pending','approved','rejected');
+DO $do$ BEGIN
+  CREATE TYPE public.employee_request_type AS ENUM ('leave','advance');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
+DO $do$ BEGIN
+  CREATE TYPE public.employee_request_status AS ENUM ('pending','approved','rejected');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
-CREATE TABLE public.employee_requests (
+CREATE TABLE IF NOT EXISTS public.employee_requests (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   employee_id UUID REFERENCES public.employees(id) ON DELETE SET NULL,
@@ -97,9 +106,11 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.employee_requests TO authenticate
 GRANT ALL ON public.employee_requests TO service_role;
 ALTER TABLE public.employee_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "requests_owner_read" ON public.employee_requests;
 CREATE POLICY "requests_owner_read" ON public.employee_requests
   FOR SELECT TO authenticated USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "requests_owner_insert" ON public.employee_requests;
 CREATE POLICY "requests_owner_insert" ON public.employee_requests
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -109,10 +120,12 @@ CREATE POLICY "requests_owner_insert" ON public.employee_requests
     AND reviewed_at IS NULL
   );
 
+DROP POLICY IF EXISTS "requests_owner_delete_pending" ON public.employee_requests;
 CREATE POLICY "requests_owner_delete_pending" ON public.employee_requests
   FOR DELETE TO authenticated
   USING (user_id = auth.uid() AND status = 'pending');
 
+DROP POLICY IF EXISTS "requests_hr_read_all" ON public.employee_requests;
 CREATE POLICY "requests_hr_read_all" ON public.employee_requests
   FOR SELECT TO authenticated USING (
     public.has_role(auth.uid(),'admin')
@@ -120,6 +133,7 @@ CREATE POLICY "requests_hr_read_all" ON public.employee_requests
     OR EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role::text = 'hr')
   );
 
+DROP POLICY IF EXISTS "requests_hr_update_all" ON public.employee_requests;
 CREATE POLICY "requests_hr_update_all" ON public.employee_requests
   FOR UPDATE TO authenticated
   USING (
@@ -133,6 +147,7 @@ CREATE POLICY "requests_hr_update_all" ON public.employee_requests
     OR EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role::text = 'hr')
   );
 
+DROP TRIGGER IF EXISTS trg_employee_requests_updated_at ON public.employee_requests;
 CREATE TRIGGER trg_employee_requests_updated_at
   BEFORE UPDATE ON public.employee_requests
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -155,6 +170,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS trg_employee_requests_validate ON public.employee_requests;
 CREATE TRIGGER trg_employee_requests_validate
   BEFORE INSERT OR UPDATE ON public.employee_requests
   FOR EACH ROW EXECUTE FUNCTION public.employee_requests_validate();

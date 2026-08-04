@@ -1,6 +1,6 @@
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'investor';
 
-CREATE TABLE public.investors (
+CREATE TABLE IF NOT EXISTS public.investors (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   email text,
@@ -14,15 +14,18 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.investors TO authenticated;
 GRANT ALL ON public.investors TO service_role;
 ALTER TABLE public.investors ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "investors admin all" ON public.investors;
 CREATE POLICY "investors admin all" ON public.investors FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "investors self read" ON public.investors;
 CREATE POLICY "investors self read" ON public.investors FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 
+DROP TRIGGER IF EXISTS investors_updated ON public.investors;
 CREATE TRIGGER investors_updated BEFORE UPDATE ON public.investors
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.investor_brand_shares (
+CREATE TABLE IF NOT EXISTS public.investor_brand_shares (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   investor_id uuid NOT NULL REFERENCES public.investors(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
@@ -35,11 +38,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.investor_brand_shares TO authenti
 GRANT ALL ON public.investor_brand_shares TO service_role;
 ALTER TABLE public.investor_brand_shares ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "shares admin all" ON public.investor_brand_shares;
 CREATE POLICY "shares admin all" ON public.investor_brand_shares FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "shares self read" ON public.investor_brand_shares;
 CREATE POLICY "shares self read" ON public.investor_brand_shares FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.investors i WHERE i.id = investor_brand_shares.investor_id AND i.user_id = auth.uid()));
 
+DROP TRIGGER IF EXISTS investor_shares_updated ON public.investor_brand_shares;
 CREATE TRIGGER investor_shares_updated BEFORE UPDATE ON public.investor_brand_shares
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

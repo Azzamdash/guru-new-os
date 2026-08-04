@@ -1,4 +1,4 @@
-CREATE TABLE public.company_assets (
+CREATE TABLE IF NOT EXISTS public.company_assets (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID NULL REFERENCES public.brands(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
@@ -13,23 +13,28 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.company_assets TO authenticated;
 GRANT ALL ON public.company_assets TO service_role;
 ALTER TABLE public.company_assets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "assets_read_scoped" ON public.company_assets;
 CREATE POLICY "assets_read_scoped" ON public.company_assets FOR SELECT TO authenticated
 USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR (brand_id IS NOT NULL AND public.has_brand_access(auth.uid(), brand_id)));
 
+DROP POLICY IF EXISTS "assets_write_admin_manager_accountant" ON public.company_assets;
 CREATE POLICY "assets_write_admin_manager_accountant" ON public.company_assets FOR INSERT TO authenticated
 WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'));
 
+DROP POLICY IF EXISTS "assets_update_admin_manager_accountant" ON public.company_assets;
 CREATE POLICY "assets_update_admin_manager_accountant" ON public.company_assets FOR UPDATE TO authenticated
 USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'))
 WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'));
 
+DROP POLICY IF EXISTS "assets_delete_admin_manager" ON public.company_assets;
 CREATE POLICY "assets_delete_admin_manager" ON public.company_assets FOR DELETE TO authenticated
 USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));
 
+DROP TRIGGER IF EXISTS update_company_assets_updated_at ON public.company_assets;
 CREATE TRIGGER update_company_assets_updated_at BEFORE UPDATE ON public.company_assets
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_company_assets_brand ON public.company_assets(brand_id);
+CREATE INDEX IF NOT EXISTS idx_company_assets_brand ON public.company_assets(brand_id);
 
 DROP POLICY IF EXISTS "read fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "read fulfillment" ON public.fulfillment_entries FOR SELECT
@@ -62,19 +67,24 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.cash_transactions TO authenticate
 GRANT ALL ON public.cash_transactions TO service_role;
 ALTER TABLE public.cash_transactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "cash_txn_read" ON public.cash_transactions;
 CREATE POLICY "cash_txn_read" ON public.cash_transactions FOR SELECT TO authenticated
 USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant') OR (brand_id IS NOT NULL AND public.has_brand_access(auth.uid(), brand_id)) OR created_by = auth.uid() OR for_user_id = auth.uid());
 
+DROP POLICY IF EXISTS "cash_txn_write_insert" ON public.cash_transactions;
 CREATE POLICY "cash_txn_write_insert" ON public.cash_transactions FOR INSERT TO authenticated
 WITH CHECK (public.is_writer(auth.uid()) AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id)));
 
+DROP POLICY IF EXISTS "cash_txn_write_update" ON public.cash_transactions;
 CREATE POLICY "cash_txn_write_update" ON public.cash_transactions FOR UPDATE TO authenticated
 USING (public.is_writer(auth.uid()) AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id)))
 WITH CHECK (public.is_writer(auth.uid()) AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id)));
 
+DROP POLICY IF EXISTS "cash_txn_write_delete" ON public.cash_transactions;
 CREATE POLICY "cash_txn_write_delete" ON public.cash_transactions FOR DELETE TO authenticated
 USING (public.is_writer(auth.uid()) AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS trg_cash_txn_updated_at ON public.cash_transactions;
 CREATE TRIGGER trg_cash_txn_updated_at BEFORE UPDATE ON public.cash_transactions
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

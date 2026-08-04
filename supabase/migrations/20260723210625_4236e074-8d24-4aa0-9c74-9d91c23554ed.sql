@@ -32,11 +32,14 @@ CREATE TABLE IF NOT EXISTS public.project_tasks (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_tasks TO authenticated;
 GRANT ALL ON public.project_tasks TO service_role;
 ALTER TABLE public.project_tasks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "pt_read" ON public.project_tasks;
 CREATE POLICY "pt_read" ON public.project_tasks FOR SELECT TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id));
+DROP POLICY IF EXISTS "pt_write" ON public.project_tasks;
 CREATE POLICY "pt_write" ON public.project_tasks FOR ALL TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id))
   WITH CHECK (public.can_access_service_project(auth.uid(), project_id));
+DROP TRIGGER IF EXISTS pt_touch ON public.project_tasks;
 CREATE TRIGGER pt_touch BEFORE UPDATE ON public.project_tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -55,8 +58,10 @@ CREATE TABLE IF NOT EXISTS public.project_files (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_files TO authenticated;
 GRANT ALL ON public.project_files TO service_role;
 ALTER TABLE public.project_files ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "pf_read" ON public.project_files;
 CREATE POLICY "pf_read" ON public.project_files FOR SELECT TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id));
+DROP POLICY IF EXISTS "pf_write" ON public.project_files;
 CREATE POLICY "pf_write" ON public.project_files FOR ALL TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id))
   WITH CHECK (public.can_access_service_project(auth.uid(), project_id));
@@ -73,8 +78,10 @@ CREATE TABLE IF NOT EXISTS public.project_comments (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_comments TO authenticated;
 GRANT ALL ON public.project_comments TO service_role;
 ALTER TABLE public.project_comments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "pc_read" ON public.project_comments;
 CREATE POLICY "pc_read" ON public.project_comments FOR SELECT TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id));
+DROP POLICY IF EXISTS "pc_write" ON public.project_comments;
 CREATE POLICY "pc_write" ON public.project_comments FOR ALL TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id))
   WITH CHECK (public.can_access_service_project(auth.uid(), project_id));
@@ -93,11 +100,14 @@ CREATE TABLE IF NOT EXISTS public.project_revisions (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_revisions TO authenticated;
 GRANT ALL ON public.project_revisions TO service_role;
 ALTER TABLE public.project_revisions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "pr_read" ON public.project_revisions;
 CREATE POLICY "pr_read" ON public.project_revisions FOR SELECT TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id));
+DROP POLICY IF EXISTS "pr_write" ON public.project_revisions;
 CREATE POLICY "pr_write" ON public.project_revisions FOR ALL TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id))
   WITH CHECK (public.can_access_service_project(auth.uid(), project_id));
+DROP TRIGGER IF EXISTS pr_touch ON public.project_revisions;
 CREATE TRIGGER pr_touch BEFORE UPDATE ON public.project_revisions
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -113,11 +123,13 @@ CREATE TABLE IF NOT EXISTS public.project_private_notes (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_private_notes TO authenticated;
 GRANT ALL ON public.project_private_notes TO service_role;
 ALTER TABLE public.project_private_notes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "ppn_pm_admin_read" ON public.project_private_notes;
 CREATE POLICY "ppn_pm_admin_read" ON public.project_private_notes FOR SELECT TO authenticated
   USING (
     public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager')
     OR EXISTS (SELECT 1 FROM public.service_projects p WHERE p.id = project_id AND p.pm_user_id = auth.uid())
   );
+DROP POLICY IF EXISTS "ppn_pm_admin_write" ON public.project_private_notes;
 CREATE POLICY "ppn_pm_admin_write" ON public.project_private_notes FOR ALL TO authenticated
   USING (
     public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager')
@@ -127,6 +139,7 @@ CREATE POLICY "ppn_pm_admin_write" ON public.project_private_notes FOR ALL TO au
     public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager')
     OR EXISTS (SELECT 1 FROM public.service_projects p WHERE p.id = project_id AND p.pm_user_id = auth.uid())
   );
+DROP TRIGGER IF EXISTS ppn_touch ON public.project_private_notes;
 CREATE TRIGGER ppn_touch BEFORE UPDATE ON public.project_private_notes
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -148,11 +161,14 @@ CREATE TABLE IF NOT EXISTS public.project_events (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_events TO authenticated;
 GRANT ALL ON public.project_events TO service_role;
 ALTER TABLE public.project_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "pe_read" ON public.project_events;
 CREATE POLICY "pe_read" ON public.project_events FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "pe_write" ON public.project_events;
 CREATE POLICY "pe_write" ON public.project_events FOR ALL TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id))
   WITH CHECK (public.has_brand_access(auth.uid(), brand_id));
+DROP TRIGGER IF EXISTS pe_touch ON public.project_events;
 CREATE TRIGGER pe_touch BEFORE UPDATE ON public.project_events
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -170,10 +186,13 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.notifications TO authenticated;
 GRANT ALL ON public.notifications TO service_role;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "notif_owner_read" ON public.notifications;
 CREATE POLICY "notif_owner_read" ON public.notifications FOR SELECT TO authenticated
   USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "notif_owner_write" ON public.notifications;
 CREATE POLICY "notif_owner_write" ON public.notifications FOR UPDATE TO authenticated
   USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+DROP POLICY IF EXISTS "notif_admin_manager_insert" ON public.notifications;
 CREATE POLICY "notif_admin_manager_insert" ON public.notifications FOR INSERT TO authenticated
   WITH CHECK (
     public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager')
@@ -191,6 +210,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END; $$;
+DROP TRIGGER IF EXISTS pt_notify_assign ON public.project_tasks;
 CREATE TRIGGER pt_notify_assign AFTER INSERT OR UPDATE OF assignee_id ON public.project_tasks
   FOR EACH ROW EXECUTE FUNCTION public.notify_task_assigned();
 
@@ -206,6 +226,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END; $$;
+DROP TRIGGER IF EXISTS pr_notify_open ON public.project_revisions;
 CREATE TRIGGER pr_notify_open AFTER INSERT ON public.project_revisions
   FOR EACH ROW EXECUTE FUNCTION public.notify_revision_opened();
 

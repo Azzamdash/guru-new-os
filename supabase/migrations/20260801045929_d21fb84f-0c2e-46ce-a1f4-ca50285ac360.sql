@@ -37,6 +37,7 @@ USING (
 
 -- 4) employees: sensitive compensation data limited to HR/admin/manager/accountant or self
 DROP POLICY IF EXISTS "employees read brand scoped" ON public.employees;
+DROP POLICY IF EXISTS "employees read privileged or self" ON public.employees;
 CREATE POLICY "employees read privileged or self" ON public.employees FOR SELECT TO authenticated
 USING (
   user_id = (select auth.uid())

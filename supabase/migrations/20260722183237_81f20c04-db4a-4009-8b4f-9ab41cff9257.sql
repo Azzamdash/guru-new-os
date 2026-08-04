@@ -29,6 +29,7 @@ GRANT ALL ON public.cash_transactions TO service_role;
 ALTER TABLE public.cash_transactions ENABLE ROW LEVEL SECURITY;
 
 -- Read: admins/managers see all; others need brand access when brand_id set, or be the creator/for_user
+DROP POLICY IF EXISTS "cash_txn_read" ON public.cash_transactions;
 CREATE POLICY "cash_txn_read"
 ON public.cash_transactions FOR SELECT
 TO authenticated
@@ -42,6 +43,7 @@ USING (
 );
 
 -- Write: writers only; when brand_id present, must have brand access (admin/manager bypass via has_brand_access)
+DROP POLICY IF EXISTS "cash_txn_write_insert" ON public.cash_transactions;
 CREATE POLICY "cash_txn_write_insert"
 ON public.cash_transactions FOR INSERT
 TO authenticated
@@ -50,6 +52,7 @@ WITH CHECK (
   AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id))
 );
 
+DROP POLICY IF EXISTS "cash_txn_write_update" ON public.cash_transactions;
 CREATE POLICY "cash_txn_write_update"
 ON public.cash_transactions FOR UPDATE
 TO authenticated
@@ -62,6 +65,7 @@ WITH CHECK (
   AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id))
 );
 
+DROP POLICY IF EXISTS "cash_txn_write_delete" ON public.cash_transactions;
 CREATE POLICY "cash_txn_write_delete"
 ON public.cash_transactions FOR DELETE
 TO authenticated
@@ -70,6 +74,7 @@ USING (
   AND (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id))
 );
 
+DROP TRIGGER IF EXISTS trg_cash_txn_updated_at ON public.cash_transactions;
 CREATE TRIGGER trg_cash_txn_updated_at
 BEFORE UPDATE ON public.cash_transactions
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

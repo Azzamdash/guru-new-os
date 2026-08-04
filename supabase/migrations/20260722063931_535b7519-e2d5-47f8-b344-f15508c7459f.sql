@@ -1,5 +1,5 @@
 
-CREATE TABLE public.fulfillment_entries (
+CREATE TABLE IF NOT EXISTS public.fulfillment_entries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid REFERENCES public.brands(id) ON DELETE SET NULL,
   employee_name text NOT NULL,
@@ -15,6 +15,7 @@ GRANT ALL ON public.fulfillment_entries TO service_role;
 
 ALTER TABLE public.fulfillment_entries ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "read fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "read fulfillment"
   ON public.fulfillment_entries FOR SELECT
   TO authenticated
@@ -25,6 +26,7 @@ CREATE POLICY "read fulfillment"
     OR public.has_section_access(auth.uid(),'reports_production')
   );
 
+DROP POLICY IF EXISTS "write fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "write fulfillment"
   ON public.fulfillment_entries FOR ALL
   TO authenticated
@@ -39,9 +41,10 @@ CREATE POLICY "write fulfillment"
     OR public.has_role(auth.uid(),'data_entry')
   );
 
+DROP TRIGGER IF EXISTS trg_fulfillment_updated ON public.fulfillment_entries;
 CREATE TRIGGER trg_fulfillment_updated
   BEFORE UPDATE ON public.fulfillment_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
-CREATE INDEX idx_fulfillment_brand ON public.fulfillment_entries(brand_id);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_brand ON public.fulfillment_entries(brand_id);

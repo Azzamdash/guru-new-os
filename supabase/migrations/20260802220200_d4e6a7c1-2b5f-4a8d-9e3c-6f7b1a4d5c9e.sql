@@ -4,7 +4,7 @@
 -- so treasury/investor reports (which already read supplier_invoices) keep
 -- working unchanged.
 
-CREATE TABLE public.purchase_orders (
+CREATE TABLE IF NOT EXISTS public.purchase_orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   supplier_id uuid NOT NULL REFERENCES public.suppliers(id) ON DELETE CASCADE,
   brand_id uuid REFERENCES public.brands(id) ON DELETE SET NULL,
@@ -19,18 +19,21 @@ CREATE TABLE public.purchase_orders (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.purchase_orders TO authenticated;
 GRANT ALL ON public.purchase_orders TO service_role;
 ALTER TABLE public.purchase_orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read purchase_orders" ON public.purchase_orders;
 CREATE POLICY "read purchase_orders" ON public.purchase_orders FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "write purchase_orders privileged" ON public.purchase_orders;
 CREATE POLICY "write purchase_orders privileged" ON public.purchase_orders FOR ALL TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id) AND public.is_writer(auth.uid()))
   WITH CHECK (public.has_brand_access(auth.uid(), brand_id) AND public.is_writer(auth.uid()));
+DROP TRIGGER IF EXISTS purchase_orders_updated_at ON public.purchase_orders;
 CREATE TRIGGER purchase_orders_updated_at BEFORE UPDATE ON public.purchase_orders
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX po_supplier_idx ON public.purchase_orders(supplier_id);
-CREATE INDEX po_brand_idx ON public.purchase_orders(brand_id);
-CREATE INDEX po_status_idx ON public.purchase_orders(status);
+CREATE INDEX IF NOT EXISTS po_supplier_idx ON public.purchase_orders(supplier_id);
+CREATE INDEX IF NOT EXISTS po_brand_idx ON public.purchase_orders(brand_id);
+CREATE INDEX IF NOT EXISTS po_status_idx ON public.purchase_orders(status);
 
-CREATE TABLE public.purchase_order_items (
+CREATE TABLE IF NOT EXISTS public.purchase_order_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   purchase_order_id uuid NOT NULL REFERENCES public.purchase_orders(id) ON DELETE CASCADE,
   product_id uuid REFERENCES public.products(id) ON DELETE SET NULL,
@@ -44,14 +47,17 @@ CREATE TABLE public.purchase_order_items (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.purchase_order_items TO authenticated;
 GRANT ALL ON public.purchase_order_items TO service_role;
 ALTER TABLE public.purchase_order_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read purchase_order_items" ON public.purchase_order_items;
 CREATE POLICY "read purchase_order_items" ON public.purchase_order_items FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id)));
+DROP POLICY IF EXISTS "write purchase_order_items privileged" ON public.purchase_order_items;
 CREATE POLICY "write purchase_order_items privileged" ON public.purchase_order_items FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id) AND public.is_writer(auth.uid())))
   WITH CHECK (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id) AND public.is_writer(auth.uid())));
+DROP TRIGGER IF EXISTS purchase_order_items_updated_at ON public.purchase_order_items;
 CREATE TRIGGER purchase_order_items_updated_at BEFORE UPDATE ON public.purchase_order_items
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX poi_po_idx ON public.purchase_order_items(purchase_order_id);
+CREATE INDEX IF NOT EXISTS poi_po_idx ON public.purchase_order_items(purchase_order_id);
 
 -- Completes a purchase order: creates the supplier invoice + items (accounting
 -- side, reusing the existing supplier_invoices flow that treasury/investor

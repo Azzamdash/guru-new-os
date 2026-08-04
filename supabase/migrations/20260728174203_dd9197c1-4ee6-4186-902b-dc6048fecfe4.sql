@@ -7,20 +7,24 @@ CREATE POLICY customer_brands_write ON public.customer_brands FOR ALL TO authent
 
 -- 2) employees: restrict UPDATE/INSERT/DELETE of salary-bearing rows to admin/manager (already brand-scoped)
 DROP POLICY IF EXISTS "employees update by writer" ON public.employees;
+DROP POLICY IF EXISTS "employees update admin manager" ON public.employees;
 CREATE POLICY "employees update admin manager" ON public.employees FOR UPDATE TO authenticated
   USING ((public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'hr')) AND public.has_brand_access(auth.uid(), brand_id))
   WITH CHECK ((public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'hr')) AND public.has_brand_access(auth.uid(), brand_id));
 
 -- 3) project_comments: writes require writer/PM role AND author must be self on insert
 DROP POLICY IF EXISTS pc_write ON public.project_comments;
+DROP POLICY IF EXISTS pc_insert_own ON public.project_comments;
 CREATE POLICY pc_insert_own ON public.project_comments FOR INSERT TO authenticated
   WITH CHECK (
     public.can_access_service_project(auth.uid(), project_id)
     AND author_id = auth.uid()
   );
+DROP POLICY IF EXISTS pc_update_own ON public.project_comments;
 CREATE POLICY pc_update_own ON public.project_comments FOR UPDATE TO authenticated
   USING (public.can_access_service_project(auth.uid(), project_id) AND author_id = auth.uid())
   WITH CHECK (public.can_access_service_project(auth.uid(), project_id) AND author_id = auth.uid());
+DROP POLICY IF EXISTS pc_delete_own_or_writer ON public.project_comments;
 CREATE POLICY pc_delete_own_or_writer ON public.project_comments FOR DELETE TO authenticated
   USING (
     public.can_access_service_project(auth.uid(), project_id)
@@ -53,11 +57,13 @@ CREATE POLICY pf_write ON public.project_files FOR ALL TO authenticated
 
 -- 6) project_revisions: writes require writer or PM role, or requester on insert
 DROP POLICY IF EXISTS pr_write ON public.project_revisions;
+DROP POLICY IF EXISTS pr_insert ON public.project_revisions;
 CREATE POLICY pr_insert ON public.project_revisions FOR INSERT TO authenticated
   WITH CHECK (
     public.can_access_service_project(auth.uid(), project_id)
     AND (requested_by = auth.uid() OR public.is_writer(auth.uid()) OR public.is_project_manager(auth.uid()))
   );
+DROP POLICY IF EXISTS pr_update ON public.project_revisions;
 CREATE POLICY pr_update ON public.project_revisions FOR UPDATE TO authenticated
   USING (
     public.can_access_service_project(auth.uid(), project_id)
@@ -67,6 +73,7 @@ CREATE POLICY pr_update ON public.project_revisions FOR UPDATE TO authenticated
     public.can_access_service_project(auth.uid(), project_id)
     AND (public.is_writer(auth.uid()) OR public.is_project_manager(auth.uid()))
   );
+DROP POLICY IF EXISTS pr_delete ON public.project_revisions;
 CREATE POLICY pr_delete ON public.project_revisions FOR DELETE TO authenticated
   USING (
     public.can_access_service_project(auth.uid(), project_id)

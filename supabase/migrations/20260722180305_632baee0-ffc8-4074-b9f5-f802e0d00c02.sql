@@ -1,5 +1,5 @@
 
-CREATE TABLE public.company_assets (
+CREATE TABLE IF NOT EXISTS public.company_assets (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID NULL REFERENCES public.brands(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
@@ -16,6 +16,7 @@ GRANT ALL ON public.company_assets TO service_role;
 
 ALTER TABLE public.company_assets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "assets_read_scoped" ON public.company_assets;
 CREATE POLICY "assets_read_scoped" ON public.company_assets
 FOR SELECT TO authenticated
 USING (
@@ -24,6 +25,7 @@ USING (
   OR (brand_id IS NOT NULL AND public.has_brand_access(auth.uid(), brand_id))
 );
 
+DROP POLICY IF EXISTS "assets_write_admin_manager_accountant" ON public.company_assets;
 CREATE POLICY "assets_write_admin_manager_accountant" ON public.company_assets
 FOR INSERT TO authenticated
 WITH CHECK (
@@ -32,6 +34,7 @@ WITH CHECK (
   OR public.has_role(auth.uid(),'accountant')
 );
 
+DROP POLICY IF EXISTS "assets_update_admin_manager_accountant" ON public.company_assets;
 CREATE POLICY "assets_update_admin_manager_accountant" ON public.company_assets
 FOR UPDATE TO authenticated
 USING (
@@ -45,6 +48,7 @@ WITH CHECK (
   OR public.has_role(auth.uid(),'accountant')
 );
 
+DROP POLICY IF EXISTS "assets_delete_admin_manager" ON public.company_assets;
 CREATE POLICY "assets_delete_admin_manager" ON public.company_assets
 FOR DELETE TO authenticated
 USING (
@@ -52,8 +56,9 @@ USING (
   OR public.has_role(auth.uid(),'manager')
 );
 
+DROP TRIGGER IF EXISTS update_company_assets_updated_at ON public.company_assets;
 CREATE TRIGGER update_company_assets_updated_at
 BEFORE UPDATE ON public.company_assets
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_company_assets_brand ON public.company_assets(brand_id);
+CREATE INDEX IF NOT EXISTS idx_company_assets_brand ON public.company_assets(brand_id);

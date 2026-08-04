@@ -1,5 +1,5 @@
 -- 1) Wallets
-CREATE TABLE public.wallets (
+CREATE TABLE IF NOT EXISTS public.wallets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   kind text NOT NULL DEFAULT 'cash' CHECK (kind IN ('cash','bank','ewallet')),
@@ -14,11 +14,14 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.wallets TO authenticated;
 GRANT ALL ON public.wallets TO service_role;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wallets_read ON public.wallets;
 CREATE POLICY wallets_read ON public.wallets FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS wallets_write ON public.wallets;
 CREATE POLICY wallets_write ON public.wallets FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'));
 
+DROP TRIGGER IF EXISTS wallets_updated_at ON public.wallets;
 CREATE TRIGGER wallets_updated_at BEFORE UPDATE ON public.wallets
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -28,21 +31,21 @@ VALUES ('الخزنة الرئيسية', 'cash', 0, 0);
 
 -- 2) cash_transactions: wallet + transfer group
 ALTER TABLE public.cash_transactions
-  ADD COLUMN wallet_id uuid REFERENCES public.wallets(id) ON DELETE RESTRICT,
-  ADD COLUMN transfer_group uuid;
+  ADD COLUMN IF NOT EXISTS wallet_id uuid REFERENCES public.wallets(id) ON DELETE RESTRICT,
+  ADD COLUMN IF NOT EXISTS transfer_group uuid;
 
 -- Backfill existing txns to default wallet
 UPDATE public.cash_transactions
    SET wallet_id = (SELECT id FROM public.wallets ORDER BY sort_order LIMIT 1)
  WHERE wallet_id IS NULL;
 
-CREATE INDEX cash_transactions_wallet_id_idx ON public.cash_transactions(wallet_id);
-CREATE INDEX cash_transactions_transfer_group_idx ON public.cash_transactions(transfer_group);
+CREATE INDEX IF NOT EXISTS cash_transactions_wallet_id_idx ON public.cash_transactions(wallet_id);
+CREATE INDEX IF NOT EXISTS cash_transactions_transfer_group_idx ON public.cash_transactions(transfer_group);
 
 -- 3) supplier_payments: allow standalone payments
 ALTER TABLE public.supplier_payments
   ALTER COLUMN invoice_id DROP NOT NULL,
-  ADD COLUMN supplier_id uuid REFERENCES public.suppliers(id) ON DELETE RESTRICT;
+  ADD COLUMN IF NOT EXISTS supplier_id uuid REFERENCES public.suppliers(id) ON DELETE RESTRICT;
 
 -- Backfill supplier_id from linked invoices
 UPDATE public.supplier_payments sp
@@ -51,10 +54,12 @@ UPDATE public.supplier_payments sp
  WHERE sp.invoice_id = si.id AND sp.supplier_id IS NULL;
 
 ALTER TABLE public.supplier_payments
+  DROP CONSTRAINT IF EXISTS supplier_payments_supplier_or_invoice_ck;
+ALTER TABLE public.supplier_payments
   ADD CONSTRAINT supplier_payments_supplier_or_invoice_ck
   CHECK (supplier_id IS NOT NULL OR invoice_id IS NOT NULL);
 
-CREATE INDEX supplier_payments_supplier_id_idx ON public.supplier_payments(supplier_id);
+CREATE INDEX IF NOT EXISTS supplier_payments_supplier_id_idx ON public.supplier_payments(supplier_id);
 
 -- 4) Rewrite sync_supplier_payment to handle standalone payments
 CREATE OR REPLACE FUNCTION public.sync_supplier_payment()

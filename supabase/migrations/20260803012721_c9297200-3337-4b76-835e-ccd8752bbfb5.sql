@@ -15,6 +15,7 @@ CREATE POLICY courier_charges_write ON public.courier_charges
 DROP POLICY IF EXISTS "HR staff read time logs" ON public.employee_time_logs;
 DROP POLICY IF EXISTS "HR staff write time logs" ON public.employee_time_logs;
 
+DROP POLICY IF EXISTS "HR staff read time logs" ON public.employee_time_logs;
 CREATE POLICY "HR staff read time logs" ON public.employee_time_logs
   AS PERMISSIVE FOR SELECT TO authenticated
   USING (
@@ -32,6 +33,7 @@ CREATE POLICY "HR staff read time logs" ON public.employee_time_logs
     )
   );
 
+DROP POLICY IF EXISTS "HR staff write time logs" ON public.employee_time_logs;
 CREATE POLICY "HR staff write time logs" ON public.employee_time_logs
   AS PERMISSIVE FOR ALL TO authenticated
   USING (

@@ -1,5 +1,5 @@
 
-CREATE TABLE public.supplier_invoice_items (
+CREATE TABLE IF NOT EXISTS public.supplier_invoice_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id uuid NOT NULL REFERENCES public.supplier_invoices(id) ON DELETE CASCADE,
   kind text NOT NULL CHECK (kind IN ('product','material','other')),
@@ -18,6 +18,7 @@ GRANT ALL ON public.supplier_invoice_items TO service_role;
 
 ALTER TABLE public.supplier_invoice_items ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "invoice items read via parent invoice brand" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items read via parent invoice brand"
   ON public.supplier_invoice_items FOR SELECT TO authenticated
   USING (EXISTS (
@@ -26,13 +27,15 @@ CREATE POLICY "invoice items read via parent invoice brand"
       AND (si.brand_id IS NULL OR public.has_brand_access(auth.uid(), si.brand_id))
   ));
 
+DROP POLICY IF EXISTS "invoice items write for writers" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items write for writers"
   ON public.supplier_invoice_items FOR ALL TO authenticated
   USING (public.is_writer(auth.uid()))
   WITH CHECK (public.is_writer(auth.uid()));
 
+DROP TRIGGER IF EXISTS trg_supplier_invoice_items_updated ON public.supplier_invoice_items;
 CREATE TRIGGER trg_supplier_invoice_items_updated
   BEFORE UPDATE ON public.supplier_invoice_items
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_supplier_invoice_items_invoice ON public.supplier_invoice_items(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_supplier_invoice_items_invoice ON public.supplier_invoice_items(invoice_id);

@@ -58,7 +58,9 @@ DROP POLICY IF EXISTS "attendance write writer" ON public.employee_attendance_en
 CREATE POLICY "attendance write writer" ON public.employee_attendance_entries FOR ALL TO authenticated
   USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 
+DROP TRIGGER IF EXISTS trg_employees_updated ON public.employees;
 CREATE TRIGGER trg_employees_updated BEFORE UPDATE ON public.employees
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+DROP TRIGGER IF EXISTS trg_attendance_updated ON public.employee_attendance_entries;
 CREATE TRIGGER trg_attendance_updated BEFORE UPDATE ON public.employee_attendance_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

@@ -1,6 +1,8 @@
-CREATE TYPE public.app_role AS ENUM ('admin', 'member');
+DO $do$ BEGIN
+  CREATE TYPE public.app_role AS ENUM ('admin', 'member');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
-CREATE TABLE public.user_roles (
+CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role public.app_role NOT NULL,
@@ -13,6 +15,7 @@ GRANT ALL ON public.user_roles TO service_role;
 
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own roles" ON public.user_roles;
 CREATE POLICY "Users can view own roles" ON public.user_roles
   FOR SELECT TO authenticated USING (auth.uid() = user_id);
 

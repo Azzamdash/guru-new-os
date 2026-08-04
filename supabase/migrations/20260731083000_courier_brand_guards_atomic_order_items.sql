@@ -5,6 +5,7 @@ DROP POLICY IF EXISTS courier_mappings_write ON public.courier_status_mappings;
 DROP POLICY IF EXISTS courier_rates_read ON public.courier_governorate_rates;
 DROP POLICY IF EXISTS courier_rates_write ON public.courier_governorate_rates;
 
+DROP POLICY IF EXISTS courier_mappings_read ON public.courier_status_mappings;
 CREATE POLICY courier_mappings_read ON public.courier_status_mappings
   FOR SELECT TO authenticated
   USING (
@@ -17,6 +18,7 @@ CREATE POLICY courier_mappings_read ON public.courier_status_mappings
     )
   );
 
+DROP POLICY IF EXISTS courier_mappings_write ON public.courier_status_mappings;
 CREATE POLICY courier_mappings_write ON public.courier_status_mappings
   FOR ALL TO authenticated
   USING (
@@ -38,6 +40,7 @@ CREATE POLICY courier_mappings_write ON public.courier_status_mappings
     )
   );
 
+DROP POLICY IF EXISTS courier_rates_read ON public.courier_governorate_rates;
 CREATE POLICY courier_rates_read ON public.courier_governorate_rates
   FOR SELECT TO authenticated
   USING (
@@ -50,6 +53,7 @@ CREATE POLICY courier_rates_read ON public.courier_governorate_rates
     )
   );
 
+DROP POLICY IF EXISTS courier_rates_write ON public.courier_governorate_rates;
 CREATE POLICY courier_rates_write ON public.courier_governorate_rates
   FOR ALL TO authenticated
   USING (

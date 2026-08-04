@@ -1,16 +1,16 @@
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='monthly_entries' AND column_name='period_type') THEN
-    ALTER TABLE public.monthly_entries ADD COLUMN period_type text NOT NULL DEFAULT 'monthly';
+    ALTER TABLE public.monthly_entries ADD COLUMN IF NOT EXISTS period_type text NOT NULL DEFAULT 'monthly';
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='monthly_entries' AND column_name='period_date') THEN
-    ALTER TABLE public.monthly_entries ADD COLUMN period_date date;
+    ALTER TABLE public.monthly_entries ADD COLUMN IF NOT EXISTS period_date date;
   END IF;
 END $$;
 
 ALTER TABLE public.materials ALTER COLUMN unit SET DEFAULT 'piece';
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='unit') THEN
-    ALTER TABLE public.products ADD COLUMN unit text NOT NULL DEFAULT 'piece';
+    ALTER TABLE public.products ADD COLUMN IF NOT EXISTS unit text NOT NULL DEFAULT 'piece';
   END IF;
 END $$;
 
@@ -27,8 +27,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.sales_invoice_items TO authentica
 GRANT ALL ON public.sales_invoice_items TO service_role;
 ALTER TABLE public.sales_invoice_items ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "auth read sales_invoice_items" ON public.sales_invoice_items;
 CREATE POLICY "auth read sales_invoice_items" ON public.sales_invoice_items FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "auth write sales_invoice_items" ON public.sales_invoice_items;
 CREATE POLICY "auth write sales_invoice_items" ON public.sales_invoice_items FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
@@ -52,12 +54,15 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.articles TO authenticated;
 GRANT ALL ON public.articles TO service_role;
 ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "auth read articles" ON public.articles;
 CREATE POLICY "auth read articles" ON public.articles FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "auth manage articles" ON public.articles;
 CREATE POLICY "auth manage articles" ON public.articles FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));
 
+DROP TRIGGER IF EXISTS trg_articles_updated ON public.articles;
 CREATE TRIGGER trg_articles_updated BEFORE UPDATE ON public.articles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -67,7 +72,7 @@ ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS worker_name text
 CREATE INDEX IF NOT EXISTS idx_suppliers_brand_id ON public.suppliers(brand_id);
 CREATE INDEX IF NOT EXISTS idx_inv_moves_worker ON public.inventory_movements(worker_name);
 
-CREATE TABLE public.tasks (
+CREATE TABLE IF NOT EXISTS public.tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
@@ -85,21 +90,25 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.tasks TO authenticated;
 GRANT ALL ON public.tasks TO service_role;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Managers manage all tasks" ON public.tasks;
 CREATE POLICY "Managers manage all tasks" ON public.tasks FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));
 
+DROP POLICY IF EXISTS "Assignees view own tasks" ON public.tasks;
 CREATE POLICY "Assignees view own tasks" ON public.tasks FOR SELECT TO authenticated
   USING (assignee_id = auth.uid() OR created_by = auth.uid());
 
+DROP POLICY IF EXISTS "Assignees update status" ON public.tasks;
 CREATE POLICY "Assignees update status" ON public.tasks FOR UPDATE TO authenticated
   USING (assignee_id = auth.uid())
   WITH CHECK (assignee_id = auth.uid());
 
+DROP TRIGGER IF EXISTS update_tasks_updated_at ON public.tasks;
 CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON public.tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.user_section_access (
+CREATE TABLE IF NOT EXISTS public.user_section_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   section TEXT NOT NULL,
@@ -110,13 +119,15 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_section_access TO authentica
 GRANT ALL ON public.user_section_access TO service_role;
 ALTER TABLE public.user_section_access ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own section access" ON public.user_section_access;
 CREATE POLICY "Users read own section access" ON public.user_section_access FOR SELECT TO authenticated
   USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "Admins manage section access" ON public.user_section_access;
 CREATE POLICY "Admins manage section access" ON public.user_section_access FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
 
-CREATE TABLE public.user_brand_access (
+CREATE TABLE IF NOT EXISTS public.user_brand_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
@@ -127,8 +138,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_brand_access TO authenticate
 GRANT ALL ON public.user_brand_access TO service_role;
 ALTER TABLE public.user_brand_access ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own brand access" ON public.user_brand_access;
 CREATE POLICY "Users read own brand access" ON public.user_brand_access FOR SELECT TO authenticated
   USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "Admins manage brand access" ON public.user_brand_access;
 CREATE POLICY "Admins manage brand access" ON public.user_brand_access FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
@@ -150,7 +163,7 @@ RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS
     OR EXISTS (SELECT 1 FROM public.user_brand_access WHERE user_id = _user_id AND brand_id = _brand_id);
 $$;
 
-CREATE TABLE public.fulfillment_entries (
+CREATE TABLE IF NOT EXISTS public.fulfillment_entries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid REFERENCES public.brands(id) ON DELETE SET NULL,
   employee_name text NOT NULL,
@@ -164,18 +177,21 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.fulfillment_entries TO authentica
 GRANT ALL ON public.fulfillment_entries TO service_role;
 ALTER TABLE public.fulfillment_entries ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "read fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "read fulfillment" ON public.fulfillment_entries FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_section_access(auth.uid(),'couriers') OR public.has_section_access(auth.uid(),'reports_production'));
 
+DROP POLICY IF EXISTS "write fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "write fulfillment" ON public.fulfillment_entries FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
 
+DROP TRIGGER IF EXISTS trg_fulfillment_updated ON public.fulfillment_entries;
 CREATE TRIGGER trg_fulfillment_updated BEFORE UPDATE ON public.fulfillment_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
-CREATE INDEX idx_fulfillment_brand ON public.fulfillment_entries(brand_id);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_brand ON public.fulfillment_entries(brand_id);
 
 REVOKE EXECUTE ON FUNCTION public.update_updated_at_column() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.has_role(uuid, app_role) FROM PUBLIC, anon;
@@ -190,30 +206,37 @@ CREATE POLICY "read sales" ON public.sales_invoices FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
 
 DROP POLICY IF EXISTS "auth read sales_invoice_items" ON public.sales_invoice_items;
+DROP POLICY IF EXISTS "read sales_invoice_items" ON public.sales_invoice_items;
 CREATE POLICY "read sales_invoice_items" ON public.sales_invoice_items FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.sales_invoices si WHERE si.id = invoice_id AND public.has_brand_access(auth.uid(), si.brand_id)));
 
 DROP POLICY IF EXISTS "me read authenticated" ON public.monthly_entries;
+DROP POLICY IF EXISTS "read monthly_entries" ON public.monthly_entries;
 CREATE POLICY "read monthly_entries" ON public.monthly_entries FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
 
 DROP POLICY IF EXISTS "ee read authenticated" ON public.expense_entries;
+DROP POLICY IF EXISTS "read expense_entries" ON public.expense_entries;
 CREATE POLICY "read expense_entries" ON public.expense_entries FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
 
 DROP POLICY IF EXISTS "suppliers read authenticated" ON public.suppliers;
+DROP POLICY IF EXISTS "read suppliers" ON public.suppliers;
 CREATE POLICY "read suppliers" ON public.suppliers FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
 
 DROP POLICY IF EXISTS "si read authenticated" ON public.supplier_invoices;
+DROP POLICY IF EXISTS "read supplier_invoices" ON public.supplier_invoices;
 CREATE POLICY "read supplier_invoices" ON public.supplier_invoices FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
 
 DROP POLICY IF EXISTS "sp read authenticated" ON public.supplier_payments;
+DROP POLICY IF EXISTS "read supplier_payments" ON public.supplier_payments;
 CREATE POLICY "read supplier_payments" ON public.supplier_payments FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.supplier_invoices si WHERE si.id = invoice_id AND public.has_brand_access(auth.uid(), si.brand_id)));
 
 DROP POLICY IF EXISTS "brands read authenticated" ON public.brands;
+DROP POLICY IF EXISTS "read brands" ON public.brands;
 CREATE POLICY "read brands" ON public.brands FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), id));
 
@@ -222,6 +245,7 @@ CREATE POLICY "read couriers" ON public.couriers FOR SELECT TO authenticated
   USING (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id));
 
 DROP POLICY IF EXISTS "cats read authenticated" ON public.expense_categories;
+DROP POLICY IF EXISTS "read expense_categories" ON public.expense_categories;
 CREATE POLICY "read expense_categories" ON public.expense_categories FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
 
@@ -234,10 +258,12 @@ CREATE POLICY "read materials" ON public.materials FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
 
 DROP POLICY IF EXISTS "read pm" ON public.product_materials;
+DROP POLICY IF EXISTS "read product_materials" ON public.product_materials;
 CREATE POLICY "read product_materials" ON public.product_materials FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.products p WHERE p.id = product_id AND public.has_brand_access(auth.uid(), p.brand_id)));
 
 DROP POLICY IF EXISTS "read im" ON public.inventory_movements;
+DROP POLICY IF EXISTS "read inventory_movements" ON public.inventory_movements;
 CREATE POLICY "read inventory_movements" ON public.inventory_movements FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.products p WHERE p.id = product_id AND public.has_brand_access(auth.uid(), p.brand_id)));
 
@@ -250,7 +276,7 @@ AS $function$
     OR EXISTS (SELECT 1 FROM public.user_brand_access WHERE user_id = _user_id AND brand_id = _brand_id);
 $function$;
 
-CREATE TABLE public.supplier_brands (
+CREATE TABLE IF NOT EXISTS public.supplier_brands (
   supplier_id UUID NOT NULL REFERENCES public.suppliers(id) ON DELETE CASCADE,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -260,9 +286,11 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.supplier_brands TO authenticated;
 GRANT ALL ON public.supplier_brands TO service_role;
 ALTER TABLE public.supplier_brands ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "read supplier_brands" ON public.supplier_brands;
 CREATE POLICY "read supplier_brands" ON public.supplier_brands
   FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "admin manage supplier_brands" ON public.supplier_brands;
 CREATE POLICY "admin manage supplier_brands" ON public.supplier_brands
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))

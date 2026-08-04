@@ -1,6 +1,6 @@
 
 -- Shipments
-CREATE TABLE public.order_shipments (
+CREATE TABLE IF NOT EXISTS public.order_shipments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE RESTRICT,
@@ -20,28 +20,33 @@ CREATE TABLE public.order_shipments (
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (order_id, attempt_no)
 );
-CREATE INDEX order_shipments_order_idx ON public.order_shipments(order_id, attempt_no);
-CREATE INDEX order_shipments_brand_idx ON public.order_shipments(brand_id, shipped_at DESC);
+CREATE INDEX IF NOT EXISTS order_shipments_order_idx ON public.order_shipments(order_id, attempt_no);
+CREATE INDEX IF NOT EXISTS order_shipments_brand_idx ON public.order_shipments(brand_id, shipped_at DESC);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_shipments TO authenticated;
 GRANT ALL ON public.order_shipments TO service_role;
 ALTER TABLE public.order_shipments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "order_shipments_read" ON public.order_shipments;
 CREATE POLICY "order_shipments_read" ON public.order_shipments FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_shipments_insert" ON public.order_shipments;
 CREATE POLICY "order_shipments_insert" ON public.order_shipments FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_shipments_update" ON public.order_shipments;
 CREATE POLICY "order_shipments_update" ON public.order_shipments FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_shipments_delete" ON public.order_shipments;
 CREATE POLICY "order_shipments_delete" ON public.order_shipments FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS order_shipments_updated_at ON public.order_shipments;
 CREATE TRIGGER order_shipments_updated_at BEFORE UPDATE ON public.order_shipments
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Collections
-CREATE TABLE public.order_collections (
+CREATE TABLE IF NOT EXISTS public.order_collections (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   shipment_id uuid REFERENCES public.order_shipments(id) ON DELETE SET NULL,
@@ -55,28 +60,33 @@ CREATE TABLE public.order_collections (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX order_collections_order_idx ON public.order_collections(order_id, collected_at DESC);
-CREATE INDEX order_collections_brand_idx ON public.order_collections(brand_id, collected_at DESC);
+CREATE INDEX IF NOT EXISTS order_collections_order_idx ON public.order_collections(order_id, collected_at DESC);
+CREATE INDEX IF NOT EXISTS order_collections_brand_idx ON public.order_collections(brand_id, collected_at DESC);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_collections TO authenticated;
 GRANT ALL ON public.order_collections TO service_role;
 ALTER TABLE public.order_collections ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "order_collections_read" ON public.order_collections;
 CREATE POLICY "order_collections_read" ON public.order_collections FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_collections_insert" ON public.order_collections;
 CREATE POLICY "order_collections_insert" ON public.order_collections FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_collections_update" ON public.order_collections;
 CREATE POLICY "order_collections_update" ON public.order_collections FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_collections_delete" ON public.order_collections;
 CREATE POLICY "order_collections_delete" ON public.order_collections FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS order_collections_updated_at ON public.order_collections;
 CREATE TRIGGER order_collections_updated_at BEFORE UPDATE ON public.order_collections
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- WhatsApp threads
-CREATE TABLE public.whatsapp_threads (
+CREATE TABLE IF NOT EXISTS public.whatsapp_threads (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE RESTRICT,
   customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
@@ -92,27 +102,32 @@ CREATE TABLE public.whatsapp_threads (
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (brand_id, phone)
 );
-CREATE INDEX whatsapp_threads_brand_idx ON public.whatsapp_threads(brand_id, last_message_at DESC);
+CREATE INDEX IF NOT EXISTS whatsapp_threads_brand_idx ON public.whatsapp_threads(brand_id, last_message_at DESC);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_threads TO authenticated;
 GRANT ALL ON public.whatsapp_threads TO service_role;
 ALTER TABLE public.whatsapp_threads ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "whatsapp_threads_read" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_read" ON public.whatsapp_threads FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_threads_insert" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_insert" ON public.whatsapp_threads FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_threads_update" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_update" ON public.whatsapp_threads FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_threads_delete" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_delete" ON public.whatsapp_threads FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
+DROP TRIGGER IF EXISTS whatsapp_threads_updated_at ON public.whatsapp_threads;
 CREATE TRIGGER whatsapp_threads_updated_at BEFORE UPDATE ON public.whatsapp_threads
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- WhatsApp messages
-CREATE TABLE public.whatsapp_messages (
+CREATE TABLE IF NOT EXISTS public.whatsapp_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   thread_id uuid NOT NULL REFERENCES public.whatsapp_threads(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE RESTRICT,
@@ -126,18 +141,22 @@ CREATE TABLE public.whatsapp_messages (
   created_by uuid,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX whatsapp_messages_thread_idx ON public.whatsapp_messages(thread_id, sent_at DESC);
+CREATE INDEX IF NOT EXISTS whatsapp_messages_thread_idx ON public.whatsapp_messages(thread_id, sent_at DESC);
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_messages TO authenticated;
 GRANT ALL ON public.whatsapp_messages TO service_role;
 ALTER TABLE public.whatsapp_messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "whatsapp_messages_read" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_read" ON public.whatsapp_messages FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_messages_insert" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_insert" ON public.whatsapp_messages FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_messages_update" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_update" ON public.whatsapp_messages FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_messages_delete" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_delete" ON public.whatsapp_messages FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));

@@ -30,6 +30,7 @@ GRANT ALL ON public.integration_logs TO service_role;
 
 ALTER TABLE public.integration_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "admin/manager read integration logs" ON public.integration_logs;
 CREATE POLICY "admin/manager read integration logs"
   ON public.integration_logs FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));

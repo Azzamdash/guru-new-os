@@ -4,14 +4,17 @@ ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES au
 CREATE UNIQUE INDEX IF NOT EXISTS employees_user_id_key ON public.employees(user_id) WHERE user_id IS NOT NULL;
 
 DROP POLICY IF EXISTS "employees write writer" ON public.employees;
+DROP POLICY IF EXISTS "employees update by writer" ON public.employees;
 CREATE POLICY "employees update by writer" ON public.employees
   FOR UPDATE TO authenticated
   USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id))
   WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "employees insert admin manager" ON public.employees;
 CREATE POLICY "employees insert admin manager" ON public.employees
   FOR INSERT TO authenticated
   WITH CHECK ((public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))
               AND public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "employees delete admin manager" ON public.employees;
 CREATE POLICY "employees delete admin manager" ON public.employees
   FOR DELETE TO authenticated
   USING ((public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))
