@@ -54,6 +54,8 @@ UPDATE public.supplier_payments sp
  WHERE sp.invoice_id = si.id AND sp.supplier_id IS NULL;
 
 ALTER TABLE public.supplier_payments
+  DROP CONSTRAINT IF EXISTS supplier_payments_supplier_or_invoice_ck;
+ALTER TABLE public.supplier_payments
   ADD CONSTRAINT supplier_payments_supplier_or_invoice_ck
   CHECK (supplier_id IS NOT NULL OR invoice_id IS NOT NULL);
 

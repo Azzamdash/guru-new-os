@@ -30,6 +30,8 @@ ALTER TABLE public.courier_charges
 -- rewriting financial history to an outcome we cannot prove.
 UPDATE public.courier_charges SET charge_type = 'legacy_return' WHERE charge_type = 'return';
 ALTER TABLE public.courier_charges
+  DROP CONSTRAINT IF EXISTS courier_charges_charge_type_check;
+ALTER TABLE public.courier_charges
   ADD CONSTRAINT courier_charges_charge_type_check
   CHECK (charge_type IN ('delivery', 'customer_return', 'failed_delivery', 'exchange', 'legacy_return'));
 
