@@ -243,11 +243,12 @@ export const deleteExpenseEntry = createServerFn({ method: "POST" })
 export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("supplier_invoices")
-      .select("id, supplier_id, brand_id, amount, issued_at, due_at, status, note")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (context.supabase as any).from("supplier_invoices")
+      .select("id, supplier_id, brand_id, amount, issued_at, due_at, status, note, type")
       .order("issued_at", { ascending: false });
     if (error) throw error;
-    return data as Array<{ id: string; supplier_id: string; brand_id: string | null; amount: number; issued_at: string; due_at: string | null; status: "open" | "paid"; note: string | null }>;
+    return data as Array<{ id: string; supplier_id: string; brand_id: string | null; amount: number; issued_at: string; due_at: string | null; status: "open" | "paid"; note: string | null; type: "purchase" | "return" }>;
   });
 
 export const listPayments = createServerFn({ method: "GET" })
@@ -273,16 +274,18 @@ export const listPayments = createServerFn({ method: "GET" })
 
 export const upsertInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id?: string; supplier_id: string; brand_id?: string | null; amount?: number; issued_at: string; due_at?: string | null; status: "open" | "paid"; note?: string | null }) => d)
+  .inputValidator((d: { id?: string; supplier_id: string; brand_id?: string | null; amount?: number; issued_at: string; due_at?: string | null; status: "open" | "paid"; note?: string | null; type?: "purchase" | "return" }) => d)
   .handler(async ({ data, context }) => {
     await assertWriter(context);
     if (data.id) {
       const { id, amount: _amount, ...patch } = data;
-      const { error } = await context.supabase.from("supplier_invoices").update(patch).eq("id", id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (context.supabase as any).from("supplier_invoices").update(patch).eq("id", id);
       if (error) throw error;
     } else {
       const { amount, ...rest } = data;
-      const { error } = await context.supabase.from("supplier_invoices").insert({ ...rest, amount: amount ?? 0 });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (context.supabase as any).from("supplier_invoices").insert({ ...rest, amount: amount ?? 0 });
       if (error) throw error;
     }
     return { ok: true };
