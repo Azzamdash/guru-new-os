@@ -179,6 +179,7 @@ export const getInvoiceCogsSummary = createServerFn({ method: "GET" })
     ) => d,
   )
   .handler(async ({ data, context }) => {
+    await assertManager(context as unknown as Ctx);
     let invQ = context.supabase
       .from("sales_invoices")
       .select("id, brand_id, type, total_amount, brands(name)");
