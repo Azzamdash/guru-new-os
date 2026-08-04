@@ -4596,6 +4596,7 @@ export type Database = {
         Args: { _brand_id?: string }
         Returns: Json
       }
+      delete_purchase_order: { Args: { _po_id: string }; Returns: undefined }
       finalize_generic_order_dispatch: {
         Args: {
           _claim_token: string
@@ -4712,6 +4713,10 @@ export type Database = {
       revenue_comparison_report: {
         Args: { _brand_id?: string; _year: number }
         Returns: Json
+      }
+      reverse_purchase_order_completion: {
+        Args: { _po_id: string }
+        Returns: undefined
       }
       try_parse_source_timestamptz: {
         Args: { _value: string }
