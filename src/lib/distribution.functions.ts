@@ -63,6 +63,8 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       onlyUnassigned?: boolean;
       search?: string | null;
       limit?: number;
+      dateFrom?: string | null;
+      dateTo?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }): Promise<DistributionBoard> => {
@@ -199,13 +201,14 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
       };
     });
 
-    // courier load board (last 90 days)
-    const since = new Date(Date.now() - 90 * 86400000).toISOString();
+    // courier load board (defaults to the last 90 days when no date filter is set)
+    const since = data.dateFrom ?? new Date(Date.now() - 90 * 86400000).toISOString();
     let statsQ = ctx.supabase
       .from("orders")
       .select("courier_id, order_status, shipment_outcome, total_amount")
       .not("courier_id", "is", null)
       .gte("occurred_at", since);
+    if (data.dateTo) statsQ = statsQ.lte("occurred_at", `${data.dateTo}T23:59:59.999Z`);
     if (data.brandId) statsQ = statsQ.eq("brand_id", data.brandId);
     const { data: statRows } = await statsQ;
 

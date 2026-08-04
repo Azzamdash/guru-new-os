@@ -25,8 +25,12 @@ import {
   autoAssignOrders,
   autoAssignOrdersToStaff,
   listAssignmentLog,
+  getEmployeeOrdersPerformance,
 } from "@/lib/distribution.functions";
 import { useLang } from "@/lib/i18n";
+import { OrdersListTab } from "@/components/orders/OrdersListTab";
+import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
+import { usePersistedPeriod } from "@/lib/global-period";
 
 export function OrderDistributionTab() {
   const { lang } = useLang();
@@ -64,14 +68,41 @@ export function OrderDistributionTab() {
     search: search.trim() || null,
   };
 
+  const [loadsPeriod, setLoadsPeriod] = usePersistedPeriod("order-distribution-loads");
+  const loadsResolved = useMemo(() => resolvePeriod(loadsPeriod), [loadsPeriod]);
+
   const boardQ = useQuery({
-    queryKey: ["distribution-board", params],
-    queryFn: () => boardFn({ data: params }),
+    queryKey: ["distribution-board", params, loadsResolved.dateFrom, loadsResolved.dateTo],
+    queryFn: () =>
+      boardFn({
+        data: { ...params, dateFrom: loadsResolved.dateFrom, dateTo: loadsResolved.dateTo },
+      }),
     staleTime: 30_000,
   });
 
   const board = boardQ.data;
   const queue = board?.queue ?? [];
+
+  const [employeesPeriod, setEmployeesPeriod] = usePersistedPeriod("order-distribution-employees");
+  const employeesResolved = useMemo(() => resolvePeriod(employeesPeriod), [employeesPeriod]);
+  const employeePerfFn = useServerFn(getEmployeeOrdersPerformance);
+  const employeePerfQ = useQuery({
+    queryKey: [
+      "distribution-employee-perf",
+      brandId,
+      employeesResolved.dateFrom,
+      employeesResolved.dateTo,
+    ],
+    queryFn: () =>
+      employeePerfFn({
+        data: {
+          dateFrom: employeesResolved.dateFrom,
+          dateTo: employeesResolved.dateTo,
+          brandId: brandId === "all" ? null : brandId,
+        },
+      }),
+    staleTime: 30_000,
+  });
 
   const invalidate = () => {
     setSelected(new Set());
@@ -208,7 +239,9 @@ export function OrderDistributionTab() {
       <Tabs defaultValue="queue">
         <TabsList>
           <TabsTrigger value="queue">{T("طابور التوزيع", "Distribution Queue")}</TabsTrigger>
+          <TabsTrigger value="orders">{T("الأوردرات", "Orders")}</TabsTrigger>
           <TabsTrigger value="loads">{T("أحمال شركات الشحن", "Courier Loads")}</TabsTrigger>
+          <TabsTrigger value="employees">{T("تقارير الموظفين", "Employee Reports")}</TabsTrigger>
           <TabsTrigger value="log">{T("سجل التوزيع", "Distribution Log")}</TabsTrigger>
         </TabsList>
 
@@ -434,7 +467,12 @@ export function OrderDistributionTab() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="loads">
+        <TabsContent value="orders">
+          <OrdersListTab />
+        </TabsContent>
+
+        <TabsContent value="loads" className="space-y-3">
+          <PeriodFilter value={loadsPeriod} onChange={setLoadsPeriod} />
           <Card className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs">
@@ -462,6 +500,50 @@ export function OrderDistributionTab() {
                   <tr>
                     <td colSpan={6} className="p-6 text-center text-muted-foreground">
                       {T("لا توجد بيانات", "No data")}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="employees" className="space-y-3">
+          <PeriodFilter value={employeesPeriod} onChange={setEmployeesPeriod} />
+          <Card className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs">
+                <tr>
+                  <th className="p-2 text-start">{T("الموظف", "Employee")}</th>
+                  <th className="p-2 text-start">{T("إجمالي الأوردرات", "Total orders")}</th>
+                  <th className="p-2 text-start">{T("تم بنجاح", "Succeeded")}</th>
+                  <th className="p-2 text-start">{T("ملغي", "Cancelled")}</th>
+                  <th className="p-2 text-start">{T("مؤكد", "Confirmed")}</th>
+                  <th className="p-2 text-start">{T("بانتظار التأكيد", "Pending confirmation")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employeePerfQ.isLoading && (
+                  <tr>
+                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                      {T("جاري التحميل…", "Loading…")}
+                    </td>
+                  </tr>
+                )}
+                {(employeePerfQ.data ?? []).map((r) => (
+                  <tr key={r.employeeId} className="border-t">
+                    <td className="p-2 font-medium">{r.employeeName}</td>
+                    <td className="p-2">{r.total}</td>
+                    <td className="p-2">{r.succeeded}</td>
+                    <td className="p-2">{r.cancelled}</td>
+                    <td className="p-2">{r.confirmed}</td>
+                    <td className="p-2">{r.pendingConfirmation}</td>
+                  </tr>
+                ))}
+                {!employeePerfQ.isLoading && !(employeePerfQ.data ?? []).length && (
+                  <tr>
+                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                      {T("لا توجد بيانات في هذه الفترة", "No data in this period")}
                     </td>
                   </tr>
                 )}
