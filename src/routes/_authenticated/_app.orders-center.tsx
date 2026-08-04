@@ -49,7 +49,6 @@ import {
 } from "@/lib/orders-management.functions";
 import { getOrder, updateOrderStatus, type OrderRow } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
-import { OrdersListTab } from "@/components/orders/OrdersListTab";
 import { getMyAssignedOrders } from "@/lib/distribution.functions";
 import { ORDER_STATUS_LABELS_AR, type OrderWorkflowStatus } from "@/lib/order-lifecycle.shared";
 
@@ -141,7 +140,6 @@ function OrdersCenterPage() {
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="orders">{t("الأوردرات", "Orders")}</TabsTrigger>
           <TabsTrigger value="myorders">{t("أوردراتي", "My Orders")}</TabsTrigger>
           <TabsTrigger value="ops">{t("الشحن والتحصيل", "Shipping & Collection")}</TabsTrigger>
           <TabsTrigger value="timeline">{t("سجل الأوردر", "Order timeline")}</TabsTrigger>
@@ -167,10 +165,6 @@ function OrdersCenterPage() {
               setTab("ops");
             }}
           />
-        </TabsContent>
-
-        <TabsContent value="orders" className="pt-4">
-          <OrdersListTab />
         </TabsContent>
 
         <TabsContent value="myorders" className="pt-4">

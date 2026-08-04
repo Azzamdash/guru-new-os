@@ -334,8 +334,8 @@ export const NAV_PAGES: NavPage[] = [
     icon: Gauge,
     hub: "sales",
     extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
-    descAr: "الشاشة الرئيسية: قائمة الأوردرات، أوردراتي، الشحن والتحصيل وسجل الحالات",
-    descEn: "Main screen: orders list, my orders, shipping, collections and timeline",
+    descAr: "الشاشة الرئيسية: أوردراتي، الشحن والتحصيل وسجل الحالات",
+    descEn: "Main screen: my orders, shipping, collections and timeline",
   },
   {
     to: "/order-distribution",
@@ -345,8 +345,10 @@ export const NAV_PAGES: NavPage[] = [
     hub: "sales",
     requiresWrite: true,
     extraRoles: ["fulfillment_manager", "operation_manager"],
-    descAr: "توزيع الأوردرات على موظفي النظام وشركات الشحن مع موازنة الأحمال",
-    descEn: "Assign orders to system users and couriers with load balancing",
+    descAr:
+      "قائمة الأوردرات، توزيعها على موظفي النظام وشركات الشحن مع موازنة الأحمال، وتقارير أداء الموظفين",
+    descEn:
+      "Orders list, assignment to system users and couriers with load balancing, and employee performance reports",
   },
   {
     to: "/orders-radar",
