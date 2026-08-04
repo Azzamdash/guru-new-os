@@ -1,14 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDERS_PAGE } from "./page-permission-paths";
 import { parseSettlementCsv, renderTemplate } from "./orders-ops.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
-
-const ORDERS_PAGE = "/orders";
 
 /* ============================ 1) Confirmation desk ============================ */
 

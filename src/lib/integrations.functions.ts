@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDERS_PAGE } from "./page-permission-paths";
 import {
   bostaDispatchIdentifiers,
   bostaProviderEventAt,
@@ -581,7 +582,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { order_id: string }) => d)
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     const { logIntegrationEvent } = await import("@/server/integrationLogger");
     const started = Date.now();
 
@@ -1319,7 +1320,7 @@ export const pullBostaShipmentStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { order_id: string }) => d)
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     return pullOneBostaOrder(context, data.order_id);
   });
 
@@ -1327,7 +1328,7 @@ export const syncAllBostaShipments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { brand_id?: string | null } = {}) => d)
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     let q = context.supabase
       .from("orders")
       .select("id, brand_id, bosta_tracking, fulfillment_status")
@@ -1356,7 +1357,7 @@ export const attachBostaTracking = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { order_id: string; tracking: string; delivery_id?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     const { data: order, error } = await context.supabase
       .from("orders")
       .select("id, brand_id, fulfillment_status")

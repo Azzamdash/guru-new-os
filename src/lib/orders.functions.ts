@@ -11,6 +11,7 @@ import {
   type ShipmentOutcome,
 } from "./order-lifecycle.shared";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDERS_PAGE } from "./page-permission-paths";
 import { normalizePageRequest } from "./scalable-pagination.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -310,7 +311,7 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
     }) => d,
   )
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     // Compute COGS per item using product_cogs()
     const costMap = await getCogsMap(
       context.supabase,
@@ -383,7 +384,7 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     }) => d,
   )
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = {};
     if (data.fulfillment_status) payload.fulfillment_status = data.fulfillment_status;
@@ -407,7 +408,7 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
     }) => data,
   )
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     const { data: order, error } = await context.supabase
       .from("orders")
       .select("id, brand_id, source, external_id, fulfillment_status, financial_status, raw")

@@ -2,6 +2,7 @@ import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { COURIERS_PAGE } from "./page-permission-paths";
 
 const rateInput = (data: {
   id?: string;
@@ -44,7 +45,7 @@ export const upsertCourierRate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(rateInput)
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/couriers");
+    await assertPageWrite(context, COURIERS_PAGE);
     const governorate = data.governorate.trim();
     if (!governorate) throw new Error("Governorate is required");
     if (
@@ -94,7 +95,7 @@ export const upsertCourierStatusMapping = createServerFn({ method: "POST" })
     }) => data,
   )
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/couriers");
+    await assertPageWrite(context, COURIERS_PAGE);
     const { data: saved, error } = await context.supabase
       .from("courier_status_mappings")
       .upsert({

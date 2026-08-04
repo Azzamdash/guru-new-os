@@ -4,6 +4,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
 import { assertPageWrite } from "./page-permissions.server";
+import { COURIERS_PAGE } from "./page-permission-paths";
 import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -384,7 +385,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { orderId: string; courierId?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/couriers");
+    await assertPageWrite(context, COURIERS_PAGE);
     const { data: order, error } = await context.supabase
       .from("orders")
       .select(
