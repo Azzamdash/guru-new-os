@@ -45,6 +45,7 @@ import {
   markAwaitingDelivery,
   completePurchaseOrder,
   cancelPurchaseOrder,
+  reopenPurchaseOrder,
   type PurchaseOrderStatus,
 } from "@/lib/purchase-orders.functions";
 
@@ -502,6 +503,23 @@ function PurchaseOrderDetailDialog({
     },
   });
 
+  const reopenFn = useServerFn(reopenPurchaseOrder);
+  const reopenMut = useMutation({
+    mutationFn: () => reopenFn({ data: { id: id! } }),
+    onSuccess: () => {
+      toast.success(
+        lang === "ar"
+          ? "تم فتح الأمر للتعديل — اتعكست فاتورة المورد وحركة المخزون المرتبطة بيه"
+          : "Order reopened for editing — its supplier invoice and stock movements were reversed",
+      );
+      detailQ.refetch();
+      onChanged();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   const po = detailQ.data;
   const locked = po && po.status !== "draft" && po.status !== "awaiting_delivery";
   const candidates = kind === "product" ? (productsQ.data ?? []) : (materialsQ.data ?? []);
@@ -644,8 +662,13 @@ function PurchaseOrderDetailDialog({
           </div>
         )}
         <DialogFooter>
-          {po && po.status === "draft" && (
-            <Button variant="ghost" className="text-destructive" onClick={() => onDelete(po.id)}>
+          {po && po.status === "completed" && (
+            <Button variant="outline" onClick={() => reopenMut.mutate()} disabled={reopenMut.isPending}>
+              {lang === "ar" ? "إعادة فتح للتعديل" : "Reopen for editing"}
+            </Button>
+          )}
+          {po && (
+            <Button variant="ghost" className="text-destructive" onClick={() => setConfirmDelete(true)}>
               {lang === "ar" ? "حذف الأمر" : "Delete Order"}
             </Button>
           )}
@@ -653,6 +676,36 @@ function PurchaseOrderDetailDialog({
             {lang === "ar" ? "إغلاق" : "Close"}
           </Button>
         </DialogFooter>
+
+        <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {lang === "ar" ? "تأكيد حذف أمر الشراء" : "Confirm deleting this purchase order"}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {po?.status === "completed"
+                  ? lang === "ar"
+                    ? "الأمر مكتمل — هيتم عكس فاتورة المورد وحركة المخزون المرتبطة بيه قبل الحذف. لو فيه مدفوعات مسجلة على الفاتورة، لازم تتحذف الأول من صفحة فواتير المشتريات."
+                    : "This order is completed — its supplier invoice and stock movements will be reversed before deleting. If payments were already recorded on the invoice, remove them first from the Purchase Invoices page."
+                  : lang === "ar"
+                    ? "هل تريد حذف أمر الشراء وكل بنوده؟ لا يمكن التراجع."
+                    : "Do you want to delete this purchase order and all its items? This cannot be undone."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{lang === "ar" ? "إلغاء" : "Cancel"}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setConfirmDelete(false);
+                  if (po) onDelete(po.id);
+                }}
+              >
+                {lang === "ar" ? "حذف" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

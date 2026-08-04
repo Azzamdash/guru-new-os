@@ -1,12 +1,19 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDERS_PAGE } from "./page-permission-paths";
 import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
-const ORDERS_PAGE = "/orders";
+async function assertManager(ctx: Ctx) {
+  for (const role of ["admin", "manager"] as const) {
+    const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: role });
+    if (data) return;
+  }
+  throw new Error("Forbidden");
+}
 
 function dayRange(from: string | null, to: string | null) {
   const start = from ? new Date(`${from}T00:00:00.000Z`) : new Date(Date.now() - 30 * 86400000);
@@ -50,6 +57,7 @@ export const getOrdersOverview = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<OrdersOverview> => {
     const ctx = context as unknown as Ctx;
+    await assertManager(ctx);
     const { start, end } = dayRange(data.dateFrom, data.dateTo);
 
     let q = ctx.supabase
@@ -357,10 +365,21 @@ export const recordCollection = createServerFn({ method: "POST" })
     if (!(Number(data.amount) > 0)) throw new Error("Amount must be positive");
     const { data: order } = await ctx.supabase
       .from("orders")
-      .select("id, brand_id, courier_id")
+      .select("id, brand_id, courier_id, total_amount")
       .eq("id", data.orderId)
       .maybeSingle();
     if (!order) throw new Error("Order not found");
+    const { data: priorCollections } = await ctx.supabase
+      .from("order_collections")
+      .select("amount")
+      .eq("order_id", data.orderId);
+    const alreadyCollected = ((priorCollections ?? []) as Array<{ amount: number }>).reduce(
+      (sum, r) => sum + Number(r.amount ?? 0),
+      0,
+    );
+    if (alreadyCollected + Number(data.amount) > Number(order.total_amount ?? 0) + 0.01) {
+      throw new Error("المبلغ يتخطى المتبقي من قيمة الأوردر");
+    }
     const { error } = await ctx.supabase.from("order_collections").insert({
       order_id: data.orderId,
       shipment_id: data.shipmentId ?? null,

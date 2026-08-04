@@ -1,15 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDERS_PAGE } from "./page-permission-paths";
 import { parseSettlementCsv, renderTemplate } from "./orders-ops.shared";
-
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
-
-const ORDERS_PAGE = "/orders";
 
 /* ============================ 1) Confirmation desk ============================ */
 
@@ -30,7 +28,9 @@ export type ConfirmationOrder = {
 
 export const getConfirmationQueue = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { brandId?: string | null; status?: string; search?: string | null }) => input)
+  .inputValidator(
+    (input: { brandId?: string | null; status?: string; search?: string | null }) => input,
+  )
   .handler(async ({ data, context }): Promise<ConfirmationOrder[]> => {
     const ctx = context as unknown as Ctx;
     let q = ctx.supabase
@@ -196,8 +196,12 @@ export const listReturns = createServerFn({ method: "POST" })
 export const createReturn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { orderId: string; kind?: "return" | "exchange"; reason?: string | null; note?: string | null }) =>
-      input,
+    (input: {
+      orderId: string;
+      kind?: "return" | "exchange";
+      reason?: string | null;
+      note?: string | null;
+    }) => input,
   )
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
@@ -295,7 +299,10 @@ export const advanceReturn = createServerFn({ method: "POST" })
     }
     if (data.note) patch["note"] = data.note;
 
-    const { error } = await ctx.supabase.from("order_returns").update(patch).eq("id", data.returnId);
+    const { error } = await ctx.supabase
+      .from("order_returns")
+      .update(patch)
+      .eq("id", data.returnId);
     if (error) throw new Error(error.message);
     return { ok: true, status: patch["status"] };
   });
@@ -347,7 +354,9 @@ export const listSettlements = createServerFn({ method: "POST" })
       }
     }
     const { data: couriers } = await ctx.supabase.from("couriers").select("id, name");
-    const cname = new Map<string, string>(((couriers ?? []) as Row[]).map((c) => [c["id"], c["name"]]));
+    const cname = new Map<string, string>(
+      ((couriers ?? []) as Row[]).map((c) => [c["id"], c["name"]]),
+    );
     return list.map((r) => {
       const c = counts.get(r["id"]) ?? { total: 0, matched: 0 };
       return {
@@ -367,7 +376,6 @@ export const listSettlements = createServerFn({ method: "POST" })
       };
     });
   });
-
 
 export const importSettlement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -505,19 +513,64 @@ export const postSettlement = createServerFn({ method: "POST" })
       .eq("posted", false);
     if (error) throw new Error(error.message);
     const rows = (lines ?? []) as Row[];
-    if (!rows.length) return { ok: true, posted: 0 };
+    if (!rows.length) return { ok: true, posted: 0, skipped: 0 };
 
-    const inserts = rows
-      .filter((l) => l["order_id"] && Number(l["declared_amount"]) > 0)
-      .map((l) => ({
-        order_id: l["order_id"],
+    const candidateOrderIds = [
+      ...new Set(rows.map((l) => l["order_id"]).filter(Boolean)),
+    ] as string[];
+    const [{ data: orderTotals }, { data: existingCollections }] = await Promise.all([
+      ctx.supabase.from("orders").select("id, total_amount").in("id", candidateOrderIds),
+      ctx.supabase
+        .from("order_collections")
+        .select("order_id, amount")
+        .in("order_id", candidateOrderIds),
+    ]);
+    const totalByOrder = new Map<string, number>(
+      ((orderTotals ?? []) as Array<{ id: string; total_amount: number }>).map((o) => [
+        o.id,
+        Number(o.total_amount ?? 0),
+      ]),
+    );
+    const collectedByOrder = new Map<string, number>();
+    for (const c of (existingCollections ?? []) as Array<{ order_id: string; amount: number }>) {
+      collectedByOrder.set(
+        c.order_id,
+        (collectedByOrder.get(c.order_id) ?? 0) + Number(c.amount ?? 0),
+      );
+    }
+
+    const postable: Row[] = [];
+    const inserts: Array<{
+      order_id: string;
+      brand_id: string;
+      courier_id: string | null;
+      amount: number;
+      method: string;
+      note: string;
+      created_by: string;
+    }> = [];
+    for (const l of rows) {
+      const orderId = l["order_id"] as string | undefined;
+      const amount = Number(l["declared_amount"]);
+      if (!orderId || !(amount > 0)) continue;
+      const already = collectedByOrder.get(orderId) ?? 0;
+      const total = totalByOrder.get(orderId) ?? 0;
+      // Skip lines that would over-collect against the order total (already
+      // settled manually or by a previous settlement) — leave them unposted
+      // so they surface for manual review instead of silently double-counting.
+      if (already + amount > total + 0.01) continue;
+      collectedByOrder.set(orderId, already + amount);
+      postable.push(l);
+      inserts.push({
+        order_id: orderId,
         brand_id: settlement.brand_id,
         courier_id: settlement.courier_id ?? null,
-        amount: Number(l["declared_amount"]),
+        amount,
         method: "cod",
         note: `كشف تحصيل ${data.settlementId.slice(0, 8)}`,
         created_by: ctx.userId,
-      }));
+      });
+    }
     if (inserts.length) {
       const { error: cErr } = await ctx.supabase.from("order_collections").insert(inserts);
       if (cErr) throw new Error(cErr.message);
@@ -526,18 +579,108 @@ export const postSettlement = createServerFn({ method: "POST" })
         .update({ posted: true })
         .in(
           "id",
-          rows.map((r) => r["id"]),
+          postable.map((r) => r["id"]),
         );
     }
     await ctx.supabase
       .from("courier_settlements")
       .update({ status: "posted" })
       .eq("id", data.settlementId);
-    return { ok: true, posted: inserts.length };
+    return { ok: true, posted: inserts.length, skipped: rows.length - inserts.length };
+  });
+
+export type CollectionGapRow = {
+  orderId: string;
+  orderNumber: string | null;
+  customerName: string | null;
+  brandName: string;
+  courierName: string | null;
+  totalAmount: number;
+  collected: number;
+  outstanding: number;
+  occurredAt: string;
+};
+
+/**
+ * Delivered orders whose recorded collections (order_collections) fall short
+ * of the order total — a read-only reconciliation view, not a new ledger.
+ * Surfaces COD that should have come in but hasn't been recorded, without
+ * touching or unifying order_collections / cash_transactions / sales_invoices.
+ */
+export const getCollectionGaps = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { brandId?: string | null; from?: string | null; to?: string | null } = {}) => input,
+  )
+  .handler(async ({ data, context }): Promise<CollectionGapRow[]> => {
+    const ctx = context as unknown as Ctx;
+    await assertPageWrite(ctx, ORDERS_PAGE);
+
+    let q = ctx.supabase
+      .from("orders")
+      .select(
+        "id, brand_id, external_order_number, customer_name, courier_id, total_amount, occurred_at",
+      )
+      .eq("fulfillment_status", "delivered")
+      .gt("total_amount", 0)
+      .order("occurred_at", { ascending: false })
+      .limit(500);
+    if (data.brandId) q = q.eq("brand_id", data.brandId);
+    if (data.from) q = q.gte("occurred_at", data.from);
+    if (data.to) q = q.lte("occurred_at", `${data.to.slice(0, 10)}T23:59:59.999Z`);
+
+    const { data: orders, error } = await q;
+    if (error) throw new Error(error.message);
+    const rows = (orders ?? []) as Row[];
+    if (!rows.length) return [];
+
+    const orderIds = rows.map((r) => r["id"] as string);
+    const brandIds = [...new Set(rows.map((r) => r["brand_id"] as string))];
+    const courierIds = [...new Set(rows.map((r) => r["courier_id"]).filter(Boolean))] as string[];
+
+    const [{ data: collections }, { data: brands }, { data: couriers }] = await Promise.all([
+      ctx.supabase.from("order_collections").select("order_id, amount").in("order_id", orderIds),
+      ctx.supabase.from("brands").select("id, name").in("id", brandIds),
+      courierIds.length
+        ? ctx.supabase.from("couriers").select("id, name").in("id", courierIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const collectedByOrder = new Map<string, number>();
+    for (const c of (collections ?? []) as Array<{ order_id: string; amount: number }>) {
+      collectedByOrder.set(
+        c.order_id,
+        (collectedByOrder.get(c.order_id) ?? 0) + Number(c.amount ?? 0),
+      );
+    }
+    const brandName = new Map<string, string>(
+      (brands ?? []).map((b: { id: string; name: string }) => [b.id, b.name]),
+    );
+    const courierName = new Map<string, string>(
+      (couriers ?? []).map((c: { id: string; name: string }) => [c.id, c.name]),
+    );
+
+    return rows
+      .map((r) => {
+        const total = Number(r["total_amount"] ?? 0);
+        const collected = collectedByOrder.get(r["id"] as string) ?? 0;
+        return {
+          orderId: r["id"] as string,
+          orderNumber: (r["external_order_number"] as string | null) ?? null,
+          customerName: (r["customer_name"] as string | null) ?? null,
+          brandName: brandName.get(r["brand_id"] as string) ?? "—",
+          courierName: r["courier_id"] ? (courierName.get(r["courier_id"] as string) ?? "—") : null,
+          totalAmount: total,
+          collected,
+          outstanding: total - collected,
+          occurredAt: r["occurred_at"] as string,
+        };
+      })
+      .filter((r) => r.outstanding > 0.01)
+      .sort((a, b) => b.outstanding - a.outstanding);
   });
 
 /* ============================ 4) WhatsApp templates =========================== */
-
 
 export const listWhatsappTemplates = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -578,7 +721,10 @@ export const upsertWhatsappTemplate = createServerFn({ method: "POST" })
       created_by: ctx.userId,
     };
     if (data.id) {
-      const { error } = await ctx.supabase.from("whatsapp_templates").update(payload).eq("id", data.id);
+      const { error } = await ctx.supabase
+        .from("whatsapp_templates")
+        .update(payload)
+        .eq("id", data.id);
       if (error) throw new Error(error.message);
       return { id: data.id };
     }
@@ -601,7 +747,6 @@ export const deleteWhatsappTemplate = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-
 
 /** Sends a template to the order's customer via WhatsApp (creates the thread if needed). */
 export const sendOrderTemplate = createServerFn({ method: "POST" })
@@ -672,7 +817,10 @@ export const sendOrderTemplate = createServerFn({ method: "POST" })
             text: { body },
           }),
         });
-        const json = (await res.json()) as { messages?: Array<{ id: string }>; error?: { message?: string } };
+        const json = (await res.json()) as {
+          messages?: Array<{ id: string }>;
+          error?: { message?: string };
+        };
         if (!res.ok) {
           status = "failed";
           err = json?.error?.message ?? `HTTP ${res.status}`;
@@ -699,7 +847,10 @@ export const sendOrderTemplate = createServerFn({ method: "POST" })
     });
     await ctx.supabase
       .from("whatsapp_threads")
-      .update({ last_message_at: new Date().toISOString(), last_message_preview: body.slice(0, 120) })
+      .update({
+        last_message_at: new Date().toISOString(),
+        last_message_preview: body.slice(0, 120),
+      })
       .eq("id", threadId);
 
     if (status === "failed") throw new Error(err ?? "فشل الإرسال");
@@ -843,7 +994,10 @@ export const getOrdersRadar = createServerFn({ method: "POST" })
           ? out.filter((o) => o.risk_score >= 25)
           : out.filter((o) => o.sla_breached || o.risk_score >= 25);
 
-    filtered.sort((a, b) => b.risk_score + (b.sla_breached ? 60 : 0) - (a.risk_score + (a.sla_breached ? 60 : 0)));
+    filtered.sort(
+      (a, b) =>
+        b.risk_score + (b.sla_breached ? 60 : 0) - (a.risk_score + (a.sla_breached ? 60 : 0)),
+    );
     return { orders: filtered.slice(0, 300), slaRules: (rules ?? []) as Row[] };
   });
 
@@ -855,7 +1009,10 @@ export const saveSlaRule = createServerFn({ method: "POST" })
     await assertPageWrite(ctx, ORDERS_PAGE);
     const { error } = await ctx.supabase
       .from("order_sla_rules")
-      .upsert({ stage: data.stage, max_hours: Math.max(1, Math.round(data.maxHours)) }, { onConflict: "stage" });
+      .upsert(
+        { stage: data.stage, max_hours: Math.max(1, Math.round(data.maxHours)) },
+        { onConflict: "stage" },
+      );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -875,44 +1032,45 @@ export const getOrderFull = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!order) throw new Error("Order not found");
 
-    const [items, shipments, collections, events, returns, attempts, thread, couriers] = await Promise.all([
-      ctx.supabase.from("order_items").select("*").eq("order_id", data.orderId),
-      ctx.supabase
-        .from("order_shipments")
-        .select("*")
-        .eq("order_id", data.orderId)
-        .order("attempt_no", { ascending: true }),
-      ctx.supabase
-        .from("order_collections")
-        .select("*")
-        .eq("order_id", data.orderId)
-        .order("collected_at", { ascending: false }),
-      ctx.supabase
-        .from("order_lifecycle_events")
-        .select("id, created_at, source, from_order_status, to_order_status, raw_status, note")
-        .eq("order_id", data.orderId)
-        .order("created_at", { ascending: false })
-        .limit(100),
-      ctx.supabase
-        .from("order_returns")
-        .select("*")
-        .eq("order_id", data.orderId)
-        .order("requested_at", { ascending: false }),
-      ctx.supabase
-        .from("order_confirmation_attempts")
-        .select("*")
-        .eq("order_id", data.orderId)
-        .order("attempted_at", { ascending: false }),
-      order.customer_phone
-        ? ctx.supabase
-            .from("whatsapp_threads")
-            .select("id")
-            .eq("brand_id", order.brand_id)
-            .eq("phone", String(order.customer_phone).replace(/[^\d+]/g, ""))
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-      ctx.supabase.from("couriers").select("id, name"),
-    ]);
+    const [items, shipments, collections, events, returns, attempts, thread, couriers] =
+      await Promise.all([
+        ctx.supabase.from("order_items").select("*").eq("order_id", data.orderId),
+        ctx.supabase
+          .from("order_shipments")
+          .select("*")
+          .eq("order_id", data.orderId)
+          .order("attempt_no", { ascending: true }),
+        ctx.supabase
+          .from("order_collections")
+          .select("*")
+          .eq("order_id", data.orderId)
+          .order("collected_at", { ascending: false }),
+        ctx.supabase
+          .from("order_lifecycle_events")
+          .select("id, created_at, source, from_order_status, to_order_status, raw_status, note")
+          .eq("order_id", data.orderId)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        ctx.supabase
+          .from("order_returns")
+          .select("*")
+          .eq("order_id", data.orderId)
+          .order("requested_at", { ascending: false }),
+        ctx.supabase
+          .from("order_confirmation_attempts")
+          .select("*")
+          .eq("order_id", data.orderId)
+          .order("attempted_at", { ascending: false }),
+        order.customer_phone
+          ? ctx.supabase
+              .from("whatsapp_threads")
+              .select("id")
+              .eq("brand_id", order.brand_id)
+              .eq("phone", String(order.customer_phone).replace(/[^\d+]/g, ""))
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        ctx.supabase.from("couriers").select("id, name"),
+      ]);
 
     let messages: Row[] = [];
     if (thread?.data?.id) {
@@ -925,10 +1083,10 @@ export const getOrderFull = createServerFn({ method: "POST" })
       messages = (msgs ?? []) as Row[];
     }
 
-    const courierName =
-      order.courier_id
-        ? (((couriers.data ?? []) as Row[]).find((c) => c["id"] === order.courier_id)?.["name"] ?? null)
-        : null;
+    const courierName = order.courier_id
+      ? (((couriers.data ?? []) as Row[]).find((c) => c["id"] === order.courier_id)?.["name"] ??
+        null)
+      : null;
 
     return {
       order: order as Row,

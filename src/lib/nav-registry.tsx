@@ -417,6 +417,13 @@ export const NAV_PAGES: NavPage[] = [
   },
 
   // INVOICING & FINANCE
+  // "Suppliers" (contact records + a simple manual-amount invoice/payment
+  // form, no line items) is fully covered by the Suppliers tab inside
+  // "إدارة المخزون" (Inventory Management), so it stays out of the nav.
+  // "Purchases" is NOT a duplicate of that tab: it's the only place with
+  // line-item entry (products/materials/qty/cost) that actually drives
+  // inventory movements and material costing — including supplier return
+  // invoices — so it needs its own card.
   {
     to: "/purchases",
     ar: "فواتير المشتريات",
@@ -425,8 +432,8 @@ export const NAV_PAGES: NavPage[] = [
     hub: "invoicing",
     section: "suppliers",
     requiresWrite: true,
-    descAr: "فواتير الموردين وبنودها",
-    descEn: "Supplier purchase invoices & items",
+    descAr: "فواتير موردين ببنود منتجات/خامات، ومرتجعات المورد",
+    descEn: "Itemized supplier invoices, including supplier returns",
   },
   {
     to: "/suppliers/payments",
@@ -995,10 +1002,17 @@ export type PageAccessLevel = "hidden" | "read" | "write";
  * when an administrator granted it, and only edits when the grant is `write:`.
  * `page:` = view only, `deny:` / missing = hidden.
  * Admin and manager remain break-glass full-access roles.
+ *
+ * `privilegedOnly` is a hard floor below that: no per-user `page:`/`write:`
+ * grant can open a privilegedOnly page for a non-admin/manager. Without this
+ * check the flag was purely decorative — a user granted `page:/reports/executive`
+ * (or any of the ~27 other privilegedOnly pages) could see it despite not
+ * being admin/manager.
  */
 export function pageAccessLevel(p: NavPage, ctx: RoleCtx): PageAccessLevel {
   if (p.adminOnly) return ctx.isAdmin ? "write" : "hidden";
   if (ctx.isPrivileged) return "write";
+  if (p.privilegedOnly) return "hidden";
 
   if (ctx.sections.has(`deny:${p.to}`)) return "hidden";
   if (ctx.sections.has(`write:${p.to}`)) return "write";

@@ -4,10 +4,19 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
 import { assertPageWrite } from "./page-permissions.server";
+import { COURIERS_PAGE } from "./page-permission-paths";
 import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
+
+async function assertManager(ctx: Ctx) {
+  for (const role of ["admin", "manager"] as const) {
+    const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: role });
+    if (data) return;
+  }
+  throw new Error("Forbidden");
+}
 
 async function courierServesBrand(context: Ctx, courierId: string, brandId: string) {
   const { data, error } = await context.supabase.rpc("courier_serves_brand", {
@@ -58,6 +67,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
     ) => d,
   )
   .handler(async ({ data, context }) => {
+    await assertManager(context as unknown as Ctx);
     const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? formatBusinessDate(new Date(Date.now() - 30 * 86400000));
 
@@ -384,7 +394,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { orderId: string; courierId?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/couriers");
+    await assertPageWrite(context, COURIERS_PAGE);
     const { data: order, error } = await context.supabase
       .from("orders")
       .select(
@@ -395,6 +405,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     if (error) throw error;
     if (isTerminalShipmentOutcome(order.shipment_outcome)) {
       throw new Error("لا يمكن إسناد أوردر حالته نهائية لشركة شحن");
+    }
+    if (!order.shipping_address?.trim() || !order.customer_phone?.trim()) {
+      throw new Error("لا يمكن إسناد الأوردر بدون عنوان ورقم تليفون للعميل");
     }
 
     let courierId = data.courierId ?? null;

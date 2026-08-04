@@ -159,8 +159,21 @@ export const deletePurchaseOrder = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
     const ctx = context as Ctx;
-    await assertWriter(ctx);
-    const { error } = await ctx.supabase.from("purchase_orders").delete().eq("id", data.id).neq("status", "completed");
+    // Handles completed orders too: reverses the invoice/inventory it created
+    // (blocked if payments were already recorded) before deleting the row.
+    const { error } = await ctx.supabase.rpc("delete_purchase_order", { _po_id: data.id });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Reverses a completed order's supplier invoice + inventory movements and
+// puts it back into "awaiting_delivery" so its items can be edited again.
+export const reopenPurchaseOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const { error } = await ctx.supabase.rpc("reverse_purchase_order_completion", { _po_id: data.id });
     if (error) throw new Error(error.message);
     return { ok: true };
   });

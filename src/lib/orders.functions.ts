@@ -11,6 +11,7 @@ import {
   type ShipmentOutcome,
 } from "./order-lifecycle.shared";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDERS_PAGE } from "./page-permission-paths";
 import { normalizePageRequest } from "./scalable-pagination.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,14 +108,18 @@ export const listOrders = createServerFn({ method: "GET" })
 
 export const getOrdersFilterSummary = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: {
-    brandId?: string | null;
-    days?: number;
-    from?: string | null;
-    to?: string | null;
-    orderStatus?: string | null;
-    search?: string | null;
-  } = {}) => d)
+  .inputValidator(
+    (
+      d: {
+        brandId?: string | null;
+        days?: number;
+        from?: string | null;
+        to?: string | null;
+        orderStatus?: string | null;
+        search?: string | null;
+      } = {},
+    ) => d,
+  )
   .handler(async ({ data, context }) => {
     const normalized = normalizePageRequest({ search: data.search });
     const from = data.from ?? new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
@@ -178,6 +183,7 @@ export const getInvoiceCogsSummary = createServerFn({ method: "GET" })
     ) => d,
   )
   .handler(async ({ data, context }) => {
+    await assertManager(context as unknown as Ctx);
     let invQ = context.supabase
       .from("sales_invoices")
       .select("id, brand_id, type, total_amount, brands(name)");
@@ -310,7 +316,7 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
     }) => d,
   )
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     // Compute COGS per item using product_cogs()
     const costMap = await getCogsMap(
       context.supabase,
@@ -382,8 +388,8 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
       employee_id?: string | null;
     }) => d,
   )
-  .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+  .handler(async ({ data, context }): Promise<{ ok: true; stockWarning?: string }> => {
+    await assertPageWrite(context, ORDERS_PAGE);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = {};
     if (data.fulfillment_status) payload.fulfillment_status = data.fulfillment_status;
@@ -393,7 +399,32 @@ export const updateOrderStatus = createServerFn({ method: "POST" })
     if (data.employee_id !== undefined) payload.employee_id = data.employee_id;
     const { error } = await context.supabase.from("orders").update(payload).eq("id", data.id);
     if (error) throw error;
-    return { ok: true };
+
+    // Soft, non-blocking stock visibility: confirming still deducts stock
+    // (orders_deduct_stock trigger) unconditionally, with no shortage guard
+    // in the DB. Surface a warning here rather than silently letting stock
+    // go negative with nobody noticing.
+    let stockWarning: string | undefined;
+    if (data.confirmation_status === "confirmed") {
+      const { data: items } = await context.supabase
+        .from("order_items")
+        .select("qty, product_id, title, products(name, on_hand_qty)")
+        .eq("order_id", data.id)
+        .not("product_id", "is", null);
+      const short = (
+        (items ?? []) as Array<{
+          qty: number;
+          title: string;
+          products: { name: string; on_hand_qty: number } | null;
+        }>
+      ).filter((i) => i.products && Number(i.products.on_hand_qty) < Number(i.qty));
+      if (short.length) {
+        stockWarning = short
+          .map((i) => `${i.products?.name ?? i.title} (${i.products?.on_hand_qty ?? 0}/${i.qty})`)
+          .join(", ");
+      }
+    }
+    return { ok: true, stockWarning };
   });
 
 export const transitionOrderLifecycle = createServerFn({ method: "POST" })
@@ -407,7 +438,7 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
     }) => data,
   )
   .handler(async ({ data, context }) => {
-    await assertPageWrite(context, "/orders");
+    await assertPageWrite(context, ORDERS_PAGE);
     const { data: order, error } = await context.supabase
       .from("orders")
       .select("id, brand_id, source, external_id, fulfillment_status, financial_status, raw")
@@ -457,10 +488,10 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
       erp_lifecycle_updated_at: new Date().toISOString(),
     };
     const shopifySyncStatus = shouldSyncShopify
+      ? "pending"
+      : shopifyAction === "review_return"
         ? "pending"
-        : shopifyAction === "review_return"
-          ? "pending"
-          : "not_applicable";
+        : "not_applicable";
     const shopifySyncError =
       shopifyAction === "review_return" ? "Returned order requires return/refund review" : null;
     const updated = await context.supabase.rpc("update_order_lifecycle_manually", {
