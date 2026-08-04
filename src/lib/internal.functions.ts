@@ -244,10 +244,10 @@ export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from("supplier_invoices")
-      .select("id, supplier_id, brand_id, amount, issued_at, due_at, status, note")
+      .select("id, supplier_id, brand_id, amount, issued_at, due_at, status, note, type")
       .order("issued_at", { ascending: false });
     if (error) throw error;
-    return data as Array<{ id: string; supplier_id: string; brand_id: string | null; amount: number; issued_at: string; due_at: string | null; status: "open" | "paid"; note: string | null }>;
+    return data as Array<{ id: string; supplier_id: string; brand_id: string | null; amount: number; issued_at: string; due_at: string | null; status: "open" | "paid"; note: string | null; type: "purchase" | "return" }>;
   });
 
 export const listPayments = createServerFn({ method: "GET" })
@@ -273,7 +273,7 @@ export const listPayments = createServerFn({ method: "GET" })
 
 export const upsertInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id?: string; supplier_id: string; brand_id?: string | null; amount?: number; issued_at: string; due_at?: string | null; status: "open" | "paid"; note?: string | null }) => d)
+  .inputValidator((d: { id?: string; supplier_id: string; brand_id?: string | null; amount?: number; issued_at: string; due_at?: string | null; status: "open" | "paid"; note?: string | null; type?: "purchase" | "return" }) => d)
   .handler(async ({ data, context }) => {
     await assertWriter(context);
     if (data.id) {
