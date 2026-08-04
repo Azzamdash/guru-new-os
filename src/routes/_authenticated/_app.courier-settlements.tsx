@@ -97,6 +97,14 @@ function CourierSettlementsPage() {
       toast.success(
         T(`تم ترحيل ${r.posted} بند للتحصيل`, `${r.posted} line(s) posted to collections`),
       );
+      if (r.skipped > 0) {
+        toast.warning(
+          T(
+            `${r.skipped} بند اتخطى المتبقي من قيمة الأوردر ولم يُرحّل — راجعه يدويًا`,
+            `${r.skipped} line(s) exceeded the order's remaining balance and were not posted — review manually`,
+          ),
+        );
+      }
       qc.invalidateQueries({ queryKey: ["courier-settlements"] });
       qc.invalidateQueries({ queryKey: ["settlement-lines"] });
     },

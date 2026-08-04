@@ -357,10 +357,21 @@ export const recordCollection = createServerFn({ method: "POST" })
     if (!(Number(data.amount) > 0)) throw new Error("Amount must be positive");
     const { data: order } = await ctx.supabase
       .from("orders")
-      .select("id, brand_id, courier_id")
+      .select("id, brand_id, courier_id, total_amount")
       .eq("id", data.orderId)
       .maybeSingle();
     if (!order) throw new Error("Order not found");
+    const { data: priorCollections } = await ctx.supabase
+      .from("order_collections")
+      .select("amount")
+      .eq("order_id", data.orderId);
+    const alreadyCollected = ((priorCollections ?? []) as Array<{ amount: number }>).reduce(
+      (sum, r) => sum + Number(r.amount ?? 0),
+      0,
+    );
+    if (alreadyCollected + Number(data.amount) > Number(order.total_amount ?? 0) + 0.01) {
+      throw new Error("المبلغ يتخطى المتبقي من قيمة الأوردر");
+    }
     const { error } = await ctx.supabase.from("order_collections").insert({
       order_id: data.orderId,
       shipment_id: data.shipmentId ?? null,
