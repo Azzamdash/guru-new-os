@@ -339,7 +339,16 @@ function MyOrdersPanel() {
   const updFn = useServerFn(updateOrderStatus);
   const upd = useMutation({
     mutationFn: (v: { id: string; confirmation_status?: string }) => updFn({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["orders-center", "my-orders"] }),
+    onSuccess: (r) => {
+      if (r.stockWarning) {
+        toast.warning(
+          lang === "ar"
+            ? `الكمية غير كافية للأصناف: ${r.stockWarning}`
+            : `Insufficient stock for: ${r.stockWarning}`,
+        );
+      }
+      qc.invalidateQueries({ queryKey: ["orders-center", "my-orders"] });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 

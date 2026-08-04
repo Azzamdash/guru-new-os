@@ -323,7 +323,14 @@ export function OrdersListTab() {
       financial_status?: string;
       confirmation_status?: string;
     }) => updFn({ data: v }),
-    onSuccess: () => {
+    onSuccess: (r) => {
+      if (r.stockWarning) {
+        toast.warning(
+          lang === "ar"
+            ? `الكمية غير كافية للأصناف: ${r.stockWarning}`
+            : `Insufficient stock for: ${r.stockWarning}`,
+        );
+      }
       qc.invalidateQueries({ queryKey: ["orders"] });
       qc.invalidateQueries({ queryKey: ["orders-summary"] });
     },
