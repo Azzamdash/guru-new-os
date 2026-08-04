@@ -1,5 +1,4 @@
-import { tr } from "@/lib/i18n";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -29,28 +28,7 @@ import {
 } from "@/lib/distribution.functions";
 import { useLang } from "@/lib/i18n";
 
-export const Route = createFileRoute("/_authenticated/_app/order-distribution")({
-  head: () => ({
-    meta: [
-      { title: tr("إدارة توزيع الأوردرات — e-GURUS") },
-      {
-        name: "description",
-        content:
-          "توزيع الأوردرات على شركات الشحن والمناديب مع اقتراح تلقائي حسب المحافظة وحمل كل شركة.",
-      },
-      { property: "og:title", content: "إدارة توزيع الأوردرات — e-GURUS" },
-      {
-        property: "og:description",
-        content: "توزيع الأوردرات تلقائياً ويدوياً ومتابعة أحمال شركات الشحن.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: OrderDistributionPage,
-});
-
-function OrderDistributionPage() {
+export function OrderDistributionTab() {
   const { lang } = useLang();
   const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const money = (n: number) =>

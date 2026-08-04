@@ -1,6 +1,6 @@
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { queryPresets } from "@/lib/query-presets";
@@ -81,21 +81,6 @@ import {
   type OrderWorkflowStatus,
   type ShipmentOutcome,
 } from "@/lib/order-lifecycle.shared";
-
-export const Route = createFileRoute("/_authenticated/_app/orders")({
-  head: () => ({
-    meta: [
-      { title: "الأوردرات — e-GURUS" },
-      {
-        name: "description",
-        content:
-          "قائمة موحّدة بكل الأوردرات (Shopify + يدوي) لكل البراندات: قيمة، تكلفة، شحن، حالة.",
-      },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
-  component: OrdersPage,
-});
 
 const FF: Array<{ v: string; k: string; tone: "default" | "success" | "destructive" | "muted" }> = [
   { v: "unfulfilled", k: "ff_unfulfilled", tone: "muted" },
@@ -197,7 +182,7 @@ const EG_GOVERNORATES: Array<{ ar: string; en: string }> = [
   { ar: "الوادي الجديد", en: "New Valley" },
 ];
 
-function OrdersPage() {
+export function OrdersListTab() {
   const { t, lang } = useLang();
   const qc = useQueryClient();
   const listFn = useServerFn(listOrders);

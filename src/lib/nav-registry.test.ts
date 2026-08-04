@@ -63,7 +63,7 @@ describe("canSeePage: nothing is implied by job roles", () => {
   it("an explicit grant opens exactly that page", () => {
     const ctx = mkCtx({ roles: ["team_leader"], sections: new Set(["page:/production"]) });
     expect(canSeePage(pageByRoute("/production"), ctx)).toBe(true);
-    expect(canSeePage(pageByRoute("/orders"), ctx)).toBe(false);
+    expect(canSeePage(pageByRoute("/order-returns"), ctx)).toBe(false);
   });
 });
 
@@ -113,11 +113,11 @@ describe("canSeePage: per-page manual grants", () => {
   });
 
   it("uses page grants for visibility and roles for write access", () => {
-    const page = pageByRoute("/orders");
-    const hidden = mkCtx({ sections: new Set(["deny:/orders"]) });
-    const read = mkCtx({ sections: new Set(["page:/orders"]) });
-    const writeGrant = mkCtx({ sections: new Set(["write:/orders"]) });
-    const roleWriter = mkCtx({ canWrite: true, sections: new Set(["page:/orders"]) });
+    const page = pageByRoute("/order-returns");
+    const hidden = mkCtx({ sections: new Set(["deny:/order-returns"]) });
+    const read = mkCtx({ sections: new Set(["page:/order-returns"]) });
+    const writeGrant = mkCtx({ sections: new Set(["write:/order-returns"]) });
+    const roleWriter = mkCtx({ canWrite: true, sections: new Set(["page:/order-returns"]) });
 
     expect(pageAccessLevel(page, hidden)).toBe("hidden");
     expect(pageAccessLevel(page, read)).toBe("read");
@@ -132,9 +132,9 @@ describe("canSeePage: per-page manual grants", () => {
     const ctx = mkCtx({
       canWrite: true,
       roles: ["operation_manager"],
-      sections: new Set(["deny:/orders"]),
+      sections: new Set(["deny:/order-returns"]),
     });
-    expect(pageAccessLevel(pageByRoute("/orders"), ctx)).toBe("hidden");
+    expect(pageAccessLevel(pageByRoute("/order-returns"), ctx)).toBe("hidden");
   });
 });
 

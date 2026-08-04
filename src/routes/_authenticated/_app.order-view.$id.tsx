@@ -88,7 +88,7 @@ function OrderViewPage() {
   return (
     <div className="space-y-4 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Link to="/orders" className="text-sm text-muted-foreground hover:underline">
+        <Link to="/orders-center" className="text-sm text-muted-foreground hover:underline">
           <ArrowRight className="inline h-4 w-4" /> {T("الأوردرات", "Orders")}
         </Link>
         <h1 className="flex items-center gap-2 text-xl font-bold">
