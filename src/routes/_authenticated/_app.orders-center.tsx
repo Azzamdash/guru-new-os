@@ -47,10 +47,11 @@ import {
   getStuckOrdersAlerts,
   type StuckOrderAlert,
 } from "@/lib/orders-management.functions";
-import { getOrder, type OrderRow } from "@/lib/orders.functions";
+import { getOrder, updateOrderStatus, type OrderRow } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
 import { OrdersListTab } from "@/components/orders/OrdersListTab";
-import { OrderDistributionTab } from "@/components/orders/OrderDistributionTab";
+import { getMyAssignedOrders } from "@/lib/distribution.functions";
+import { ORDER_STATUS_LABELS_AR, type OrderWorkflowStatus } from "@/lib/order-lifecycle.shared";
 
 export const Route = createFileRoute("/_authenticated/_app/orders-center")({
   head: () => ({
@@ -141,9 +142,7 @@ function OrdersCenterPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="orders">{t("الأوردرات", "Orders")}</TabsTrigger>
-          <TabsTrigger value="distribution">
-            {t("توزيع الأوردرات", "Order Distribution")}
-          </TabsTrigger>
+          <TabsTrigger value="myorders">{t("أوردراتي", "My Orders")}</TabsTrigger>
           <TabsTrigger value="ops">{t("الشحن والتحصيل", "Shipping & Collection")}</TabsTrigger>
           <TabsTrigger value="timeline">{t("سجل الأوردر", "Order timeline")}</TabsTrigger>
 
@@ -174,8 +173,8 @@ function OrdersCenterPage() {
           <OrdersListTab />
         </TabsContent>
 
-        <TabsContent value="distribution" className="pt-4">
-          <OrderDistributionTab />
+        <TabsContent value="myorders" className="pt-4">
+          <MyOrdersPanel />
         </TabsContent>
 
         <TabsContent value="ops" className="pt-4">
@@ -299,6 +298,158 @@ function AttentionPanel({
         ),
         uncollected,
       )}
+    </div>
+  );
+}
+
+const ORDER_STATUS_LABELS_EN: Record<OrderWorkflowStatus, string> = {
+  new: "New",
+  processing: "Processing",
+  postponed: "Postponed",
+  awaiting_response: "Awaiting your response",
+  succeeded: "Succeeded",
+  cancelled: "Cancelled",
+};
+
+const MY_ORDERS_CONFIRM: Array<{
+  v: string;
+  labelAr: string;
+  labelEn: string;
+  tone: "muted" | "success" | "destructive";
+}> = [
+  { v: "pending", labelAr: "بانتظار التأكيد", labelEn: "Pending", tone: "muted" },
+  { v: "confirmed", labelAr: "مؤكد", labelEn: "Confirmed", tone: "success" },
+  { v: "cancelled", labelAr: "ملغي", labelEn: "Cancelled", tone: "destructive" },
+];
+
+function MyOrdersPanel() {
+  const { lang } = useLang();
+  const t = (ar: string, en: string) => T(lang, ar, en);
+  const qc = useQueryClient();
+  const [status, setStatus] = useState<string>("all");
+
+  const myOrdersFn = useServerFn(getMyAssignedOrders);
+  const myOrders = useQuery({
+    queryKey: ["orders-center", "my-orders", status],
+    queryFn: () => myOrdersFn({ data: { status: status === "all" ? null : status } }),
+    ...queryPresets.live,
+  });
+
+  const updFn = useServerFn(updateOrderStatus);
+  const upd = useMutation({
+    mutationFn: (v: { id: string; confirmation_status?: string }) => updFn({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["orders-center", "my-orders"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const rows = myOrders.data ?? [];
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm text-muted-foreground">
+          {t(`عدد الأوردرات: ${rows.length}`, `Orders: ${rows.length}`)}
+        </div>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("كل الحالات", "All statuses")}</SelectItem>
+            {(
+              [
+                "new",
+                "processing",
+                "postponed",
+                "awaiting_response",
+                "succeeded",
+                "cancelled",
+              ] as const
+            ).map((s) => (
+              <SelectItem key={s} value={s}>
+                {lang === "ar" ? ORDER_STATUS_LABELS_AR[s] : ORDER_STATUS_LABELS_EN[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card className="overflow-x-auto">
+        {myOrders.isLoading ? (
+          <div className="p-6 text-muted-foreground">{t("جارٍ التحميل…", "Loading…")}</div>
+        ) : rows.length === 0 ? (
+          <div className="p-6 text-muted-foreground">
+            {t("لا توجد أوردرات موزّعة عليك حاليًا", "No orders currently assigned to you")}
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="text-muted-foreground border-b">
+              <tr>
+                <th className="p-3 text-start">{t("رقم الأوردر", "Order #")}</th>
+                <th className="p-3 text-start">{t("العميل", "Customer")}</th>
+                <th className="p-3 text-start">{t("البراند", "Brand")}</th>
+                <th className="p-3 text-start">{t("الإجمالي", "Total")}</th>
+                <th className="p-3 text-start">{t("الحالة", "Status")}</th>
+                <th className="p-3 text-start">{t("التأكيد", "Confirmation")}</th>
+                <th className="p-3 text-start">{t("شركة الشحن", "Courier")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const c =
+                  MY_ORDERS_CONFIRM.find((x) => x.v === (r.confirmationStatus ?? "pending")) ??
+                  MY_ORDERS_CONFIRM[0];
+                return (
+                  <tr key={r.id} className="border-b last:border-0">
+                    <td className="p-3">{r.orderNumber ?? r.id.slice(0, 8)}</td>
+                    <td className="p-3">
+                      <div>{r.customerName ?? t("بدون اسم", "No name")}</div>
+                      <div className="text-xs text-muted-foreground">{r.customerPhone ?? "—"}</div>
+                    </td>
+                    <td className="p-3">{r.brandName}</td>
+                    <td className="p-3 tabular-nums">{nf(r.total)}</td>
+                    <td className="p-3">
+                      <Badge variant="secondary">
+                        {lang === "ar"
+                          ? ORDER_STATUS_LABELS_AR[r.orderStatus as OrderWorkflowStatus]
+                          : ORDER_STATUS_LABELS_EN[r.orderStatus as OrderWorkflowStatus]}
+                      </Badge>
+                    </td>
+                    <td className="p-3">
+                      <Select
+                        value={r.confirmationStatus ?? "pending"}
+                        onValueChange={(v) => upd.mutate({ id: r.id, confirmation_status: v })}
+                      >
+                        <SelectTrigger className="w-32 h-8">
+                          <Badge
+                            variant={
+                              c.tone === "success"
+                                ? "default"
+                                : c.tone === "destructive"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                          >
+                            {lang === "ar" ? c.labelAr : c.labelEn}
+                          </Badge>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MY_ORDERS_CONFIRM.map((x) => (
+                            <SelectItem key={x.v} value={x.v}>
+                              {lang === "ar" ? x.labelAr : x.labelEn}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-3">{r.courierName ?? "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </Card>
     </div>
   );
 }
