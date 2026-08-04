@@ -1,8 +1,5 @@
 name: Deploy to Server
 on:
-  workflow_run:
-    workflows: ["Build & Push Image"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       target_ip:
@@ -16,7 +13,6 @@ on:
 
 jobs:
   check:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       should_deploy: ${{ steps.gate.outputs.should_deploy }}
