@@ -72,6 +72,7 @@ type Invoice = {
   due_at: string | null;
   status: "open" | "paid";
   note: string | null;
+  type: "purchase" | "return";
 };
 
 function PurchasesPage() {
@@ -98,9 +99,11 @@ function PurchasesPage() {
     due_at: string | null;
     status: "open" | "paid";
     note: string | null;
+    type: "purchase" | "return";
   }>(null);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
   const [itemsFor, setItemsFor] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<"all" | "purchase" | "return">("all");
 
   const canWrite = !!(roleQ.data?.isAdmin || roleQ.data?.isManager || roleQ.data?.canWrite);
 
@@ -143,28 +146,27 @@ function PurchasesPage() {
         if (dateFrom && r.issued_at < dateFrom) return false;
         if (dateTo && r.issued_at > dateTo) return false;
         if (supplierFilter !== "all" && r.supplier_id !== supplierFilter) return false;
+        if (typeFilter !== "all" && (r.type ?? "purchase") !== typeFilter) return false;
         return true;
       }),
-    [allRows, dateFrom, dateTo, supplierFilter],
+    [allRows, dateFrom, dateTo, supplierFilter, typeFilter],
   );
 
   const today = getTodayInBusinessTimezone();
 
   const report = useMemo(() => {
-    const total = rows.reduce((a, r) => a + Number(r.amount || 0), 0);
-    const paid = rows
-      .filter((r) => r.status === "paid")
-      .reduce((a, r) => a + Number(r.amount || 0), 0);
-    const open = rows
-      .filter((r) => r.status !== "paid")
-      .reduce((a, r) => a + Number(r.amount || 0), 0);
+    // Return invoices are credits: they reduce what we owe/spent, not add to it.
+    const signed = (r: Invoice) => (r.type === "return" ? -1 : 1) * Number(r.amount || 0);
+    const total = rows.reduce((a, r) => a + signed(r), 0);
+    const paid = rows.filter((r) => r.status === "paid").reduce((a, r) => a + signed(r), 0);
+    const open = rows.filter((r) => r.status !== "paid").reduce((a, r) => a + signed(r), 0);
     const overdue = rows.filter((r) => r.status !== "paid" && r.due_at && r.due_at < today);
-    const overdueTotal = overdue.reduce((a, r) => a + Number(r.amount || 0), 0);
+    const overdueTotal = overdue.reduce((a, r) => a + signed(r), 0);
     const bySupplier: Record<string, { total: number; open: number }> = {};
     for (const r of rows) {
       bySupplier[r.supplier_id] = bySupplier[r.supplier_id] || { total: 0, open: 0 };
-      bySupplier[r.supplier_id].total += Number(r.amount || 0);
-      if (r.status !== "paid") bySupplier[r.supplier_id].open += Number(r.amount || 0);
+      bySupplier[r.supplier_id].total += signed(r);
+      if (r.status !== "paid") bySupplier[r.supplier_id].open += signed(r);
     }
     const topSuppliers = Object.entries(bySupplier)
       .map(([id, v]) => ({ id, name: supplierName(id), ...v }))
@@ -209,6 +211,7 @@ function PurchasesPage() {
                 due_at: null,
                 status: "open",
                 note: "",
+                type: "purchase",
               });
               setOpen(true);
             }}
@@ -228,7 +231,7 @@ function PurchasesPage() {
             <Label>{T("إلى", "To")}</Label>
             <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <Label>{T("المورد", "Supplier")}</Label>
             <Select value={supplierFilter} onValueChange={setSupplierFilter}>
               <SelectTrigger>
@@ -241,6 +244,19 @@ function PurchasesPage() {
                     {s.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>{T("النوع", "Type")}</Label>
+            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{T("الكل", "All")}</SelectItem>
+                <SelectItem value="purchase">{T("شراء", "Purchase")}</SelectItem>
+                <SelectItem value="return">{T("مرتجع لمورد", "Supplier return")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -315,6 +331,7 @@ function PurchasesPage() {
                 <th className="p-3">{T("التاريخ", "Date")}</th>
                 <th className="p-3">{T("المورد", "Supplier")}</th>
                 <th className="p-3">{T("البراند", "Brand")}</th>
+                <th className="p-3">{T("النوع", "Type")}</th>
                 <th className="p-3 text-left">{T("الإجمالي", "Total")}</th>
                 <th className="p-3">{T("الاستحقاق", "Due date")}</th>
                 <th className="p-3">{T("الحالة", "Status")}</th>
@@ -329,6 +346,13 @@ function PurchasesPage() {
                   </td>
                   <td className="p-3 font-medium">{supplierName(r.supplier_id)}</td>
                   <td className="p-3 text-muted-foreground">{brandName(r.brand_id)}</td>
+                  <td className="p-3">
+                    {r.type === "return" ? (
+                      <Badge variant="secondary">{T("مرتجع لمورد", "Supplier return")}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">{T("شراء", "Purchase")}</span>
+                    )}
+                  </td>
                   <td className="p-3 num text-left">{Number(r.amount).toLocaleString("en-US")}</td>
                   <td className="p-3 num text-muted-foreground" dir="ltr">
                     {r.due_at ?? "—"}
@@ -363,6 +387,7 @@ function PurchasesPage() {
                               due_at: r.due_at,
                               status: r.status,
                               note: r.note,
+                              type: r.type,
                             });
                             setOpen(true);
                           }}
@@ -379,7 +404,7 @@ function PurchasesPage() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
                     {T("لا فواتير.", "No invoices.")}
                   </td>
                 </tr>
@@ -415,6 +440,29 @@ function PurchasesPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label>{T("النوع", "Type")}</Label>
+                <Select
+                  value={editing.type}
+                  onValueChange={(v) => setEditing({ ...editing, type: v as "purchase" | "return" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="purchase">{T("فاتورة شراء", "Purchase invoice")}</SelectItem>
+                    <SelectItem value="return">{T("مرتجع لمورد", "Supplier return")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                {editing.type === "return" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {T(
+                      "البنود اللي هتضيفها هتتخصم من المخزون بدل ما تتضاف، وهتتحسب كخصم من مستحقات المورد.",
+                      "Line items you add will decrement stock instead of adding to it, and count as a credit against what's owed to the supplier.",
+                    )}
+                  </p>
+                )}
               </div>
               <div>
                 <Label>{T("البراند (اختياري)", "Brand (optional)")}</Label>
