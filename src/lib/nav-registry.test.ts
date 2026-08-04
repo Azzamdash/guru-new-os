@@ -90,7 +90,11 @@ describe("canSeePage: privileged & admin", () => {
 
   it("investor sees investor-flagged pages only when granted", () => {
     expect(canSeePage(pageByRoute("/my-investments"), investor)).toBe(false);
-    const granted = mkCtx({ isInvestor: true, roles: ["investor"], sections: new Set(["page:/my-investments"]) });
+    const granted = mkCtx({
+      isInvestor: true,
+      roles: ["investor"],
+      sections: new Set(["page:/my-investments"]),
+    });
     expect(canSeePage(pageByRoute("/my-investments"), granted)).toBe(true);
   });
 
@@ -102,12 +106,12 @@ describe("canSeePage: privileged & admin", () => {
 
 describe("canSeePage: per-page manual grants", () => {
   it("grants access via sections page:<route> even without role", () => {
-    const ctx = mkCtx({ sections: new Set(["page:/reports/executive"]) });
-    expect(canSeePage(pageByRoute("/reports/executive"), ctx)).toBe(true);
+    const ctx = mkCtx({ sections: new Set(["page:/order-returns"]) });
+    expect(canSeePage(pageByRoute("/order-returns"), ctx)).toBe(true);
   });
 
   it("does not leak access to other pages", () => {
-    const ctx = mkCtx({ sections: new Set(["page:/reports/executive"]) });
+    const ctx = mkCtx({ sections: new Set(["page:/order-returns"]) });
     expect(canSeePage(pageByRoute("/admin"), ctx)).toBe(false);
     expect(canSeePage(pageByRoute("/reports/audit"), ctx)).toBe(false);
   });
@@ -135,6 +139,31 @@ describe("canSeePage: per-page manual grants", () => {
       sections: new Set(["deny:/order-returns"]),
     });
     expect(pageAccessLevel(pageByRoute("/order-returns"), ctx)).toBe("hidden");
+  });
+});
+
+describe("canSeePage: privilegedOnly is a hard floor", () => {
+  it("no page:/write: grant opens a privilegedOnly page for a non-privileged user", () => {
+    const page = pageByRoute("/reports/executive");
+    expect(page.privilegedOnly).toBe(true);
+    const pageGrant = mkCtx({ sections: new Set(["page:/reports/executive"]) });
+    const writeGrant = mkCtx({ sections: new Set(["write:/reports/executive"]) });
+    const roleGrant = mkCtx({
+      canWrite: true,
+      roles: ["operation_manager"],
+      sections: new Set(["page:/reports/executive"]),
+    });
+    expect(canSeePage(page, pageGrant)).toBe(false);
+    expect(canSeePage(page, writeGrant)).toBe(false);
+    expect(canSeePage(page, roleGrant)).toBe(false);
+  });
+
+  it("admin/manager still see privilegedOnly pages with no grant needed", () => {
+    const page = pageByRoute("/reports/executive");
+    const admin = mkCtx({ isAdmin: true, isPrivileged: true, roles: ["admin"] });
+    const manager = mkCtx({ isPrivileged: true, roles: ["manager"] });
+    expect(canSeePage(page, admin)).toBe(true);
+    expect(canSeePage(page, manager)).toBe(true);
   });
 });
 

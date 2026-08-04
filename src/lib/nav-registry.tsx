@@ -989,10 +989,17 @@ export type PageAccessLevel = "hidden" | "read" | "write";
  * when an administrator granted it, and only edits when the grant is `write:`.
  * `page:` = view only, `deny:` / missing = hidden.
  * Admin and manager remain break-glass full-access roles.
+ *
+ * `privilegedOnly` is a hard floor below that: no per-user `page:`/`write:`
+ * grant can open a privilegedOnly page for a non-admin/manager. Without this
+ * check the flag was purely decorative — a user granted `page:/reports/executive`
+ * (or any of the ~27 other privilegedOnly pages) could see it despite not
+ * being admin/manager.
  */
 export function pageAccessLevel(p: NavPage, ctx: RoleCtx): PageAccessLevel {
   if (p.adminOnly) return ctx.isAdmin ? "write" : "hidden";
   if (ctx.isPrivileged) return "write";
+  if (p.privilegedOnly) return "hidden";
 
   if (ctx.sections.has(`deny:${p.to}`)) return "hidden";
   if (ctx.sections.has(`write:${p.to}`)) return "write";
