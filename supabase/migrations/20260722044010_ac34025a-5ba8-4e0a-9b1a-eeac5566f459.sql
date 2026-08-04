@@ -1,9 +1,17 @@
 
 -- Enums
-CREATE TYPE public.marketing_platform AS ENUM ('tiktok','meta','google','snapchat','whatsapp','sms','other');
-CREATE TYPE public.courier_type AS ENUM ('courier_company','rep','offline_branch');
-CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return','adjustment');
-CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
+DO $do$ BEGIN
+  CREATE TYPE public.marketing_platform AS ENUM ('tiktok','meta','google','snapchat','whatsapp','sms','other');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
+DO $do$ BEGIN
+  CREATE TYPE public.courier_type AS ENUM ('courier_company','rep','offline_branch');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
+DO $do$ BEGIN
+  CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return','adjustment');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
+DO $do$ BEGIN
+  CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
 -- Materials
 CREATE TABLE IF NOT EXISTS public.materials (
@@ -148,5 +156,5 @@ CREATE TRIGGER sales_updated_at BEFORE UPDATE ON public.sales_invoices
 
 -- Extend expense_entries with marketing platform + attributed revenue
 ALTER TABLE public.expense_entries
-  ADD COLUMN platform public.marketing_platform,
-  ADD COLUMN attributed_revenue numeric NOT NULL DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS platform public.marketing_platform,
+  ADD COLUMN IF NOT EXISTS attributed_revenue numeric NOT NULL DEFAULT 0;

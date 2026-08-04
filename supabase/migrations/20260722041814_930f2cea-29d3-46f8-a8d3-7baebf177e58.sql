@@ -1,7 +1,11 @@
 
 -- Enum for supplier invoice status
-CREATE TYPE public.invoice_status AS ENUM ('open', 'partial', 'paid');
-CREATE TYPE public.brand_type AS ENUM ('product', 'service');
+DO $do$ BEGIN
+  CREATE TYPE public.invoice_status AS ENUM ('open', 'partial', 'paid');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
+DO $do$ BEGIN
+  CREATE TYPE public.brand_type AS ENUM ('product', 'service');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
 -- ============ brands ============
 CREATE TABLE IF NOT EXISTS public.brands (

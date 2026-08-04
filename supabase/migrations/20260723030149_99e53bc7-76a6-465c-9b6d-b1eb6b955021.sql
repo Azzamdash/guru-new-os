@@ -1,4 +1,6 @@
-CREATE TYPE public.app_role AS ENUM ('admin', 'member');
+DO $do$ BEGIN
+  CREATE TYPE public.app_role AS ENUM ('admin', 'member');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,

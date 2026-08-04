@@ -31,8 +31,8 @@ VALUES ('الخزنة الرئيسية', 'cash', 0, 0);
 
 -- 2) cash_transactions: wallet + transfer group
 ALTER TABLE public.cash_transactions
-  ADD COLUMN wallet_id uuid REFERENCES public.wallets(id) ON DELETE RESTRICT,
-  ADD COLUMN transfer_group uuid;
+  ADD COLUMN IF NOT EXISTS wallet_id uuid REFERENCES public.wallets(id) ON DELETE RESTRICT,
+  ADD COLUMN IF NOT EXISTS transfer_group uuid;
 
 -- Backfill existing txns to default wallet
 UPDATE public.cash_transactions
@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS cash_transactions_transfer_group_idx ON public.cash_t
 -- 3) supplier_payments: allow standalone payments
 ALTER TABLE public.supplier_payments
   ALTER COLUMN invoice_id DROP NOT NULL,
-  ADD COLUMN supplier_id uuid REFERENCES public.suppliers(id) ON DELETE RESTRICT;
+  ADD COLUMN IF NOT EXISTS supplier_id uuid REFERENCES public.suppliers(id) ON DELETE RESTRICT;
 
 -- Backfill supplier_id from linked invoices
 UPDATE public.supplier_payments sp

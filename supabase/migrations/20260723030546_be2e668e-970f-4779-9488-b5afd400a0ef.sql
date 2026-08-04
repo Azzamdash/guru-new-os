@@ -1,16 +1,16 @@
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='monthly_entries' AND column_name='period_type') THEN
-    ALTER TABLE public.monthly_entries ADD COLUMN period_type text NOT NULL DEFAULT 'monthly';
+    ALTER TABLE public.monthly_entries ADD COLUMN IF NOT EXISTS period_type text NOT NULL DEFAULT 'monthly';
   END IF;
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='monthly_entries' AND column_name='period_date') THEN
-    ALTER TABLE public.monthly_entries ADD COLUMN period_date date;
+    ALTER TABLE public.monthly_entries ADD COLUMN IF NOT EXISTS period_date date;
   END IF;
 END $$;
 
 ALTER TABLE public.materials ALTER COLUMN unit SET DEFAULT 'piece';
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='unit') THEN
-    ALTER TABLE public.products ADD COLUMN unit text NOT NULL DEFAULT 'piece';
+    ALTER TABLE public.products ADD COLUMN IF NOT EXISTS unit text NOT NULL DEFAULT 'piece';
   END IF;
 END $$;
 

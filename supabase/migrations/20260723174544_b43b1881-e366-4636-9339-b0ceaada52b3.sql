@@ -79,8 +79,12 @@ CREATE TRIGGER trg_production_tasks_field_lock
   FOR EACH ROW EXECUTE FUNCTION public.production_tasks_prevent_field_tampering();
 
 -- 3) Employee requests
-CREATE TYPE public.employee_request_type AS ENUM ('leave','advance');
-CREATE TYPE public.employee_request_status AS ENUM ('pending','approved','rejected');
+DO $do$ BEGIN
+  CREATE TYPE public.employee_request_type AS ENUM ('leave','advance');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
+DO $do$ BEGIN
+  CREATE TYPE public.employee_request_status AS ENUM ('pending','approved','rejected');
+EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
 CREATE TABLE IF NOT EXISTS public.employee_requests (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,

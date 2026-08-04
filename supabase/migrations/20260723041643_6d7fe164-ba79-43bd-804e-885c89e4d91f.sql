@@ -52,10 +52,10 @@ CREATE TRIGGER cnotes_updated_at BEFORE UPDATE ON public.customer_notes
 
 -- 3) Extend sales_invoices with customer contact + link
 ALTER TABLE public.sales_invoices
-  ADD COLUMN customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  ADD COLUMN customer_name text,
-  ADD COLUMN customer_phone text,
-  ADD COLUMN customer_email text;
+  ADD COLUMN IF NOT EXISTS customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS customer_name text,
+  ADD COLUMN IF NOT EXISTS customer_phone text,
+  ADD COLUMN IF NOT EXISTS customer_email text;
 CREATE INDEX IF NOT EXISTS sales_invoices_customer_idx ON public.sales_invoices(customer_id);
 
 -- 4) Trigger: on insert/update of a sales invoice, upsert/link a customer by phone or email
