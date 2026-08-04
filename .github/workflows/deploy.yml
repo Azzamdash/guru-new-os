@@ -68,27 +68,30 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "$TARGET_IP" >> ~/.ssh/known_hosts
 
-      - name: Lowercase repository name
+      - name: Resolve repository names
         id: repo
-        run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+        run: |
+          FULL="${{ github.repository }}"
+          echo "full=${FULL,,}" >> "$GITHUB_OUTPUT"
+          echo "name=$(echo "${FULL,,}" | cut -d'/' -f2)" >> "$GITHUB_OUTPUT"
 
       - name: Sync compose files
         run: |
-          ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/${{ steps.repo.outputs.repo }}"
-          scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/${{ steps.repo.outputs.repo }}/"
+          ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/${{ steps.repo.outputs.name }}"
+          scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/${{ steps.repo.outputs.name }}/"
 
       - name: Write env and deploy
         run: |
           ssh "$SSH_USER@$TARGET_IP" bash -s -- <<EOF
             set -e
-            cat > /opt/${{ steps.repo.outputs.repo }}/.env <<ENV
-            GITHUB_REPOSITORY=${{ steps.repo.outputs.repo }}
+            cat > /opt/${{ steps.repo.outputs.name }}/.env <<ENV
+            GITHUB_REPOSITORY=${{ steps.repo.outputs.full }}
             VERSION=$VERSION
             DOMAIN=${{ secrets.DOMAIN }}
             SUPABASE_SERVICE_ROLE=${{ secrets.SUPABASE_SERVICE_ROLE }}
             ENV
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            cd /opt/${{ steps.repo.outputs.repo }}
+            cd /opt/${{ steps.repo.outputs.name }}
             docker compose pull
             docker compose up -d --remove-orphans
             docker image prune -f
