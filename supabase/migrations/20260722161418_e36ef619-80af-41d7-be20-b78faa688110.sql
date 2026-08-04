@@ -1,5 +1,5 @@
 
-CREATE TABLE public.brand_integrations (
+CREATE TABLE IF NOT EXISTS public.brand_integrations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   provider text NOT NULL,

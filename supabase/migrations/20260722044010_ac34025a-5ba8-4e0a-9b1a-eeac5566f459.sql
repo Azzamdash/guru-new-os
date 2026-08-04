@@ -6,7 +6,7 @@ CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return'
 CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
 
 -- Materials
-CREATE TABLE public.materials (
+CREATE TABLE IF NOT EXISTS public.materials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   unit text NOT NULL DEFAULT 'unit',
@@ -27,7 +27,7 @@ CREATE TRIGGER materials_updated_at BEFORE UPDATE ON public.materials
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Products
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   name text NOT NULL,
@@ -50,7 +50,7 @@ CREATE TRIGGER products_updated_at BEFORE UPDATE ON public.products
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Product materials (BOM)
-CREATE TABLE public.product_materials (
+CREATE TABLE IF NOT EXISTS public.product_materials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
   material_id uuid NOT NULL REFERENCES public.materials(id) ON DELETE RESTRICT,
@@ -71,7 +71,7 @@ CREATE TRIGGER product_materials_updated_at BEFORE UPDATE ON public.product_mate
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Inventory movements
-CREATE TABLE public.inventory_movements (
+CREATE TABLE IF NOT EXISTS public.inventory_movements (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
   type public.inventory_movement_type NOT NULL,
@@ -93,7 +93,7 @@ CREATE TRIGGER im_updated_at BEFORE UPDATE ON public.inventory_movements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Couriers
-CREATE TABLE public.couriers (
+CREATE TABLE IF NOT EXISTS public.couriers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   type public.courier_type NOT NULL DEFAULT 'courier_company',
@@ -115,7 +115,7 @@ CREATE TRIGGER couriers_updated_at BEFORE UPDATE ON public.couriers
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Sales invoices
-CREATE TABLE public.sales_invoices (
+CREATE TABLE IF NOT EXISTS public.sales_invoices (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   courier_id uuid REFERENCES public.couriers(id) ON DELETE SET NULL,

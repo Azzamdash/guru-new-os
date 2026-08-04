@@ -59,7 +59,7 @@ CREATE TRIGGER trg_employees_updated BEFORE UPDATE ON public.employees
 CREATE TRIGGER trg_attendance_updated BEFORE UPDATE ON public.employee_attendance_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.supplier_invoice_items (
+CREATE TABLE IF NOT EXISTS public.supplier_invoice_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id uuid NOT NULL REFERENCES public.supplier_invoices(id) ON DELETE CASCADE,
   kind text NOT NULL CHECK (kind IN ('product','material','other')),
@@ -85,9 +85,9 @@ CREATE POLICY "invoice items write for writers" ON public.supplier_invoice_items
 
 CREATE TRIGGER trg_supplier_invoice_items_updated BEFORE UPDATE ON public.supplier_invoice_items
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX idx_supplier_invoice_items_invoice ON public.supplier_invoice_items(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_supplier_invoice_items_invoice ON public.supplier_invoice_items(invoice_id);
 
-CREATE TABLE public.service_clients (
+CREATE TABLE IF NOT EXISTS public.service_clients (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -105,9 +105,9 @@ CREATE POLICY "service_clients read by brand access" ON public.service_clients F
 DROP POLICY IF EXISTS "service_clients write by writers" ON public.service_clients;
 CREATE POLICY "service_clients write by writers" ON public.service_clients FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
 CREATE TRIGGER trg_service_clients_updated BEFORE UPDATE ON public.service_clients FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX idx_service_clients_brand ON public.service_clients(brand_id);
+CREATE INDEX IF NOT EXISTS idx_service_clients_brand ON public.service_clients(brand_id);
 
-CREATE TABLE public.service_projects (
+CREATE TABLE IF NOT EXISTS public.service_projects (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   client_id UUID NOT NULL REFERENCES public.service_clients(id) ON DELETE CASCADE,
@@ -130,8 +130,8 @@ CREATE POLICY "service_projects read by brand access" ON public.service_projects
 DROP POLICY IF EXISTS "service_projects write by writers" ON public.service_projects;
 CREATE POLICY "service_projects write by writers" ON public.service_projects FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
 CREATE TRIGGER trg_service_projects_updated BEFORE UPDATE ON public.service_projects FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX idx_service_projects_brand ON public.service_projects(brand_id);
-CREATE INDEX idx_service_projects_client ON public.service_projects(client_id);
+CREATE INDEX IF NOT EXISTS idx_service_projects_brand ON public.service_projects(brand_id);
+CREATE INDEX IF NOT EXISTS idx_service_projects_client ON public.service_projects(client_id);
 
 DROP POLICY IF EXISTS "employees read authenticated" ON public.employees;
 DROP POLICY IF EXISTS "employees read brand scoped" ON public.employees;
@@ -157,7 +157,7 @@ WITH CHECK (
   AND due_date IS NOT DISTINCT FROM (SELECT t.due_date FROM public.tasks t WHERE t.id = tasks.id)
 );
 
-CREATE TABLE public.brand_integrations (
+CREATE TABLE IF NOT EXISTS public.brand_integrations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   provider text NOT NULL,

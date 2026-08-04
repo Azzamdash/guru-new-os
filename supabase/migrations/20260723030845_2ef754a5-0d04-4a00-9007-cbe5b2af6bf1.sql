@@ -1,4 +1,4 @@
-CREATE TABLE public.company_assets (
+CREATE TABLE IF NOT EXISTS public.company_assets (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID NULL REFERENCES public.brands(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
@@ -33,7 +33,7 @@ USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manage
 CREATE TRIGGER update_company_assets_updated_at BEFORE UPDATE ON public.company_assets
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_company_assets_brand ON public.company_assets(brand_id);
+CREATE INDEX IF NOT EXISTS idx_company_assets_brand ON public.company_assets(brand_id);
 
 DROP POLICY IF EXISTS "read fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "read fulfillment" ON public.fulfillment_entries FOR SELECT

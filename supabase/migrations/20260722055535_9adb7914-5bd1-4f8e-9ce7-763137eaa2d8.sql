@@ -2,7 +2,7 @@
 -- =========================================
 -- TASKS TABLE
 -- =========================================
-CREATE TABLE public.tasks (
+CREATE TABLE IF NOT EXISTS public.tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
@@ -41,7 +41,7 @@ CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON public.tasks
 -- =========================================
 -- USER SECTION ACCESS
 -- =========================================
-CREATE TABLE public.user_section_access (
+CREATE TABLE IF NOT EXISTS public.user_section_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   section TEXT NOT NULL,
@@ -64,7 +64,7 @@ CREATE POLICY "Admins manage section access" ON public.user_section_access FOR A
 -- =========================================
 -- USER BRAND ACCESS
 -- =========================================
-CREATE TABLE public.user_brand_access (
+CREATE TABLE IF NOT EXISTS public.user_brand_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,

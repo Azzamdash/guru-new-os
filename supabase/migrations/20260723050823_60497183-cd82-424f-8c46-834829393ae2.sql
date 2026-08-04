@@ -1,5 +1,5 @@
 -- Orders
-CREATE TABLE public.orders (
+CREATE TABLE IF NOT EXISTS public.orders (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   source text NOT NULL DEFAULT 'manual',
@@ -43,15 +43,15 @@ CREATE POLICY orders_writer_all ON public.orders
   USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id))
   WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
 
-CREATE INDEX orders_brand_occurred_idx ON public.orders (brand_id, occurred_at DESC);
-CREATE INDEX orders_customer_idx ON public.orders (customer_id);
-CREATE INDEX orders_fulfillment_idx ON public.orders (fulfillment_status);
+CREATE INDEX IF NOT EXISTS orders_brand_occurred_idx ON public.orders (brand_id, occurred_at DESC);
+CREATE INDEX IF NOT EXISTS orders_customer_idx ON public.orders (customer_id);
+CREATE INDEX IF NOT EXISTS orders_fulfillment_idx ON public.orders (fulfillment_status);
 
 CREATE TRIGGER orders_updated_at BEFORE UPDATE ON public.orders
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Order items
-CREATE TABLE public.order_items (
+CREATE TABLE IF NOT EXISTS public.order_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   product_id uuid REFERENCES public.products(id) ON DELETE SET NULL,
@@ -77,8 +77,8 @@ CREATE POLICY order_items_writer ON public.order_items
   USING (public.is_writer(auth.uid()) AND EXISTS (SELECT 1 FROM public.orders o WHERE o.id = order_items.order_id AND public.has_brand_access(auth.uid(), o.brand_id)))
   WITH CHECK (public.is_writer(auth.uid()) AND EXISTS (SELECT 1 FROM public.orders o WHERE o.id = order_items.order_id AND public.has_brand_access(auth.uid(), o.brand_id)));
 
-CREATE INDEX order_items_order_idx ON public.order_items (order_id);
-CREATE INDEX order_items_product_idx ON public.order_items (product_id);
+CREATE INDEX IF NOT EXISTS order_items_order_idx ON public.order_items (order_id);
+CREATE INDEX IF NOT EXISTS order_items_product_idx ON public.order_items (product_id);
 
 -- Auto-link customer
 CREATE OR REPLACE FUNCTION public.link_order_customer()

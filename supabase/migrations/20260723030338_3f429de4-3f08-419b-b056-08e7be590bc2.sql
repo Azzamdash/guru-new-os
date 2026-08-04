@@ -3,7 +3,7 @@ CREATE TYPE public.courier_type AS ENUM ('courier_company','rep','offline_branch
 CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return','adjustment');
 CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
 
-CREATE TABLE public.materials (
+CREATE TABLE IF NOT EXISTS public.materials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   unit text NOT NULL DEFAULT 'unit',
@@ -23,7 +23,7 @@ CREATE POLICY "admin write materials" ON public.materials FOR ALL TO authenticat
 CREATE TRIGGER materials_updated_at BEFORE UPDATE ON public.materials
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   name text NOT NULL,
@@ -45,7 +45,7 @@ CREATE POLICY "admin write products" ON public.products FOR ALL TO authenticated
 CREATE TRIGGER products_updated_at BEFORE UPDATE ON public.products
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.product_materials (
+CREATE TABLE IF NOT EXISTS public.product_materials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
   material_id uuid NOT NULL REFERENCES public.materials(id) ON DELETE RESTRICT,
@@ -65,7 +65,7 @@ CREATE POLICY "admin write pm" ON public.product_materials FOR ALL TO authentica
 CREATE TRIGGER product_materials_updated_at BEFORE UPDATE ON public.product_materials
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.inventory_movements (
+CREATE TABLE IF NOT EXISTS public.inventory_movements (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
   type public.inventory_movement_type NOT NULL,
@@ -86,7 +86,7 @@ CREATE POLICY "admin write im" ON public.inventory_movements FOR ALL TO authenti
 CREATE TRIGGER im_updated_at BEFORE UPDATE ON public.inventory_movements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.couriers (
+CREATE TABLE IF NOT EXISTS public.couriers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   type public.courier_type NOT NULL DEFAULT 'courier_company',
@@ -107,7 +107,7 @@ CREATE POLICY "admin write couriers" ON public.couriers FOR ALL TO authenticated
 CREATE TRIGGER couriers_updated_at BEFORE UPDATE ON public.couriers
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.sales_invoices (
+CREATE TABLE IF NOT EXISTS public.sales_invoices (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   courier_id uuid REFERENCES public.couriers(id) ON DELETE SET NULL,

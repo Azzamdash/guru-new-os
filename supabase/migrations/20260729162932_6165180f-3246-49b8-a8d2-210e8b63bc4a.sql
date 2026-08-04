@@ -1,5 +1,5 @@
 -- 1) Wallets
-CREATE TABLE public.wallets (
+CREATE TABLE IF NOT EXISTS public.wallets (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   kind text NOT NULL DEFAULT 'cash' CHECK (kind IN ('cash','bank','ewallet')),
@@ -38,8 +38,8 @@ UPDATE public.cash_transactions
    SET wallet_id = (SELECT id FROM public.wallets ORDER BY sort_order LIMIT 1)
  WHERE wallet_id IS NULL;
 
-CREATE INDEX cash_transactions_wallet_id_idx ON public.cash_transactions(wallet_id);
-CREATE INDEX cash_transactions_transfer_group_idx ON public.cash_transactions(transfer_group);
+CREATE INDEX IF NOT EXISTS cash_transactions_wallet_id_idx ON public.cash_transactions(wallet_id);
+CREATE INDEX IF NOT EXISTS cash_transactions_transfer_group_idx ON public.cash_transactions(transfer_group);
 
 -- 3) supplier_payments: allow standalone payments
 ALTER TABLE public.supplier_payments
@@ -56,7 +56,7 @@ ALTER TABLE public.supplier_payments
   ADD CONSTRAINT supplier_payments_supplier_or_invoice_ck
   CHECK (supplier_id IS NOT NULL OR invoice_id IS NOT NULL);
 
-CREATE INDEX supplier_payments_supplier_id_idx ON public.supplier_payments(supplier_id);
+CREATE INDEX IF NOT EXISTS supplier_payments_supplier_id_idx ON public.supplier_payments(supplier_id);
 
 -- 4) Rewrite sync_supplier_payment to handle standalone payments
 CREATE OR REPLACE FUNCTION public.sync_supplier_payment()

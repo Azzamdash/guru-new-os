@@ -71,7 +71,7 @@ ALTER TABLE public.inventory_movements ADD COLUMN IF NOT EXISTS worker_name text
 CREATE INDEX IF NOT EXISTS idx_suppliers_brand_id ON public.suppliers(brand_id);
 CREATE INDEX IF NOT EXISTS idx_inv_moves_worker ON public.inventory_movements(worker_name);
 
-CREATE TABLE public.tasks (
+CREATE TABLE IF NOT EXISTS public.tasks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
@@ -106,7 +106,7 @@ CREATE POLICY "Assignees update status" ON public.tasks FOR UPDATE TO authentica
 CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON public.tasks
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.user_section_access (
+CREATE TABLE IF NOT EXISTS public.user_section_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   section TEXT NOT NULL,
@@ -125,7 +125,7 @@ CREATE POLICY "Admins manage section access" ON public.user_section_access FOR A
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
 
-CREATE TABLE public.user_brand_access (
+CREATE TABLE IF NOT EXISTS public.user_brand_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
@@ -161,7 +161,7 @@ RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS
     OR EXISTS (SELECT 1 FROM public.user_brand_access WHERE user_id = _user_id AND brand_id = _brand_id);
 $$;
 
-CREATE TABLE public.fulfillment_entries (
+CREATE TABLE IF NOT EXISTS public.fulfillment_entries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid REFERENCES public.brands(id) ON DELETE SET NULL,
   employee_name text NOT NULL,
@@ -187,8 +187,8 @@ CREATE POLICY "write fulfillment" ON public.fulfillment_entries FOR ALL TO authe
 CREATE TRIGGER trg_fulfillment_updated BEFORE UPDATE ON public.fulfillment_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
-CREATE INDEX idx_fulfillment_brand ON public.fulfillment_entries(brand_id);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_brand ON public.fulfillment_entries(brand_id);
 
 REVOKE EXECUTE ON FUNCTION public.update_updated_at_column() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.has_role(uuid, app_role) FROM PUBLIC, anon;
@@ -273,7 +273,7 @@ AS $function$
     OR EXISTS (SELECT 1 FROM public.user_brand_access WHERE user_id = _user_id AND brand_id = _brand_id);
 $function$;
 
-CREATE TABLE public.supplier_brands (
+CREATE TABLE IF NOT EXISTS public.supplier_brands (
   supplier_id UUID NOT NULL REFERENCES public.suppliers(id) ON DELETE CASCADE,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

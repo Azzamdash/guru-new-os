@@ -1,6 +1,6 @@
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'investor';
 
-CREATE TABLE public.investors (
+CREATE TABLE IF NOT EXISTS public.investors (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   email text,
@@ -24,7 +24,7 @@ CREATE POLICY "investors self read" ON public.investors FOR SELECT TO authentica
 CREATE TRIGGER investors_updated BEFORE UPDATE ON public.investors
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.investor_brand_shares (
+CREATE TABLE IF NOT EXISTS public.investor_brand_shares (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   investor_id uuid NOT NULL REFERENCES public.investors(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,

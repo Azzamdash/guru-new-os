@@ -1,6 +1,6 @@
 
 -- =============== 1) Courier settlements (COD reconciliation) ===============
-CREATE TABLE public.courier_settlements (
+CREATE TABLE IF NOT EXISTS public.courier_settlements (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE RESTRICT,
   courier_id uuid REFERENCES public.couriers(id) ON DELETE SET NULL,
@@ -15,7 +15,7 @@ CREATE TABLE public.courier_settlements (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX courier_settlements_brand_idx ON public.courier_settlements(brand_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS courier_settlements_brand_idx ON public.courier_settlements(brand_id, created_at DESC);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.courier_settlements TO authenticated;
 GRANT ALL ON public.courier_settlements TO service_role;
 ALTER TABLE public.courier_settlements ENABLE ROW LEVEL SECURITY;
@@ -35,7 +35,7 @@ CREATE POLICY "courier_settlements_delete" ON public.courier_settlements FOR DEL
 CREATE TRIGGER courier_settlements_updated_at BEFORE UPDATE ON public.courier_settlements
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE TABLE public.courier_settlement_lines (
+CREATE TABLE IF NOT EXISTS public.courier_settlement_lines (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   settlement_id uuid NOT NULL REFERENCES public.courier_settlements(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE RESTRICT,
@@ -52,8 +52,8 @@ CREATE TABLE public.courier_settlement_lines (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX courier_settlement_lines_settlement_idx ON public.courier_settlement_lines(settlement_id);
-CREATE INDEX courier_settlement_lines_tracking_idx ON public.courier_settlement_lines(tracking);
+CREATE INDEX IF NOT EXISTS courier_settlement_lines_settlement_idx ON public.courier_settlement_lines(settlement_id);
+CREATE INDEX IF NOT EXISTS courier_settlement_lines_tracking_idx ON public.courier_settlement_lines(tracking);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.courier_settlement_lines TO authenticated;
 GRANT ALL ON public.courier_settlement_lines TO service_role;
 ALTER TABLE public.courier_settlement_lines ENABLE ROW LEVEL SECURITY;
@@ -74,7 +74,7 @@ CREATE TRIGGER courier_settlement_lines_updated_at BEFORE UPDATE ON public.couri
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- =============== 2) Returns / exchanges ===============
-CREATE TABLE public.order_returns (
+CREATE TABLE IF NOT EXISTS public.order_returns (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE RESTRICT,
@@ -92,8 +92,8 @@ CREATE TABLE public.order_returns (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX order_returns_order_idx ON public.order_returns(order_id);
-CREATE INDEX order_returns_brand_idx ON public.order_returns(brand_id, requested_at DESC);
+CREATE INDEX IF NOT EXISTS order_returns_order_idx ON public.order_returns(order_id);
+CREATE INDEX IF NOT EXISTS order_returns_brand_idx ON public.order_returns(brand_id, requested_at DESC);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_returns TO authenticated;
 GRANT ALL ON public.order_returns TO service_role;
 ALTER TABLE public.order_returns ENABLE ROW LEVEL SECURITY;
@@ -114,7 +114,7 @@ CREATE TRIGGER order_returns_updated_at BEFORE UPDATE ON public.order_returns
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- =============== 3) Confirmation attempts ===============
-CREATE TABLE public.order_confirmation_attempts (
+CREATE TABLE IF NOT EXISTS public.order_confirmation_attempts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE RESTRICT,
@@ -126,7 +126,7 @@ CREATE TABLE public.order_confirmation_attempts (
   created_by uuid,
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX order_confirmation_attempts_order_idx ON public.order_confirmation_attempts(order_id, attempted_at DESC);
+CREATE INDEX IF NOT EXISTS order_confirmation_attempts_order_idx ON public.order_confirmation_attempts(order_id, attempted_at DESC);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_confirmation_attempts TO authenticated;
 GRANT ALL ON public.order_confirmation_attempts TO service_role;
 ALTER TABLE public.order_confirmation_attempts ENABLE ROW LEVEL SECURITY;
@@ -145,7 +145,7 @@ CREATE POLICY "order_conf_attempts_delete" ON public.order_confirmation_attempts
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
 -- =============== 4) WhatsApp templates ===============
-CREATE TABLE public.whatsapp_templates (
+CREATE TABLE IF NOT EXISTS public.whatsapp_templates (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid REFERENCES public.brands(id) ON DELETE CASCADE,
   name text NOT NULL,
@@ -157,7 +157,7 @@ CREATE TABLE public.whatsapp_templates (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX whatsapp_templates_event_idx ON public.whatsapp_templates(event_key, active);
+CREATE INDEX IF NOT EXISTS whatsapp_templates_event_idx ON public.whatsapp_templates(event_key, active);
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_templates TO authenticated;
 GRANT ALL ON public.whatsapp_templates TO service_role;
 ALTER TABLE public.whatsapp_templates ENABLE ROW LEVEL SECURITY;
@@ -183,7 +183,7 @@ CREATE TRIGGER whatsapp_templates_updated_at BEFORE UPDATE ON public.whatsapp_te
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- =============== 5) SLA rules ===============
-CREATE TABLE public.order_sla_rules (
+CREATE TABLE IF NOT EXISTS public.order_sla_rules (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   stage text NOT NULL UNIQUE,
   max_hours integer NOT NULL DEFAULT 24,

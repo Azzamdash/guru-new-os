@@ -1,6 +1,6 @@
 
 -- 1) Customers unified across brands
-CREATE TABLE public.customers (
+CREATE TABLE IF NOT EXISTS public.customers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   phone text,
@@ -13,8 +13,8 @@ CREATE TABLE public.customers (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX customers_phone_uidx ON public.customers(phone_norm) WHERE phone_norm <> '';
-CREATE UNIQUE INDEX customers_email_uidx ON public.customers(email_norm) WHERE email_norm <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS customers_phone_uidx ON public.customers(phone_norm) WHERE phone_norm <> '';
+CREATE UNIQUE INDEX IF NOT EXISTS customers_email_uidx ON public.customers(email_norm) WHERE email_norm <> '';
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.customers TO authenticated;
 GRANT ALL ON public.customers TO service_role;
@@ -29,7 +29,7 @@ CREATE TRIGGER customers_updated_at BEFORE UPDATE ON public.customers
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- 2) Notes on customers
-CREATE TABLE public.customer_notes (
+CREATE TABLE IF NOT EXISTS public.customer_notes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
   author_id uuid,
@@ -54,7 +54,7 @@ ALTER TABLE public.sales_invoices
   ADD COLUMN customer_name text,
   ADD COLUMN customer_phone text,
   ADD COLUMN customer_email text;
-CREATE INDEX sales_invoices_customer_idx ON public.sales_invoices(customer_id);
+CREATE INDEX IF NOT EXISTS sales_invoices_customer_idx ON public.sales_invoices(customer_id);
 
 -- 4) Trigger: on insert/update of a sales invoice, upsert/link a customer by phone or email
 CREATE OR REPLACE FUNCTION public.link_sales_invoice_customer()

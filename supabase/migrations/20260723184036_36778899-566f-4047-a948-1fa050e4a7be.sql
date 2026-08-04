@@ -1,5 +1,5 @@
 
-CREATE TABLE public.material_brands (
+CREATE TABLE IF NOT EXISTS public.material_brands (
   material_id uuid NOT NULL REFERENCES public.materials(id) ON DELETE CASCADE,
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now(),

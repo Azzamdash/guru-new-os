@@ -1,5 +1,5 @@
 
-CREATE TABLE public.fulfillment_entries (
+CREATE TABLE IF NOT EXISTS public.fulfillment_entries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid REFERENCES public.brands(id) ON DELETE SET NULL,
   employee_name text NOT NULL,
@@ -45,5 +45,5 @@ CREATE TRIGGER trg_fulfillment_updated
   BEFORE UPDATE ON public.fulfillment_entries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
-CREATE INDEX idx_fulfillment_brand ON public.fulfillment_entries(brand_id);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_date ON public.fulfillment_entries(occurred_at DESC);
+CREATE INDEX IF NOT EXISTS idx_fulfillment_brand ON public.fulfillment_entries(brand_id);

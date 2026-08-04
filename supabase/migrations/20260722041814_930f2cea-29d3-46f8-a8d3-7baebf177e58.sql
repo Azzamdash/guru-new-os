@@ -4,7 +4,7 @@ CREATE TYPE public.invoice_status AS ENUM ('open', 'partial', 'paid');
 CREATE TYPE public.brand_type AS ENUM ('product', 'service');
 
 -- ============ brands ============
-CREATE TABLE public.brands (
+CREATE TABLE IF NOT EXISTS public.brands (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   slug text NOT NULL UNIQUE,
@@ -26,7 +26,7 @@ CREATE POLICY "brands write admin" ON public.brands FOR ALL TO authenticated
 CREATE TRIGGER brands_updated_at BEFORE UPDATE ON public.brands FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- ============ expense categories ============
-CREATE TABLE public.expense_categories (
+CREATE TABLE IF NOT EXISTS public.expense_categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   slug text NOT NULL UNIQUE,
@@ -47,7 +47,7 @@ CREATE POLICY "cats write admin" ON public.expense_categories FOR ALL TO authent
 CREATE TRIGGER cats_updated_at BEFORE UPDATE ON public.expense_categories FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- ============ suppliers ============
-CREATE TABLE public.suppliers (
+CREATE TABLE IF NOT EXISTS public.suppliers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   contact text,
@@ -68,7 +68,7 @@ CREATE POLICY "suppliers write admin" ON public.suppliers FOR ALL TO authenticat
 CREATE TRIGGER suppliers_updated_at BEFORE UPDATE ON public.suppliers FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- ============ monthly entries ============
-CREATE TABLE public.monthly_entries (
+CREATE TABLE IF NOT EXISTS public.monthly_entries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   year integer NOT NULL,
@@ -96,10 +96,10 @@ CREATE POLICY "me write admin" ON public.monthly_entries FOR ALL TO authenticate
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 CREATE TRIGGER me_updated_at BEFORE UPDATE ON public.monthly_entries FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX me_brand_year_month_idx ON public.monthly_entries(brand_id, year, month);
+CREATE INDEX IF NOT EXISTS me_brand_year_month_idx ON public.monthly_entries(brand_id, year, month);
 
 -- ============ expense entries ============
-CREATE TABLE public.expense_entries (
+CREATE TABLE IF NOT EXISTS public.expense_entries (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   brand_id uuid NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   category_id uuid NOT NULL REFERENCES public.expense_categories(id) ON DELETE RESTRICT,
@@ -120,11 +120,11 @@ CREATE POLICY "ee write admin" ON public.expense_entries FOR ALL TO authenticate
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 CREATE TRIGGER ee_updated_at BEFORE UPDATE ON public.expense_entries FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX ee_brand_year_month_idx ON public.expense_entries(brand_id, year, month);
-CREATE INDEX ee_category_idx ON public.expense_entries(category_id);
+CREATE INDEX IF NOT EXISTS ee_brand_year_month_idx ON public.expense_entries(brand_id, year, month);
+CREATE INDEX IF NOT EXISTS ee_category_idx ON public.expense_entries(category_id);
 
 -- ============ supplier invoices ============
-CREATE TABLE public.supplier_invoices (
+CREATE TABLE IF NOT EXISTS public.supplier_invoices (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   supplier_id uuid NOT NULL REFERENCES public.suppliers(id) ON DELETE CASCADE,
   brand_id uuid REFERENCES public.brands(id) ON DELETE SET NULL,
@@ -146,11 +146,11 @@ CREATE POLICY "si write admin" ON public.supplier_invoices FOR ALL TO authentica
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 CREATE TRIGGER si_updated_at BEFORE UPDATE ON public.supplier_invoices FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX si_supplier_idx ON public.supplier_invoices(supplier_id);
-CREATE INDEX si_brand_idx ON public.supplier_invoices(brand_id);
+CREATE INDEX IF NOT EXISTS si_supplier_idx ON public.supplier_invoices(supplier_id);
+CREATE INDEX IF NOT EXISTS si_brand_idx ON public.supplier_invoices(brand_id);
 
 -- ============ supplier payments ============
-CREATE TABLE public.supplier_payments (
+CREATE TABLE IF NOT EXISTS public.supplier_payments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id uuid NOT NULL REFERENCES public.supplier_invoices(id) ON DELETE CASCADE,
   amount numeric NOT NULL DEFAULT 0,
@@ -169,7 +169,7 @@ CREATE POLICY "sp write admin" ON public.supplier_payments FOR ALL TO authentica
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 CREATE TRIGGER sp_updated_at BEFORE UPDATE ON public.supplier_payments FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX sp_invoice_idx ON public.supplier_payments(invoice_id);
+CREATE INDEX IF NOT EXISTS sp_invoice_idx ON public.supplier_payments(invoice_id);
 
 -- Seed default expense categories
 INSERT INTO public.expense_categories (name, slug, sort_order) VALUES

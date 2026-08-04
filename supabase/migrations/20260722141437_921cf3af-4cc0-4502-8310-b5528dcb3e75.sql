@@ -1,5 +1,5 @@
 
-CREATE TABLE public.supplier_invoice_items (
+CREATE TABLE IF NOT EXISTS public.supplier_invoice_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   invoice_id uuid NOT NULL REFERENCES public.supplier_invoices(id) ON DELETE CASCADE,
   kind text NOT NULL CHECK (kind IN ('product','material','other')),
@@ -37,4 +37,4 @@ CREATE TRIGGER trg_supplier_invoice_items_updated
   BEFORE UPDATE ON public.supplier_invoice_items
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-CREATE INDEX idx_supplier_invoice_items_invoice ON public.supplier_invoice_items(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_supplier_invoice_items_invoice ON public.supplier_invoice_items(invoice_id);

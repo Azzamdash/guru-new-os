@@ -1,5 +1,5 @@
 
-CREATE TABLE public.supplier_brands (
+CREATE TABLE IF NOT EXISTS public.supplier_brands (
   supplier_id UUID NOT NULL REFERENCES public.suppliers(id) ON DELETE CASCADE,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

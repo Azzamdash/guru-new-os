@@ -1,5 +1,5 @@
 
-CREATE TABLE public.user_settings (
+CREATE TABLE IF NOT EXISTS public.user_settings (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   can_write boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),

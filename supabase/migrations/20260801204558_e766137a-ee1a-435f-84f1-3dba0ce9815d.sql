@@ -1,4 +1,4 @@
-CREATE TABLE public.order_assignment_log (
+CREATE TABLE IF NOT EXISTS public.order_assignment_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id uuid NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   previous_employee_id uuid REFERENCES public.employees(id) ON DELETE SET NULL,
@@ -10,9 +10,9 @@ CREATE TABLE public.order_assignment_log (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_oal_order ON public.order_assignment_log(order_id, created_at DESC);
-CREATE INDEX idx_oal_employee ON public.order_assignment_log(employee_id, created_at DESC);
-CREATE INDEX idx_oal_created ON public.order_assignment_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_oal_order ON public.order_assignment_log(order_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_oal_employee ON public.order_assignment_log(employee_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_oal_created ON public.order_assignment_log(created_at DESC);
 
 GRANT SELECT, INSERT ON public.order_assignment_log TO authenticated;
 GRANT ALL ON public.order_assignment_log TO service_role;

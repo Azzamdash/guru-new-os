@@ -1,6 +1,6 @@
 
 -- Service brand: clients & projects
-CREATE TABLE public.service_clients (
+CREATE TABLE IF NOT EXISTS public.service_clients (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -18,9 +18,9 @@ CREATE POLICY "service_clients read by brand access" ON public.service_clients F
 DROP POLICY IF EXISTS "service_clients write by writers" ON public.service_clients;
 CREATE POLICY "service_clients write by writers" ON public.service_clients FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
 CREATE TRIGGER trg_service_clients_updated BEFORE UPDATE ON public.service_clients FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX idx_service_clients_brand ON public.service_clients(brand_id);
+CREATE INDEX IF NOT EXISTS idx_service_clients_brand ON public.service_clients(brand_id);
 
-CREATE TABLE public.service_projects (
+CREATE TABLE IF NOT EXISTS public.service_projects (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   brand_id UUID NOT NULL REFERENCES public.brands(id) ON DELETE CASCADE,
   client_id UUID NOT NULL REFERENCES public.service_clients(id) ON DELETE CASCADE,
@@ -43,5 +43,5 @@ CREATE POLICY "service_projects read by brand access" ON public.service_projects
 DROP POLICY IF EXISTS "service_projects write by writers" ON public.service_projects;
 CREATE POLICY "service_projects write by writers" ON public.service_projects FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
 CREATE TRIGGER trg_service_projects_updated BEFORE UPDATE ON public.service_projects FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-CREATE INDEX idx_service_projects_brand ON public.service_projects(brand_id);
-CREATE INDEX idx_service_projects_client ON public.service_projects(client_id);
+CREATE INDEX IF NOT EXISTS idx_service_projects_brand ON public.service_projects(brand_id);
+CREATE INDEX IF NOT EXISTS idx_service_projects_client ON public.service_projects(client_id);

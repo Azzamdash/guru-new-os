@@ -4,7 +4,7 @@ ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'production_manager';
 ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'hr';
 
 -- 2) Production tasks
-CREATE TABLE public.production_tasks (
+CREATE TABLE IF NOT EXISTS public.production_tasks (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -80,7 +80,7 @@ CREATE TRIGGER trg_production_tasks_field_lock
 CREATE TYPE public.employee_request_type AS ENUM ('leave','advance');
 CREATE TYPE public.employee_request_status AS ENUM ('pending','approved','rejected');
 
-CREATE TABLE public.employee_requests (
+CREATE TABLE IF NOT EXISTS public.employee_requests (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   employee_id UUID REFERENCES public.employees(id) ON DELETE SET NULL,
