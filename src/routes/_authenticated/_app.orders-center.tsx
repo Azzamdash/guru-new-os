@@ -32,8 +32,6 @@ import {
   Download,
 } from "lucide-react";
 import { exportToCSV } from "@/lib/export-utils";
-import { PeriodFilter, resolvePeriod } from "@/components/PeriodFilter";
-import { usePersistedPeriod } from "@/lib/global-period";
 import { queryPresets } from "@/lib/query-presets";
 import { listBrands } from "@/lib/internal.functions";
 import {
@@ -49,8 +47,10 @@ import {
   getStuckOrdersAlerts,
   type StuckOrderAlert,
 } from "@/lib/orders-management.functions";
-import { getOrder, listOrders, type OrderRow } from "@/lib/orders.functions";
+import { getOrder, type OrderRow } from "@/lib/orders.functions";
 import { OrderSearchCombobox } from "@/components/orders/OrderSearchCombobox";
+import { OrdersListTab } from "@/components/orders/OrdersListTab";
+import { OrderDistributionTab } from "@/components/orders/OrderDistributionTab";
 
 export const Route = createFileRoute("/_authenticated/_app/orders-center")({
   head: () => ({
@@ -71,79 +71,19 @@ const nf = (n: number) => Number(n || 0).toLocaleString("en-US", { maximumFracti
 const pct = (n: number) => `${Number(n || 0).toFixed(1)}%`;
 const T = (lang: "ar" | "en", ar: string, en: string) => (lang === "ar" ? ar : en);
 
-function Kpi({
-  label,
-  value,
-  hint,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  icon: typeof Truck;
-}) {
-  return (
-    <Card className="p-4 space-y-1">
-      <div className="flex items-center justify-between text-muted-foreground text-sm">
-        <span>{label}</span>
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="text-2xl font-bold tabular-nums">{value}</div>
-      {hint ? <div className="text-xs text-muted-foreground">{hint}</div> : null}
-    </Card>
-  );
-}
-
 function OrdersCenterPage() {
   const { lang } = useLang();
   const t = (ar: string, en: string) => T(lang, ar, en);
   const qc = useQueryClient();
-  const [period, setPeriod] = usePersistedPeriod("orders-center");
-  const resolved = useMemo(() => resolvePeriod(period), [period]);
   const [brandId, setBrandId] = useState<string>("all");
-  const [tab, setTab] = useState("kpis");
+  const [tab, setTab] = useState("attention");
   const [activeOrder, setActiveOrder] = useState("");
   const [activeRow, setActiveRow] = useState<OrderRow | null>(null);
-  const [ordersFilter, setOrdersFilter] = useState<OrdersListFilter>({
-    status: "all",
-    courier: "all",
-    gov: "all",
-  });
-  const ordersTabRef = useRef<HTMLDivElement | null>(null);
-
-  const drillTo = (patch: Partial<OrdersListFilter>) => {
-    setOrdersFilter({ status: "all", courier: "all", gov: "all", ...patch });
-    setTab("orders");
-    setTimeout(
-      () => ordersTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-      50,
-    );
-  };
-
-  const openOrderIn = (target: "ops" | "timeline", row: OrderRow) => {
-    setActiveOrder(row.id);
-    setActiveRow(row);
-    setTab(target);
-  };
 
   const brands = useQuery({
     queryKey: ["brands"],
     queryFn: () => listBrands(),
     ...queryPresets.reference,
-  });
-
-  const overviewFn = useServerFn(getOrdersOverview);
-  const overview = useQuery({
-    queryKey: ["orders-center", "overview", resolved.dateFrom, resolved.dateTo, brandId],
-    queryFn: () =>
-      overviewFn({
-        data: {
-          dateFrom: resolved.dateFrom,
-          dateTo: resolved.dateTo,
-          brandId: brandId === "all" ? null : brandId,
-        },
-      }),
-    ...queryPresets.report,
   });
 
   const stuckFn = useServerFn(getStuckOrdersAlerts);
@@ -161,56 +101,6 @@ function OrdersCenterPage() {
     ...queryPresets.live,
   });
   const waUnread = (waThreads.data ?? []).reduce((sum, t) => sum + (t.unread_count || 0), 0);
-
-  const o = overview.data;
-
-  const exportOverviewCsv = () => {
-    if (!o) return;
-    const rows: Array<Record<string, unknown>> = [];
-    const push = (
-      c1: unknown,
-      c2: unknown = "",
-      c3: unknown = "",
-      c4: unknown = "",
-      c5: unknown = "",
-    ) => rows.push({ c1, c2, c3, c4, c5 });
-
-    push(t("حسب الحالة", "By status"));
-    push(t("الحالة", "Status"), t("عدد الأوردرات", "Order count"), t("القيمة", "Amount"));
-    o.byStatus.forEach((r) => push(r.status, r.count, r.amount));
-    push("");
-
-    push(t("أداء شركات الشحن", "Courier performance"));
-    push(
-      t("الشركة", "Courier"),
-      t("أوردرات", "Orders"),
-      t("تم التسليم", "Delivered"),
-      t("مرتجع", "Returned"),
-      t("نسبة التسليم %", "Delivery rate %"),
-    );
-    o.byCourier.forEach((r) =>
-      push(r.name, r.count, r.delivered, r.returned, Number(r.deliveryRate || 0).toFixed(1)),
-    );
-    push("");
-
-    push(t("التوزيع الجغرافي", "Geographic distribution"));
-    push(
-      t("المحافظة", "Governorate"),
-      t("أوردرات", "Orders"),
-      t("تم التسليم", "Delivered"),
-      t("القيمة", "Amount"),
-    );
-    o.byGovernorate.forEach((r) => push(r.name, r.count, r.delivered, r.amount));
-
-    exportToCSV(`orders-overview-${resolved.dateFrom ?? ""}_${resolved.dateTo ?? ""}`, rows, [
-      { key: "c1", label: "" },
-      { key: "c2", label: "" },
-      { key: "c3", label: "" },
-      { key: "c4", label: "" },
-      { key: "c5", label: "" },
-    ]);
-    toast.success(t("تم تصدير المؤشرات", "KPIs exported"));
-  };
 
   return (
     <div className="p-4 space-y-4">
@@ -230,18 +120,6 @@ function OrdersCenterPage() {
               ))}
             </SelectContent>
           </Select>
-          <PeriodFilter value={period} onChange={setPeriod} />
-          {tab === "kpis" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportOverviewCsv}
-              disabled={!o}
-              className="gap-1.5"
-            >
-              <Download className="h-4 w-4" /> {t("تصدير CSV", "Export CSV")}
-            </Button>
-          ) : null}
           <Button
             variant="outline"
             size="sm"
@@ -254,7 +132,6 @@ function OrdersCenterPage() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="kpis">{t("المؤشرات", "KPIs")}</TabsTrigger>
           <TabsTrigger value="attention" className="relative">
             {t("يحتاج تدخل", "Needs attention")}
             {stuckCount > 0 && (
@@ -264,6 +141,9 @@ function OrdersCenterPage() {
             )}
           </TabsTrigger>
           <TabsTrigger value="orders">{t("الأوردرات", "Orders")}</TabsTrigger>
+          <TabsTrigger value="distribution">
+            {t("توزيع الأوردرات", "Order Distribution")}
+          </TabsTrigger>
           <TabsTrigger value="ops">{t("الشحن والتحصيل", "Shipping & Collection")}</TabsTrigger>
           <TabsTrigger value="timeline">{t("سجل الأوردر", "Order timeline")}</TabsTrigger>
 
@@ -276,195 +156,6 @@ function OrdersCenterPage() {
             )}
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="kpis" className="space-y-4 pt-4">
-          {stuckCount > 0 ? (
-            <Card className="border-destructive/50 bg-destructive/5 p-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
-                <span className="font-semibold">
-                  {lang === "ar" ? (
-                    <>
-                      {stuckCount} أوردر يحتاج تدخل عاجل
-                      {" — "}
-                      {stuck.data?.noShipment.length ?? 0} بدون شحن أكثر من 3 أيام،{" "}
-                      {stuck.data?.uncollected.length ?? 0} تم تسليمها بدون تحصيل كامل
-                    </>
-                  ) : (
-                    <>
-                      {stuckCount} order(s) need urgent attention
-                      {" — "}
-                      {stuck.data?.noShipment.length ?? 0} with no shipment for over 3 days,{" "}
-                      {stuck.data?.uncollected.length ?? 0} delivered without full collection
-                    </>
-                  )}
-                </span>
-              </div>
-              <Button size="sm" variant="destructive" onClick={() => setTab("attention")}>
-                {t("عرض التفاصيل", "View details")}
-              </Button>
-            </Card>
-          ) : null}
-          {overview.isLoading ? (
-            <Card className="p-6 text-muted-foreground">{t("جارٍ التحميل…", "Loading…")}</Card>
-          ) : null}
-          {o ? (
-            <>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <Kpi
-                  label={t("عدد الأوردرات", "Order count")}
-                  value={nf(o.totals.orders)}
-                  icon={Activity}
-                />
-                <Kpi
-                  label={t("إجمالي المبيعات", "Total sales")}
-                  value={nf(o.totals.revenue)}
-                  hint={t(
-                    `متوسط الأوردر ${nf(o.totals.avgOrderValue)}`,
-                    `Avg order ${nf(o.totals.avgOrderValue)}`,
-                  )}
-                  icon={Wallet}
-                />
-                <Kpi
-                  label={t("نسبة التسليم", "Delivery rate")}
-                  value={pct(o.delivery.deliveryRate)}
-                  hint={t(
-                    `${nf(o.delivery.delivered)} تم تسليمها`,
-                    `${nf(o.delivery.delivered)} delivered`,
-                  )}
-                  icon={Truck}
-                />
-                <Kpi
-                  label={t("نسبة المرتجع", "Return rate")}
-                  value={pct(o.delivery.returnRate)}
-                  hint={t(
-                    `${nf(o.delivery.returned)} مرتجع`,
-                    `${nf(o.delivery.returned)} returned`,
-                  )}
-                  icon={Truck}
-                />
-                <Kpi
-                  label={t("المتوقع تحصيله", "Expected to collect")}
-                  value={nf(o.collection.expected)}
-                  icon={Wallet}
-                />
-                <Kpi
-                  label={t("المحصّل فعليًا", "Actually collected")}
-                  value={nf(o.collection.collected)}
-                  hint={pct(o.collection.collectionRate)}
-                  icon={Wallet}
-                />
-                <Kpi
-                  label={t("المتبقي", "Outstanding")}
-                  value={nf(o.collection.outstanding)}
-                  icon={Wallet}
-                />
-                <Kpi
-                  label={t("قيد التنفيذ", "In progress")}
-                  value={nf(o.delivery.open)}
-                  hint={t(
-                    `${nf(o.delivery.cancelled)} ملغي`,
-                    `${nf(o.delivery.cancelled)} cancelled`,
-                  )}
-                  icon={Activity}
-                />
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-2">
-                <Card className="p-4">
-                  <div className="font-semibold mb-2">{t("حسب الحالة", "By status")}</div>
-                  <table className="w-full text-sm">
-                    <tbody>
-                      {o.byStatus.map((r) => (
-                        <tr
-                          key={r.status}
-                          onClick={() => drillTo({ status: r.status })}
-                          title={t(
-                            "اضغط لعرض أوردرات هذه الحالة",
-                            "Click to view orders with this status",
-                          )}
-                          className="border-b last:border-0 cursor-pointer transition-colors hover:bg-accent/60"
-                        >
-                          <td className="py-1">{r.status}</td>
-                          <td className="py-1 text-right tabular-nums">{nf(r.count)}</td>
-                          <td className="py-1 text-right tabular-nums">{nf(r.amount)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </Card>
-                <Card className="p-4">
-                  <div className="font-semibold mb-2">
-                    {t("أداء شركات الشحن", "Courier performance")}
-                  </div>
-                  <table className="w-full text-sm">
-                    <thead className="text-muted-foreground">
-                      <tr>
-                        <th className="text-start">{t("الشركة", "Courier")}</th>
-                        <th>{t("أوردرات", "Orders")}</th>
-                        <th>{t("تسليم", "Delivered")}</th>
-                        <th>{t("مرتجع", "Returned")}</th>
-                        <th>{t("النسبة", "Rate")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {o.byCourier.map((r) => (
-                        <tr
-                          key={r.name}
-                          onClick={() => drillTo({ courier: r.name })}
-                          title={t(
-                            "اضغط لعرض أوردرات شركة الشحن دي",
-                            "Click to view orders for this courier",
-                          )}
-                          className="border-b last:border-0 text-center cursor-pointer transition-colors hover:bg-accent/60"
-                        >
-                          <td className="py-1 text-start">{r.name}</td>
-                          <td className="tabular-nums">{nf(r.count)}</td>
-                          <td className="tabular-nums">{nf(r.delivered)}</td>
-                          <td className="tabular-nums">{nf(r.returned)}</td>
-                          <td className="tabular-nums">{pct(r.deliveryRate)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </Card>
-                <Card className="p-4 lg:col-span-2">
-                  <div className="font-semibold mb-2">
-                    {t("التوزيع الجغرافي", "Geographic distribution")}
-                  </div>
-                  <table className="w-full text-sm">
-                    <thead className="text-muted-foreground">
-                      <tr>
-                        <th className="text-start">{t("المحافظة", "Governorate")}</th>
-                        <th>{t("أوردرات", "Orders")}</th>
-                        <th>{t("تم التسليم", "Delivered")}</th>
-                        <th>{t("القيمة", "Amount")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {o.byGovernorate.map((r) => (
-                        <tr
-                          key={r.name}
-                          onClick={() => drillTo({ gov: r.name })}
-                          title={t(
-                            "اضغط لعرض أوردرات المحافظة دي",
-                            "Click to view orders for this governorate",
-                          )}
-                          className="border-b last:border-0 text-center cursor-pointer transition-colors hover:bg-accent/60"
-                        >
-                          <td className="py-1 text-start">{r.name}</td>
-                          <td className="tabular-nums">{nf(r.count)}</td>
-                          <td className="tabular-nums">{nf(r.delivered)}</td>
-                          <td className="tabular-nums">{nf(r.amount)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </Card>
-              </div>
-            </>
-          ) : null}
-        </TabsContent>
 
         <TabsContent value="attention" className="pt-4">
           <AttentionPanel
@@ -479,18 +170,12 @@ function OrdersCenterPage() {
           />
         </TabsContent>
 
-        <TabsContent value="orders" className="pt-4" ref={ordersTabRef}>
-          <OrdersListPanel
-            dateFrom={resolved.dateFrom ?? ""}
-            dateTo={resolved.dateTo ?? ""}
-            brandId={brandId}
-            statuses={(o?.byStatus ?? []).map((r) => r.status)}
-            couriers={(o?.byCourier ?? []).map((r) => r.name)}
-            governorates={(o?.byGovernorate ?? []).map((r) => r.name)}
-            onOpen={openOrderIn}
-            filter={ordersFilter}
-            setFilter={setOrdersFilter}
-          />
+        <TabsContent value="orders" className="pt-4">
+          <OrdersListTab />
+        </TabsContent>
+
+        <TabsContent value="distribution" className="pt-4">
+          <OrderDistributionTab />
         </TabsContent>
 
         <TabsContent value="ops" className="pt-4">
@@ -615,275 +300,6 @@ function AttentionPanel({
         uncollected,
       )}
     </div>
-  );
-}
-
-export type OrdersListFilter = { status: string; courier: string; gov: string };
-
-function OrdersListPanel({
-  dateFrom,
-  dateTo,
-  brandId,
-  statuses,
-  couriers,
-  governorates,
-  onOpen,
-  filter,
-  setFilter,
-}: {
-  dateFrom: string;
-  dateTo: string;
-  brandId: string;
-  statuses: string[];
-  couriers: string[];
-  governorates: string[];
-  onOpen: (target: "ops" | "timeline", row: OrderRow) => void;
-  filter: OrdersListFilter;
-  setFilter: (next: OrdersListFilter) => void;
-}) {
-  const { lang } = useLang();
-  const t = (ar: string, en: string) => T(lang, ar, en);
-  const { status, courier, gov } = filter;
-  const setStatus = (v: string) => setFilter({ ...filter, status: v });
-  const setCourier = (v: string) => setFilter({ ...filter, courier: v });
-  const setGov = (v: string) => setFilter({ ...filter, gov: v });
-  const [page, setPage] = useState(0);
-  const [cursors, setCursors] = useState<Array<{ occurredAt: string; id: string } | null>>([null]);
-  const pageSize = 25;
-
-  useEffect(() => {
-    setPage(0);
-    setCursors([null]);
-  }, [dateFrom, dateTo, brandId, status]);
-
-  const cursor = cursors[page] ?? null;
-  const listFn = useServerFn(listOrders);
-  const q = useQuery({
-    queryKey: ["orders-center", "orders-list", dateFrom, dateTo, brandId, status, cursor],
-    queryFn: () =>
-      listFn({
-        data: {
-          brandId: brandId === "all" ? null : brandId,
-          from: dateFrom,
-          to: dateTo,
-          orderStatus: status === "all" ? null : status,
-          pageSize,
-          cursorAt: cursor?.occurredAt ?? null,
-          cursorId: cursor?.id ?? null,
-        },
-      }),
-    placeholderData: keepPreviousData,
-    ...queryPresets.listing,
-  });
-
-  const rows = useMemo(
-    () =>
-      (q.data?.rows ?? []).filter(
-        (r) =>
-          (courier === "all" || (r.courier_name ?? "—") === courier) &&
-          (gov === "all" || (r.shipping_governorate ?? "—") === gov),
-      ),
-    [q.data, courier, gov],
-  );
-
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    setSelected(new Set());
-  }, [dateFrom, dateTo, brandId, status, courier, gov, page]);
-  const selectedRows = useMemo(() => rows.filter((r) => selected.has(r.id)), [rows, selected]);
-  const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
-  const toggleAll = (on: boolean) => setSelected(on ? new Set(rows.map((r) => r.id)) : new Set());
-  const toggleOne = (id: string, on: boolean) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (on) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  const exportSelected = () => {
-    exportToCSV(`orders-selected-${formatBusinessDate(new Date())}`, selectedRows, [
-      {
-        key: "customer_name",
-        label: t("اسم العميل", "Customer name"),
-        fmt: (v) => (v as string) ?? "—",
-      },
-      { key: "customer_phone", label: t("التليفون", "Phone"), fmt: (v) => (v as string) ?? "—" },
-      {
-        key: "shipping_governorate",
-        label: t("المحافظة", "Governorate"),
-        fmt: (v) => (v as string) ?? "—",
-      },
-      { key: "courier_name", label: t("شركة الشحن", "Courier"), fmt: (v) => (v as string) ?? "—" },
-      { key: "total_amount", label: t("المبلغ", "Amount"), fmt: (v) => String(Number(v ?? 0)) },
-    ]);
-    toast.success(
-      t(`تم تصدير ${selectedRows.length} أوردر`, `Exported ${selectedRows.length} order(s)`),
-    );
-  };
-
-  const goNext = () => {
-    const nc = q.data?.nextCursor;
-    if (!nc) return;
-    setCursors((prev) => {
-      const next = [...prev];
-      next[page + 1] = nc;
-      return next;
-    });
-    setPage((p) => p + 1);
-  };
-
-  return (
-    <Card className="p-4 space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder={t("الحالة", "Status")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("كل الحالات", "All statuses")}</SelectItem>
-            {statuses.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={courier} onValueChange={setCourier}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder={t("شركة الشحن", "Courier")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("كل شركات الشحن", "All couriers")}</SelectItem>
-            {couriers.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={gov} onValueChange={setGov}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder={t("المحافظة", "Governorate")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("كل المحافظات", "All governorates")}</SelectItem>
-            {governorates.map((g) => (
-              <SelectItem key={g} value={g}>
-                {g}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-muted-foreground">
-            <tr>
-              <th className="w-8 py-1">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={(v) => toggleAll(v === true)}
-                  aria-label={t("تحديد الكل", "Select all")}
-                />
-              </th>
-              <th className="text-start py-1">{t("رقم الأوردر", "Order #")}</th>
-              <th className="text-start">{t("العميل", "Customer")}</th>
-              <th className="text-start">{t("البراند", "Brand")}</th>
-              <th className="text-start">{t("الحالة", "Status")}</th>
-              <th className="text-start">{t("شركة الشحن", "Courier")}</th>
-              <th className="text-start">{t("المحافظة", "Governorate")}</th>
-              <th className="text-end">{t("المبلغ", "Amount")}</th>
-              <th className="text-end">{t("التاريخ", "Date")}</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-b last:border-0">
-                <td className="py-1">
-                  <Checkbox
-                    checked={selected.has(r.id)}
-                    onCheckedChange={(v) => toggleOne(r.id, v === true)}
-                    aria-label={t("تحديد الأوردر", "Select order")}
-                  />
-                </td>
-                <td className="py-1">{r.external_order_number ?? r.id.slice(0, 8)}</td>
-                <td>{r.customer_name ?? "—"}</td>
-                <td>{r.brand_name}</td>
-                <td>
-                  <Badge variant="secondary">{r.order_status}</Badge>
-                </td>
-                <td>{r.courier_name ?? "—"}</td>
-                <td>{r.shipping_governorate ?? "—"}</td>
-                <td className="text-end tabular-nums">{nf(Number(r.total_amount))}</td>
-                <td className="text-end tabular-nums">
-                  {new Date(r.occurred_at).toLocaleDateString("en-GB")}
-                </td>
-                <td className="text-end whitespace-nowrap">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="me-1"
-                    onClick={() => onOpen("ops", r)}
-                  >
-                    <Truck className="h-3 w-3 me-1" />{" "}
-                    {t("الشحن والتحصيل", "Shipping & Collection")}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => onOpen("timeline", r)}>
-                    <Activity className="h-3 w-3 me-1" /> {t("السجل", "Timeline")}
-                  </Button>
-                </td>
-              </tr>
-            ))}
-            {!q.isLoading && rows.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="py-6 text-center text-muted-foreground">
-                  {t("لا توجد أوردرات مطابقة.", "No matching orders.")}
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-
-      {selectedRows.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2">
-          <div className="text-sm">
-            {t(`تم تحديد ${selectedRows.length} أوردر`, `${selectedRows.length} order(s) selected`)}
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>
-              {t("إلغاء التحديد", "Clear selection")}
-            </Button>
-            <Button size="sm" onClick={exportSelected}>
-              <Download className="h-3 w-3 me-1" /> {t("تصدير المحدد CSV", "Export selected CSV")}
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
-      <div className="flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">
-          {q.isFetching
-            ? t("جارٍ التحميل…", "Loading…")
-            : t(`صفحة ${page + 1}`, `Page ${page + 1}`)}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-          >
-            {t("السابق", "Previous")}
-          </Button>
-          <Button size="sm" variant="outline" disabled={!q.data?.hasMore} onClick={goNext}>
-            {t("التالي", "Next")}
-          </Button>
-        </div>
-      </div>
-    </Card>
   );
 }
 

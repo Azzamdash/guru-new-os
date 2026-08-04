@@ -40,10 +40,8 @@ import { Route as AuthenticatedAppMaterialsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppMyInvestmentsRouteImport } from './routes/_authenticated/_app.my-investments'
 import { Route as AuthenticatedAppMyPrepRouteImport } from './routes/_authenticated/_app.my-prep'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/_app.operations'
-import { Route as AuthenticatedAppOrderDistributionRouteImport } from './routes/_authenticated/_app.order-distribution'
 import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
 import { Route as AuthenticatedAppOrderReturnsRouteImport } from './routes/_authenticated/_app.order-returns'
-import { Route as AuthenticatedAppOrdersRouteImport } from './routes/_authenticated/_app.orders'
 import { Route as AuthenticatedAppOrdersCenterRouteImport } from './routes/_authenticated/_app.orders-center'
 import { Route as AuthenticatedAppOrdersRadarRouteImport } from './routes/_authenticated/_app.orders-radar'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/_app.pos'
@@ -81,6 +79,7 @@ import { Route as AuthenticatedAppReportsInvestorsAuditRouteImport } from './rou
 import { Route as AuthenticatedAppReportsMarketingRouteImport } from './routes/_authenticated/_app.reports.marketing'
 import { Route as AuthenticatedAppReportsMetaAdsRouteImport } from './routes/_authenticated/_app.reports.meta-ads'
 import { Route as AuthenticatedAppReportsOfflineInvoicesRouteImport } from './routes/_authenticated/_app.reports.offline-invoices'
+import { Route as AuthenticatedAppReportsOrdersOverviewRouteImport } from './routes/_authenticated/_app.reports.orders-overview'
 import { Route as AuthenticatedAppReportsProductionRouteImport } from './routes/_authenticated/_app.reports.production'
 import { Route as AuthenticatedAppReportsProfitsRouteImport } from './routes/_authenticated/_app.reports.profits'
 import { Route as AuthenticatedAppReportsReceivablesAgingRouteImport } from './routes/_authenticated/_app.reports.receivables-aging'
@@ -278,12 +277,6 @@ const AuthenticatedAppOperationsRoute =
     path: '/operations',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppOrderDistributionRoute =
-  AuthenticatedAppOrderDistributionRouteImport.update({
-    id: '/order-distribution',
-    path: '/order-distribution',
-    getParentRoute: () => AuthenticatedAppRoute,
-  } as any)
 const AuthenticatedAppOrderPipelineRoute =
   AuthenticatedAppOrderPipelineRouteImport.update({
     id: '/order-pipeline',
@@ -296,11 +289,6 @@ const AuthenticatedAppOrderReturnsRoute =
     path: '/order-returns',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppOrdersRoute = AuthenticatedAppOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
 const AuthenticatedAppOrdersCenterRoute =
   AuthenticatedAppOrdersCenterRouteImport.update({
     id: '/orders-center',
@@ -519,6 +507,12 @@ const AuthenticatedAppReportsOfflineInvoicesRoute =
     path: '/reports/offline-invoices',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppReportsOrdersOverviewRoute =
+  AuthenticatedAppReportsOrdersOverviewRouteImport.update({
+    id: '/reports/orders-overview',
+    path: '/reports/orders-overview',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppReportsProductionRoute =
   AuthenticatedAppReportsProductionRouteImport.update({
     id: '/reports/production',
@@ -688,10 +682,8 @@ export interface FileRoutesByFullPath {
   '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
-  '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
-  '/orders': typeof AuthenticatedAppOrdersRoute
   '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
@@ -728,6 +720,7 @@ export interface FileRoutesByFullPath {
   '/reports/marketing': typeof AuthenticatedAppReportsMarketingRoute
   '/reports/meta-ads': typeof AuthenticatedAppReportsMetaAdsRoute
   '/reports/offline-invoices': typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  '/reports/orders-overview': typeof AuthenticatedAppReportsOrdersOverviewRoute
   '/reports/production': typeof AuthenticatedAppReportsProductionRoute
   '/reports/profits': typeof AuthenticatedAppReportsProfitsRoute
   '/reports/receivables-aging': typeof AuthenticatedAppReportsReceivablesAgingRoute
@@ -783,10 +776,8 @@ export interface FileRoutesByTo {
   '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
-  '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
-  '/orders': typeof AuthenticatedAppOrdersRoute
   '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
@@ -821,6 +812,7 @@ export interface FileRoutesByTo {
   '/reports/marketing': typeof AuthenticatedAppReportsMarketingRoute
   '/reports/meta-ads': typeof AuthenticatedAppReportsMetaAdsRoute
   '/reports/offline-invoices': typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  '/reports/orders-overview': typeof AuthenticatedAppReportsOrdersOverviewRoute
   '/reports/production': typeof AuthenticatedAppReportsProductionRoute
   '/reports/profits': typeof AuthenticatedAppReportsProfitsRoute
   '/reports/receivables-aging': typeof AuthenticatedAppReportsReceivablesAgingRoute
@@ -879,10 +871,8 @@ export interface FileRoutesById {
   '/_authenticated/_app/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
   '/_authenticated/_app/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/_authenticated/_app/operations': typeof AuthenticatedAppOperationsRoute
-  '/_authenticated/_app/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/_authenticated/_app/order-returns': typeof AuthenticatedAppOrderReturnsRoute
-  '/_authenticated/_app/orders': typeof AuthenticatedAppOrdersRoute
   '/_authenticated/_app/orders-center': typeof AuthenticatedAppOrdersCenterRoute
   '/_authenticated/_app/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/_authenticated/_app/pos': typeof AuthenticatedAppPosRoute
@@ -919,6 +909,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/reports/marketing': typeof AuthenticatedAppReportsMarketingRoute
   '/_authenticated/_app/reports/meta-ads': typeof AuthenticatedAppReportsMetaAdsRoute
   '/_authenticated/_app/reports/offline-invoices': typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  '/_authenticated/_app/reports/orders-overview': typeof AuthenticatedAppReportsOrdersOverviewRoute
   '/_authenticated/_app/reports/production': typeof AuthenticatedAppReportsProductionRoute
   '/_authenticated/_app/reports/profits': typeof AuthenticatedAppReportsProfitsRoute
   '/_authenticated/_app/reports/receivables-aging': typeof AuthenticatedAppReportsReceivablesAgingRoute
@@ -976,10 +967,8 @@ export interface FileRouteTypes {
     | '/my-investments'
     | '/my-prep'
     | '/operations'
-    | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
-    | '/orders'
     | '/orders-center'
     | '/orders-radar'
     | '/pos'
@@ -1016,6 +1005,7 @@ export interface FileRouteTypes {
     | '/reports/marketing'
     | '/reports/meta-ads'
     | '/reports/offline-invoices'
+    | '/reports/orders-overview'
     | '/reports/production'
     | '/reports/profits'
     | '/reports/receivables-aging'
@@ -1071,10 +1061,8 @@ export interface FileRouteTypes {
     | '/my-investments'
     | '/my-prep'
     | '/operations'
-    | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
-    | '/orders'
     | '/orders-center'
     | '/orders-radar'
     | '/pos'
@@ -1109,6 +1097,7 @@ export interface FileRouteTypes {
     | '/reports/marketing'
     | '/reports/meta-ads'
     | '/reports/offline-invoices'
+    | '/reports/orders-overview'
     | '/reports/production'
     | '/reports/profits'
     | '/reports/receivables-aging'
@@ -1166,10 +1155,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/my-investments'
     | '/_authenticated/_app/my-prep'
     | '/_authenticated/_app/operations'
-    | '/_authenticated/_app/order-distribution'
     | '/_authenticated/_app/order-pipeline'
     | '/_authenticated/_app/order-returns'
-    | '/_authenticated/_app/orders'
     | '/_authenticated/_app/orders-center'
     | '/_authenticated/_app/orders-radar'
     | '/_authenticated/_app/pos'
@@ -1206,6 +1193,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/reports/marketing'
     | '/_authenticated/_app/reports/meta-ads'
     | '/_authenticated/_app/reports/offline-invoices'
+    | '/_authenticated/_app/reports/orders-overview'
     | '/_authenticated/_app/reports/production'
     | '/_authenticated/_app/reports/profits'
     | '/_authenticated/_app/reports/receivables-aging'
@@ -1471,13 +1459,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOperationsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/_app/order-distribution': {
-      id: '/_authenticated/_app/order-distribution'
-      path: '/order-distribution'
-      fullPath: '/order-distribution'
-      preLoaderRoute: typeof AuthenticatedAppOrderDistributionRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/_app/order-pipeline': {
       id: '/_authenticated/_app/order-pipeline'
       path: '/order-pipeline'
@@ -1490,13 +1471,6 @@ declare module '@tanstack/react-router' {
       path: '/order-returns'
       fullPath: '/order-returns'
       preLoaderRoute: typeof AuthenticatedAppOrderReturnsRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
-    '/_authenticated/_app/orders': {
-      id: '/_authenticated/_app/orders'
-      path: '/orders'
-      fullPath: '/orders'
-      preLoaderRoute: typeof AuthenticatedAppOrdersRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/orders-center': {
@@ -1758,6 +1732,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppReportsOfflineInvoicesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/reports/orders-overview': {
+      id: '/_authenticated/_app/reports/orders-overview'
+      path: '/reports/orders-overview'
+      fullPath: '/reports/orders-overview'
+      preLoaderRoute: typeof AuthenticatedAppReportsOrdersOverviewRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/reports/production': {
       id: '/_authenticated/_app/reports/production'
       path: '/reports/production'
@@ -2014,10 +1995,8 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppMyInvestmentsRoute: typeof AuthenticatedAppMyInvestmentsRoute
   AuthenticatedAppMyPrepRoute: typeof AuthenticatedAppMyPrepRoute
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
-  AuthenticatedAppOrderDistributionRoute: typeof AuthenticatedAppOrderDistributionRoute
   AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
   AuthenticatedAppOrderReturnsRoute: typeof AuthenticatedAppOrderReturnsRoute
-  AuthenticatedAppOrdersRoute: typeof AuthenticatedAppOrdersRoute
   AuthenticatedAppOrdersCenterRoute: typeof AuthenticatedAppOrdersCenterRoute
   AuthenticatedAppOrdersRadarRoute: typeof AuthenticatedAppOrdersRadarRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
@@ -2052,6 +2031,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppReportsMarketingRoute: typeof AuthenticatedAppReportsMarketingRoute
   AuthenticatedAppReportsMetaAdsRoute: typeof AuthenticatedAppReportsMetaAdsRoute
   AuthenticatedAppReportsOfflineInvoicesRoute: typeof AuthenticatedAppReportsOfflineInvoicesRoute
+  AuthenticatedAppReportsOrdersOverviewRoute: typeof AuthenticatedAppReportsOrdersOverviewRoute
   AuthenticatedAppReportsProductionRoute: typeof AuthenticatedAppReportsProductionRoute
   AuthenticatedAppReportsProfitsRoute: typeof AuthenticatedAppReportsProfitsRoute
   AuthenticatedAppReportsReceivablesAgingRoute: typeof AuthenticatedAppReportsReceivablesAgingRoute
@@ -2088,11 +2068,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppMyInvestmentsRoute: AuthenticatedAppMyInvestmentsRoute,
   AuthenticatedAppMyPrepRoute: AuthenticatedAppMyPrepRoute,
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
-  AuthenticatedAppOrderDistributionRoute:
-    AuthenticatedAppOrderDistributionRoute,
   AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,
   AuthenticatedAppOrderReturnsRoute: AuthenticatedAppOrderReturnsRoute,
-  AuthenticatedAppOrdersRoute: AuthenticatedAppOrdersRoute,
   AuthenticatedAppOrdersCenterRoute: AuthenticatedAppOrdersCenterRoute,
   AuthenticatedAppOrdersRadarRoute: AuthenticatedAppOrdersRadarRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
@@ -2137,6 +2114,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppReportsMetaAdsRoute: AuthenticatedAppReportsMetaAdsRoute,
   AuthenticatedAppReportsOfflineInvoicesRoute:
     AuthenticatedAppReportsOfflineInvoicesRoute,
+  AuthenticatedAppReportsOrdersOverviewRoute:
+    AuthenticatedAppReportsOrdersOverviewRoute,
   AuthenticatedAppReportsProductionRoute:
     AuthenticatedAppReportsProductionRoute,
   AuthenticatedAppReportsProfitsRoute: AuthenticatedAppReportsProfitsRoute,
