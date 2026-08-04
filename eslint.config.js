@@ -37,4 +37,13 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // Large parts of the pre-existing codebase were never run through
+    // `eslint --fix`/prettier. Keep formatting visible as a warning instead
+    // of a hard error so CI can gate on real correctness issues without
+    // failing every PR that happens to touch an unformatted file.
+    rules: {
+      "prettier/prettier": "warn",
+    },
+  },
 );

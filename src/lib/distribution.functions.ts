@@ -1,14 +1,24 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDER_DISTRIBUTION_PAGE } from "./page-permission-paths";
 import { balanceAssignments, getEligibleStaff, recordAssignments } from "./distribution.server";
+import { ORDER_WORKFLOW_STATUSES, SHIPMENT_OUTCOMES } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
-const DISTRIBUTION_PAGE = "/order-distribution";
+// Non-terminal order statuses — every real order_status value except the two
+// terminal ones. Previously listed made-up values ("confirmed", "ready",
+// "in_transit") that don't exist in ORDER_WORKFLOW_STATUSES, so "postponed"
+// and "awaiting_response" orders silently never showed up in the distribution
+// queue or the open-load count.
+const OPEN_STATUSES = ORDER_WORKFLOW_STATUSES.filter((s) => s !== "succeeded" && s !== "cancelled");
 
-const OPEN_STATUSES = ["new", "confirmed", "processing", "ready", "in_transit"];
+// Terminal shipment outcomes — a closed order's courier attribution must not
+// be silently rewritten by bulk (re)assignment, or courier performance
+// analytics drift from what actually happened.
+const TERMINAL_SHIPMENT_OUTCOMES_FILTER = `(${SHIPMENT_OUTCOMES.filter((s) => s !== "open").join(",")})`;
 
 function norm(v: string | null | undefined) {
   return (v ?? "").trim().toLowerCase();
@@ -260,7 +270,7 @@ export const assignOrdersCourier = createServerFn({ method: "POST" })
   .inputValidator((input: { orderIds: string[]; courierId: string | null }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
 
@@ -268,11 +278,10 @@ export const assignOrdersCourier = createServerFn({ method: "POST" })
       .from("orders")
       .update({ courier_id: data.courierId })
       .in("id", ids)
+      .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER)
       .select("id");
     if (error) throw new Error(error.message);
-    const updated = (rows ?? []).length;
-    if (!updated) throw new Error("لم يتم تعديل أي أوردر — صلاحيتك لا تسمح بتعديل هذه الأوردرات");
-    return { updated };
+    return { updated: (rows ?? []).length };
   });
 
 export const assignOrdersEmployee = createServerFn({ method: "POST" })
@@ -282,7 +291,7 @@ export const assignOrdersEmployee = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
 
@@ -310,7 +319,7 @@ export const autoAssignOrders = createServerFn({ method: "POST" })
   .inputValidator((input: { assignments: Array<{ orderId: string; courierId: string }> }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const list = (data.assignments ?? []).filter((a) => a.orderId && a.courierId).slice(0, 500);
     if (!list.length) return { updated: 0, failed: 0 };
 
@@ -328,6 +337,7 @@ export const autoAssignOrders = createServerFn({ method: "POST" })
         .from("orders")
         .update({ courier_id: courierId })
         .in("id", ids)
+        .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER)
         .select("id");
       const n = error ? 0 : (rows ?? []).length;
       updated += n;
@@ -342,7 +352,7 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
   .inputValidator((input: { orderIds: string[] }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
 
@@ -471,6 +481,7 @@ export type MyOrderRow = {
   orderNumber: string | null;
   customerName: string | null;
   customerPhone: string | null;
+  governorate: string | null;
   total: number;
   orderStatus: string;
   confirmationStatus: string;
@@ -490,7 +501,7 @@ export const getMyAssignedOrders = createServerFn({ method: "GET" })
     let q = ctx.supabase
       .from("orders")
       .select(
-        "id, brand_id, external_order_number, customer_name, customer_phone, total_amount, order_status, confirmation_status, courier_id, occurred_at",
+        "id, brand_id, external_order_number, customer_name, customer_phone, shipping_governorate, total_amount, order_status, confirmation_status, courier_id, occurred_at",
       )
       .eq("assigned_user_id", ctx.userId)
       .order("occurred_at", { ascending: false })
@@ -521,6 +532,7 @@ export const getMyAssignedOrders = createServerFn({ method: "GET" })
         orderNumber: (o["external_order_number"] as string | null) ?? null,
         customerName: (o["customer_name"] as string | null) ?? null,
         customerPhone: (o["customer_phone"] as string | null) ?? null,
+        governorate: (o["shipping_governorate"] as string | null) ?? null,
         total: Number(o["total_amount"] ?? 0),
         orderStatus: (o["order_status"] as string) ?? "new",
         confirmationStatus: (o["confirmation_status"] as string) ?? "pending",
