@@ -14,10 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Banknote, Upload } from "lucide-react";
+import { Banknote, Upload, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { listBrands } from "@/lib/internal.functions";
 import {
+  getCollectionGaps,
   getSettlementLines,
   importSettlement,
   listSettlements,
@@ -66,6 +67,13 @@ function CourierSettlementsPage() {
   const listQ = useQuery({
     queryKey: ["courier-settlements"],
     queryFn: () => listFn({ data: {} }),
+    staleTime: 30_000,
+  });
+
+  const gapsFn = useServerFn(getCollectionGaps);
+  const gapsQ = useQuery({
+    queryKey: ["courier-settlements", "collection-gaps", brandId],
+    queryFn: () => gapsFn({ data: { brandId: brandId || null } }),
     staleTime: 30_000,
   });
   const linesQ = useQuery({
@@ -273,6 +281,66 @@ function CourierSettlementsPage() {
           </Card>
         )}
       </div>
+
+      <Card className="space-y-3 p-4">
+        <div className="flex items-center gap-2 font-semibold">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          {T("أوردرات مُسلَّمة بدون تحصيل كامل", "Delivered orders with an outstanding balance")}
+          <Badge variant="secondary">{(gapsQ.data ?? []).length}</Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {T(
+            "مطابقة للقراءة فقط: أوردرات تم تسليمها والمبلغ المسجَّل في order_collections أقل من قيمة الأوردر — مفيش تعديل أو ترحيل تلقائي هنا.",
+            "Read-only reconciliation: delivered orders where recorded collections fall short of the order total — nothing here writes or auto-posts anything.",
+          )}
+        </p>
+        {gapsQ.isLoading ? (
+          <div className="p-4 text-sm text-muted-foreground">{T("جارٍ التحميل…", "Loading…")}</div>
+        ) : (gapsQ.data ?? []).length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">
+            {T("لا توجد فجوات تحصيل حاليًا", "No collection gaps right now")}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs">
+                <tr>
+                  <th className="p-2 text-start">{T("الأوردر", "Order")}</th>
+                  <th className="p-2 text-start">{T("العميل", "Customer")}</th>
+                  <th className="p-2 text-start">{T("البراند", "Brand")}</th>
+                  <th className="p-2 text-start">{T("شركة الشحن", "Courier")}</th>
+                  <th className="p-2 text-start">{T("الإجمالي", "Total")}</th>
+                  <th className="p-2 text-start">{T("المحصَّل", "Collected")}</th>
+                  <th className="p-2 text-start">{T("المتبقي", "Outstanding")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(gapsQ.data ?? []).map((r) => (
+                  <tr key={r.orderId} className="border-t">
+                    <td className="p-2">
+                      <Link
+                        to="/order-view/$id"
+                        params={{ id: r.orderId }}
+                        className="text-primary hover:underline"
+                      >
+                        #{r.orderNumber ?? r.orderId.slice(0, 8)}
+                      </Link>
+                    </td>
+                    <td className="p-2">{r.customerName ?? "—"}</td>
+                    <td className="p-2">{r.brandName}</td>
+                    <td className="p-2">{r.courierName ?? "—"}</td>
+                    <td className="p-2">{money(r.totalAmount, currency)}</td>
+                    <td className="p-2">{money(r.collected, currency)}</td>
+                    <td className="p-2 font-semibold text-destructive">
+                      {money(r.outstanding, currency)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
