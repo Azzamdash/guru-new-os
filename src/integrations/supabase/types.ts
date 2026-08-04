@@ -3938,6 +3938,7 @@ export type Database = {
           note: string | null
           status: Database["public"]["Enums"]["invoice_status"]
           supplier_id: string
+          type: string
           updated_at: string
         }
         Insert: {
@@ -3950,6 +3951,7 @@ export type Database = {
           note?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           supplier_id: string
+          type?: string
           updated_at?: string
         }
         Update: {
@@ -3962,6 +3964,7 @@ export type Database = {
           note?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           supplier_id?: string
+          type?: string
           updated_at?: string
         }
         Relationships: [
@@ -4787,7 +4790,12 @@ export type Database = {
       courier_type: "courier_company" | "rep" | "offline_branch"
       employee_request_status: "pending" | "approved" | "rejected"
       employee_request_type: "leave" | "advance"
-      inventory_movement_type: "production" | "sale" | "return" | "adjustment"
+      inventory_movement_type:
+        | "production"
+        | "sale"
+        | "return"
+        | "adjustment"
+        | "supplier_return"
       invoice_status: "open" | "partial" | "paid"
       marketing_platform:
         | "tiktok"
@@ -4968,7 +4976,13 @@ export const Constants = {
       courier_type: ["courier_company", "rep", "offline_branch"],
       employee_request_status: ["pending", "approved", "rejected"],
       employee_request_type: ["leave", "advance"],
-      inventory_movement_type: ["production", "sale", "return", "adjustment"],
+      inventory_movement_type: [
+        "production",
+        "sale",
+        "return",
+        "adjustment",
+        "supplier_return",
+      ],
       invoice_status: ["open", "partial", "paid"],
       marketing_platform: [
         "tiktok",
