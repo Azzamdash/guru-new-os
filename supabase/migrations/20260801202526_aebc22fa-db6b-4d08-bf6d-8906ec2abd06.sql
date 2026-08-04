@@ -19,13 +19,17 @@ CREATE INDEX courier_settlements_brand_idx ON public.courier_settlements(brand_i
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.courier_settlements TO authenticated;
 GRANT ALL ON public.courier_settlements TO service_role;
 ALTER TABLE public.courier_settlements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "courier_settlements_read" ON public.courier_settlements;
 CREATE POLICY "courier_settlements_read" ON public.courier_settlements FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "courier_settlements_insert" ON public.courier_settlements;
 CREATE POLICY "courier_settlements_insert" ON public.courier_settlements FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "courier_settlements_update" ON public.courier_settlements;
 CREATE POLICY "courier_settlements_update" ON public.courier_settlements FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "courier_settlements_delete" ON public.courier_settlements;
 CREATE POLICY "courier_settlements_delete" ON public.courier_settlements FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 CREATE TRIGGER courier_settlements_updated_at BEFORE UPDATE ON public.courier_settlements
@@ -53,13 +57,17 @@ CREATE INDEX courier_settlement_lines_tracking_idx ON public.courier_settlement_
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.courier_settlement_lines TO authenticated;
 GRANT ALL ON public.courier_settlement_lines TO service_role;
 ALTER TABLE public.courier_settlement_lines ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "courier_settlement_lines_read" ON public.courier_settlement_lines;
 CREATE POLICY "courier_settlement_lines_read" ON public.courier_settlement_lines FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "courier_settlement_lines_insert" ON public.courier_settlement_lines;
 CREATE POLICY "courier_settlement_lines_insert" ON public.courier_settlement_lines FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "courier_settlement_lines_update" ON public.courier_settlement_lines;
 CREATE POLICY "courier_settlement_lines_update" ON public.courier_settlement_lines FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "courier_settlement_lines_delete" ON public.courier_settlement_lines;
 CREATE POLICY "courier_settlement_lines_delete" ON public.courier_settlement_lines FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 CREATE TRIGGER courier_settlement_lines_updated_at BEFORE UPDATE ON public.courier_settlement_lines
@@ -89,13 +97,17 @@ CREATE INDEX order_returns_brand_idx ON public.order_returns(brand_id, requested
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_returns TO authenticated;
 GRANT ALL ON public.order_returns TO service_role;
 ALTER TABLE public.order_returns ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "order_returns_read" ON public.order_returns;
 CREATE POLICY "order_returns_read" ON public.order_returns FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_returns_insert" ON public.order_returns;
 CREATE POLICY "order_returns_insert" ON public.order_returns FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_returns_update" ON public.order_returns;
 CREATE POLICY "order_returns_update" ON public.order_returns FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_returns_delete" ON public.order_returns;
 CREATE POLICY "order_returns_delete" ON public.order_returns FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 CREATE TRIGGER order_returns_updated_at BEFORE UPDATE ON public.order_returns
@@ -118,13 +130,17 @@ CREATE INDEX order_confirmation_attempts_order_idx ON public.order_confirmation_
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_confirmation_attempts TO authenticated;
 GRANT ALL ON public.order_confirmation_attempts TO service_role;
 ALTER TABLE public.order_confirmation_attempts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "order_conf_attempts_read" ON public.order_confirmation_attempts;
 CREATE POLICY "order_conf_attempts_read" ON public.order_confirmation_attempts FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_conf_attempts_insert" ON public.order_confirmation_attempts;
 CREATE POLICY "order_conf_attempts_insert" ON public.order_confirmation_attempts FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_conf_attempts_update" ON public.order_confirmation_attempts;
 CREATE POLICY "order_conf_attempts_update" ON public.order_confirmation_attempts FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_conf_attempts_delete" ON public.order_confirmation_attempts;
 CREATE POLICY "order_conf_attempts_delete" ON public.order_confirmation_attempts FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
@@ -145,17 +161,21 @@ CREATE INDEX whatsapp_templates_event_idx ON public.whatsapp_templates(event_key
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_templates TO authenticated;
 GRANT ALL ON public.whatsapp_templates TO service_role;
 ALTER TABLE public.whatsapp_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "whatsapp_templates_read" ON public.whatsapp_templates;
 CREATE POLICY "whatsapp_templates_read" ON public.whatsapp_templates FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders'))
          AND (brand_id IS NULL OR (SELECT public.has_brand_access(auth.uid(), brand_id))));
+DROP POLICY IF EXISTS "whatsapp_templates_insert" ON public.whatsapp_templates;
 CREATE POLICY "whatsapp_templates_insert" ON public.whatsapp_templates FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders'))
          AND (brand_id IS NULL OR (SELECT public.has_brand_access(auth.uid(), brand_id))));
+DROP POLICY IF EXISTS "whatsapp_templates_update" ON public.whatsapp_templates;
 CREATE POLICY "whatsapp_templates_update" ON public.whatsapp_templates FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders'))
          AND (brand_id IS NULL OR (SELECT public.has_brand_access(auth.uid(), brand_id))))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders'))
          AND (brand_id IS NULL OR (SELECT public.has_brand_access(auth.uid(), brand_id))));
+DROP POLICY IF EXISTS "whatsapp_templates_delete" ON public.whatsapp_templates;
 CREATE POLICY "whatsapp_templates_delete" ON public.whatsapp_templates FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders'))
          AND (brand_id IS NULL OR (SELECT public.has_brand_access(auth.uid(), brand_id))));
@@ -174,8 +194,10 @@ CREATE TABLE public.order_sla_rules (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_sla_rules TO authenticated;
 GRANT ALL ON public.order_sla_rules TO service_role;
 ALTER TABLE public.order_sla_rules ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "order_sla_rules_read" ON public.order_sla_rules;
 CREATE POLICY "order_sla_rules_read" ON public.order_sla_rules FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')));
+DROP POLICY IF EXISTS "order_sla_rules_write" ON public.order_sla_rules;
 CREATE POLICY "order_sla_rules_write" ON public.order_sla_rules FOR ALL TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')));

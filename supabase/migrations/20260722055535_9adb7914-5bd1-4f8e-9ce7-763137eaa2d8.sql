@@ -21,13 +21,16 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.tasks TO authenticated;
 GRANT ALL ON public.tasks TO service_role;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Managers manage all tasks" ON public.tasks;
 CREATE POLICY "Managers manage all tasks" ON public.tasks FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));
 
+DROP POLICY IF EXISTS "Assignees view own tasks" ON public.tasks;
 CREATE POLICY "Assignees view own tasks" ON public.tasks FOR SELECT TO authenticated
   USING (assignee_id = auth.uid() OR created_by = auth.uid());
 
+DROP POLICY IF EXISTS "Assignees update status" ON public.tasks;
 CREATE POLICY "Assignees update status" ON public.tasks FOR UPDATE TO authenticated
   USING (assignee_id = auth.uid())
   WITH CHECK (assignee_id = auth.uid());
@@ -50,8 +53,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_section_access TO authentica
 GRANT ALL ON public.user_section_access TO service_role;
 ALTER TABLE public.user_section_access ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own section access" ON public.user_section_access;
 CREATE POLICY "Users read own section access" ON public.user_section_access FOR SELECT TO authenticated
   USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "Admins manage section access" ON public.user_section_access;
 CREATE POLICY "Admins manage section access" ON public.user_section_access FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
@@ -71,8 +76,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_brand_access TO authenticate
 GRANT ALL ON public.user_brand_access TO service_role;
 ALTER TABLE public.user_brand_access ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users read own brand access" ON public.user_brand_access;
 CREATE POLICY "Users read own brand access" ON public.user_brand_access FOR SELECT TO authenticated
   USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'));
+DROP POLICY IF EXISTS "Admins manage brand access" ON public.user_brand_access;
 CREATE POLICY "Admins manage brand access" ON public.user_brand_access FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));

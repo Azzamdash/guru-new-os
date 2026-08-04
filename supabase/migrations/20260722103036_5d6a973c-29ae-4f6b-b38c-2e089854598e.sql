@@ -11,10 +11,12 @@ GRANT ALL ON public.supplier_brands TO service_role;
 
 ALTER TABLE public.supplier_brands ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "read supplier_brands" ON public.supplier_brands;
 CREATE POLICY "read supplier_brands" ON public.supplier_brands
   FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
 
+DROP POLICY IF EXISTS "write supplier_brands admin/manager" ON public.supplier_brands;
 CREATE POLICY "write supplier_brands admin/manager" ON public.supplier_brands
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))

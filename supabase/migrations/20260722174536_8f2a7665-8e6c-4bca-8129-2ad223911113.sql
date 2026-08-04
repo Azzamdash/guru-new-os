@@ -18,11 +18,13 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.investors TO authenticated;
 GRANT ALL ON public.investors TO service_role;
 ALTER TABLE public.investors ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "investors admin all" ON public.investors;
 CREATE POLICY "investors admin all" ON public.investors
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
 
+DROP POLICY IF EXISTS "investors self read" ON public.investors;
 CREATE POLICY "investors self read" ON public.investors
   FOR SELECT TO authenticated
   USING (user_id = auth.uid());
@@ -46,11 +48,13 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.investor_brand_shares TO authenti
 GRANT ALL ON public.investor_brand_shares TO service_role;
 ALTER TABLE public.investor_brand_shares ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "shares admin all" ON public.investor_brand_shares;
 CREATE POLICY "shares admin all" ON public.investor_brand_shares
   FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin'))
   WITH CHECK (public.has_role(auth.uid(),'admin'));
 
+DROP POLICY IF EXISTS "shares self read" ON public.investor_brand_shares;
 CREATE POLICY "shares self read" ON public.investor_brand_shares
   FOR SELECT TO authenticated
   USING (EXISTS (

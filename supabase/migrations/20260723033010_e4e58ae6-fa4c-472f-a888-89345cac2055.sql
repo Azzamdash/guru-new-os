@@ -4,6 +4,7 @@ DROP POLICY IF EXISTS cash_txn_write_insert ON public.cash_transactions;
 DROP POLICY IF EXISTS cash_txn_write_update ON public.cash_transactions;
 DROP POLICY IF EXISTS cash_txn_write_delete ON public.cash_transactions;
 
+DROP POLICY IF EXISTS cash_txn_write_insert ON public.cash_transactions;
 CREATE POLICY cash_txn_write_insert ON public.cash_transactions FOR INSERT TO authenticated
 WITH CHECK (
   is_writer(auth.uid()) AND (
@@ -11,6 +12,7 @@ WITH CHECK (
     OR (brand_id IS NULL AND (has_role(auth.uid(),'admin') OR has_role(auth.uid(),'manager')))
   )
 );
+DROP POLICY IF EXISTS cash_txn_write_update ON public.cash_transactions;
 CREATE POLICY cash_txn_write_update ON public.cash_transactions FOR UPDATE TO authenticated
 USING (
   is_writer(auth.uid()) AND (
@@ -24,6 +26,7 @@ WITH CHECK (
     OR (brand_id IS NULL AND (has_role(auth.uid(),'admin') OR has_role(auth.uid(),'manager')))
   )
 );
+DROP POLICY IF EXISTS cash_txn_write_delete ON public.cash_transactions;
 CREATE POLICY cash_txn_write_delete ON public.cash_transactions FOR DELETE TO authenticated
 USING (
   is_writer(auth.uid()) AND (
@@ -36,6 +39,7 @@ USING (
 DROP POLICY IF EXISTS assets_write_admin_manager_accountant ON public.company_assets;
 DROP POLICY IF EXISTS assets_update_admin_manager_accountant ON public.company_assets;
 
+DROP POLICY IF EXISTS assets_write_admin_manager_accountant ON public.company_assets;
 CREATE POLICY assets_write_admin_manager_accountant ON public.company_assets FOR INSERT TO authenticated
 WITH CHECK (
   (has_role(auth.uid(),'admin') OR has_role(auth.uid(),'manager') OR has_role(auth.uid(),'accountant'))
@@ -44,6 +48,7 @@ WITH CHECK (
     OR (brand_id IS NULL AND (has_role(auth.uid(),'admin') OR has_role(auth.uid(),'manager')))
   )
 );
+DROP POLICY IF EXISTS assets_update_admin_manager_accountant ON public.company_assets;
 CREATE POLICY assets_update_admin_manager_accountant ON public.company_assets FOR UPDATE TO authenticated
 USING (
   (has_role(auth.uid(),'admin') OR has_role(auth.uid(),'manager') OR has_role(auth.uid(),'accountant'))
@@ -87,6 +92,7 @@ WITH CHECK (
 -- supplier_invoice_items: restrict via parent invoice
 DROP POLICY IF EXISTS "invoice items read via parent invoice brand" ON public.supplier_invoice_items;
 DROP POLICY IF EXISTS "invoice items write for writers" ON public.supplier_invoice_items;
+DROP POLICY IF EXISTS "invoice items read via parent invoice brand" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items read via parent invoice brand" ON public.supplier_invoice_items FOR SELECT TO authenticated
 USING (
   EXISTS (
@@ -97,6 +103,7 @@ USING (
     )
   )
 );
+DROP POLICY IF EXISTS "invoice items write for writers" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items write for writers" ON public.supplier_invoice_items FOR ALL TO authenticated
 USING (
   is_writer(auth.uid()) AND EXISTS (

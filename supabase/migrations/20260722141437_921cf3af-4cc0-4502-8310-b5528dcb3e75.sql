@@ -18,6 +18,7 @@ GRANT ALL ON public.supplier_invoice_items TO service_role;
 
 ALTER TABLE public.supplier_invoice_items ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "invoice items read via parent invoice brand" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items read via parent invoice brand"
   ON public.supplier_invoice_items FOR SELECT TO authenticated
   USING (EXISTS (
@@ -26,6 +27,7 @@ CREATE POLICY "invoice items read via parent invoice brand"
       AND (si.brand_id IS NULL OR public.has_brand_access(auth.uid(), si.brand_id))
   ));
 
+DROP POLICY IF EXISTS "invoice items write for writers" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items write for writers"
   ON public.supplier_invoice_items FOR ALL TO authenticated
   USING (public.is_writer(auth.uid()))

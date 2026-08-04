@@ -33,9 +33,11 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.orders TO authenticated;
 GRANT ALL ON public.orders TO service_role;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS orders_brand_read ON public.orders;
 CREATE POLICY orders_brand_read ON public.orders
   FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS orders_writer_all ON public.orders;
 CREATE POLICY orders_writer_all ON public.orders
   FOR ALL TO authenticated
   USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id))
@@ -65,9 +67,11 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_items TO authenticated;
 GRANT ALL ON public.order_items TO service_role;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS order_items_read ON public.order_items;
 CREATE POLICY order_items_read ON public.order_items
   FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.orders o WHERE o.id = order_items.order_id AND public.has_brand_access(auth.uid(), o.brand_id)));
+DROP POLICY IF EXISTS order_items_writer ON public.order_items;
 CREATE POLICY order_items_writer ON public.order_items
   FOR ALL TO authenticated
   USING (public.is_writer(auth.uid()) AND EXISTS (SELECT 1 FROM public.orders o WHERE o.id = order_items.order_id AND public.has_brand_access(auth.uid(), o.brand_id)))

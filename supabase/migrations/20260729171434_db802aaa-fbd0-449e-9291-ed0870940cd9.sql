@@ -2,6 +2,7 @@ DROP POLICY IF EXISTS sp_read ON public.supplier_payments;
 DROP POLICY IF EXISTS sp_write ON public.supplier_payments;
 DROP POLICY IF EXISTS "sp write privileged" ON public.supplier_payments;
 
+DROP POLICY IF EXISTS sp_read ON public.supplier_payments;
 CREATE POLICY sp_read ON public.supplier_payments FOR SELECT TO authenticated
 USING (
   (invoice_id IS NOT NULL AND EXISTS (
@@ -19,6 +20,7 @@ USING (
   OR has_role(auth.uid(),'admin')
 );
 
+DROP POLICY IF EXISTS sp_write ON public.supplier_payments;
 CREATE POLICY sp_write ON public.supplier_payments FOR ALL TO authenticated
 USING (
   is_writer(auth.uid()) AND (

@@ -19,7 +19,9 @@ CREATE UNIQUE INDEX customers_email_uidx ON public.customers(email_norm) WHERE e
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.customers TO authenticated;
 GRANT ALL ON public.customers TO service_role;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "customers read" ON public.customers;
 CREATE POLICY "customers read" ON public.customers FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "customers write" ON public.customers;
 CREATE POLICY "customers write" ON public.customers FOR ALL TO authenticated
   USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 
@@ -38,7 +40,9 @@ CREATE TABLE public.customer_notes (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.customer_notes TO authenticated;
 GRANT ALL ON public.customer_notes TO service_role;
 ALTER TABLE public.customer_notes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "notes read" ON public.customer_notes;
 CREATE POLICY "notes read" ON public.customer_notes FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "notes write" ON public.customer_notes;
 CREATE POLICY "notes write" ON public.customer_notes FOR ALL TO authenticated
   USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 CREATE TRIGGER cnotes_updated_at BEFORE UPDATE ON public.customer_notes

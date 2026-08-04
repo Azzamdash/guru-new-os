@@ -19,8 +19,10 @@ CREATE TABLE public.purchase_orders (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.purchase_orders TO authenticated;
 GRANT ALL ON public.purchase_orders TO service_role;
 ALTER TABLE public.purchase_orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read purchase_orders" ON public.purchase_orders;
 CREATE POLICY "read purchase_orders" ON public.purchase_orders FOR SELECT TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "write purchase_orders privileged" ON public.purchase_orders;
 CREATE POLICY "write purchase_orders privileged" ON public.purchase_orders FOR ALL TO authenticated
   USING (public.has_brand_access(auth.uid(), brand_id) AND public.is_writer(auth.uid()))
   WITH CHECK (public.has_brand_access(auth.uid(), brand_id) AND public.is_writer(auth.uid()));
@@ -44,8 +46,10 @@ CREATE TABLE public.purchase_order_items (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.purchase_order_items TO authenticated;
 GRANT ALL ON public.purchase_order_items TO service_role;
 ALTER TABLE public.purchase_order_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read purchase_order_items" ON public.purchase_order_items;
 CREATE POLICY "read purchase_order_items" ON public.purchase_order_items FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id)));
+DROP POLICY IF EXISTS "write purchase_order_items privileged" ON public.purchase_order_items;
 CREATE POLICY "write purchase_order_items privileged" ON public.purchase_order_items FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id) AND public.is_writer(auth.uid())))
   WITH CHECK (EXISTS (SELECT 1 FROM public.purchase_orders po WHERE po.id = purchase_order_id AND public.has_brand_access(auth.uid(), po.brand_id) AND public.is_writer(auth.uid())));

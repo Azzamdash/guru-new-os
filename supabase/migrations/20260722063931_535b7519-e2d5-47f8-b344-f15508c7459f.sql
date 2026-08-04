@@ -15,6 +15,7 @@ GRANT ALL ON public.fulfillment_entries TO service_role;
 
 ALTER TABLE public.fulfillment_entries ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "read fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "read fulfillment"
   ON public.fulfillment_entries FOR SELECT
   TO authenticated
@@ -25,6 +26,7 @@ CREATE POLICY "read fulfillment"
     OR public.has_section_access(auth.uid(),'reports_production')
   );
 
+DROP POLICY IF EXISTS "write fulfillment" ON public.fulfillment_entries;
 CREATE POLICY "write fulfillment"
   ON public.fulfillment_entries FOR ALL
   TO authenticated

@@ -15,6 +15,7 @@ GRANT ALL ON public.financial_audit_log TO service_role;
 
 ALTER TABLE public.financial_audit_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins and managers can view audit log" ON public.financial_audit_log;
 CREATE POLICY "Admins and managers can view audit log"
   ON public.financial_audit_log FOR SELECT
   TO authenticated

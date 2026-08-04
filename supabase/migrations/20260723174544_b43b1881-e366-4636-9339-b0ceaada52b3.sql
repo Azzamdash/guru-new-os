@@ -22,6 +22,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.production_tasks TO authenticated
 GRANT ALL ON public.production_tasks TO service_role;
 ALTER TABLE public.production_tasks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "prod_tasks_manage_all" ON public.production_tasks;
 CREATE POLICY "prod_tasks_manage_all" ON public.production_tasks
   FOR ALL TO authenticated
   USING (
@@ -35,9 +36,11 @@ CREATE POLICY "prod_tasks_manage_all" ON public.production_tasks
     OR EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role::text = 'production_manager')
   );
 
+DROP POLICY IF EXISTS "prod_tasks_assignee_read" ON public.production_tasks;
 CREATE POLICY "prod_tasks_assignee_read" ON public.production_tasks
   FOR SELECT TO authenticated USING (assignee_id = auth.uid());
 
+DROP POLICY IF EXISTS "prod_tasks_assignee_update" ON public.production_tasks;
 CREATE POLICY "prod_tasks_assignee_update" ON public.production_tasks
   FOR UPDATE TO authenticated
   USING (assignee_id = auth.uid())
@@ -97,9 +100,11 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.employee_requests TO authenticate
 GRANT ALL ON public.employee_requests TO service_role;
 ALTER TABLE public.employee_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "requests_owner_read" ON public.employee_requests;
 CREATE POLICY "requests_owner_read" ON public.employee_requests
   FOR SELECT TO authenticated USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "requests_owner_insert" ON public.employee_requests;
 CREATE POLICY "requests_owner_insert" ON public.employee_requests
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -109,10 +114,12 @@ CREATE POLICY "requests_owner_insert" ON public.employee_requests
     AND reviewed_at IS NULL
   );
 
+DROP POLICY IF EXISTS "requests_owner_delete_pending" ON public.employee_requests;
 CREATE POLICY "requests_owner_delete_pending" ON public.employee_requests
   FOR DELETE TO authenticated
   USING (user_id = auth.uid() AND status = 'pending');
 
+DROP POLICY IF EXISTS "requests_hr_read_all" ON public.employee_requests;
 CREATE POLICY "requests_hr_read_all" ON public.employee_requests
   FOR SELECT TO authenticated USING (
     public.has_role(auth.uid(),'admin')
@@ -120,6 +127,7 @@ CREATE POLICY "requests_hr_read_all" ON public.employee_requests
     OR EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role::text = 'hr')
   );
 
+DROP POLICY IF EXISTS "requests_hr_update_all" ON public.employee_requests;
 CREATE POLICY "requests_hr_update_all" ON public.employee_requests
   FOR UPDATE TO authenticated
   USING (

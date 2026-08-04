@@ -83,6 +83,7 @@ BEGIN
   END LOOP;
 END $$;
 
+DROP POLICY IF EXISTS supplier_invoices_read ON public.supplier_invoices;
 CREATE POLICY supplier_invoices_read ON public.supplier_invoices FOR SELECT
 USING (
   has_role(auth.uid(),'admin'::app_role)
@@ -90,6 +91,7 @@ USING (
   OR ((brand_id IS NULL) AND has_role(auth.uid(),'admin'::app_role))
 );
 
+DROP POLICY IF EXISTS supplier_invoices_write ON public.supplier_invoices;
 CREATE POLICY supplier_invoices_write ON public.supplier_invoices FOR ALL
 USING (
   is_writer(auth.uid()) AND (
@@ -113,6 +115,7 @@ BEGIN
   END LOOP;
 END $$;
 
+DROP POLICY IF EXISTS sii_read ON public.supplier_invoice_items;
 CREATE POLICY sii_read ON public.supplier_invoice_items FOR SELECT
 USING (
   EXISTS (
@@ -125,6 +128,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS sii_write ON public.supplier_invoice_items;
 CREATE POLICY sii_write ON public.supplier_invoice_items FOR ALL
 USING (
   is_writer(auth.uid()) AND EXISTS (
@@ -156,6 +160,7 @@ BEGIN
   END LOOP;
 END $$;
 
+DROP POLICY IF EXISTS sp_read ON public.supplier_payments;
 CREATE POLICY sp_read ON public.supplier_payments FOR SELECT
 USING (
   EXISTS (
@@ -168,6 +173,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS sp_write ON public.supplier_payments;
 CREATE POLICY sp_write ON public.supplier_payments FOR ALL
 USING (
   is_writer(auth.uid()) AND EXISTS (

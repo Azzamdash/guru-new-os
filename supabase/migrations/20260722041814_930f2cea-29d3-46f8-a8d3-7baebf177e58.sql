@@ -17,7 +17,9 @@ CREATE TABLE public.brands (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.brands TO authenticated;
 GRANT ALL ON public.brands TO service_role;
 ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "brands read authenticated" ON public.brands;
 CREATE POLICY "brands read authenticated" ON public.brands FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "brands write admin" ON public.brands;
 CREATE POLICY "brands write admin" ON public.brands FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
@@ -36,7 +38,9 @@ CREATE TABLE public.expense_categories (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.expense_categories TO authenticated;
 GRANT ALL ON public.expense_categories TO service_role;
 ALTER TABLE public.expense_categories ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "cats read authenticated" ON public.expense_categories;
 CREATE POLICY "cats read authenticated" ON public.expense_categories FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "cats write admin" ON public.expense_categories;
 CREATE POLICY "cats write admin" ON public.expense_categories FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
@@ -55,7 +59,9 @@ CREATE TABLE public.suppliers (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.suppliers TO authenticated;
 GRANT ALL ON public.suppliers TO service_role;
 ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "suppliers read authenticated" ON public.suppliers;
 CREATE POLICY "suppliers read authenticated" ON public.suppliers FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "suppliers write admin" ON public.suppliers;
 CREATE POLICY "suppliers write admin" ON public.suppliers FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
@@ -83,7 +89,9 @@ CREATE TABLE public.monthly_entries (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.monthly_entries TO authenticated;
 GRANT ALL ON public.monthly_entries TO service_role;
 ALTER TABLE public.monthly_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "me read authenticated" ON public.monthly_entries;
 CREATE POLICY "me read authenticated" ON public.monthly_entries FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "me write admin" ON public.monthly_entries;
 CREATE POLICY "me write admin" ON public.monthly_entries FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
@@ -105,7 +113,9 @@ CREATE TABLE public.expense_entries (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.expense_entries TO authenticated;
 GRANT ALL ON public.expense_entries TO service_role;
 ALTER TABLE public.expense_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "ee read authenticated" ON public.expense_entries;
 CREATE POLICY "ee read authenticated" ON public.expense_entries FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "ee write admin" ON public.expense_entries;
 CREATE POLICY "ee write admin" ON public.expense_entries FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
@@ -129,7 +139,9 @@ CREATE TABLE public.supplier_invoices (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.supplier_invoices TO authenticated;
 GRANT ALL ON public.supplier_invoices TO service_role;
 ALTER TABLE public.supplier_invoices ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "si read authenticated" ON public.supplier_invoices;
 CREATE POLICY "si read authenticated" ON public.supplier_invoices FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "si write admin" ON public.supplier_invoices;
 CREATE POLICY "si write admin" ON public.supplier_invoices FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
@@ -150,7 +162,9 @@ CREATE TABLE public.supplier_payments (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.supplier_payments TO authenticated;
 GRANT ALL ON public.supplier_payments TO service_role;
 ALTER TABLE public.supplier_payments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "sp read authenticated" ON public.supplier_payments;
 CREATE POLICY "sp read authenticated" ON public.supplier_payments FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "sp write admin" ON public.supplier_payments;
 CREATE POLICY "sp write admin" ON public.supplier_payments FOR ALL TO authenticated
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));

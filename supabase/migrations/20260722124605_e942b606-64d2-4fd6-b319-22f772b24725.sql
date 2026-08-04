@@ -6,6 +6,7 @@ ALTER TABLE public.monthly_entries ADD COLUMN IF NOT EXISTS period_end_date date
 ALTER TABLE public.monthly_entries DROP CONSTRAINT IF EXISTS monthly_entries_brand_id_year_month_key;
 
 DROP POLICY IF EXISTS "me write admin" ON public.monthly_entries;
+DROP POLICY IF EXISTS "me write privileged" ON public.monthly_entries;
 CREATE POLICY "me write privileged" ON public.monthly_entries
   FOR ALL TO authenticated
   USING (
@@ -25,6 +26,7 @@ CREATE POLICY "me write privileged" ON public.monthly_entries
 
 -- expense_entries
 DROP POLICY IF EXISTS "ee write admin" ON public.expense_entries;
+DROP POLICY IF EXISTS "ee write privileged" ON public.expense_entries;
 CREATE POLICY "ee write privileged" ON public.expense_entries
   FOR ALL TO authenticated
   USING (
@@ -44,6 +46,7 @@ CREATE POLICY "ee write privileged" ON public.expense_entries
 
 -- sales_invoices
 DROP POLICY IF EXISTS "admin write sales" ON public.sales_invoices;
+DROP POLICY IF EXISTS "sales write privileged" ON public.sales_invoices;
 CREATE POLICY "sales write privileged" ON public.sales_invoices
   FOR ALL TO authenticated
   USING (
@@ -63,6 +66,7 @@ CREATE POLICY "sales write privileged" ON public.sales_invoices
 
 -- supplier_invoices
 DROP POLICY IF EXISTS "si write admin" ON public.supplier_invoices;
+DROP POLICY IF EXISTS "si write privileged" ON public.supplier_invoices;
 CREATE POLICY "si write privileged" ON public.supplier_invoices
   FOR ALL TO authenticated
   USING (
@@ -82,6 +86,7 @@ CREATE POLICY "si write privileged" ON public.supplier_invoices
 
 -- supplier_payments
 DROP POLICY IF EXISTS "sp write admin" ON public.supplier_payments;
+DROP POLICY IF EXISTS "sp write privileged" ON public.supplier_payments;
 CREATE POLICY "sp write privileged" ON public.supplier_payments
   FOR ALL TO authenticated
   USING (
@@ -97,6 +102,7 @@ CREATE POLICY "sp write privileged" ON public.supplier_payments
 
 -- suppliers
 DROP POLICY IF EXISTS "suppliers write admin" ON public.suppliers;
+DROP POLICY IF EXISTS "suppliers write privileged" ON public.suppliers;
 CREATE POLICY "suppliers write privileged" ON public.suppliers
   FOR ALL TO authenticated
   USING (

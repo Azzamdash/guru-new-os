@@ -14,11 +14,13 @@ GRANT ALL ON public.app_user_connections TO service_role;
 ALTER TABLE public.app_user_connections ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see WHETHER they have a connection (not the ciphertext, but RLS is on columns via app code)
+DROP POLICY IF EXISTS "Users can view own connection status" ON public.app_user_connections;
 CREATE POLICY "Users can view own connection status"
   ON public.app_user_connections FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own connection" ON public.app_user_connections;
 CREATE POLICY "Users can delete own connection"
   ON public.app_user_connections FOR DELETE
   TO authenticated
@@ -37,6 +39,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_sheet_config TO authenticate
 GRANT ALL ON public.user_sheet_config TO service_role;
 ALTER TABLE public.user_sheet_config ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users manage own sheet config" ON public.user_sheet_config;
 CREATE POLICY "Users manage own sheet config"
   ON public.user_sheet_config FOR ALL
   TO authenticated

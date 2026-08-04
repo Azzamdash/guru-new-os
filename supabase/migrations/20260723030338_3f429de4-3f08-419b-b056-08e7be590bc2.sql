@@ -15,7 +15,9 @@ CREATE TABLE public.materials (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.materials TO authenticated;
 GRANT ALL ON public.materials TO service_role;
 ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read materials" ON public.materials;
 CREATE POLICY "read materials" ON public.materials FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admin write materials" ON public.materials;
 CREATE POLICY "admin write materials" ON public.materials FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 CREATE TRIGGER materials_updated_at BEFORE UPDATE ON public.materials
@@ -35,7 +37,9 @@ CREATE TABLE public.products (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.products TO authenticated;
 GRANT ALL ON public.products TO service_role;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read products" ON public.products;
 CREATE POLICY "read products" ON public.products FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admin write products" ON public.products;
 CREATE POLICY "admin write products" ON public.products FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 CREATE TRIGGER products_updated_at BEFORE UPDATE ON public.products
@@ -53,7 +57,9 @@ CREATE TABLE public.product_materials (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.product_materials TO authenticated;
 GRANT ALL ON public.product_materials TO service_role;
 ALTER TABLE public.product_materials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read pm" ON public.product_materials;
 CREATE POLICY "read pm" ON public.product_materials FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admin write pm" ON public.product_materials;
 CREATE POLICY "admin write pm" ON public.product_materials FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 CREATE TRIGGER product_materials_updated_at BEFORE UPDATE ON public.product_materials
@@ -72,7 +78,9 @@ CREATE TABLE public.inventory_movements (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.inventory_movements TO authenticated;
 GRANT ALL ON public.inventory_movements TO service_role;
 ALTER TABLE public.inventory_movements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read im" ON public.inventory_movements;
 CREATE POLICY "read im" ON public.inventory_movements FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admin write im" ON public.inventory_movements;
 CREATE POLICY "admin write im" ON public.inventory_movements FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 CREATE TRIGGER im_updated_at BEFORE UPDATE ON public.inventory_movements
@@ -91,7 +99,9 @@ CREATE TABLE public.couriers (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.couriers TO authenticated;
 GRANT ALL ON public.couriers TO service_role;
 ALTER TABLE public.couriers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read couriers" ON public.couriers;
 CREATE POLICY "read couriers" ON public.couriers FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admin write couriers" ON public.couriers;
 CREATE POLICY "admin write couriers" ON public.couriers FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 CREATE TRIGGER couriers_updated_at BEFORE UPDATE ON public.couriers
@@ -114,7 +124,9 @@ CREATE TABLE public.sales_invoices (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.sales_invoices TO authenticated;
 GRANT ALL ON public.sales_invoices TO service_role;
 ALTER TABLE public.sales_invoices ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read sales" ON public.sales_invoices;
 CREATE POLICY "read sales" ON public.sales_invoices FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "admin write sales" ON public.sales_invoices;
 CREATE POLICY "admin write sales" ON public.sales_invoices FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 CREATE TRIGGER sales_updated_at BEFORE UPDATE ON public.sales_invoices

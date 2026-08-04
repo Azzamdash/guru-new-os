@@ -14,7 +14,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.wallets TO authenticated;
 GRANT ALL ON public.wallets TO service_role;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS wallets_read ON public.wallets;
 CREATE POLICY wallets_read ON public.wallets FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS wallets_write ON public.wallets;
 CREATE POLICY wallets_write ON public.wallets FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'accountant'));

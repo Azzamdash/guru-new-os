@@ -133,23 +133,29 @@ ALTER TABLE public.courier_status_mappings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courier_governorate_rates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.courier_charges ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS courier_mappings_read ON public.courier_status_mappings;
 CREATE POLICY courier_mappings_read ON public.courier_status_mappings
   FOR SELECT TO authenticated USING (public.can_read_page(auth.uid(), '/couriers'));
+DROP POLICY IF EXISTS courier_mappings_write ON public.courier_status_mappings;
 CREATE POLICY courier_mappings_write ON public.courier_status_mappings
   FOR ALL TO authenticated
   USING (public.can_write_page(auth.uid(), '/couriers'))
   WITH CHECK (public.can_write_page(auth.uid(), '/couriers'));
 
+DROP POLICY IF EXISTS courier_rates_read ON public.courier_governorate_rates;
 CREATE POLICY courier_rates_read ON public.courier_governorate_rates
   FOR SELECT TO authenticated USING (public.can_read_page(auth.uid(), '/couriers'));
+DROP POLICY IF EXISTS courier_rates_write ON public.courier_governorate_rates;
 CREATE POLICY courier_rates_write ON public.courier_governorate_rates
   FOR ALL TO authenticated
   USING (public.can_write_page(auth.uid(), '/couriers'))
   WITH CHECK (public.can_write_page(auth.uid(), '/couriers'));
 
+DROP POLICY IF EXISTS courier_charges_read ON public.courier_charges;
 CREATE POLICY courier_charges_read ON public.courier_charges
   FOR SELECT TO authenticated
   USING (public.can_read_page(auth.uid(), '/couriers') AND public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS courier_charges_write ON public.courier_charges;
 CREATE POLICY courier_charges_write ON public.courier_charges
   FOR ALL TO authenticated
   USING (public.can_write_page(auth.uid(), '/couriers') AND public.has_brand_access(auth.uid(), brand_id))

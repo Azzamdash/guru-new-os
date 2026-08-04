@@ -48,12 +48,14 @@ SELECT id, brand_id FROM public.couriers WHERE brand_id IS NOT NULL
 ON CONFLICT DO NOTHING;
 
 ALTER TABLE public.courier_brands ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS courier_brands_read ON public.courier_brands;
 CREATE POLICY courier_brands_read ON public.courier_brands
 FOR SELECT TO authenticated
 USING (
   public.can_read_page(auth.uid(), '/couriers')
   AND public.has_brand_access(auth.uid(), brand_id)
 );
+DROP POLICY IF EXISTS courier_brands_write ON public.courier_brands;
 CREATE POLICY courier_brands_write ON public.courier_brands
 FOR ALL TO authenticated
 USING (
@@ -70,6 +72,7 @@ GRANT ALL ON public.courier_brands TO service_role;
 
 DROP POLICY IF EXISTS "read couriers" ON public.couriers;
 DROP POLICY IF EXISTS "admin write couriers" ON public.couriers;
+DROP POLICY IF EXISTS "read couriers" ON public.couriers;
 CREATE POLICY "read couriers" ON public.couriers
 FOR SELECT TO authenticated
 USING (
@@ -151,6 +154,7 @@ AS $$
   )
 $$;
 
+DROP POLICY IF EXISTS "admin write couriers" ON public.couriers;
 CREATE POLICY "admin write couriers" ON public.couriers
 FOR ALL TO authenticated
 USING (
@@ -184,12 +188,14 @@ DROP POLICY IF EXISTS courier_mappings_read ON public.courier_status_mappings;
 DROP POLICY IF EXISTS courier_mappings_write ON public.courier_status_mappings;
 DROP POLICY IF EXISTS courier_rates_read ON public.courier_governorate_rates;
 DROP POLICY IF EXISTS courier_rates_write ON public.courier_governorate_rates;
+DROP POLICY IF EXISTS courier_mappings_read ON public.courier_status_mappings;
 CREATE POLICY courier_mappings_read ON public.courier_status_mappings
 FOR SELECT TO authenticated
 USING (
   public.can_read_page(auth.uid(), '/couriers')
   AND public.courier_accessible_to_user(auth.uid(), courier_id)
 );
+DROP POLICY IF EXISTS courier_mappings_write ON public.courier_status_mappings;
 CREATE POLICY courier_mappings_write ON public.courier_status_mappings
 FOR ALL TO authenticated
 USING (
@@ -200,12 +206,14 @@ WITH CHECK (
   public.can_write_page(auth.uid(), '/couriers')
   AND public.courier_manageable_by_user(auth.uid(), courier_id)
 );
+DROP POLICY IF EXISTS courier_rates_read ON public.courier_governorate_rates;
 CREATE POLICY courier_rates_read ON public.courier_governorate_rates
 FOR SELECT TO authenticated
 USING (
   public.can_read_page(auth.uid(), '/couriers')
   AND public.courier_accessible_to_user(auth.uid(), courier_id)
 );
+DROP POLICY IF EXISTS courier_rates_write ON public.courier_governorate_rates;
 CREATE POLICY courier_rates_write ON public.courier_governorate_rates
 FOR ALL TO authenticated
 USING (
@@ -368,6 +376,7 @@ CREATE TABLE IF NOT EXISTS public.order_lifecycle_events (
 CREATE INDEX IF NOT EXISTS order_lifecycle_events_order_idx
   ON public.order_lifecycle_events(order_id, created_at DESC);
 ALTER TABLE public.order_lifecycle_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS order_lifecycle_events_read ON public.order_lifecycle_events;
 CREATE POLICY order_lifecycle_events_read ON public.order_lifecycle_events
 FOR SELECT TO authenticated
 USING (

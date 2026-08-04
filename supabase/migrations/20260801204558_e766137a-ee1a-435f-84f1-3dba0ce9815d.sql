@@ -19,9 +19,11 @@ GRANT ALL ON public.order_assignment_log TO service_role;
 
 ALTER TABLE public.order_assignment_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "oal_read" ON public.order_assignment_log;
 CREATE POLICY "oal_read" ON public.order_assignment_log
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "oal_insert" ON public.order_assignment_log;
 CREATE POLICY "oal_insert" ON public.order_assignment_log
   FOR INSERT TO authenticated WITH CHECK (performed_by = auth.uid());
 

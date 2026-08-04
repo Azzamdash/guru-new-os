@@ -10,24 +10,32 @@ GRANT EXECUTE ON FUNCTION public.has_brand_access(uuid, uuid) TO authenticated;
 DROP POLICY IF EXISTS "read sales" ON public.sales_invoices;
 CREATE POLICY "read sales" ON public.sales_invoices FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "auth read sales_invoice_items" ON public.sales_invoice_items;
+DROP POLICY IF EXISTS "read sales_invoice_items" ON public.sales_invoice_items;
 CREATE POLICY "read sales_invoice_items" ON public.sales_invoice_items FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.sales_invoices si WHERE si.id = invoice_id AND public.has_brand_access(auth.uid(), si.brand_id)));
 DROP POLICY IF EXISTS "me read authenticated" ON public.monthly_entries;
+DROP POLICY IF EXISTS "read monthly_entries" ON public.monthly_entries;
 CREATE POLICY "read monthly_entries" ON public.monthly_entries FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "ee read authenticated" ON public.expense_entries;
+DROP POLICY IF EXISTS "read expense_entries" ON public.expense_entries;
 CREATE POLICY "read expense_entries" ON public.expense_entries FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "suppliers read authenticated" ON public.suppliers;
+DROP POLICY IF EXISTS "read suppliers" ON public.suppliers;
 CREATE POLICY "read suppliers" ON public.suppliers FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "si read authenticated" ON public.supplier_invoices;
+DROP POLICY IF EXISTS "read supplier_invoices" ON public.supplier_invoices;
 CREATE POLICY "read supplier_invoices" ON public.supplier_invoices FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "sp read authenticated" ON public.supplier_payments;
+DROP POLICY IF EXISTS "read supplier_payments" ON public.supplier_payments;
 CREATE POLICY "read supplier_payments" ON public.supplier_payments FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.supplier_invoices si WHERE si.id = invoice_id AND public.has_brand_access(auth.uid(), si.brand_id)));
 DROP POLICY IF EXISTS "brands read authenticated" ON public.brands;
+DROP POLICY IF EXISTS "read brands" ON public.brands;
 CREATE POLICY "read brands" ON public.brands FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), id));
 DROP POLICY IF EXISTS "read couriers" ON public.couriers;
 CREATE POLICY "read couriers" ON public.couriers FOR SELECT TO authenticated USING (brand_id IS NULL OR public.has_brand_access(auth.uid(), brand_id));
 DROP POLICY IF EXISTS "cats read authenticated" ON public.expense_categories;
+DROP POLICY IF EXISTS "read expense_categories" ON public.expense_categories;
 CREATE POLICY "read expense_categories" ON public.expense_categories FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
 DROP POLICY IF EXISTS "read products" ON public.products;
@@ -36,9 +44,11 @@ DROP POLICY IF EXISTS "read materials" ON public.materials;
 CREATE POLICY "read materials" ON public.materials FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
 DROP POLICY IF EXISTS "read pm" ON public.product_materials;
+DROP POLICY IF EXISTS "read product_materials" ON public.product_materials;
 CREATE POLICY "read product_materials" ON public.product_materials FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.products p WHERE p.id = product_id AND public.has_brand_access(auth.uid(), p.brand_id)));
 DROP POLICY IF EXISTS "read im" ON public.inventory_movements;
+DROP POLICY IF EXISTS "read inventory_movements" ON public.inventory_movements;
 CREATE POLICY "read inventory_movements" ON public.inventory_movements FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.products p WHERE p.id = product_id AND public.has_brand_access(auth.uid(), p.brand_id)));
 
@@ -57,7 +67,9 @@ CREATE TABLE public.supplier_brands (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.supplier_brands TO authenticated;
 GRANT ALL ON public.supplier_brands TO service_role;
 ALTER TABLE public.supplier_brands ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read supplier_brands" ON public.supplier_brands;
 CREATE POLICY "read supplier_brands" ON public.supplier_brands FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "write supplier_brands admin/manager" ON public.supplier_brands;
 CREATE POLICY "write supplier_brands admin/manager" ON public.supplier_brands FOR ALL TO authenticated
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager'));
@@ -109,6 +121,7 @@ DROP POLICY IF EXISTS "sp write privileged" ON public.supplier_payments;
 CREATE POLICY "sp write privileged" ON public.supplier_payments FOR ALL USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 
 DROP POLICY IF EXISTS "suppliers write admin" ON public.suppliers;
+DROP POLICY IF EXISTS "suppliers write privileged" ON public.suppliers;
 CREATE POLICY "suppliers write privileged" ON public.suppliers FOR ALL
   USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'))
   WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'manager') OR public.has_role(auth.uid(),'data_entry'));
@@ -136,7 +149,9 @@ CREATE TABLE public.employees (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.employees TO authenticated;
 GRANT ALL ON public.employees TO service_role;
 ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "employees read brand scoped" ON public.employees;
 CREATE POLICY "employees read brand scoped" ON public.employees FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "employees write writer" ON public.employees;
 CREATE POLICY "employees write writer" ON public.employees FOR ALL TO authenticated USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 CREATE TRIGGER trg_employees_updated BEFORE UPDATE ON public.employees FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -153,8 +168,10 @@ CREATE TABLE public.employee_attendance_entries (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.employee_attendance_entries TO authenticated;
 GRANT ALL ON public.employee_attendance_entries TO service_role;
 ALTER TABLE public.employee_attendance_entries ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "attendance read brand scoped" ON public.employee_attendance_entries;
 CREATE POLICY "attendance read brand scoped" ON public.employee_attendance_entries FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.employees e WHERE e.id = employee_id AND public.has_brand_access(auth.uid(), e.brand_id)));
+DROP POLICY IF EXISTS "attendance write writer" ON public.employee_attendance_entries;
 CREATE POLICY "attendance write writer" ON public.employee_attendance_entries FOR ALL TO authenticated USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 CREATE TRIGGER trg_attendance_updated BEFORE UPDATE ON public.employee_attendance_entries FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -171,8 +188,10 @@ CREATE TABLE public.supplier_invoice_items (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.supplier_invoice_items TO authenticated;
 GRANT ALL ON public.supplier_invoice_items TO service_role;
 ALTER TABLE public.supplier_invoice_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "invoice items read via parent invoice brand" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items read via parent invoice brand" ON public.supplier_invoice_items FOR SELECT TO authenticated
   USING (EXISTS (SELECT 1 FROM public.supplier_invoices si WHERE si.id = invoice_id AND (si.brand_id IS NULL OR public.has_brand_access(auth.uid(), si.brand_id))));
+DROP POLICY IF EXISTS "invoice items write for writers" ON public.supplier_invoice_items;
 CREATE POLICY "invoice items write for writers" ON public.supplier_invoice_items FOR ALL TO authenticated USING (public.is_writer(auth.uid())) WITH CHECK (public.is_writer(auth.uid()));
 CREATE TRIGGER trg_supplier_invoice_items_updated BEFORE UPDATE ON public.supplier_invoice_items FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX idx_supplier_invoice_items_invoice ON public.supplier_invoice_items(invoice_id);
@@ -188,7 +207,9 @@ CREATE TABLE public.service_clients (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.service_clients TO authenticated;
 GRANT ALL ON public.service_clients TO service_role;
 ALTER TABLE public.service_clients ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service_clients read by brand access" ON public.service_clients;
 CREATE POLICY "service_clients read by brand access" ON public.service_clients FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "service_clients write by writers" ON public.service_clients;
 CREATE POLICY "service_clients write by writers" ON public.service_clients FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
 CREATE TRIGGER trg_service_clients_updated BEFORE UPDATE ON public.service_clients FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX idx_service_clients_brand ON public.service_clients(brand_id);
@@ -207,7 +228,9 @@ CREATE TABLE public.service_projects (
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.service_projects TO authenticated;
 GRANT ALL ON public.service_projects TO service_role;
 ALTER TABLE public.service_projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service_projects read by brand access" ON public.service_projects;
 CREATE POLICY "service_projects read by brand access" ON public.service_projects FOR SELECT TO authenticated USING (public.has_brand_access(auth.uid(), brand_id));
+DROP POLICY IF EXISTS "service_projects write by writers" ON public.service_projects;
 CREATE POLICY "service_projects write by writers" ON public.service_projects FOR ALL TO authenticated USING (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id)) WITH CHECK (public.is_writer(auth.uid()) AND public.has_brand_access(auth.uid(), brand_id));
 CREATE TRIGGER trg_service_projects_updated BEFORE UPDATE ON public.service_projects FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 CREATE INDEX idx_service_projects_brand ON public.service_projects(brand_id);

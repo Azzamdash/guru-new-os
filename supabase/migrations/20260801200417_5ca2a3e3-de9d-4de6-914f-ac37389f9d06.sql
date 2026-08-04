@@ -27,13 +27,17 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_shipments TO authenticated;
 GRANT ALL ON public.order_shipments TO service_role;
 ALTER TABLE public.order_shipments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "order_shipments_read" ON public.order_shipments;
 CREATE POLICY "order_shipments_read" ON public.order_shipments FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_shipments_insert" ON public.order_shipments;
 CREATE POLICY "order_shipments_insert" ON public.order_shipments FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_shipments_update" ON public.order_shipments;
 CREATE POLICY "order_shipments_update" ON public.order_shipments FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_shipments_delete" ON public.order_shipments;
 CREATE POLICY "order_shipments_delete" ON public.order_shipments FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
@@ -62,13 +66,17 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.order_collections TO authenticate
 GRANT ALL ON public.order_collections TO service_role;
 ALTER TABLE public.order_collections ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "order_collections_read" ON public.order_collections;
 CREATE POLICY "order_collections_read" ON public.order_collections FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_collections_insert" ON public.order_collections;
 CREATE POLICY "order_collections_insert" ON public.order_collections FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_collections_update" ON public.order_collections;
 CREATE POLICY "order_collections_update" ON public.order_collections FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "order_collections_delete" ON public.order_collections;
 CREATE POLICY "order_collections_delete" ON public.order_collections FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
@@ -98,13 +106,17 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_threads TO authenticated
 GRANT ALL ON public.whatsapp_threads TO service_role;
 ALTER TABLE public.whatsapp_threads ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "whatsapp_threads_read" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_read" ON public.whatsapp_threads FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_threads_insert" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_insert" ON public.whatsapp_threads FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_threads_update" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_update" ON public.whatsapp_threads FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_threads_delete" ON public.whatsapp_threads;
 CREATE POLICY "whatsapp_threads_delete" ON public.whatsapp_threads FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
 
@@ -132,12 +144,16 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.whatsapp_messages TO authenticate
 GRANT ALL ON public.whatsapp_messages TO service_role;
 ALTER TABLE public.whatsapp_messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "whatsapp_messages_read" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_read" ON public.whatsapp_messages FOR SELECT TO authenticated
   USING ((SELECT public.can_read_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_messages_insert" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_insert" ON public.whatsapp_messages FOR INSERT TO authenticated
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_messages_update" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_update" ON public.whatsapp_messages FOR UPDATE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)))
   WITH CHECK ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));
+DROP POLICY IF EXISTS "whatsapp_messages_delete" ON public.whatsapp_messages;
 CREATE POLICY "whatsapp_messages_delete" ON public.whatsapp_messages FOR DELETE TO authenticated
   USING ((SELECT public.can_write_page(auth.uid(), '/orders')) AND (SELECT public.has_brand_access(auth.uid(), brand_id)));

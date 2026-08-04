@@ -19,6 +19,7 @@ GRANT ALL ON public.brand_integrations TO service_role;
 
 ALTER TABLE public.brand_integrations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "integrations read brand scoped" ON public.brand_integrations;
 CREATE POLICY "integrations read brand scoped" ON public.brand_integrations
 FOR SELECT TO authenticated
 USING (
@@ -26,6 +27,7 @@ USING (
   AND public.has_brand_access(auth.uid(), brand_id)
 );
 
+DROP POLICY IF EXISTS "integrations write brand scoped" ON public.brand_integrations;
 CREATE POLICY "integrations write brand scoped" ON public.brand_integrations
 FOR ALL TO authenticated
 USING (

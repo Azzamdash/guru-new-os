@@ -1,12 +1,14 @@
 
 -- Employees: brand-scoped read
 DROP POLICY IF EXISTS "employees read authenticated" ON public.employees;
+DROP POLICY IF EXISTS "employees read brand scoped" ON public.employees;
 CREATE POLICY "employees read brand scoped" ON public.employees
 FOR SELECT TO authenticated
 USING (public.has_brand_access(auth.uid(), brand_id));
 
 -- Employee attendance: brand-scoped read via employees.brand_id
 DROP POLICY IF EXISTS "attendance read authenticated" ON public.employee_attendance_entries;
+DROP POLICY IF EXISTS "attendance read brand scoped" ON public.employee_attendance_entries;
 CREATE POLICY "attendance read brand scoped" ON public.employee_attendance_entries
 FOR SELECT TO authenticated
 USING (
