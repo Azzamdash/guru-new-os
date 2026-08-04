@@ -1,13 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDER_DISTRIBUTION_PAGE } from "./page-permission-paths";
 import { balanceAssignments, getEligibleStaff, recordAssignments } from "./distribution.server";
 import { ORDER_WORKFLOW_STATUSES, SHIPMENT_OUTCOMES } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
-
-const DISTRIBUTION_PAGE = "/order-distribution";
 
 // Non-terminal order statuses — every real order_status value except the two
 // terminal ones. Previously listed made-up values ("confirmed", "ready",
@@ -271,7 +270,7 @@ export const assignOrdersCourier = createServerFn({ method: "POST" })
   .inputValidator((input: { orderIds: string[]; courierId: string | null }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
 
@@ -291,7 +290,7 @@ export const assignOrdersEmployee = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
 
@@ -316,7 +315,7 @@ export const autoAssignOrders = createServerFn({ method: "POST" })
   .inputValidator((input: { assignments: Array<{ orderId: string; courierId: string }> }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const list = (data.assignments ?? []).filter((a) => a.orderId && a.courierId).slice(0, 500);
     if (!list.length) return { updated: 0, failed: 0 };
 
@@ -347,7 +346,7 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
   .inputValidator((input: { orderIds: string[] }) => input)
   .handler(async ({ data, context }) => {
     const ctx = context as unknown as Ctx;
-    await assertPageWrite(ctx, DISTRIBUTION_PAGE);
+    await assertPageWrite(ctx, ORDER_DISTRIBUTION_PAGE);
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
 

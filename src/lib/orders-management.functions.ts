@@ -1,12 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
+import { ORDERS_PAGE } from "./page-permission-paths";
 import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
-
-const ORDERS_PAGE = "/orders";
 
 function dayRange(from: string | null, to: string | null) {
   const start = from ? new Date(`${from}T00:00:00.000Z`) : new Date(Date.now() - 30 * 86400000);
