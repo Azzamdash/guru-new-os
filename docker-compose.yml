@@ -4,6 +4,7 @@ services:
     container_name: app-instance
     restart: always
     environment:
+      - SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE=${SUPABASE_SERVICE_ROLE}
     expose:
