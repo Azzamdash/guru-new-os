@@ -1,7 +1,41 @@
-CREATE TYPE public.marketing_platform AS ENUM ('tiktok','meta','google','snapchat','whatsapp','sms','other');
-CREATE TYPE public.courier_type AS ENUM ('courier_company','rep','offline_branch');
-CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return','adjustment');
-CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'marketing_platform'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.marketing_platform AS ENUM ('tiktok','meta','google','snapchat','whatsapp','sms','other');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'courier_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.courier_type AS ENUM ('courier_company','rep','offline_branch');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'inventory_movement_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return','adjustment');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'sales_invoice_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
+  END IF;
+END $$;
 
 CREATE TABLE public.materials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

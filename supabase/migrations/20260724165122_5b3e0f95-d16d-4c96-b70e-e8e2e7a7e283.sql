@@ -66,10 +66,24 @@ RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = public AS
 $$;
 
 DO $do$ BEGIN
-  CREATE TYPE public.invoice_status AS ENUM ('open','partial','paid');
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'invoice_status'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.invoice_status AS ENUM ('open','partial','paid');
+  END IF;
 EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 DO $do$ BEGIN
-  CREATE TYPE public.brand_type AS ENUM ('product','service');
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'brand_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.brand_type AS ENUM ('product','service');
+  END IF;
 EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
 CREATE TABLE IF NOT EXISTS public.brands (
@@ -149,7 +163,14 @@ CREATE TRIGGER me_updated_at BEFORE UPDATE ON public.monthly_entries FOR EACH RO
 CREATE INDEX IF NOT EXISTS me_brand_year_month_idx ON public.monthly_entries(brand_id, year, month);
 
 DO $do$ BEGIN
-  CREATE TYPE public.marketing_platform AS ENUM ('tiktok','meta','google','snapchat','whatsapp','sms','other');
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'marketing_platform'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.marketing_platform AS ENUM ('tiktok','meta','google','snapchat','whatsapp','sms','other');
+  END IF;
 EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
 CREATE TABLE IF NOT EXISTS public.expense_entries (
@@ -219,13 +240,34 @@ INSERT INTO public.expense_categories (name, slug, sort_order) VALUES
   ('خدمات ومرافق','utilities',6),('أخرى','other',99);
 
 DO $do$ BEGIN
-  CREATE TYPE public.courier_type AS ENUM ('courier_company','rep','offline_branch');
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'courier_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.courier_type AS ENUM ('courier_company','rep','offline_branch');
+  END IF;
 EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 DO $do$ BEGIN
-  CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return','adjustment');
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'inventory_movement_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.inventory_movement_type AS ENUM ('production','sale','return','adjustment');
+  END IF;
 EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 DO $do$ BEGIN
-  CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'sales_invoice_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.sales_invoice_type AS ENUM ('sale','return');
+  END IF;
 EXCEPTION WHEN duplicate_object THEN NULL; END $do$;
 
 CREATE TABLE IF NOT EXISTS public.materials (

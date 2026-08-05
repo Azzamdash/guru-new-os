@@ -1,5 +1,23 @@
-CREATE TYPE public.invoice_status AS ENUM ('open', 'partial', 'paid');
-CREATE TYPE public.brand_type AS ENUM ('product', 'service');
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'invoice_status'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.invoice_status AS ENUM ('open', 'partial', 'paid');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_type
+    WHERE typname = 'brand_type'
+      AND typnamespace = 'public'::regnamespace
+  ) THEN
+    CREATE TYPE public.brand_type AS ENUM ('product', 'service');
+  END IF;
+END $$;
 
 CREATE TABLE public.brands (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
