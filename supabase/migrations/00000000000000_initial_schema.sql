@@ -2,7 +2,7 @@
 -- Generated from the live database as a single clean-start migration.
 -- Every statement is idempotent so replays never fail on existing objects.
 
-CREATE SCHEMA IF NOT EXISTS public;
+-- schema "public" is provided by the platform; nothing to create here.
 
 DO $mig$ BEGIN
 CREATE TYPE public.app_role AS ENUM (
