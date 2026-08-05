@@ -26,16 +26,16 @@ CREATE TYPE public.app_role AS ENUM (
     'production_worker',
     'moderator',
     'customer_service'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.brand_type AS ENUM (
     'product',
     'service',
     'offline_branch'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.cash_txn_type AS ENUM (
@@ -43,31 +43,31 @@ CREATE TYPE public.cash_txn_type AS ENUM (
     'personal_withdrawal',
     'deposit',
     'other_out'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.courier_type AS ENUM (
     'courier_company',
     'rep',
     'offline_branch'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.employee_request_status AS ENUM (
     'pending',
     'approved',
     'rejected'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.employee_request_type AS ENUM (
     'leave',
     'advance'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.inventory_movement_type AS ENUM (
@@ -76,16 +76,16 @@ CREATE TYPE public.inventory_movement_type AS ENUM (
     'return',
     'adjustment',
     'supplier_return'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.invoice_status AS ENUM (
     'open',
     'partial',
     'paid'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.marketing_platform AS ENUM (
@@ -99,8 +99,8 @@ CREATE TYPE public.marketing_platform AS ENUM (
     'influencer',
     'ugc',
     'media_production'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.sales_invoice_stage AS ENUM (
@@ -111,15 +111,15 @@ CREATE TYPE public.sales_invoice_stage AS ENUM (
     'with_courier',
     'delivered',
     'cancelled'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 DO $mig$ BEGIN
 CREATE TYPE public.sales_invoice_type AS ENUM (
     'sale',
     'return'
-)
-EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;;
+);
+EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;
 
 CREATE OR REPLACE FUNCTION public.accounting_profit_report(_from date, _to date, _brand_id uuid DEFAULT NULL::uuid, _exclude_brand_ids uuid[] DEFAULT ARRAY[]::uuid[]) RETURNS jsonb
     LANGUAGE sql STABLE
