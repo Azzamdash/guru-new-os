@@ -1,47 +1,56 @@
-# Secrets audit and cleanup
+# Secrets: identify, classify, rename
 
-## What the code actually uses
+## Answering the two questions first
 
-Configured today: `APP_USER_CONNECTION_KEY_SECRET`, `BOSTA_RECALL_SECRET`, `SHOPIFY_SYNC_HOOK_SECRET`, `LOVABLE_API_KEY` (managed).
+**"Shown in the UI setup card"** — on `/integrations`, the Bosta card calls `getBostaWebhookInfo`, which reads `BOSTA_WEBHOOK_SECRET` from the environment and renders the full webhook URL with `?secret=...` appended for the admin to copy into the Bosta dashboard. So it is *not* a per-brand value stored in the database; it is one instance-level secret we generate, kept in `.env`, and merely displayed for copying. It is a completely different value from `BOSTA_RECALL_SECRET` and the two must stay separate.
 
-| Secret | Used in | Verdict |
+**"Cron caller token"** — `/api/public/hooks/shopify-sync` and `/api/public/hooks/bosta-recall` are *our own* endpoints, and `/api/public/*` bypasses site auth so anyone on the internet can POST to them. They exist so a scheduler can periodically trigger a full Shopify catalog/order sync and a Bosta shipment-status recall. The secret is just a password on our own endpoint proving the caller is our scheduler, nothing to do with Shopify or Bosta as vendors. Shopify's real credentials are the per-brand `client_id`/`client_secret` the admin enters on the Integrations page, encrypted into `brand_integrations.credentials_ciphertext` — correctly *not* in `.env`. Only the misleading `SHOPIFY_` prefix on the cron token is wrong.
+
+Noted on the Vault migration: agreed, dropping it. The scheduler will send the header value directly, so the token lives only in `.env` and in whatever schedules the call.
+
+## Classification
+
+### A. Ours — random values we generate, put in `.env`
+
+| New name | Old name in code | Purpose |
 |---|---|---|
-| `SHOPIFY_SYNC_HOOK_SECRET` | `api/public/hooks/shopify-sync` — `apikey` header check on the scheduled sync job | Works, but **badly named**. It is not a Shopify credential; it's the cron caller token for our own endpoint. |
-| `BOSTA_RECALL_SECRET` | `api/public/hooks/bosta-recall` — `x-webhook-secret` on the scheduled recall job | Works. Cron caller token. |
-| `BOSTA_WEBHOOK_SECRET` | `api/public/webhooks/bosta/$brandId` and `integrations.functions.ts` (shown in the UI setup card) | **Not configured → inbound Bosta webhooks always return 401.** This is a *different* secret from `BOSTA_RECALL_SECRET`, not a duplicate/typo. |
-| `APP_USER_CONNECTION_KEY_SECRET` | `connectionKeyCrypto.ts`, used by `integrations.functions.ts` and `shopifyOAuthCallback.server.ts` | Works, but **misnamed**: it no longer encrypts connector connection keys — it is the AES key for all encrypted integration credentials (Shopify/Bosta tokens) and the Shopify OAuth `state`. |
-| `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | WhatsApp settings page, order-ops and order-management send paths | **Missing → all WhatsApp sending is dead** (returns "المفاتيح غير مكتملة"). |
-| `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET` | `api/public/whatsapp` GET handshake + POST HMAC check | **Missing → Meta verification fails (403) and inbound messages return 503.** |
-| `PUBLIC_SITE_URL` | WhatsApp settings, to display the webhook URL | Missing; falls back to `https://egurus.info`. Harmless. |
+| `CRON_TOKEN_SHOPIFY_SYNC` | `SHOPIFY_SYNC_HOOK_SECRET` | `apikey` header on `POST /api/public/hooks/shopify-sync` |
+| `CRON_TOKEN_BOSTA_RECALL` | `BOSTA_RECALL_SECRET` | `x-webhook-secret` header on `POST /api/public/hooks/bosta-recall` |
+| `BOSTA_WEBHOOK_TOKEN` | `BOSTA_WEBHOOK_SECRET` | `?secret=` / `x-webhook-secret` on inbound Bosta webhooks; shown in the Integrations card to paste into Bosta |
+| `INTEGRATION_ENCRYPTION_KEY` | `APP_USER_CONNECTION_KEY_SECRET` | AES-256-GCM key for `brand_integrations.credentials_ciphertext` and the Shopify OAuth `state`. **Value must be carried over unchanged** — a new value makes every stored integration credential undecryptable. |
 
-Shopify's real credentials (`client_id` / `client_secret`) are **not** env vars by design: they are entered per brand in the Integrations page, encrypted, and stored in the integrations table; the OAuth callback and webhook HMAC read them from there. That part is correct — the confusion is only the `SHOPIFY_*` name on the cron token.
+`BOSTA_WEBHOOK_TOKEN` is a shared secret in the sense that you paste it into Bosta, but you invent the value; Bosta does not issue it.
 
-Duplicates: none of the four configured secrets duplicate each other. The real duplication is at the database layer — the cron jobs read copies of the same values from Vault (`shopify_sync_hook_secret`, `bosta_recall_secret`, `app_public_api_key`), so each token exists in two places and must be rotated in both.
+### B. From third parties — you collect these
 
-## Proposed changes
+| Name | Source | Used by |
+|---|---|---|
+| `WHATSAPP_TOKEN` | Meta app -> WhatsApp -> permanent system-user access token | all outbound WhatsApp sending |
+| `WHATSAPP_PHONE_NUMBER_ID` | Meta app -> WhatsApp -> API setup | all outbound WhatsApp sending |
+| `WHATSAPP_VERIFY_TOKEN` | you invent it, then paste the same value into Meta's webhook config | `GET /api/public/whatsapp` verification handshake |
+| `WHATSAPP_APP_SECRET` | Meta app -> Settings -> Basic -> App secret | `X-Hub-Signature-256` HMAC on inbound WhatsApp messages |
 
-1. **Rename the cron caller tokens** to say what they are:
-   - `SHOPIFY_SYNC_HOOK_SECRET` -> `CRON_HOOK_TOKEN_SHOPIFY_SYNC`
-   - `BOSTA_RECALL_SECRET` -> `CRON_HOOK_TOKEN_BOSTA_RECALL`
-   Both handlers accept the new name and fall back to the old one for one release, so nothing breaks while the Vault copies are updated in the same migration.
+All four are currently unset, which is why WhatsApp send returns "المفاتيح غير مكتملة" and the inbound webhook returns 503.
 
-2. **Rename the encryption key** `APP_USER_CONNECTION_KEY_SECRET` -> `INTEGRATION_ENCRYPTION_KEY`, same dual-read fallback. The *value* must stay identical — rotating it would make every stored Shopify/Bosta credential undecryptable.
+Not secrets, but same file: `PUBLIC_SITE_URL` — plain config, the live origin used to display the WhatsApp webhook URL (currently falls back to a hardcoded `https://egurus.info`).
 
-3. **Add the missing secrets** so the dead features come alive:
-   - `BOSTA_WEBHOOK_SECRET` (rename to `BOSTA_WEBHOOK_TOKEN` while we're here) — the value you paste into Bosta's webhook config.
-   - `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET` from the Meta app.
-   - `PUBLIC_SITE_URL` set to the live domain instead of the hardcoded fallback.
+### C. Already correct, no action
 
-4. **Add a secrets health panel** (admin-only) listing every secret the app reads, which feature depends on it, and whether it is configured — so a missing key shows up as a red row instead of a silent 401/503.
+`LOVABLE_API_KEY` (managed), `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (platform-injected), and the per-brand Shopify/Bosta credentials in the database.
 
-5. **Document it** in `README.md`: one table, env var -> feature -> where the value comes from -> whether a Vault copy must match.
+### Duplicates
 
-## Technical notes
+None. Every configured secret has exactly one distinct role. The only near-collision is `BOSTA_RECALL_SECRET` vs `BOSTA_WEBHOOK_SECRET`, which the rename to `CRON_TOKEN_BOSTA_RECALL` vs `BOSTA_WEBHOOK_TOKEN` makes unambiguous.
 
-- Handler pattern for the transition: `process.env["NEW_NAME"] ?? process.env["OLD_NAME"]`, then delete the old secret once the rename is confirmed working.
-- The Vault-backed cron rename needs one migration updating `vault.secrets` entries and the `invoke_public_hook` call sites; the existing `invoke_public_hook(text, jsonb, text, text)` signature already supports per-hook secret names, so only the names change.
-- No change to Shopify OAuth storage: per-brand `client_id`/`client_secret` stay encrypted in the database.
+## Code changes (rename only)
 
-## Open question
+Swap the `process.env` key names in these files, nothing else:
 
-Item 3 needs the actual values from you (Meta app + Bosta dashboard). I can do 1, 2, 4, 5 immediately and request the new secrets when you're ready.
+- `src/routes/api/public/hooks/shopify-sync.ts` — `CRON_TOKEN_SHOPIFY_SYNC`
+- `src/routes/api/public/hooks/bosta-recall.ts` — `CRON_TOKEN_BOSTA_RECALL`
+- `src/routes/api/public/webhooks/bosta.$brandId.ts` and `src/lib/integrations.functions.ts` — `BOSTA_WEBHOOK_TOKEN`
+- `src/server/connectionKeyCrypto.ts` — `INTEGRATION_ENCRYPTION_KEY`
+
+Each reads the new name with a fallback to the old one (`process.env["NEW"] ?? process.env["OLD"]`) so the app keeps working until you finish editing `.env`; the fallbacks can be dropped in a later pass. WhatsApp names stay as they are — they are already correctly named, just unset.
+
+No database migration, no Vault entries, no new UI.
