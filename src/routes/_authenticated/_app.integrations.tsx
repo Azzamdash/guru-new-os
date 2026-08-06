@@ -112,6 +112,9 @@ function IntegrationsPage() {
         </p>
       </div>
 
+      <CoreSecretsCard />
+
+
       {/* Shopify */}
       <Card className="card-gradient p-4 md:p-5">
         <div className="flex items-center gap-3 mb-4">
