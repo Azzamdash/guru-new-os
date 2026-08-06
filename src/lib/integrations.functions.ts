@@ -1423,6 +1423,23 @@ export const listIntegrationLogs = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+export const getCoreSecretStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertManager(context);
+    const { CORE_SECRET_MAP } = await import("@/server/coreSecretsSeed.server");
+    const { data, error } = await context.supabase.rpc("core_vault_secret_status");
+    if (error) throw error;
+    const present = new Map(
+      ((data ?? []) as Array<{ name: string; present: boolean }>).map((r) => [r.name, r.present]),
+    );
+    return CORE_SECRET_MAP.map((e) => ({
+      name: e.name,
+      env: e.env,
+      present: present.get(e.name) === true,
+    }));
+  });
+
 export const getBostaWebhookInfo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { brand_id: string }) => d)
