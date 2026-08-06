@@ -58,8 +58,7 @@ function truncate(v: unknown, max = 8000): unknown {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function logIntegrationEvent(supabase: any, input: IntegrationLogInput): Promise<void> {
+export async function logIntegrationEvent(input: IntegrationLogInput): Promise<void> {
   const row = {
     provider: input.provider,
     brand_id: input.brand_id ?? null,
@@ -82,6 +81,7 @@ export async function logIntegrationEvent(supabase: any, input: IntegrationLogIn
   const key =
     `op=${input.operation} status=${input.status}` +
     (input.http_status ? ` http=${input.http_status}` : "") +
+    (input.url ? ` url=${input.url}` : "") +
     (input.order_number ? ` order=${input.order_number}` : "") +
     (input.tracking_number ? ` tracking=${input.tracking_number}` : "") +
     (input.brand_id ? ` brand=${input.brand_id}` : "") +
@@ -91,9 +91,34 @@ export async function logIntegrationEvent(supabase: any, input: IntegrationLogIn
   else console.log(tag, key);
 
   try {
-    const { error } = await supabase.from("integration_logs").insert(row);
-    if (error) console.error(tag, "log-insert-failed", error.message);
+    // Always write with the service client: integration_logs has no insert
+    // policy for end users, and a user-triggered sync must log the same way a
+    // cron-triggered one does.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("integration_logs").insert(row);
+    if (error) {
+      const e = error as { code?: string; message?: string; details?: string; hint?: string };
+      console.error(
+        tag,
+        "log-insert-failed",
+        JSON.stringify({
+          code: e.code ?? null,
+          message: e.message ?? null,
+          details: e.details ?? null,
+          hint: e.hint ?? null,
+          client: "service_role",
+          provider: input.provider,
+          operation: input.operation,
+          direction: input.direction,
+          brand_id: input.brand_id ?? null,
+          order_id: input.order_id ?? null,
+          url: input.url ?? null,
+          http_status: input.http_status ?? null,
+        }),
+      );
+    }
   } catch (e) {
     console.error(tag, "log-insert-threw", (e as Error).message);
   }
 }
+
