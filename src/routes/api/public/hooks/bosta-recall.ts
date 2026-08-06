@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 async function isAuthorized(request: Request): Promise<boolean> {
-  const expected = process.env["BOSTA_RECALL_SECRET"];
+  const expected = process.env["CRON_TOKEN_BOSTA_RECALL"] ?? process.env["BOSTA_RECALL_SECRET"];
   if (!expected) return false;
   const provided = request.headers.get("x-webhook-secret");
   if (!provided) return false;

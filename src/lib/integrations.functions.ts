@@ -1429,7 +1429,7 @@ export const getBostaWebhookInfo = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertManager(context);
     await assertBrandAccess(context, data.brand_id);
-    const secret = process.env.BOSTA_WEBHOOK_SECRET ?? "";
+    const secret = process.env["BOSTA_WEBHOOK_TOKEN"] ?? process.env.BOSTA_WEBHOOK_SECRET ?? "";
     return {
       path: `/api/public/webhooks/bosta/${data.brand_id}`,
       secret,
