@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
       POST: async ({ request, params }) => {
         const started = Date.now();
         const providedSecret = request.headers.get("x-webhook-secret");
-        const expected = process.env.BOSTA_WEBHOOK_SECRET;
+        const expected = process.env["BOSTA_WEBHOOK_TOKEN"] ?? process.env.BOSTA_WEBHOOK_SECRET;
         const secretOk = await secretMatches(providedSecret, expected);
 
         const raw = await request.text();
@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
             http_status: httpStatus,
             reason: expected
               ? "invalid or missing webhook secret"
-              : "BOSTA_WEBHOOK_SECRET is not configured",
+              : "BOSTA_WEBHOOK_TOKEN is not configured",
             metadata: {
               ip: request.headers.get("x-forwarded-for"),
               duration_ms: Date.now() - started,
