@@ -490,7 +490,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
                 phone: order.customer_phone ?? "",
               },
             };
-            await logIntegrationEvent(context.supabase, {
+            await logIntegrationEvent({
               provider: "bosta",
               brand_id: order.brand_id,
               direction: "outgoing",
@@ -525,7 +525,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             if (providerRejected) providerMayHaveAccepted = false;
             const deliveryCreated = !providerRejected && !!trackingNumber;
             externalNote = deliveryCreated ? " · Bosta: ✔" : ` · Bosta: ✗ (${res.status})`;
-            await logIntegrationEvent(context.supabase, {
+            await logIntegrationEvent({
               provider: "bosta",
               brand_id: order.brand_id,
               direction: "outgoing",
@@ -555,7 +555,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     } catch (e) {
       const msg = (e as Error).message;
       externalNote = ` · Dispatch API error: ${msg}`;
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",

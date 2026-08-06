@@ -369,7 +369,7 @@ export const testBosta = createServerFn({ method: "POST" })
     try {
       const { creds } = await loadCreds(context, data.brand_id, "bosta");
       const url = "https://app.bosta.co/api/v1/cities";
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -388,7 +388,7 @@ export const testBosta = createServerFn({ method: "POST" })
       });
       const body = await res.text();
       if (!res.ok) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -404,7 +404,7 @@ export const testBosta = createServerFn({ method: "POST" })
       }
       const parsed = JSON.parse(body);
       if (parsed?.success === false) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -428,7 +428,7 @@ export const testBosta = createServerFn({ method: "POST" })
           cities: Array.isArray(parsed?.data) ? parsed.data.length : undefined,
         },
       });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -446,7 +446,7 @@ export const testBosta = createServerFn({ method: "POST" })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await updateStatus(context, data.brand_id, "bosta", { status: "error", last_error: msg });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -473,7 +473,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
       const since = new Date(Date.now() - days * 86400_000).toISOString();
       const url = "https://app.bosta.co/api/v2/deliveries/search";
       const reqBody = { pageNumber: 0, pageLimit: 100, createdAtStart: since };
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -495,7 +495,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
       });
       const body = await res.text();
       if (!res.ok) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -511,7 +511,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
       }
       const parsed = JSON.parse(body);
       if (parsed?.success === false) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -548,7 +548,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
         last_sync_at: new Date().toISOString(),
         last_sync_summary: summary,
       });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -563,7 +563,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await updateStatus(context, data.brand_id, "bosta", { status: "error", last_error: msg });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -724,7 +724,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
         .slice(0, 40)
         .map((c: any) => c.name ?? c.nameAr ?? c.cityName ?? c.code ?? c._id)
         .filter(Boolean);
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -847,7 +847,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
       null;
 
     if (!pickedDistrict?.districtId && !pickedDistrict?.districtName) {
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -927,7 +927,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     let dispatchPersisted = false;
     let providerMayHaveAccepted = false;
     try {
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "outgoing",
@@ -961,7 +961,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     if (!res.ok || parsed?.success === false) {
       providerMayHaveAccepted = false;
       const msg = parsed?.message || parsed?.error || `HTTP ${res.status}`;
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -980,7 +980,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
 
     const { tracking, deliveryId } = bostaDispatchIdentifiers(parsed);
     if (!tracking) {
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -1001,7 +1001,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     await finalizeOrderDispatch(context.supabase, order.id, dispatchClaim, tracking, deliveryId);
     dispatchPersisted = true;
 
-    await logIntegrationEvent(context.supabase, {
+    await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "outgoing",
@@ -1140,7 +1140,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
   });
   if (archiveResult.error) throw archiveResult.error;
   if (!successfulResponse && !notFoundOnBosta) {
-    await logIntegrationEvent(context.supabase, {
+    await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "incoming",
@@ -1169,7 +1169,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
     };
   }
   if (successfulResponse && !isRecognizedBostaDeliveryStatus(stateValue)) {
-    await logIntegrationEvent(context.supabase, {
+    await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "incoming",
@@ -1292,7 +1292,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
     if (syncUpdate.error) throw syncUpdate.error;
   }
 
-  await logIntegrationEvent(context.supabase, {
+  await logIntegrationEvent({
     provider: "bosta",
     brand_id: order.brand_id,
     direction: "incoming",
