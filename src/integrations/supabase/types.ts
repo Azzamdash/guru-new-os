@@ -4560,6 +4560,14 @@ export type Database = {
         Returns: boolean
       }
       complete_purchase_order: { Args: { _po_id: string }; Returns: string }
+      core_cron_job_status: {
+        Args: never
+        Returns: {
+          active: boolean
+          name: string
+          schedule: string
+        }[]
+      }
       core_vault_secret_status: {
         Args: never
         Returns: {
@@ -4725,6 +4733,7 @@ export type Database = {
         Args: { _po_id: string }
         Returns: undefined
       }
+      sync_core_cron_jobs: { Args: { _jobs: Json }; Returns: Json }
       sync_core_vault_secret: {
         Args: { _name: string; _value: string }
         Returns: string
