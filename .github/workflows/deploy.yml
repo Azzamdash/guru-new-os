@@ -83,10 +83,20 @@ jobs:
           cat > /opt/${{ steps.repo.outputs.name }}/.env <<ENV
           GITHUB_REPOSITORY=${{ steps.repo.outputs.full }}
           VERSION=$VERSION
+          SERVICE_NAME=${{ steps.repo.outputs.name }}
           DOMAIN=${{ secrets.DOMAIN }}
           SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE }}
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          WHATSAPP_TOKEN=${{ secrets.WHATSAPP_TOKEN }}
+          WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+          WHATSAPP_APP_SECRET=${{ secrets.WHATSAPP_APP_SECRET }}
+          WHATSAPP_VERIFY_TOKEN=${{ secrets.WHATSAPP_VERIFY_TOKEN }}
+          PUBLIC_SITE_URL=${{ secrets.PUBLIC_SITE_URL }}
+          CRON_TOKEN_SHOPIFY_SYNC=${{ secrets.CRON_TOKEN_SHOPIFY_SYNC }}
+          CRON_TOKEN_BOSTA_RECALL=${{ secrets.CRON_TOKEN_BOSTA_RECALL }}
+          BOSTA_WEBHOOK_TOKEN=${{ secrets.BOSTA_WEBHOOK_TOKEN }}
+          INTEGRATION_ENCRYPTION_KEY=${{ secrets.INTEGRATION_ENCRYPTION_KEY }}
           ENV
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           cd /opt/${{ steps.repo.outputs.name }}
