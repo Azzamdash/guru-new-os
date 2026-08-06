@@ -4560,6 +4560,13 @@ export type Database = {
         Returns: boolean
       }
       complete_purchase_order: { Args: { _po_id: string }; Returns: string }
+      core_vault_secret_status: {
+        Args: never
+        Returns: {
+          name: string
+          present: boolean
+        }[]
+      }
       courier_accessible_to_user: {
         Args: { _courier_id: string; _user_id: string }
         Returns: boolean
@@ -4717,6 +4724,10 @@ export type Database = {
       reverse_purchase_order_completion: {
         Args: { _po_id: string }
         Returns: undefined
+      }
+      sync_core_vault_secret: {
+        Args: { _name: string; _value: string }
+        Returns: string
       }
       try_parse_source_timestamptz: {
         Args: { _value: string }

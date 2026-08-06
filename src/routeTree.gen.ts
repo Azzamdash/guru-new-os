@@ -98,6 +98,7 @@ import { Route as AuthenticatedAppSuppliersIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedAppSuppliersPaymentsRouteImport } from './routes/_authenticated/_app.suppliers.payments'
 import { Route as ApiPublicHooksBostaRecallRouteImport } from './routes/api/public/hooks/bosta-recall'
 import { Route as ApiPublicHooksShopifySyncRouteImport } from './routes/api/public/hooks/shopify-sync'
+import { Route as ApiPublicHooksSyncCoreSecretsRouteImport } from './routes/api/public/hooks/sync-core-secrets'
 import { Route as ApiPublicOauthShopifyDotcallbackRouteImport } from './routes/api/public/oauth/shopify[.]callback'
 import { Route as AuthenticatedAppServicesDashboardProjectsIdRouteImport } from './routes/_authenticated/_app.services-dashboard.projects.$id'
 import { Route as ApiPublicOauthShopifyCallbackRouteImport } from './routes/api/public/oauth/shopify.callback'
@@ -622,6 +623,12 @@ const ApiPublicHooksShopifySyncRoute =
     path: '/api/public/hooks/shopify-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksSyncCoreSecretsRoute =
+  ApiPublicHooksSyncCoreSecretsRouteImport.update({
+    id: '/api/public/hooks/sync-core-secrets',
+    path: '/api/public/hooks/sync-core-secrets',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOauthShopifyDotcallbackRoute =
   ApiPublicOauthShopifyDotcallbackRouteImport.update({
     id: '/api/public/oauth/shopify.callback',
@@ -744,6 +751,7 @@ export interface FileRoutesByFullPath {
   '/suppliers/payments': typeof AuthenticatedAppSuppliersPaymentsRoute
   '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
   '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
+  '/api/public/hooks/sync-core-secrets': typeof ApiPublicHooksSyncCoreSecretsRoute
   '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
   '/customers/': typeof AuthenticatedAppCustomersIndexRoute
   '/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
@@ -837,6 +845,7 @@ export interface FileRoutesByTo {
   '/suppliers/payments': typeof AuthenticatedAppSuppliersPaymentsRoute
   '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
   '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
+  '/api/public/hooks/sync-core-secrets': typeof ApiPublicHooksSyncCoreSecretsRoute
   '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
   '/customers': typeof AuthenticatedAppCustomersIndexRoute
   '/services-dashboard': typeof AuthenticatedAppServicesDashboardIndexRoute
@@ -935,6 +944,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/suppliers/payments': typeof AuthenticatedAppSuppliersPaymentsRoute
   '/api/public/hooks/bosta-recall': typeof ApiPublicHooksBostaRecallRoute
   '/api/public/hooks/shopify-sync': typeof ApiPublicHooksShopifySyncRoute
+  '/api/public/hooks/sync-core-secrets': typeof ApiPublicHooksSyncCoreSecretsRoute
   '/api/public/oauth/shopify.callback': typeof ApiPublicOauthShopifyDotcallbackRoute
   '/_authenticated/_app/customers/': typeof AuthenticatedAppCustomersIndexRoute
   '/_authenticated/_app/services-dashboard/': typeof AuthenticatedAppServicesDashboardIndexRoute
@@ -1032,6 +1042,7 @@ export interface FileRouteTypes {
     | '/suppliers/payments'
     | '/api/public/hooks/bosta-recall'
     | '/api/public/hooks/shopify-sync'
+    | '/api/public/hooks/sync-core-secrets'
     | '/api/public/oauth/shopify.callback'
     | '/customers/'
     | '/services-dashboard/'
@@ -1125,6 +1136,7 @@ export interface FileRouteTypes {
     | '/suppliers/payments'
     | '/api/public/hooks/bosta-recall'
     | '/api/public/hooks/shopify-sync'
+    | '/api/public/hooks/sync-core-secrets'
     | '/api/public/oauth/shopify.callback'
     | '/customers'
     | '/services-dashboard'
@@ -1222,6 +1234,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/suppliers/payments'
     | '/api/public/hooks/bosta-recall'
     | '/api/public/hooks/shopify-sync'
+    | '/api/public/hooks/sync-core-secrets'
     | '/api/public/oauth/shopify.callback'
     | '/_authenticated/_app/customers/'
     | '/_authenticated/_app/services-dashboard/'
@@ -1246,6 +1259,7 @@ export interface RootRouteChildren {
   ApiPublicWhatsappRoute: typeof ApiPublicWhatsappRoute
   ApiPublicHooksBostaRecallRoute: typeof ApiPublicHooksBostaRecallRoute
   ApiPublicHooksShopifySyncRoute: typeof ApiPublicHooksShopifySyncRoute
+  ApiPublicHooksSyncCoreSecretsRoute: typeof ApiPublicHooksSyncCoreSecretsRoute
   ApiPublicOauthShopifyDotcallbackRoute: typeof ApiPublicOauthShopifyDotcallbackRoute
   ApiPublicOauthShopifyCallbackRoute: typeof ApiPublicOauthShopifyCallbackRoute
   ApiPublicWebhooksBostaBrandIdRoute: typeof ApiPublicWebhooksBostaBrandIdRoute
@@ -1878,6 +1892,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksShopifySyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/sync-core-secrets': {
+      id: '/api/public/hooks/sync-core-secrets'
+      path: '/api/public/hooks/sync-core-secrets'
+      fullPath: '/api/public/hooks/sync-core-secrets'
+      preLoaderRoute: typeof ApiPublicHooksSyncCoreSecretsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/oauth/shopify.callback': {
       id: '/api/public/oauth/shopify.callback'
       path: '/api/public/oauth/shopify.callback'
@@ -2183,6 +2204,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWhatsappRoute: ApiPublicWhatsappRoute,
   ApiPublicHooksBostaRecallRoute: ApiPublicHooksBostaRecallRoute,
   ApiPublicHooksShopifySyncRoute: ApiPublicHooksShopifySyncRoute,
+  ApiPublicHooksSyncCoreSecretsRoute: ApiPublicHooksSyncCoreSecretsRoute,
   ApiPublicOauthShopifyDotcallbackRoute: ApiPublicOauthShopifyDotcallbackRoute,
   ApiPublicOauthShopifyCallbackRoute: ApiPublicOauthShopifyCallbackRoute,
   ApiPublicWebhooksBostaBrandIdRoute: ApiPublicWebhooksBostaBrandIdRoute,
