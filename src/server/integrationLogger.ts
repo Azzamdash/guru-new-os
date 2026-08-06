@@ -98,7 +98,11 @@ export async function logIntegrationEvent(input: IntegrationLogInput): Promise<v
     // policy for end users, and a user-triggered sync must log the same way a
     // cron-triggered one does.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("integration_logs").insert(row);
+    const { error } = await supabaseAdmin
+      .from("integration_logs")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert(row as any);
+
     if (error) {
       const e = error as { code?: string; message?: string; details?: string; hint?: string };
       console.error(
