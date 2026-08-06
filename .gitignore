@@ -43,3 +43,4 @@ dist-ssr
 
 # Supabase CLI local project metadata
 supabase/.temp/
+scripts/
