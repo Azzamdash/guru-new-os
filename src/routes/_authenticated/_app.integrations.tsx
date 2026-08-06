@@ -774,3 +774,47 @@ function BostaWebhookInfo({ brand_id }: { brand_id: string }) {
     </div>
   );
 }
+
+function CoreSecretsCard() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
+  const fn = useServerFn(getCoreSecretStatus);
+  const { data, isLoading } = useQuery({
+    queryKey: ["core-secret-status"],
+    queryFn: () => fn(),
+  });
+
+  return (
+    <Card className="card-gradient p-4 md:p-5">
+      <div className="mb-3">
+        <h2 className="font-semibold">{T("مفاتيح النظام الأساسية", "Core system secrets")}</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          {T(
+            "بتتزرع تلقائيًا في قاعدة البيانات من متغيرات البيئة عند تشغيل التطبيق. القيم نفسها لا تُعرض أبدًا.",
+            "Seeded into the database automatically from environment variables when the app boots. Values are never displayed.",
+          )}
+        </p>
+      </div>
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">{T("جارٍ التحميل…", "Loading…")}</p>
+      ) : (
+        <div className="space-y-2">
+          {(data ?? []).map((s) => (
+            <div
+              key={s.name}
+              className="flex items-center justify-between gap-3 rounded-md border p-2 bg-muted/30"
+            >
+              <div className="min-w-0">
+                <div className="text-xs font-mono truncate">{s.name}</div>
+                <div className="text-[11px] text-muted-foreground font-mono truncate">{s.env}</div>
+              </div>
+              <Badge variant={s.present ? "secondary" : "destructive"}>
+                {s.present ? T("موجود", "Present") : T("غير موجود", "Missing")}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
