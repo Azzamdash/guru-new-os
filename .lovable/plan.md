@@ -1,63 +1,39 @@
-# Finalize deployment environment variables
+# Vault secrets contract for scheduled jobs
 
-## What the code already expects
+## Current state (verified)
 
-The rename-only changes from the previous discussion are already in place. The code now reads the new names with fallbacks to the old names, so the app works as soon as the GitHub secrets / server `.env` use the new names.
+- The squashed baseline `supabase/migrations/00000000000000_initial_schema.sql` contains `public.invoke_public_hook(...)` and **no** `vault.create_secret` calls. The hardcoded `vault.update_secret` blocks only exist in `supabase/migrations_archive/` (historical, not replayed).
+- `invoke_public_hook` reads three things from `vault.decrypted_secrets`:
+  - `app_public_base_url` (always)
+  - `app_public_api_key` (default apikey header) or the name passed in `_apikey_secret_name`
+  - the name passed in `_secret_name` (optional `x-webhook-secret` header)
+- The restricted psql role cannot read `vault.secrets` or `cron.job`, so the currently stored values could not be inspected from here.
 
-| New name | Old name | Used by |
+Why the DB needs these at all: pg_cron runs inside Postgres and has no access to the container's `.env`. The only values that belong in Vault are the *outbound caller* credentials the scheduler must present to our own `/api/public/*` endpoints — they mirror the `.env` values, they are not a second source of truth for anything else.
+
+## Naming contract: core vs. customer
+
+Core (instance) secrets get a `core_` prefix so they can never collide with anything an admin configures on `/integrations`. Per-brand vendor credentials (Shopify `client_id`/`client_secret`, Bosta API key) stay encrypted in `public.brand_integrations.credentials_ciphertext` and never enter Vault.
+
+| Vault secret name | Value = which `.env` variable | Used as |
 |---|---|---|
-| `CRON_TOKEN_SHOPIFY_SYNC` | `SHOPIFY_SYNC_HOOK_SECRET` | `apikey` header on `POST /api/public/hooks/shopify-sync` |
-| `CRON_TOKEN_BOSTA_RECALL` | `BOSTA_RECALL_SECRET` | `x-webhook-secret` header on `POST /api/public/hooks/bosta-recall` |
-| `BOSTA_WEBHOOK_TOKEN` | `BOSTA_WEBHOOK_SECRET` | inbound Bosta webhooks (`/api/public/webhooks/bosta/:brandId`) and shown on `/integrations` |
-| `INTEGRATION_ENCRYPTION_KEY` | `APP_USER_CONNECTION_KEY_SECRET` | AES-256-GCM key for `brand_integrations.credentials_ciphertext` and Shopify OAuth `state` |
+| `core_public_base_url` | `PUBLIC_SITE_URL` | base URL for `net.http_post` |
+| `core_cron_token_shopify_sync` | `CRON_TOKEN_SHOPIFY_SYNC` | `apikey` header on `/api/public/hooks/shopify-sync` |
+| `core_cron_token_bosta_recall` | `CRON_TOKEN_BOSTA_RECALL` | `x-webhook-secret` header on `/api/public/hooks/bosta-recall` |
 
-## Required `.env` on the server
+`app_public_api_key` (the Supabase publishable key) is no longer needed as a default: both hooks pass a dedicated token, so the fallback becomes unnecessary and is removed rather than kept as a vague catch-all.
 
-These are the variables the running container actually reads:
+## Changes
 
-```text
-GITHUB_REPOSITORY=<owner>/<repo>
-VERSION=<release-tag>
-DOMAIN=<your-domain>
-SUPABASE_SERVICE_ROLE_KEY=<service-role>
-SUPABASE_URL=<supabase-url>
-SUPABASE_PUBLISHABLE_KEY=<supabase-anon-key>
-WHATSAPP_TOKEN=<meta-permanent-token>
-WHATSAPP_PHONE_NUMBER_ID=<meta-phone-number-id>
-WHATSAPP_VERIFY_TOKEN=<your-invented-verify-token>
-WHATSAPP_APP_SECRET=<meta-app-secret>
-PUBLIC_SITE_URL=https://<your-domain>
-INTEGRATION_ENCRYPTION_KEY=<carry-over-unchanged-from-APP_USER_CONNECTION_KEY_SECRET>
-CRON_TOKEN_SHOPIFY_SYNC=<random-cron-password>
-CRON_TOKEN_BOSTA_RECALL=<random-cron-password>
-BOSTA_WEBHOOK_TOKEN=<random-webhook-password>
-```
+1. **Migration — function only, no values.** Replace `invoke_public_hook` so it reads `core_public_base_url` and requires an explicit `_apikey_secret_name` or `_secret_name`; raise a clear error naming the missing Vault entry. Add `public.core_secret_names()` returning the required-name list so the contract is discoverable from SQL. No `vault.create_secret` calls with literal values in any migration.
+2. **Migration — cron jobs re-pointed** to the new names:
+   - shopify sync: `invoke_public_hook('/api/public/hooks/shopify-sync','{}'::jsonb, NULL, 'core_cron_token_shopify_sync')`
+   - bosta recall: `invoke_public_hook('/api/public/hooks/bosta-recall','{}'::jsonb, 'core_cron_token_bosta_recall', NULL)`
+3. **Docs** — add `deploy/VAULT_SECRETS.md` with the table above and the exact three `vault.create_secret` statements for you to paste into the SQL editor with your own values (values live only in your `.env` and in your paste, never in the repo).
+4. **Rotate note** — the two values previously hardcoded in `migrations_archive` are public in git history; treat them as compromised and set fresh values for `CRON_TOKEN_SHOPIFY_SYNC` and `CRON_TOKEN_BOSTA_RECALL` in both `.env` and Vault.
 
-## Build-time variables (also required)
+## Technical details
 
-The Docker build (`docker-compose.yml` / `.github/workflows/build.yml`) injects these at build time for the browser bundle:
-
-```text
-VITE_SUPABASE_URL=<same-as-SUPABASE_URL>
-VITE_SUPABASE_PUBLISHABLE_KEY=<same-as-SUPABASE_PUBLISHABLE_KEY>
-VITE_SUPABASE_PROJECT_ID=<supabase-project-ref>
-```
-
-`src/start.ts` falls back `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_PROJECT_ID` from the `VITE_*` variants at runtime, but the build itself needs the `VITE_*` values.
-
-## Issues in the pasted snippet
-
-1. **Missing `WHATSAPP_TOKEN`** — outbound WhatsApp messages will fail with "المفاتيح غير مكتملة".
-2. **Missing `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`** — the build step needs them.
-3. **Duplicate `INTEGRATION_ENCRYPTION_KEY`** — appears twice in the snippet.
-4. **Line breaks are collapsed** — `SUPABASE_PUBLISHABLE_KEY=...  WHATSAPP_PHONE_NUMBER_ID=...` and several other joins must each be on their own line, otherwise the shell here-doc writes a malformed `.env`.
-5. **`SERVICE_NAME`** is not needed in `.env` — the workflow already computes it as `steps.repo.outputs.name` and uses it for the `/opt/` path.
-
-## What is NOT in `.env`
-
-- **Shopify `client_id` / `client_secret`** — per-brand credentials entered in the UI, encrypted with `INTEGRATION_ENCRYPTION_KEY`, stored in `public.brand_integrations.credentials_ciphertext`. They do not belong in `.env`.
-- **Bosta API key** — also per-brand, stored encrypted in the same table.
-
-## Proposed change
-
-Update `.github/workflows/deploy.yml` so the `cat > .env` block writes the corrected, fully-expanded list above. No code changes are required — the code already reads the new names with fallbacks.
+- `invoke_public_hook` stays `SECURITY DEFINER` with `search_path = public, extensions, vault` and `REVOKE ALL ... FROM PUBLIC, anon, authenticated`; only the cron/postgres owner calls it.
+- The old 4-arg signature is kept (same argument order) so existing job commands do not break during the switch; only the resolved secret names change.
+- No application code changes — `.env` names stay exactly as they are today.
