@@ -1,12 +1,10 @@
 services:
   app:
     image: ghcr.io/${GITHUB_REPOSITORY}:${VERSION}
-    container_name: app-instance
+    container_name: ${SERVICE_NAME}
     restart: always
-    environment:
-      - SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    env_file:
+      - .env
     expose:
       - "3000"
     networks:
