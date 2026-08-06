@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 async function isAuthorized(request: Request): Promise<boolean> {
-  const expected = process.env["SHOPIFY_SYNC_HOOK_SECRET"];
+  const expected = process.env["CRON_TOKEN_SHOPIFY_SYNC"] ?? process.env["SHOPIFY_SYNC_HOOK_SECRET"];
   if (!expected) return false;
   const provided = request.headers.get("apikey");
   if (!provided) return false;
