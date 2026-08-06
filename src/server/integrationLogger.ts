@@ -21,7 +21,10 @@ export type IntegrationLogInput = {
   response?: unknown;
   metadata?: Record<string, unknown> | null;
   actor_id?: string | null;
+  /** Outbound target URL — mirrored to the console only, never persisted. */
+  url?: string | null;
 };
+
 
 function redact(obj: unknown): unknown {
   if (!obj || typeof obj !== "object") return obj;
