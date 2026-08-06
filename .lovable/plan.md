@@ -1,60 +1,63 @@
-# Secrets: identify, classify, rename
+# Finalize deployment environment variables
 
-## Answering the two questions first
+## What the code already expects
 
-**"Shown in the UI setup card"** — on `/integrations`, the Bosta card calls `getBostaWebhookInfo`, which reads `BOSTA_WEBHOOK_SECRET` from the environment and renders the full webhook URL with `?secret=...` appended for the admin to copy into the Bosta dashboard. So it is *not* a per-brand value stored in the database; it is one instance-level secret we generate, kept in `.env`, and merely displayed for copying. It is a completely different value from `BOSTA_RECALL_SECRET` and the two must stay separate.
+The rename-only changes from the previous discussion are already in place. The code now reads the new names with fallbacks to the old names, so the app works as soon as the GitHub secrets / server `.env` use the new names.
 
-**"Cron caller token"** — `/api/public/hooks/shopify-sync` and `/api/public/hooks/bosta-recall` are *our own* endpoints, and `/api/public/*` bypasses site auth so anyone on the internet can POST to them. They exist so a scheduler can periodically trigger a full Shopify catalog/order sync and a Bosta shipment-status recall. The secret is just a password on our own endpoint proving the caller is our scheduler, nothing to do with Shopify or Bosta as vendors. Shopify's real credentials are the per-brand `client_id`/`client_secret` the admin enters on the Integrations page, encrypted into `brand_integrations.credentials_ciphertext` — correctly *not* in `.env`. Only the misleading `SHOPIFY_` prefix on the cron token is wrong.
-
-Noted on the Vault migration: agreed, dropping it. The scheduler will send the header value directly, so the token lives only in `.env` and in whatever schedules the call.
-
-## Shopify client_id / client_secret clarification
-
-Shopify `client_id` and `client_secret` are **per-brand credentials**, not instance secrets. They are entered by an admin on the Integrations page for each brand, encrypted with `INTEGRATION_ENCRYPTION_KEY`, and stored in `public.brand_integrations.credentials_ciphertext`. No `.env` entry is required for them and no code rename is needed.
-
-## Classification
-
-### A. Ours — random values we generate, put in `.env`
-
-| New name | Old name in code | Purpose |
+| New name | Old name | Used by |
 |---|---|---|
 | `CRON_TOKEN_SHOPIFY_SYNC` | `SHOPIFY_SYNC_HOOK_SECRET` | `apikey` header on `POST /api/public/hooks/shopify-sync` |
 | `CRON_TOKEN_BOSTA_RECALL` | `BOSTA_RECALL_SECRET` | `x-webhook-secret` header on `POST /api/public/hooks/bosta-recall` |
-| `BOSTA_WEBHOOK_TOKEN` | `BOSTA_WEBHOOK_SECRET` | `?secret=` / `x-webhook-secret` on inbound Bosta webhooks; shown in the Integrations card to paste into Bosta |
-| `INTEGRATION_ENCRYPTION_KEY` | `APP_USER_CONNECTION_KEY_SECRET` | AES-256-GCM key for `brand_integrations.credentials_ciphertext` and the Shopify OAuth `state`. **Value must be carried over unchanged** — a new value makes every stored integration credential undecryptable. |
+| `BOSTA_WEBHOOK_TOKEN` | `BOSTA_WEBHOOK_SECRET` | inbound Bosta webhooks (`/api/public/webhooks/bosta/:brandId`) and shown on `/integrations` |
+| `INTEGRATION_ENCRYPTION_KEY` | `APP_USER_CONNECTION_KEY_SECRET` | AES-256-GCM key for `brand_integrations.credentials_ciphertext` and Shopify OAuth `state` |
 
-`BOSTA_WEBHOOK_TOKEN` is a shared secret in the sense that you paste it into Bosta, but you invent the value; Bosta does not issue it.
+## Required `.env` on the server
 
-### B. From third parties — you collect these
+These are the variables the running container actually reads:
 
-| Name | Source | Used by |
-|---|---|---|
-| `WHATSAPP_TOKEN` | Meta app -> WhatsApp -> permanent system-user access token | all outbound WhatsApp sending |
-| `WHATSAPP_PHONE_NUMBER_ID` | Meta app -> WhatsApp -> API setup | all outbound WhatsApp sending |
-| `WHATSAPP_VERIFY_TOKEN` | you invent it, then paste the same value into Meta's webhook config | `GET /api/public/whatsapp` verification handshake |
-| `WHATSAPP_APP_SECRET` | Meta app -> Settings -> Basic -> App secret | `X-Hub-Signature-256` HMAC on inbound WhatsApp messages |
+```text
+GITHUB_REPOSITORY=<owner>/<repo>
+VERSION=<release-tag>
+DOMAIN=<your-domain>
+SUPABASE_SERVICE_ROLE_KEY=<service-role>
+SUPABASE_URL=<supabase-url>
+SUPABASE_PUBLISHABLE_KEY=<supabase-anon-key>
+WHATSAPP_TOKEN=<meta-permanent-token>
+WHATSAPP_PHONE_NUMBER_ID=<meta-phone-number-id>
+WHATSAPP_VERIFY_TOKEN=<your-invented-verify-token>
+WHATSAPP_APP_SECRET=<meta-app-secret>
+PUBLIC_SITE_URL=https://<your-domain>
+INTEGRATION_ENCRYPTION_KEY=<carry-over-unchanged-from-APP_USER_CONNECTION_KEY_SECRET>
+CRON_TOKEN_SHOPIFY_SYNC=<random-cron-password>
+CRON_TOKEN_BOSTA_RECALL=<random-cron-password>
+BOSTA_WEBHOOK_TOKEN=<random-webhook-password>
+```
 
-All four are currently unset, which is why WhatsApp send returns "المفاتيح غير مكتملة" and the inbound webhook returns 503.
+## Build-time variables (also required)
 
-Not secrets, but same file: `PUBLIC_SITE_URL` — plain config, the live origin used to display the WhatsApp webhook URL (currently falls back to a hardcoded `https://egurus.info`).
+The Docker build (`docker-compose.yml` / `.github/workflows/build.yml`) injects these at build time for the browser bundle:
 
-### C. Already correct, no action
+```text
+VITE_SUPABASE_URL=<same-as-SUPABASE_URL>
+VITE_SUPABASE_PUBLISHABLE_KEY=<same-as-SUPABASE_PUBLISHABLE_KEY>
+VITE_SUPABASE_PROJECT_ID=<supabase-project-ref>
+```
 
-`LOVABLE_API_KEY` (managed), `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` (platform-injected), and the per-brand Shopify/Bosta credentials in the database.
+`src/start.ts` falls back `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_PROJECT_ID` from the `VITE_*` variants at runtime, but the build itself needs the `VITE_*` values.
 
-### Duplicates
+## Issues in the pasted snippet
 
-None. Every configured secret has exactly one distinct role. The only near-collision is `BOSTA_RECALL_SECRET` vs `BOSTA_WEBHOOK_SECRET`, which the rename to `CRON_TOKEN_BOSTA_RECALL` vs `BOSTA_WEBHOOK_TOKEN` makes unambiguous.
+1. **Missing `WHATSAPP_TOKEN`** — outbound WhatsApp messages will fail with "المفاتيح غير مكتملة".
+2. **Missing `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`** — the build step needs them.
+3. **Duplicate `INTEGRATION_ENCRYPTION_KEY`** — appears twice in the snippet.
+4. **Line breaks are collapsed** — `SUPABASE_PUBLISHABLE_KEY=...  WHATSAPP_PHONE_NUMBER_ID=...` and several other joins must each be on their own line, otherwise the shell here-doc writes a malformed `.env`.
+5. **`SERVICE_NAME`** is not needed in `.env` — the workflow already computes it as `steps.repo.outputs.name` and uses it for the `/opt/` path.
 
-## Code changes (rename only)
+## What is NOT in `.env`
 
-Swap the `process.env` key names in these files, nothing else:
+- **Shopify `client_id` / `client_secret`** — per-brand credentials entered in the UI, encrypted with `INTEGRATION_ENCRYPTION_KEY`, stored in `public.brand_integrations.credentials_ciphertext`. They do not belong in `.env`.
+- **Bosta API key** — also per-brand, stored encrypted in the same table.
 
-- `src/routes/api/public/hooks/shopify-sync.ts` — `CRON_TOKEN_SHOPIFY_SYNC`
-- `src/routes/api/public/hooks/bosta-recall.ts` — `CRON_TOKEN_BOSTA_RECALL`
-- `src/routes/api/public/webhooks/bosta.$brandId.ts` and `src/lib/integrations.functions.ts` — `BOSTA_WEBHOOK_TOKEN`
-- `src/server/connectionKeyCrypto.ts` — `INTEGRATION_ENCRYPTION_KEY`
+## Proposed change
 
-Each reads the new name with a fallback to the old one (`process.env["NEW"] ?? process.env["OLD"]`) so the app keeps working until you finish editing `.env`; the fallbacks can be dropped in a later pass. WhatsApp names stay as they are — they are already correctly named, just unset.
-
-No database migration, no Vault entries, no new UI.
+Update `.github/workflows/deploy.yml` so the `cat > .env` block writes the corrected, fully-expanded list above. No code changes are required — the code already reads the new names with fallbacks.
