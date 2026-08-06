@@ -1440,6 +1440,32 @@ export const getCoreSecretStatus = createServerFn({ method: "GET" })
     }));
   });
 
+export const getCoreCronStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertManager(context);
+    const { CORE_CRON_JOBS } = await import("@/server/coreSecretsSeed.server");
+    const { data, error } = await context.supabase.rpc("core_cron_job_status");
+    if (error) throw error;
+    const live = new Map(
+      ((data ?? []) as Array<{ name: string; schedule: string; active: boolean }>).map((r) => [
+        r.name,
+        r,
+      ]),
+    );
+    return CORE_CRON_JOBS.map((j) => {
+      const row = live.get(j.name);
+      return {
+        name: j.name,
+        path: j.path,
+        schedule: row?.schedule ?? j.schedule,
+        scheduled: Boolean(row),
+        active: row?.active === true,
+      };
+    });
+  });
+
+
 export const getBostaWebhookInfo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { brand_id: string }) => d)
