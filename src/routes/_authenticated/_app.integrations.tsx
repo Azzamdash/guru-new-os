@@ -36,6 +36,8 @@ import {
   syncBostaDeliveries,
   getBostaWebhookInfo,
   getCoreSecretStatus,
+  getCoreCronStatus,
+
   startShopifyOAuth,
   registerShopifyWebhooks,
 } from "@/lib/integrations.functions";
@@ -815,6 +817,56 @@ function CoreSecretsCard() {
           ))}
         </div>
       )}
+      <CoreCronList />
     </Card>
   );
 }
+
+function CoreCronList() {
+  const { lang } = useLang();
+  const T = (ar: string, en: string) => (lang === "ar" ? ar : en);
+  const fn = useServerFn(getCoreCronStatus);
+  const { data, isLoading } = useQuery({
+    queryKey: ["core-cron-status"],
+    queryFn: () => fn(),
+  });
+
+  return (
+    <div className="mt-4 border-t pt-3">
+      <h3 className="text-sm font-semibold">{T("المهام المجدولة", "Scheduled jobs")}</h3>
+      <p className="text-xs text-muted-foreground mt-1 mb-2">
+        {T(
+          "بتتسجل تلقائيًا عند تشغيل التطبيق باستخدام المفاتيح الأساسية أعلاه.",
+          "Registered automatically at app boot using the core secrets above.",
+        )}
+      </p>
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">{T("جارٍ التحميل…", "Loading…")}</p>
+      ) : (
+        <div className="space-y-2">
+          {(data ?? []).map((j) => (
+            <div
+              key={j.name}
+              className="flex items-center justify-between gap-3 rounded-md border p-2 bg-muted/30"
+            >
+              <div className="min-w-0">
+                <div className="text-xs font-mono truncate">{j.name}</div>
+                <div className="text-[11px] text-muted-foreground font-mono truncate">
+                  {j.schedule} · {j.path}
+                </div>
+              </div>
+              <Badge variant={j.scheduled && j.active ? "secondary" : "destructive"}>
+                {j.scheduled
+                  ? j.active
+                    ? T("مفعّل", "Active")
+                    : T("متوقف", "Paused")
+                  : T("غير مجدول", "Not scheduled")}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+

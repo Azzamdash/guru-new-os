@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
 
         if (!secretOk) {
           const httpStatus = expected ? 401 : 503;
-          await logIntegrationEvent(supabaseAdmin, {
+          await logIntegrationEvent({
             provider: "bosta",
             brand_id: params.brandId,
             direction: "webhook",
@@ -153,7 +153,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
             }
 
             if (ambiguousMatch) {
-              await logIntegrationEvent(supabaseAdmin, {
+              await logIntegrationEvent({
                 provider: "bosta",
                 brand_id: params.brandId,
                 direction: "webhook",
@@ -255,7 +255,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
               }
             }
           } else if (orderNumber) {
-            await logIntegrationEvent(supabaseAdmin, {
+            await logIntegrationEvent({
               provider: "bosta",
               brand_id: params.brandId,
               direction: "webhook",
@@ -267,7 +267,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
             });
           }
         } catch (e) {
-          await logIntegrationEvent(supabaseAdmin, {
+          await logIntegrationEvent({
             provider: "bosta",
             brand_id: params.brandId,
             direction: "webhook",
@@ -281,7 +281,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
           return new Response("Failed to apply Bosta webhook", { status: 500 });
         }
 
-        await logIntegrationEvent(supabaseAdmin, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: params.brandId,
           direction: "webhook",
