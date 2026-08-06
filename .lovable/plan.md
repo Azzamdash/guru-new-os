@@ -1,39 +1,49 @@
-# Vault secrets contract for scheduled jobs
+# Core secret seeding: `.env` -> Vault, no raw SQL in prod
 
-## Current state (verified)
+## Goal
 
-- The squashed baseline `supabase/migrations/00000000000000_initial_schema.sql` contains `public.invoke_public_hook(...)` and **no** `vault.create_secret` calls. The hardcoded `vault.update_secret` blocks only exist in `supabase/migrations_archive/` (historical, not replayed).
-- `invoke_public_hook` reads three things from `vault.decrypted_secrets`:
-  - `app_public_base_url` (always)
-  - `app_public_api_key` (default apikey header) or the name passed in `_apikey_secret_name`
-  - the name passed in `_secret_name` (optional `x-webhook-secret` header)
-- The restricted psql role cannot read `vault.secrets` or `cron.job`, so the currently stored values could not be inspected from here.
+A fresh Supabase project plus a Docker image with a filled `.env` should be fully working with no manual SQL. The only values Postgres genuinely needs (so `pg_cron` can call our own `/api/public/*` hooks) are pushed into Vault by the application itself, at boot, from `.env` — created when absent, updated when the value differs, untouched when identical.
 
-Why the DB needs these at all: pg_cron runs inside Postgres and has no access to the container's `.env`. The only values that belong in Vault are the *outbound caller* credentials the scheduler must present to our own `/api/public/*` endpoints — they mirror the `.env` values, they are not a second source of truth for anything else.
+## Verified current state
 
-## Naming contract: core vs. customer
+- The squashed baseline `supabase/migrations/00000000000000_initial_schema.sql` contains `public.invoke_public_hook(...)` and **no** `vault.create_secret` / `vault.update_secret` calls. Hardcoded secret values exist only in `supabase/migrations_archive/` (historical, not replayed).
+- `invoke_public_hook` reads `app_public_base_url` always, plus `app_public_api_key` or the name passed as `_apikey_secret_name`, plus the optional `_secret_name` for the `x-webhook-secret` header.
+- The restricted psql role cannot read `vault.secrets` / `cron.job`, so the seeder must report what it did rather than us inspecting Vault by hand.
 
-Core (instance) secrets get a `core_` prefix so they can never collide with anything an admin configures on `/integrations`. Per-brand vendor credentials (Shopify `client_id`/`client_secret`, Bosta API key) stay encrypted in `public.brand_integrations.credentials_ciphertext` and never enter Vault.
+## The core secret set (all `.env` driven)
 
-| Vault secret name | Value = which `.env` variable | Used as |
+| Vault name | Source `.env` variable | Purpose |
 |---|---|---|
-| `core_public_base_url` | `PUBLIC_SITE_URL` | base URL for `net.http_post` |
+| `core_public_base_url` | `PUBLIC_SITE_URL` | base URL used by `net.http_post` |
 | `core_cron_token_shopify_sync` | `CRON_TOKEN_SHOPIFY_SYNC` | `apikey` header on `/api/public/hooks/shopify-sync` |
 | `core_cron_token_bosta_recall` | `CRON_TOKEN_BOSTA_RECALL` | `x-webhook-secret` header on `/api/public/hooks/bosta-recall` |
 
-`app_public_api_key` (the Supabase publishable key) is no longer needed as a default: both hooks pass a dedicated token, so the fallback becomes unnecessary and is removed rather than kept as a vague catch-all.
+`core_` prefix keeps these disjoint from anything an admin configures on `/integrations`; per-brand Shopify/Bosta vendor credentials stay encrypted in `public.brand_integrations` and are never written to Vault.
 
-## Changes
+## Feature design
 
-1. **Migration — function only, no values.** Replace `invoke_public_hook` so it reads `core_public_base_url` and requires an explicit `_apikey_secret_name` or `_secret_name`; raise a clear error naming the missing Vault entry. Add `public.core_secret_names()` returning the required-name list so the contract is discoverable from SQL. No `vault.create_secret` calls with literal values in any migration.
-2. **Migration — cron jobs re-pointed** to the new names:
-   - shopify sync: `invoke_public_hook('/api/public/hooks/shopify-sync','{}'::jsonb, NULL, 'core_cron_token_shopify_sync')`
-   - bosta recall: `invoke_public_hook('/api/public/hooks/bosta-recall','{}'::jsonb, 'core_cron_token_bosta_recall', NULL)`
-3. **Docs** — add `deploy/VAULT_SECRETS.md` with the table above and the exact three `vault.create_secret` statements for you to paste into the SQL editor with your own values (values live only in your `.env` and in your paste, never in the repo).
-4. **Rotate note** — the two values previously hardcoded in `migrations_archive` are public in git history; treat them as compromised and set fresh values for `CRON_TOKEN_SHOPIFY_SYNC` and `CRON_TOKEN_BOSTA_RECALL` in both `.env` and Vault.
+**1. Migration — mechanism only, zero values.**
 
-## Technical details
+- `public.sync_core_vault_secret(_name text, _value text) RETURNS text` — `SECURITY DEFINER`, `search_path = public, vault`. Rejects any `_name` not starting with `core_`. Looks up `vault.secrets` by name: inserts via `vault.create_secret` when missing (returns `'created'`), compares against `vault.decrypted_secrets` and calls `vault.update_secret` only when different (`'updated'`), otherwise `'unchanged'`.
+- `public.core_vault_secret_status() RETURNS TABLE(name text, present boolean)` — presence only, never values, for the admin readout.
+- `REVOKE ALL ... FROM PUBLIC, anon, authenticated;` then `GRANT EXECUTE ... TO service_role;` Only the service-role client can call it.
+- Also re-point the two cron jobs to the `core_*` names, guarded so it is a no-op when the jobs do not exist yet (fresh project).
 
-- `invoke_public_hook` stays `SECURITY DEFINER` with `search_path = public, extensions, vault` and `REVOKE ALL ... FROM PUBLIC, anon, authenticated`; only the cron/postgres owner calls it.
-- The old 4-arg signature is kept (same argument order) so existing job commands do not break during the switch; only the resolved secret names change.
-- No application code changes — `.env` names stay exactly as they are today.
+**2. Seeder module — `src/server/coreSecretsSeed.server.ts`.**
+
+Single exported `syncCoreSecretsToVault()`: builds the name/value list from `process.env` (read inside the function), skips entries whose env var is unset and records them as `missing`, and for the rest calls `supabaseAdmin.rpc('sync_core_vault_secret', ...)`. Returns a per-name result array of `created | updated | unchanged | missing | error`. Values are never logged — only names and outcomes.
+
+**3. Automatic run at boot.**
+
+Called once from the server entry (`src/server.ts`), lazily on the first request and memoised in a module-level promise so it runs once per container. Wrapped in try/catch: a Vault failure logs a warning and never blocks serving. This is what makes "new Supabase project + new `.env` + `docker compose up`" sufficient.
+
+**4. Manual re-run + visibility.**
+
+- `POST /api/public/hooks/sync-core-secrets` — guarded by the same `CRON_TOKEN_SHOPIFY_SYNC`-style token check pattern already used by the other hooks (its own `CRON_TOKEN_SECRETS_SYNC`), returning the outcome list. Lets you force a re-sync after editing `.env` without a redeploy.
+- On `/integrations`, an admin-only card listing the three core names with a present/absent badge, backed by a `requireSupabaseAuth` server function that checks the admin role then calls `core_vault_secret_status()`. Never displays values.
+
+## Notes
+
+- Idempotent by construction: re-running after a redeploy yields `unchanged` for everything already correct.
+- No application `.env` variable names change; only the Vault-side names become `core_*`, resolved by the seeder.
+- `app_public_api_key` is dropped from the flow — both hooks pass their own dedicated token, so the publishable-key fallback in `invoke_public_hook` is removed.
