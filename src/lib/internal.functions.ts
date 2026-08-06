@@ -243,8 +243,7 @@ export const deleteExpenseEntry = createServerFn({ method: "POST" })
 export const listInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (context.supabase as any).from("supplier_invoices")
+    const { data, error } = await context.supabase.from("supplier_invoices")
       .select("id, supplier_id, brand_id, amount, issued_at, due_at, status, note, type")
       .order("issued_at", { ascending: false });
     if (error) throw error;
@@ -279,13 +278,11 @@ export const upsertInvoice = createServerFn({ method: "POST" })
     await assertWriter(context);
     if (data.id) {
       const { id, amount: _amount, ...patch } = data;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (context.supabase as any).from("supplier_invoices").update(patch).eq("id", id);
+      const { error } = await context.supabase.from("supplier_invoices").update(patch).eq("id", id);
       if (error) throw error;
     } else {
       const { amount, ...rest } = data;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (context.supabase as any).from("supplier_invoices").insert({ ...rest, amount: amount ?? 0 });
+      const { error } = await context.supabase.from("supplier_invoices").insert({ ...rest, amount: amount ?? 0 });
       if (error) throw error;
     }
     return { ok: true };

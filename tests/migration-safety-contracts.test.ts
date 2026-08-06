@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
 const read = (path: string) => Bun.file(path).text();
-const scalable = await read("supabase/migrations/20260731130000_scalable_read_models.sql");
-const archival = await read("supabase/migrations/20260731140000_hot_payload_archival.sql");
-const hotBackfill = await read("supabase/migrations/20260731141000_hot_payload_backfill.sql");
-const followup = await read("supabase/migrations/20260731150000_preserve_legacy_courier_returns.sql");
+const scalable = await read("supabase/migrations_archive/20260731130000_scalable_read_models.sql");
+const archival = await read("supabase/migrations_archive/20260731140000_hot_payload_archival.sql");
+const hotBackfill = await read("supabase/migrations_archive/20260731141000_hot_payload_backfill.sql");
+const followup = await read("supabase/migrations_archive/20260731150000_preserve_legacy_courier_returns.sql");
 const shopifySync = await read("src/server/shopifySync.server.ts");
 const integrations = await read("src/lib/integrations.functions.ts");
 const bostaRecall = await read("src/server/bostaRecall.server.ts");

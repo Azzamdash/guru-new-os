@@ -84,7 +84,7 @@ jobs:
           GITHUB_REPOSITORY=${{ steps.repo.outputs.full }}
           VERSION=$VERSION
           DOMAIN=${{ secrets.DOMAIN }}
-          SUPABASE_SERVICE_ROLE=${{ secrets.SUPABASE_SERVICE_ROLE }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE }}
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
           ENV
