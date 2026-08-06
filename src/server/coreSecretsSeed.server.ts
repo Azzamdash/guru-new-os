@@ -42,6 +42,88 @@ export async function syncCoreSecretsToVault(): Promise<CoreSecretResult[]> {
   return results;
 }
 
+export type CoreCronJob = {
+  /** cron.job name — must start with core_ */
+  name: string;
+  schedule: string;
+  path: string;
+  /** core secret sent as the x-webhook-secret header */
+  secret_name?: string;
+  /** core secret sent as the apikey header */
+  apikey_name?: string;
+};
+
+export type CoreCronResult = {
+  name: string;
+  schedule: string;
+  outcome: "created" | "updated" | "unchanged" | "missing" | "error";
+  error?: string;
+};
+
+/** Scheduled jobs owned by the application. Seeded at boot, never by a migration. */
+export const CORE_CRON_JOBS: CoreCronJob[] = [
+  {
+    name: "core_shopify_sync",
+    schedule: "*/15 * * * *",
+    path: "/api/public/hooks/shopify-sync",
+    apikey_name: "core_cron_token_shopify_sync",
+  },
+  {
+    name: "core_bosta_recall",
+    schedule: "*/30 * * * *",
+    path: "/api/public/hooks/bosta-recall",
+    secret_name: "core_cron_token_bosta_recall",
+  },
+];
+
+export async function syncCoreCronJobs(
+  secretResults: CoreSecretResult[],
+): Promise<CoreCronResult[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const available = new Set(
+    secretResults.filter((r) => r.outcome !== "missing" && r.outcome !== "error").map((r) => r.name),
+  );
+
+  const results: CoreCronResult[] = [];
+  const schedulable: CoreCronJob[] = [];
+
+  for (const job of CORE_CRON_JOBS) {
+    const needed = [job.secret_name, job.apikey_name].filter(Boolean) as string[];
+    const missing = needed.filter((n) => !available.has(n));
+    if (missing.length > 0 || !available.has("core_public_base_url")) {
+      results.push({ name: job.name, schedule: job.schedule, outcome: "missing" });
+      continue;
+    }
+    schedulable.push(job);
+  }
+
+  if (schedulable.length === 0) return results;
+
+  const { data, error } = await supabaseAdmin.rpc("sync_core_cron_jobs", {
+    _jobs: schedulable as unknown as never,
+  });
+  if (error) {
+    for (const job of schedulable) {
+      results.push({ name: job.name, schedule: job.schedule, outcome: "error", error: error.message });
+    }
+    return results;
+  }
+
+  const applied = (data as unknown as CoreCronResult[]) ?? [];
+  return [...results, ...applied];
+}
+
+export type CoreSeedReport = {
+  secrets: CoreSecretResult[];
+  cron: CoreCronResult[];
+};
+
+export async function seedCoreConfiguration(): Promise<CoreSeedReport> {
+  const secrets = await syncCoreSecretsToVault();
+  const cron = await syncCoreCronJobs(secrets);
+  return { secrets, cron };
+}
+
 let bootPromise: Promise<void> | undefined;
 
 /** Runs the sync at most once per container; never throws. */
@@ -49,9 +131,11 @@ export function ensureCoreSecretsSynced(): Promise<void> {
   if (!bootPromise) {
     bootPromise = (async () => {
       try {
-        const results = await syncCoreSecretsToVault();
-        const summary = results.map((r) => `${r.name}=${r.outcome}`).join(", ");
+        const { secrets, cron } = await seedCoreConfiguration();
+        const summary = secrets.map((r) => `${r.name}=${r.outcome}`).join(", ");
+        const jobs = cron.map((r) => `${r.name}=${r.outcome}`).join(", ");
         console.log(`[core-secrets] ${summary}`);
+        console.log(`[core-cron] ${jobs || "none"}`);
       } catch (e) {
         console.warn(`[core-secrets] sync skipped: ${(e as Error).message}`);
       }
@@ -59,3 +143,4 @@ export function ensureCoreSecretsSynced(): Promise<void> {
   }
   return bootPromise;
 }
+
