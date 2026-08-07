@@ -9,7 +9,7 @@ import { fetchAllRows } from "@/lib/paginate";
 export type ExecutiveSnapshot = {
   from: string; to: string;
   income: {
-    netRevenue: number; cogs: number; grossProfit: number; grossMargin: number;
+    netRevenue: number; projectedNetRevenue: number; cogs: number; grossProfit: number; grossMargin: number;
     opex: number; netProfit: number; netMargin: number;
   };
   cashFlow: { inflow: number; outflow: number; net: number };
@@ -36,7 +36,7 @@ export const getExecutiveSnapshot = createServerFn({ method: "POST" })
     if (brandId && isExcluded(brandId)) {
       return {
         from, to,
-        income: { netRevenue: 0, cogs: 0, grossProfit: 0, grossMargin: 0, opex: 0, netProfit: 0, netMargin: 0 },
+        income: { netRevenue: 0, projectedNetRevenue: 0, cogs: 0, grossProfit: 0, grossMargin: 0, opex: 0, netProfit: 0, netMargin: 0 },
         cashFlow: { inflow: 0, outflow: 0, net: 0 },
         reconciliation: { expected: 0, deposited: 0, variance: 0, variancePct: 0 },
         inventory: { units: 0, valuation: 0 },
@@ -128,6 +128,7 @@ export const getExecutiveSnapshot = createServerFn({ method: "POST" })
       from, to,
       income: {
         netRevenue: income.netRevenue,
+        projectedNetRevenue: income.projectedNetRevenue,
         cogs: income.cogs,
         grossProfit: income.grossProfit,
         grossMargin: income.grossMargin,
