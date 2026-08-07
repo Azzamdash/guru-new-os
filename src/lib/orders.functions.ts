@@ -294,6 +294,7 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
     (d: {
       id?: string;
       brand_id: string;
+      order_kind?: "sale" | "return" | "exchange";
       external_order_number?: string | null;
       customer_name?: string | null;
       customer_phone?: string | null;
@@ -312,11 +313,23 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
       discount_amount?: number;
       occurred_at?: string;
       note?: string | null;
-      items: Array<{ product_id?: string | null; title: string; qty: number; unit_price: number }>;
+      items: Array<{
+        product_id?: string | null;
+        title: string;
+        qty: number;
+        unit_price: number;
+        direction?: "out" | "in";
+      }>;
     }) => d,
   )
   .handler(async ({ data, context }) => {
     await assertPageWrite(context, ORDERS_PAGE);
+    const orderKind = data.order_kind ?? "sale";
+    // Exchange is the one case with items going both ways on a single order —
+    // a "return" order's items are all incoming but still price positive
+    // (the invoice's own type='return' carries the sign flip, same as before).
+    // Only exchange nets 'in' items against 'out' items directly here.
+    const isExchange = orderKind === "exchange";
     // Compute COGS per item using product_cogs()
     const costMap = await getCogsMap(
       context.supabase,
@@ -325,16 +338,19 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
     let subtotal = 0,
       cost_total = 0;
     const enriched = data.items.map((i) => {
+      const direction = i.direction === "in" ? "in" : "out";
+      const sign = isExchange && direction === "in" ? -1 : 1;
       const unit_cost = i.product_id ? (costMap.get(i.product_id) ?? 0) : 0;
       const line = Number(i.qty) * Number(i.unit_price);
-      subtotal += line;
-      cost_total += Number(i.qty) * unit_cost;
-      return { ...i, unit_cost, subtotal: line };
+      subtotal += sign * line;
+      cost_total += sign * Number(i.qty) * unit_cost;
+      return { ...i, direction, unit_cost, subtotal: line };
     });
     const total_amount =
       subtotal + Number(data.shipping_amount ?? 0) - Number(data.discount_amount ?? 0);
     const orderPayload = {
       brand_id: data.brand_id,
+      order_kind: orderKind,
       source: "manual",
       external_order_number: data.external_order_number ?? null,
       customer_name: data.customer_name ?? null,
@@ -358,7 +374,8 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
       occurred_at: data.occurred_at ?? new Date().toISOString(),
       note: data.note ?? null,
     };
-    const { data: orderId, error } = await context.supabase.rpc("upsert_order_with_items", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: orderId, error } = await (context.supabase as any).rpc("upsert_order_with_items", {
       // Supabase's generator omits SQL argument nullability; PostgreSQL accepts NULL here.
       _order_id: (data.id ?? null) as unknown as string,
       _order_patch: orderPayload,
@@ -370,6 +387,7 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
         unit_price: i.unit_price,
         unit_cost: i.unit_cost,
         subtotal: i.subtotal,
+        direction: i.direction,
       })),
     });
     if (error) throw error;
@@ -697,29 +715,59 @@ export const deleteOrder = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+type ManualOrderRow = {
+  id: string;
+  brand_id: string;
+  external_order_number: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  shipping_governorate: string | null;
+  shipping_address: string | null;
+  building_number: string | null;
+  floor_number: string | null;
+  apartment_number: string | null;
+  courier_id: string | null;
+  employee_id: string | null;
+  fulfillment_status: string;
+  financial_status: string;
+  confirmation_status: string;
+  shipping_amount: number;
+  discount_amount: number;
+  occurred_at: string;
+  note: string | null;
+  source: string;
+  order_kind: "sale" | "return" | "exchange" | null;
+};
+
 export const getOrder = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
-    const { data: order, error } = await context.supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: order, error } = await (context.supabase as any)
       .from("orders")
       .select(
-        "id, brand_id, external_order_number, customer_name, customer_phone, customer_email, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, courier_id, employee_id, fulfillment_status, financial_status, confirmation_status, shipping_amount, discount_amount, occurred_at, note, source",
+        "id, brand_id, external_order_number, customer_name, customer_phone, customer_email, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, courier_id, employee_id, fulfillment_status, financial_status, confirmation_status, shipping_amount, discount_amount, occurred_at, note, source, order_kind",
       )
       .eq("id", data.id)
       .single();
     if (error) throw error;
-    const { data: items } = await context.supabase
+    const orderRow = order as ManualOrderRow;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: items } = await (context.supabase as any)
       .from("order_items")
-      .select("product_id, title, qty, unit_price")
+      .select("product_id, title, qty, unit_price, direction")
       .eq("order_id", data.id);
     return {
-      ...order,
+      ...orderRow,
+      order_kind: orderRow.order_kind ?? "sale",
       items: (items ?? []) as Array<{
         product_id: string | null;
         title: string;
         qty: number;
         unit_price: number;
+        direction: "out" | "in";
       }>,
     };
   });
