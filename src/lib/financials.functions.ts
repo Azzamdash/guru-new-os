@@ -35,7 +35,7 @@ export type IncomeStatement = {
 
 export const getIncomeStatement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { from?: string; to?: string; brandId?: string | null; excludeBrandIds?: string[] } = {}) => d)
+  .inputValidator((d: { from?: string; to?: string; brandId?: string | null; excludeBrandIds?: string[]; settledOnly?: boolean } = {}) => d)
   .handler(async ({ data, context }): Promise<IncomeStatement> => {
     const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? `${new Date(to).getFullYear()}-01-01`;
@@ -44,6 +44,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       to,
       brandId: data.brandId,
       excludeBrandIds: data.excludeBrandIds,
+      settledOnly: data.settledOnly,
     });
     const totals = report.totals;
     const grossRevenue = Number(totals.grossRevenue) || 0;

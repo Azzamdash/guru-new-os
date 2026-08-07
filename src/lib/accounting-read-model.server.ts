@@ -38,7 +38,14 @@ export type AccountingProfitRpcResult = {
 
 export async function fetchAccountingProfitReport(
   supabase: unknown,
-  input: { from: string; to: string; brandId?: string | null; excludeBrandIds?: string[] },
+  input: {
+    from: string;
+    to: string;
+    brandId?: string | null;
+    excludeBrandIds?: string[];
+    /** false = every invoice counts as if settled, i.e. plain order-based totals (no delivery gate). Defaults to true. */
+    settledOnly?: boolean;
+  },
 ): Promise<AccountingProfitRpcResult> {
   const client = supabase as {
     rpc: (
@@ -51,6 +58,7 @@ export async function fetchAccountingProfitReport(
     _to: input.to,
     _brand_id: input.brandId || null,
     _exclude_brand_ids: input.excludeBrandIds ?? [],
+    _settled_only: input.settledOnly ?? true,
   });
   if (error) throw error;
   return data as AccountingProfitRpcResult;
