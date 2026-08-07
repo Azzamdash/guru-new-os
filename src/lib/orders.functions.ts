@@ -587,6 +587,106 @@ export const confirmReturnReceived = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Creates a return or exchange order directly in the system, linked back to
+ * the sale order it relates to, so it can go through the normal dispatch
+ * flow (courier assignment, Bosta updates) like any other order — rather
+ * than only ever being importable from Shopify.
+ */
+export const createReturnOrExchangeOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      relatedOrderId: string;
+      kind: "return" | "exchange";
+      items: Array<{ productId: string; qty: number; unitPrice: number }>;
+      note?: string | null;
+    }) => d,
+  )
+  .handler(async ({ data, context }): Promise<{ id: string }> => {
+    await assertPageWrite(context, ORDERS_PAGE);
+    if (data.kind !== "return" && data.kind !== "exchange") throw new Error("نوع غير صالح");
+    if (!Array.isArray(data.items) || data.items.length === 0) {
+      throw new Error("أضف صنف واحد على الأقل");
+    }
+    for (const it of data.items) {
+      if (!it.productId) throw new Error("اختر منتج لكل بند");
+      if (!(it.qty > 0)) throw new Error("الكمية يجب أن تكون أكبر من صفر");
+    }
+
+    const { data: related, error: relatedError } = await context.supabase
+      .from("orders")
+      .select(
+        "id, brand_id, customer_id, customer_name, customer_phone, customer_email, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, currency",
+      )
+      .eq("id", data.relatedOrderId)
+      .single();
+    if (relatedError) throw relatedError;
+
+    const { getCogsMap } = await import("./cogs.server");
+    const productIds = data.items.map((it) => it.productId);
+    const { data: prods } = await context.supabase
+      .from("products")
+      .select("id, name")
+      .in("id", productIds);
+    const nameMap = new Map(
+      ((prods ?? []) as Array<{ id: string; name: string }>).map((p) => [p.id, p.name]),
+    );
+    const costMap = await getCogsMap(context.supabase, productIds);
+
+    const totalAmount = data.items.reduce((s, it) => s + it.qty * it.unitPrice, 0);
+    const costTotal = data.items.reduce(
+      (s, it) => s + it.qty * (costMap.get(it.productId) ?? 0),
+      0,
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: orderRow, error: insertError } = await (context.supabase as any)
+      .from("orders")
+      .insert({
+        brand_id: related.brand_id,
+        source: "manual",
+        order_kind: data.kind,
+        related_order_id: related.id,
+        customer_id: related.customer_id,
+        customer_name: related.customer_name,
+        customer_phone: related.customer_phone,
+        customer_email: related.customer_email,
+        shipping_governorate: related.shipping_governorate,
+        shipping_address: related.shipping_address,
+        building_number: related.building_number,
+        floor_number: related.floor_number,
+        apartment_number: related.apartment_number,
+        currency: related.currency ?? "EGP",
+        confirmation_status: "confirmed",
+        subtotal_amount: totalAmount,
+        shipping_amount: 0,
+        discount_amount: 0,
+        total_amount: totalAmount,
+        cost_total: costTotal,
+        occurred_at: new Date().toISOString(),
+        note: data.note?.trim() || (data.kind === "return" ? "مرتجع" : "تبديل"),
+      })
+      .select("id")
+      .single();
+    if (insertError) throw insertError;
+
+    const { error: itemsError } = await context.supabase.from("order_items").insert(
+      data.items.map((it) => ({
+        order_id: orderRow.id,
+        product_id: it.productId,
+        title: nameMap.get(it.productId) ?? "Item",
+        qty: it.qty,
+        unit_price: it.unitPrice,
+        unit_cost: costMap.get(it.productId) ?? 0,
+        subtotal: it.qty * it.unitPrice,
+      })),
+    );
+    if (itemsError) throw itemsError;
+
+    return { id: orderRow.id as string };
+  });
+
 export const deleteOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)
