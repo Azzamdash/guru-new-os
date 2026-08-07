@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
 import { ORDERS_PAGE } from "./page-permission-paths";
 import { parseSettlementCsv, renderTemplate } from "./orders-ops.shared";
+import { businessDateEndUTC, businessDateStartUTC } from "./timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -626,8 +627,8 @@ export const getCollectionGaps = createServerFn({ method: "POST" })
       .order("occurred_at", { ascending: false })
       .limit(500);
     if (data.brandId) q = q.eq("brand_id", data.brandId);
-    if (data.from) q = q.gte("occurred_at", data.from);
-    if (data.to) q = q.lte("occurred_at", `${data.to.slice(0, 10)}T23:59:59.999Z`);
+    if (data.from) q = q.gte("occurred_at", businessDateStartUTC(data.from.slice(0, 10)));
+    if (data.to) q = q.lte("occurred_at", businessDateEndUTC(data.to.slice(0, 10)));
 
     const { data: orders, error } = await q;
     if (error) throw new Error(error.message);

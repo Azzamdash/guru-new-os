@@ -1,5 +1,6 @@
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
@@ -85,8 +86,8 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
         .select(
           "id, brand_id, courier_id, fulfillment_status, confirmation_status, total_amount, shipping_amount, shipping_governorate, occurred_at",
         )
-        .gte("occurred_at", from)
-        .lte("occurred_at", `${to}T23:59:59`);
+        .gte("occurred_at", businessDateStartUTC(from))
+        .lte("occurred_at", businessDateEndUTC(to));
       if (data.brandId) q = q.eq("brand_id", data.brandId);
       if (data.courierId) q = q.eq("courier_id", data.courierId);
       if (data.confirmationStatus && data.confirmationStatus !== "all") {

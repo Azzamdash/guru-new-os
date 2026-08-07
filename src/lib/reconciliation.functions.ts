@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
+import { businessDateEndUTC, businessDateStartUTC } from "./timezone";
 
 export type ReconInput = { from: string; to: string; brandId?: string | null };
 
@@ -10,11 +11,13 @@ export const getCourierReconciliation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { from, to, brandId } = data;
+    const fromUTC = businessDateStartUTC(from.slice(0, 10));
+    const toUTC = businessDateEndUTC(to.slice(0, 10));
 
     const invs = await fetchAllRows<{ id: string; courier_id: string | null; brand_id: string; type: string; total_amount: number; collected_amount: number; occurred_at: string }>(() => {
       let q = supabase.from("sales_invoices")
         .select("id, courier_id, brand_id, type, total_amount, collected_amount, occurred_at")
-        .gte("occurred_at", from).lte("occurred_at", to);
+        .gte("occurred_at", fromUTC).lte("occurred_at", toUTC);
       if (brandId) q = q.eq("brand_id", brandId);
       return q;
     });
@@ -36,7 +39,7 @@ export const getCourierReconciliation = createServerFn({ method: "POST" })
       let q = supabase.from("cash_transactions")
         .select("courier_id, brand_id, amount, type, occurred_at")
         .eq("type", "collection")
-        .gte("occurred_at", from).lte("occurred_at", to);
+        .gte("occurred_at", fromUTC).lte("occurred_at", toUTC);
       if (brandId) q = q.eq("brand_id", brandId);
       return q;
     });

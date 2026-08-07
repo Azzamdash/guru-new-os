@@ -1,4 +1,4 @@
-import { getTodayInBusinessTimezone } from "@/lib/timezone";
+import { businessDateEndUTC, businessDateStartUTC, getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -188,8 +188,8 @@ async function loadMovements(
     .order("occurred_at", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(filters.limit ?? 1000);
-  if (filters.from) q = q.gte("occurred_at", filters.from);
-  if (filters.to) q = q.lte("occurred_at", filters.to);
+  if (filters.from) q = q.gte("occurred_at", businessDateStartUTC(filters.from.slice(0, 10)));
+  if (filters.to) q = q.lte("occurred_at", businessDateEndUTC(filters.to.slice(0, 10)));
   if (filters.source) q = q.eq("source", filters.source);
   if (filters.kind === "product") q = q.not("product_id", "is", null);
   if (filters.kind === "material") q = q.not("material_id", "is", null);
@@ -343,8 +343,8 @@ export const listStockTransfers = createServerFn({ method: "POST" })
       .not("transfer_group", "is", null)
       .order("occurred_at", { ascending: false })
       .limit(data.limit ?? 500);
-    if (data.from) q = q.gte("occurred_at", data.from);
-    if (data.to) q = q.lte("occurred_at", data.to);
+    if (data.from) q = q.gte("occurred_at", businessDateStartUTC(data.from.slice(0, 10)));
+    if (data.to) q = q.lte("occurred_at", businessDateEndUTC(data.to.slice(0, 10)));
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 

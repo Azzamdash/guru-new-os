@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "@/lib/paginate";
+import { businessDateStartUTC, businessDateEndUTC } from "@/lib/timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -458,8 +459,8 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       }
     }
     const isCustom = periodType === "custom" && dateFrom && dateTo;
-    const fromISO = isCustom ? dateFrom! : `${year}-01-01`;
-    const toISO = isCustom ? `${dateTo}T23:59:59` : `${year}-12-31T23:59:59`;
+    const fromISO = businessDateStartUTC(isCustom ? dateFrom! : `${year}-01-01`);
+    const toISO = businessDateEndUTC(isCustom ? dateTo! : `${year}-12-31`);
     const fromDay = isCustom ? dateFrom! : `${year}-01-01`;
     const toDay = isCustom ? dateTo! : `${year}-12-31`;
 
@@ -1017,8 +1018,8 @@ export const listFulfillmentEntries = createServerFn({ method: "GET" })
         .select("id, brand_id, employee_name, orders_prepared, occurred_at, note, employee_id")
         .order("occurred_at", { ascending: false });
       if (data.brandId) q = q.eq("brand_id", data.brandId);
-      if (data.dateFrom) q = q.gte("occurred_at", data.dateFrom);
-      if (data.dateTo) q = q.lte("occurred_at", data.dateTo);
+      if (data.dateFrom) q = q.gte("occurred_at", businessDateStartUTC(data.dateFrom.slice(0, 10)));
+      if (data.dateTo) q = q.lte("occurred_at", businessDateEndUTC(data.dateTo.slice(0, 10)));
       return q;
     });
     return rows as Array<{ id: string; brand_id: string | null; employee_name: string; orders_prepared: number; occurred_at: string; note: string | null; employee_id: string | null }>;
@@ -1055,8 +1056,8 @@ export const listCashTransactions = createServerFn({ method: "GET" })
       .select("id, type, amount, occurred_at, brand_id, courier_id, for_user_id, created_by, note, created_at, category_id, expense_entry_id, wallet_id, transfer_group")
       .order("occurred_at", { ascending: false })
       .order("created_at", { ascending: false });
-    if (data.from) q = q.gte("occurred_at", data.from);
-    if (data.to) q = q.lte("occurred_at", data.to);
+    if (data.from) q = q.gte("occurred_at", businessDateStartUTC(data.from.slice(0, 10)));
+    if (data.to) q = q.lte("occurred_at", businessDateEndUTC(data.to.slice(0, 10)));
     if (data.type) q = q.eq("type", data.type);
     if (data.brandId) q = q.eq("brand_id", data.brandId);
     if (data.courierId) q = q.eq("courier_id", data.courierId);

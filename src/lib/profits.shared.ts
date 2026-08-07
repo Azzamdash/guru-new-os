@@ -1,5 +1,6 @@
 import { getCogsMap } from "./cogs.server";
 import { fetchAllRows } from "./paginate";
+import { businessDateEndUTC, businessDateStartUTC } from "./timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseAny = any;
@@ -19,8 +20,8 @@ export async function computeBrandNetProfit(
     let q = supabase.from("sales_invoices")
       .select("id, type, total_amount, occurred_at")
       .eq("brand_id", brandId);
-    if (from) q = q.gte("occurred_at", from);
-    if (to) q = q.lte("occurred_at", to);
+    if (from) q = q.gte("occurred_at", businessDateStartUTC(from.slice(0, 10)));
+    if (to) q = q.lte("occurred_at", businessDateEndUTC(to.slice(0, 10)));
     return q;
   });
 

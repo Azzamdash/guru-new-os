@@ -1,5 +1,6 @@
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -276,8 +277,8 @@ export function OrdersListTab() {
       backfillFn({
         data: {
           brandId: brandId === "all" ? null : brandId,
-          fromISO: `${backfillFrom}T00:00:00.000Z`,
-          toISO: `${backfillTo}T23:59:59.999Z`,
+          fromISO: businessDateStartUTC(backfillFrom),
+          toISO: businessDateEndUTC(backfillTo),
           deleteOutside: false,
         },
       }),

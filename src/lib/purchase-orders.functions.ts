@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -43,8 +44,8 @@ export const listPurchaseOrders = createServerFn({ method: "POST" })
       .limit(500);
     if (data.status && data.status !== "all") q = q.eq("status", data.status);
     if (data.supplierId) q = q.eq("supplier_id", data.supplierId);
-    if (data.from) q = q.gte("created_at", data.from);
-    if (data.to) q = q.lte("created_at", `${data.to}T23:59:59`);
+    if (data.from) q = q.gte("created_at", businessDateStartUTC(data.from.slice(0, 10)));
+    if (data.to) q = q.lte("created_at", businessDateEndUTC(data.to.slice(0, 10)));
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 
