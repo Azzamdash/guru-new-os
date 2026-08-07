@@ -11,6 +11,8 @@ export type AccountingProfitRpcRow = {
   expenses: number;
   orders: number;
   return_orders: number;
+  /** Revenue for orders still in flight (not yet delivered/returned) — not included in net_revenue. */
+  projected_net_revenue: number;
   expense_categories: Array<{ name: string; amount: number }>;
 };
 
@@ -29,6 +31,8 @@ export type AccountingProfitRpcResult = {
     expenses: number;
     orders: number;
     returnOrders: number;
+    /** Revenue for orders still in flight (not yet delivered/returned) — not included in netRevenue. */
+    projectedNetRevenue: number;
   };
 };
 
