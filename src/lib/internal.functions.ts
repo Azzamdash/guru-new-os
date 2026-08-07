@@ -469,6 +469,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       _from: fromISO,
       _to: toISO,
       _brand_id: brandId || null,
+      _settled_only: false,
     });
     const supplierDebtQ = (context.supabase as any).rpc("dashboard_supplier_debt_summary", {
       _brand_id: brandId || null,
