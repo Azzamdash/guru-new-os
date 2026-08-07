@@ -124,7 +124,11 @@ export function CeoDashboard() {
   });
   const isQ = useQuery({
     queryKey: ["ceo-is", from, to],
-    queryFn: () => getIS({ data: { from, to } }),
+    // The dashboard's headline P&L is order-based (Shopify-style, like
+    // before) — not gated by delivery. Valuation/investor reporting is a
+    // separate codepath (profits.shared.ts, revenue.server.ts) and stays
+    // gated to what's actually delivered/collected.
+    queryFn: () => getIS({ data: { from, to, settledOnly: false } }),
     placeholderData: keepPreviousData,
     ...queryPresets.report,
   });
