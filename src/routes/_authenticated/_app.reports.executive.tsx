@@ -192,16 +192,9 @@ function Page() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Kpi
           icon={TrendingUp}
-          label={L(tr("الإيراد الصافي (تم التسليم)"), "Net Revenue (delivered)")}
+          label={L(tr("الإيراد الصافي"), "Net Revenue")}
           value={nf(d?.income.netRevenue ?? 0)}
           sub="EGP"
-        />
-        <Kpi
-          icon={TrendingUp}
-          label={L(tr("متوقع تحصيله (لسه في الطريق)"), "Projected (still in flight)")}
-          value={nf(d?.income.projectedNetRevenue ?? 0)}
-          sub="EGP"
-          tone="text-muted-foreground"
         />
         <Kpi
           icon={TrendingDown}
@@ -233,13 +226,13 @@ function Page() {
         />
         <Kpi
           icon={Scale}
-          label={L(tr("المتوقع COD"), "Expected COD")}
+          label={L(tr("متوقع تحصيله (شركات الشحن)"), "Expected to collect (couriers)")}
           value={nf(d?.reconciliation.expected ?? 0)}
           sub="EGP"
         />
         <Kpi
           icon={Scale}
-          label={L(tr("المودَع"), "Deposited")}
+          label={L(tr("ما تم تحصيله (شركات الشحن)"), "Collected (couriers)")}
           value={nf(d?.reconciliation.deposited ?? 0)}
           sub="EGP"
           tone="text-emerald-500"
