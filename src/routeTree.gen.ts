@@ -24,10 +24,13 @@ import { Route as AuthenticatedAppAssetsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppBranchStockRouteImport } from './routes/_authenticated/_app.branch-stock'
 import { Route as AuthenticatedAppBrandsRouteImport } from './routes/_authenticated/_app.brands'
 import { Route as AuthenticatedAppCategoriesRouteImport } from './routes/_authenticated/_app.categories'
+import { Route as AuthenticatedAppCourierLoadsRouteImport } from './routes/_authenticated/_app.courier-loads'
 import { Route as AuthenticatedAppCourierSettlementsRouteImport } from './routes/_authenticated/_app.courier-settlements'
 import { Route as AuthenticatedAppCouriersRouteImport } from './routes/_authenticated/_app.couriers'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app.dashboard'
 import { Route as AuthenticatedAppDataEntryRouteImport } from './routes/_authenticated/_app.data-entry'
+import { Route as AuthenticatedAppDistributionLogRouteImport } from './routes/_authenticated/_app.distribution-log'
+import { Route as AuthenticatedAppDistributionPerformanceRouteImport } from './routes/_authenticated/_app.distribution-performance'
 import { Route as AuthenticatedAppExpensesRouteImport } from './routes/_authenticated/_app.expenses'
 import { Route as AuthenticatedAppFulfillmentRouteImport } from './routes/_authenticated/_app.fulfillment'
 import { Route as AuthenticatedAppIntegrationLogsRouteImport } from './routes/_authenticated/_app.integration-logs'
@@ -44,6 +47,7 @@ import { Route as AuthenticatedAppOrderDistributionRouteImport } from './routes/
 import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
 import { Route as AuthenticatedAppOrderReturnsRouteImport } from './routes/_authenticated/_app.order-returns'
 import { Route as AuthenticatedAppOrdersCenterRouteImport } from './routes/_authenticated/_app.orders-center'
+import { Route as AuthenticatedAppOrdersListRouteImport } from './routes/_authenticated/_app.orders-list'
 import { Route as AuthenticatedAppOrdersRadarRouteImport } from './routes/_authenticated/_app.orders-radar'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/_app.pos'
 import { Route as AuthenticatedAppProductionRouteImport } from './routes/_authenticated/_app.production'
@@ -184,6 +188,12 @@ const AuthenticatedAppCategoriesRoute =
     path: '/categories',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppCourierLoadsRoute =
+  AuthenticatedAppCourierLoadsRouteImport.update({
+    id: '/courier-loads',
+    path: '/courier-loads',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppCourierSettlementsRoute =
   AuthenticatedAppCourierSettlementsRouteImport.update({
     id: '/courier-settlements',
@@ -206,6 +216,18 @@ const AuthenticatedAppDataEntryRoute =
   AuthenticatedAppDataEntryRouteImport.update({
     id: '/data-entry',
     path: '/data-entry',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDistributionLogRoute =
+  AuthenticatedAppDistributionLogRouteImport.update({
+    id: '/distribution-log',
+    path: '/distribution-log',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppDistributionPerformanceRoute =
+  AuthenticatedAppDistributionPerformanceRouteImport.update({
+    id: '/distribution-performance',
+    path: '/distribution-performance',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppExpensesRoute =
@@ -301,6 +323,12 @@ const AuthenticatedAppOrdersCenterRoute =
   AuthenticatedAppOrdersCenterRouteImport.update({
     id: '/orders-center',
     path: '/orders-center',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrdersListRoute =
+  AuthenticatedAppOrdersListRouteImport.update({
+    id: '/orders-list',
+    path: '/orders-list',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppOrdersRadarRoute =
@@ -680,10 +708,13 @@ export interface FileRoutesByFullPath {
   '/branch-stock': typeof AuthenticatedAppBranchStockRoute
   '/brands': typeof AuthenticatedAppBrandsRoute
   '/categories': typeof AuthenticatedAppCategoriesRoute
+  '/courier-loads': typeof AuthenticatedAppCourierLoadsRoute
   '/courier-settlements': typeof AuthenticatedAppCourierSettlementsRoute
   '/couriers': typeof AuthenticatedAppCouriersRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/data-entry': typeof AuthenticatedAppDataEntryRoute
+  '/distribution-log': typeof AuthenticatedAppDistributionLogRoute
+  '/distribution-performance': typeof AuthenticatedAppDistributionPerformanceRoute
   '/expenses': typeof AuthenticatedAppExpensesRoute
   '/fulfillment': typeof AuthenticatedAppFulfillmentRoute
   '/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
@@ -700,6 +731,7 @@ export interface FileRoutesByFullPath {
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
   '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
+  '/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
   '/production': typeof AuthenticatedAppProductionRoute
@@ -776,10 +808,13 @@ export interface FileRoutesByTo {
   '/branch-stock': typeof AuthenticatedAppBranchStockRoute
   '/brands': typeof AuthenticatedAppBrandsRoute
   '/categories': typeof AuthenticatedAppCategoriesRoute
+  '/courier-loads': typeof AuthenticatedAppCourierLoadsRoute
   '/courier-settlements': typeof AuthenticatedAppCourierSettlementsRoute
   '/couriers': typeof AuthenticatedAppCouriersRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/data-entry': typeof AuthenticatedAppDataEntryRoute
+  '/distribution-log': typeof AuthenticatedAppDistributionLogRoute
+  '/distribution-performance': typeof AuthenticatedAppDistributionPerformanceRoute
   '/expenses': typeof AuthenticatedAppExpensesRoute
   '/fulfillment': typeof AuthenticatedAppFulfillmentRoute
   '/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
@@ -796,6 +831,7 @@ export interface FileRoutesByTo {
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
   '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
+  '/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
   '/production': typeof AuthenticatedAppProductionRoute
@@ -873,10 +909,13 @@ export interface FileRoutesById {
   '/_authenticated/_app/branch-stock': typeof AuthenticatedAppBranchStockRoute
   '/_authenticated/_app/brands': typeof AuthenticatedAppBrandsRoute
   '/_authenticated/_app/categories': typeof AuthenticatedAppCategoriesRoute
+  '/_authenticated/_app/courier-loads': typeof AuthenticatedAppCourierLoadsRoute
   '/_authenticated/_app/courier-settlements': typeof AuthenticatedAppCourierSettlementsRoute
   '/_authenticated/_app/couriers': typeof AuthenticatedAppCouriersRoute
   '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/_app/data-entry': typeof AuthenticatedAppDataEntryRoute
+  '/_authenticated/_app/distribution-log': typeof AuthenticatedAppDistributionLogRoute
+  '/_authenticated/_app/distribution-performance': typeof AuthenticatedAppDistributionPerformanceRoute
   '/_authenticated/_app/expenses': typeof AuthenticatedAppExpensesRoute
   '/_authenticated/_app/fulfillment': typeof AuthenticatedAppFulfillmentRoute
   '/_authenticated/_app/integration-logs': typeof AuthenticatedAppIntegrationLogsRoute
@@ -893,6 +932,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/_authenticated/_app/order-returns': typeof AuthenticatedAppOrderReturnsRoute
   '/_authenticated/_app/orders-center': typeof AuthenticatedAppOrdersCenterRoute
+  '/_authenticated/_app/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/_authenticated/_app/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/_authenticated/_app/pos': typeof AuthenticatedAppPosRoute
   '/_authenticated/_app/production': typeof AuthenticatedAppProductionRoute
@@ -971,10 +1011,13 @@ export interface FileRouteTypes {
     | '/branch-stock'
     | '/brands'
     | '/categories'
+    | '/courier-loads'
     | '/courier-settlements'
     | '/couriers'
     | '/dashboard'
     | '/data-entry'
+    | '/distribution-log'
+    | '/distribution-performance'
     | '/expenses'
     | '/fulfillment'
     | '/integration-logs'
@@ -991,6 +1034,7 @@ export interface FileRouteTypes {
     | '/order-pipeline'
     | '/order-returns'
     | '/orders-center'
+    | '/orders-list'
     | '/orders-radar'
     | '/pos'
     | '/production'
@@ -1067,10 +1111,13 @@ export interface FileRouteTypes {
     | '/branch-stock'
     | '/brands'
     | '/categories'
+    | '/courier-loads'
     | '/courier-settlements'
     | '/couriers'
     | '/dashboard'
     | '/data-entry'
+    | '/distribution-log'
+    | '/distribution-performance'
     | '/expenses'
     | '/fulfillment'
     | '/integration-logs'
@@ -1087,6 +1134,7 @@ export interface FileRouteTypes {
     | '/order-pipeline'
     | '/order-returns'
     | '/orders-center'
+    | '/orders-list'
     | '/orders-radar'
     | '/pos'
     | '/production'
@@ -1163,10 +1211,13 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/branch-stock'
     | '/_authenticated/_app/brands'
     | '/_authenticated/_app/categories'
+    | '/_authenticated/_app/courier-loads'
     | '/_authenticated/_app/courier-settlements'
     | '/_authenticated/_app/couriers'
     | '/_authenticated/_app/dashboard'
     | '/_authenticated/_app/data-entry'
+    | '/_authenticated/_app/distribution-log'
+    | '/_authenticated/_app/distribution-performance'
     | '/_authenticated/_app/expenses'
     | '/_authenticated/_app/fulfillment'
     | '/_authenticated/_app/integration-logs'
@@ -1183,6 +1234,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/order-pipeline'
     | '/_authenticated/_app/order-returns'
     | '/_authenticated/_app/orders-center'
+    | '/_authenticated/_app/orders-list'
     | '/_authenticated/_app/orders-radar'
     | '/_authenticated/_app/pos'
     | '/_authenticated/_app/production'
@@ -1374,6 +1426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppCategoriesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/courier-loads': {
+      id: '/_authenticated/_app/courier-loads'
+      path: '/courier-loads'
+      fullPath: '/courier-loads'
+      preLoaderRoute: typeof AuthenticatedAppCourierLoadsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/courier-settlements': {
       id: '/_authenticated/_app/courier-settlements'
       path: '/courier-settlements'
@@ -1400,6 +1459,20 @@ declare module '@tanstack/react-router' {
       path: '/data-entry'
       fullPath: '/data-entry'
       preLoaderRoute: typeof AuthenticatedAppDataEntryRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/distribution-log': {
+      id: '/_authenticated/_app/distribution-log'
+      path: '/distribution-log'
+      fullPath: '/distribution-log'
+      preLoaderRoute: typeof AuthenticatedAppDistributionLogRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/distribution-performance': {
+      id: '/_authenticated/_app/distribution-performance'
+      path: '/distribution-performance'
+      fullPath: '/distribution-performance'
+      preLoaderRoute: typeof AuthenticatedAppDistributionPerformanceRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/expenses': {
@@ -1512,6 +1585,13 @@ declare module '@tanstack/react-router' {
       path: '/orders-center'
       fullPath: '/orders-center'
       preLoaderRoute: typeof AuthenticatedAppOrdersCenterRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/orders-list': {
+      id: '/_authenticated/_app/orders-list'
+      path: '/orders-list'
+      fullPath: '/orders-list'
+      preLoaderRoute: typeof AuthenticatedAppOrdersListRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/orders-radar': {
@@ -2020,10 +2100,13 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppBranchStockRoute: typeof AuthenticatedAppBranchStockRoute
   AuthenticatedAppBrandsRoute: typeof AuthenticatedAppBrandsRoute
   AuthenticatedAppCategoriesRoute: typeof AuthenticatedAppCategoriesRoute
+  AuthenticatedAppCourierLoadsRoute: typeof AuthenticatedAppCourierLoadsRoute
   AuthenticatedAppCourierSettlementsRoute: typeof AuthenticatedAppCourierSettlementsRoute
   AuthenticatedAppCouriersRoute: typeof AuthenticatedAppCouriersRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppDataEntryRoute: typeof AuthenticatedAppDataEntryRoute
+  AuthenticatedAppDistributionLogRoute: typeof AuthenticatedAppDistributionLogRoute
+  AuthenticatedAppDistributionPerformanceRoute: typeof AuthenticatedAppDistributionPerformanceRoute
   AuthenticatedAppExpensesRoute: typeof AuthenticatedAppExpensesRoute
   AuthenticatedAppFulfillmentRoute: typeof AuthenticatedAppFulfillmentRoute
   AuthenticatedAppIntegrationLogsRoute: typeof AuthenticatedAppIntegrationLogsRoute
@@ -2040,6 +2123,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
   AuthenticatedAppOrderReturnsRoute: typeof AuthenticatedAppOrderReturnsRoute
   AuthenticatedAppOrdersCenterRoute: typeof AuthenticatedAppOrdersCenterRoute
+  AuthenticatedAppOrdersListRoute: typeof AuthenticatedAppOrdersListRoute
   AuthenticatedAppOrdersRadarRoute: typeof AuthenticatedAppOrdersRadarRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
   AuthenticatedAppProductionRoute: typeof AuthenticatedAppProductionRoute
@@ -2092,11 +2176,15 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppBranchStockRoute: AuthenticatedAppBranchStockRoute,
   AuthenticatedAppBrandsRoute: AuthenticatedAppBrandsRoute,
   AuthenticatedAppCategoriesRoute: AuthenticatedAppCategoriesRoute,
+  AuthenticatedAppCourierLoadsRoute: AuthenticatedAppCourierLoadsRoute,
   AuthenticatedAppCourierSettlementsRoute:
     AuthenticatedAppCourierSettlementsRoute,
   AuthenticatedAppCouriersRoute: AuthenticatedAppCouriersRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppDataEntryRoute: AuthenticatedAppDataEntryRoute,
+  AuthenticatedAppDistributionLogRoute: AuthenticatedAppDistributionLogRoute,
+  AuthenticatedAppDistributionPerformanceRoute:
+    AuthenticatedAppDistributionPerformanceRoute,
   AuthenticatedAppExpensesRoute: AuthenticatedAppExpensesRoute,
   AuthenticatedAppFulfillmentRoute: AuthenticatedAppFulfillmentRoute,
   AuthenticatedAppIntegrationLogsRoute: AuthenticatedAppIntegrationLogsRoute,
@@ -2115,6 +2203,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,
   AuthenticatedAppOrderReturnsRoute: AuthenticatedAppOrderReturnsRoute,
   AuthenticatedAppOrdersCenterRoute: AuthenticatedAppOrdersCenterRoute,
+  AuthenticatedAppOrdersListRoute: AuthenticatedAppOrdersListRoute,
   AuthenticatedAppOrdersRadarRoute: AuthenticatedAppOrdersRadarRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
   AuthenticatedAppProductionRoute: AuthenticatedAppProductionRoute,
