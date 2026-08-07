@@ -13,6 +13,7 @@ import {
 import { assertPageWrite } from "./page-permissions.server";
 import { ORDERS_PAGE } from "./page-permission-paths";
 import { normalizePageRequest } from "./scalable-pagination.shared";
+import { businessDateStartUTC, businessDateEndUTC } from "./timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -81,8 +82,10 @@ export const listOrders = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }): Promise<OrderPageResult> => {
     const normalized = normalizePageRequest({ pageSize: data.pageSize, search: data.search });
-    const from = data.from ?? new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
-    const to = data.to ? `${data.to.slice(0, 10)}T23:59:59.999Z` : new Date().toISOString();
+    const from = data.from
+      ? businessDateStartUTC(data.from.slice(0, 10))
+      : new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
+    const to = data.to ? businessDateEndUTC(data.to.slice(0, 10)) : new Date().toISOString();
     const { data: result, error } = await (context.supabase as any).rpc("orders_page", {
       _from: from,
       _to: to,
@@ -122,8 +125,10 @@ export const getOrdersFilterSummary = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }) => {
     const normalized = normalizePageRequest({ search: data.search });
-    const from = data.from ?? new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
-    const to = data.to ? `${data.to.slice(0, 10)}T23:59:59.999Z` : new Date().toISOString();
+    const from = data.from
+      ? businessDateStartUTC(data.from.slice(0, 10))
+      : new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
+    const to = data.to ? businessDateEndUTC(data.to.slice(0, 10)) : new Date().toISOString();
     const { data: result, error } = await (context.supabase as any).rpc("orders_filter_summary", {
       _from: from,
       _to: to,
@@ -144,8 +149,10 @@ export const getOrdersSummary = createServerFn({ method: "GET" })
     ) => d,
   )
   .handler(async ({ data, context }) => {
-    const from = data.from ?? new Date(Date.now() - (data.days ?? 30) * 86400000).toISOString();
-    const to = data.to ? `${data.to.slice(0, 10)}T23:59:59.999Z` : new Date().toISOString();
+    const from = data.from
+      ? businessDateStartUTC(data.from.slice(0, 10))
+      : new Date(Date.now() - (data.days ?? 30) * 86400000).toISOString();
+    const to = data.to ? businessDateEndUTC(data.to.slice(0, 10)) : new Date().toISOString();
     const { data: result, error } = await (context.supabase as any).rpc("orders_summary", {
       _from: from,
       _to: to,
@@ -187,8 +194,8 @@ export const getInvoiceCogsSummary = createServerFn({ method: "GET" })
     let invQ = context.supabase
       .from("sales_invoices")
       .select("id, brand_id, type, total_amount, brands(name)");
-    if (data.from) invQ = invQ.gte("occurred_at", data.from);
-    if (data.to) invQ = invQ.lte("occurred_at", `${data.to.slice(0, 10)}T23:59:59`);
+    if (data.from) invQ = invQ.gte("occurred_at", businessDateStartUTC(data.from.slice(0, 10)));
+    if (data.to) invQ = invQ.lte("occurred_at", businessDateEndUTC(data.to.slice(0, 10)));
     if (!data.from && !data.to) {
       const days = data.days ?? 30;
       const since = new Date(Date.now() - days * 86400000).toISOString();

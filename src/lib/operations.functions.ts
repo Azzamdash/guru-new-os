@@ -1,5 +1,6 @@
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getCogsMap } from "./cogs.server";
@@ -264,8 +265,8 @@ export const getPrepStaffPerformance = createServerFn({ method: "GET" })
         .select("id, prep_assignee_id, stage, stage_updated_at, occurred_at, brand_id, total_amount")
         .eq("type", "sale")
         .not("prep_assignee_id", "is", null)
-        .gte("occurred_at", dateFrom)
-        .lte("occurred_at", dateTo);
+        .gte("occurred_at", businessDateStartUTC(dateFrom.slice(0, 10)))
+        .lte("occurred_at", businessDateEndUTC(dateTo.slice(0, 10)));
       if (data.brandId) q = q.eq("brand_id", data.brandId);
       return q;
     });

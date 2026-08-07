@@ -3,7 +3,7 @@
 // pagination silently under-counts revenue (and therefore valuation).
 // This helper pages through every matching invoice.
 
-import { formatBusinessDate } from "@/lib/timezone";
+import { businessDateStartUTC, formatBusinessDate } from "@/lib/timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
@@ -22,7 +22,7 @@ export async function revenueByBrandSince(
     let q = supabase
       .from("sales_invoices")
       .select("id,brand_id,total_amount,type")
-      .gte("occurred_at", sinceDate)
+      .gte("occurred_at", businessDateStartUTC(sinceDate.slice(0, 10)))
       .order("id", { ascending: true })
       .range(offset, offset + PAGE - 1);
     if (brandId) q = q.eq("brand_id", brandId);
