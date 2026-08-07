@@ -341,6 +341,19 @@ export function CeoDashboard() {
             value={nfPct(is?.netMargin ?? 0)}
             tone={(is?.netMargin ?? 0) >= 0.05 ? "positive" : "warning"}
           />
+          <KpiTile
+            label={T("الخصومات", "Discounts")}
+            value={egp(is?.discounts ?? 0)}
+            hint={egpFull(is?.discounts ?? 0)}
+            tone="warning"
+            icon={<Wallet className="w-4 h-4" />}
+          />
+          <KpiTile
+            label={T("متوقع تحصيله", "Expected to collect")}
+            value={egp(is?.projectedNetRevenue ?? 0)}
+            hint={T("أوردرات لسه ما اتسلمتش", "Orders not yet delivered")}
+            icon={<Banknote className="w-4 h-4" />}
+          />
         </div>
         <div className="mt-3 max-w-sm">
           <KpiTile
