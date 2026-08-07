@@ -31,25 +31,39 @@ type OrderKind = "sale" | "return" | "exchange";
 type ItemRow = { product_id: string; title: string; qty: number; unit_price: number };
 type Product = { id: string; brand_id: string; name: string; sell_price: number | null };
 
+/** Prefill for creating a return/exchange order linked to an existing one — see order-view. */
+export type RelatedOrderPrefill = {
+  id: string;
+  brand_id: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  shipping_governorate?: string | null;
+  shipping_address?: string | null;
+  building_number?: string | null;
+  floor_number?: string | null;
+  apartment_number?: string | null;
+};
+
 const emptyItem = (): ItemRow => ({ product_id: "", title: "", qty: 1, unit_price: 0 });
-const emptyForm = () => ({
+const emptyForm = (seed?: { presetKind?: OrderKind; relatedOrder?: RelatedOrderPrefill }) => ({
   id: undefined as string | undefined,
-  brand_id: "",
-  order_kind: "sale" as OrderKind,
+  brand_id: seed?.relatedOrder?.brand_id ?? "",
+  order_kind: seed?.presetKind ?? ("sale" as OrderKind),
+  related_order_id: seed?.relatedOrder?.id as string | undefined,
   external_order_number: "",
-  customer_name: "",
-  customer_phone: "",
-  shipping_governorate: "",
+  customer_name: seed?.relatedOrder?.customer_name ?? "",
+  customer_phone: seed?.relatedOrder?.customer_phone ?? "",
+  shipping_governorate: seed?.relatedOrder?.shipping_governorate ?? "",
   shipping_area: "",
-  shipping_address: "",
-  building_number: "",
-  floor_number: "",
-  apartment_number: "",
+  shipping_address: seed?.relatedOrder?.shipping_address ?? "",
+  building_number: seed?.relatedOrder?.building_number ?? "",
+  floor_number: seed?.relatedOrder?.floor_number ?? "",
+  apartment_number: seed?.relatedOrder?.apartment_number ?? "",
   courier_id: "",
   occurred_at: getTodayInBusinessTimezone(),
   fulfillment_status: "unfulfilled",
   financial_status: "pending",
-  confirmation_status: "pending",
+  confirmation_status: seed?.presetKind ? "confirmed" : "pending",
   shipping_amount: 0,
   discount_amount: 0,
   note: "",
@@ -187,17 +201,23 @@ function ItemRowsEditor({
   );
 }
 
-/** Create/edit an order — same dialog used across Order Distribution and My Orders. */
+/** Create/edit an order — same dialog used across Order Distribution and My Orders,
+ *  and (with presetKind + relatedOrder) for creating a return/exchange linked
+ *  to an existing order from order-view. */
 export function OrderEditDialog({
   open,
   orderId,
   onOpenChange,
   onSaved,
+  presetKind,
+  relatedOrder,
 }: {
   open: boolean;
   orderId: string | null;
   onOpenChange: (v: boolean) => void;
-  onSaved?: () => void;
+  onSaved?: (id: string) => void;
+  presetKind?: OrderKind;
+  relatedOrder?: RelatedOrderPrefill;
 }) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
@@ -207,13 +227,13 @@ export function OrderEditDialog({
   const listProductsFn = useServerFn(listProducts);
   const listCouriersFn = useServerFn(listCouriers);
 
-  const [form, setForm] = useState(emptyForm());
+  const [form, setForm] = useState(emptyForm({ presetKind, relatedOrder }));
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     if (!orderId) {
-      setForm(emptyForm());
+      setForm(emptyForm({ presetKind, relatedOrder }));
       return;
     }
     let cancelled = false;
@@ -228,6 +248,7 @@ export function OrderEditDialog({
           id: o.id,
           brand_id: o.brand_id,
           order_kind: kind,
+          related_order_id: undefined,
           external_order_number: o.external_order_number ?? "",
           customer_name: o.customer_name ?? "",
           customer_phone: o.customer_phone ?? "",
@@ -321,6 +342,7 @@ export function OrderEditDialog({
           id: form.id,
           brand_id: form.brand_id,
           order_kind: form.order_kind,
+          related_order_id: form.related_order_id,
           external_order_number: form.external_order_number || null,
           customer_name: form.customer_name || null,
           customer_phone: form.customer_phone || null,
@@ -342,7 +364,7 @@ export function OrderEditDialog({
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (r) => {
       toast.success(t("order_saved"));
       onOpenChange(false);
       setForm(emptyForm());
@@ -350,7 +372,7 @@ export function OrderEditDialog({
       qc.invalidateQueries({ queryKey: ["orders-summary"] });
       qc.invalidateQueries({ queryKey: ["sales"] });
       qc.invalidateQueries({ queryKey: ["ops-snapshot"] });
-      onSaved?.();
+      onSaved?.(r.id);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -372,7 +394,19 @@ export function OrderEditDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {form.id ? (lang === "ar" ? "تعديل أوردر" : "Edit order") : t("order_new_title")}
+            {form.id
+              ? lang === "ar"
+                ? "تعديل أوردر"
+                : "Edit order"
+              : presetKind === "return"
+                ? lang === "ar"
+                  ? "إنشاء أوردر مرتجع"
+                  : "Create return order"
+                : presetKind === "exchange"
+                  ? lang === "ar"
+                    ? "إنشاء أوردر تبديل"
+                    : "Create exchange order"
+                  : t("order_new_title")}
           </DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">{t("order_new_hint")}</p>
@@ -382,6 +416,7 @@ export function OrderEditDialog({
             <Select
               value={form.order_kind}
               onValueChange={(v) => setForm({ ...form, order_kind: v as OrderKind })}
+              disabled={!!presetKind}
             >
               <SelectTrigger>
                 <SelectValue />

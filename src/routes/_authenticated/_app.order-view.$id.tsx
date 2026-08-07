@@ -5,8 +5,6 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -14,19 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { ArrowRight, Package, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Package } from "lucide-react";
 import { toast } from "sonner";
 import { getOrderFull, listWhatsappTemplates, sendOrderTemplate } from "@/lib/orders-ops.functions";
-import { confirmReturnReceived, createReturnOrExchangeOrder } from "@/lib/orders.functions";
-import { listProducts } from "@/lib/internal.functions";
+import { confirmReturnReceived } from "@/lib/orders.functions";
 import { useLang } from "@/lib/i18n";
+import { OrderEditDialog } from "@/components/orders/OrderEditDialog";
 
 export const Route = createFileRoute("/_authenticated/_app/order-view/$id")({
   head: () => ({
@@ -70,6 +61,7 @@ function OrderViewPage() {
   const { T, money } = useT();
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const fullFn = useServerFn(getOrderFull);
   const templatesFn = useServerFn(listWhatsappTemplates);
   const sendFn = useServerFn(sendOrderTemplate);
@@ -348,169 +340,33 @@ function OrderViewPage() {
         </Section>
       </div>
 
-      <ReturnExchangeDialog
-        kind={reDialogKind}
-        relatedOrderId={id}
-        onClose={() => setReDialogKind(null)}
+      <OrderEditDialog
+        open={!!reDialogKind}
+        orderId={null}
+        presetKind={reDialogKind ?? undefined}
+        relatedOrder={
+          reDialogKind
+            ? {
+                id,
+                brand_id: String(o["brand_id"] ?? ""),
+                customer_name: (o["customer_name"] as string | null) ?? null,
+                customer_phone: (o["customer_phone"] as string | null) ?? null,
+                shipping_governorate: (o["shipping_governorate"] as string | null) ?? null,
+                shipping_address: (o["shipping_address"] as string | null) ?? null,
+                building_number: (o["building_number"] as string | null) ?? null,
+                floor_number: (o["floor_number"] as string | null) ?? null,
+                apartment_number: (o["apartment_number"] as string | null) ?? null,
+              }
+            : undefined
+        }
+        onOpenChange={(v) => {
+          if (!v) setReDialogKind(null);
+        }}
+        onSaved={(newId) => {
+          setReDialogKind(null);
+          navigate({ to: "/order-view/$id", params: { id: newId } });
+        }}
       />
     </div>
-  );
-}
-
-function ReturnExchangeDialog({
-  kind,
-  relatedOrderId,
-  onClose,
-}: {
-  kind: "return" | "exchange" | null;
-  relatedOrderId: string;
-  onClose: () => void;
-}) {
-  const { T } = useT();
-  const navigate = useNavigate();
-  const productsFn = useServerFn(listProducts);
-  const createFn = useServerFn(createReturnOrExchangeOrder);
-  const productsQ = useQuery({ queryKey: ["products"], queryFn: () => productsFn() });
-
-  const [rows, setRows] = useState<Array<{ productId: string; qty: number; unitPrice: number }>>([
-    { productId: "", qty: 1, unitPrice: 0 },
-  ]);
-  const [note, setNote] = useState("");
-
-  const reset = () => {
-    setRows([{ productId: "", qty: 1, unitPrice: 0 }]);
-    setNote("");
-  };
-
-  const createM = useMutation({
-    mutationFn: () =>
-      createFn({
-        data: {
-          relatedOrderId,
-          kind: kind!,
-          items: rows.filter((r) => r.productId && r.qty > 0),
-          note: note.trim() || null,
-        },
-      }),
-    onSuccess: (r) => {
-      toast.success(T("تم إنشاء الأوردر", "Order created"));
-      reset();
-      onClose();
-      navigate({ to: "/order-view/$id", params: { id: r.id } });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const products = productsQ.data ?? [];
-  const canSubmit = rows.some((r) => r.productId && r.qty > 0);
-
-  return (
-    <Dialog
-      open={!!kind}
-      onOpenChange={(o) => {
-        if (!o) {
-          reset();
-          onClose();
-        }
-      }}
-    >
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {kind === "return"
-              ? T("إنشاء أوردر مرتجع", "Create return order")
-              : T("إنشاء أوردر تبديل", "Create exchange order")}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
-          {rows.map((row, i) => (
-            <div key={i} className="grid grid-cols-[1fr_90px_110px_auto] gap-2 items-end">
-              <div>
-                <Label className="text-xs">{T("الصنف", "Item")}</Label>
-                <Select
-                  value={row.productId}
-                  onValueChange={(v) => {
-                    const p = products.find((x) => x.id === v);
-                    setRows((prev) =>
-                      prev.map((r, idx) =>
-                        idx === i
-                          ? { ...r, productId: v, unitPrice: p?.sell_price ?? r.unitPrice }
-                          : r,
-                      ),
-                    );
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={T("اختر منتج", "Select product")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">{T("الكمية", "Qty")}</Label>
-                <Input
-                  type="number"
-                  value={row.qty}
-                  onChange={(e) =>
-                    setRows((prev) =>
-                      prev.map((r, idx) =>
-                        idx === i ? { ...r, qty: parseFloat(e.target.value) || 0 } : r,
-                      ),
-                    )
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-xs">{T("السعر", "Price")}</Label>
-                <Input
-                  type="number"
-                  value={row.unitPrice}
-                  onChange={(e) =>
-                    setRows((prev) =>
-                      prev.map((r, idx) =>
-                        idx === i ? { ...r, unitPrice: parseFloat(e.target.value) || 0 } : r,
-                      ),
-                    )
-                  }
-                />
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                disabled={rows.length === 1}
-                onClick={() => setRows((prev) => prev.filter((_, idx) => idx !== i))}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setRows((prev) => [...prev, { productId: "", qty: 1, unitPrice: 0 }])}
-          >
-            <Plus className="h-4 w-4 me-1" /> {T("إضافة بند", "Add item")}
-          </Button>
-          <div>
-            <Label className="text-xs">{T("ملاحظة", "Note")}</Label>
-            <Input value={note} onChange={(e) => setNote(e.target.value)} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            {T("إلغاء", "Cancel")}
-          </Button>
-          <Button disabled={!canSubmit || createM.isPending} onClick={() => createM.mutate()}>
-            {T("إنشاء", "Create")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
