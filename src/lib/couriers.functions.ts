@@ -494,10 +494,28 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
               orderKind !== "sale" || order.collection_status === "paid"
                 ? 0
                 : Number(order.total_amount) || 0;
+            const isReturnOrExchange = orderKind === "return" || orderKind === "exchange";
             const payload = {
               type: BOSTA_DELIVERY_TYPE_BY_KIND[orderKind as keyof typeof BOSTA_DELIVERY_TYPE_BY_KIND] ?? 10,
               businessReference: order.id,
               specs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
+              // Bosta's Customer Return Pickup / Exchange types also take
+              // returnSpecs/returnNotes describing the item coming back from
+              // the customer. returnAddress/pickupAddress (where the courier
+              // should drop off what they picked up) are deliberately left
+              // out — there's no warehouse/return address configured
+              // anywhere in this app yet, and guessing one risks sending a
+              // courier to the wrong place. Bosta falls back to the
+              // business's registered pickup location when these are
+              // omitted.
+              ...(isReturnOrExchange
+                ? {
+                    returnSpecs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
+                    returnNotes:
+                      order.note ||
+                      (orderKind === "return" ? `Return for order ${orderNo}` : `Exchange for order ${orderNo}`),
+                  }
+                : {}),
               cod: codAmount,
               dropOffAddress: {
                 city: order.shipping_governorate ?? "Cairo",
