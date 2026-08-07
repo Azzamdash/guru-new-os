@@ -84,8 +84,9 @@ import {
 const ORDER_STATUS_LABELS_EN: Record<OrderWorkflowStatus, string> = {
   new: "New",
   processing: "Processing",
+  shipped: "Out for delivery",
   postponed: "Postponed",
-  awaiting_response: "Awaiting your response",
+  awaiting_response: "Needs attention",
   succeeded: "Succeeded",
   cancelled: "Cancelled",
 };
@@ -98,16 +99,18 @@ const COLLECTION_STATUS_LABELS_EN: Record<CollectionStatus, string> = {
 const SHIPMENT_OUTCOME_LABELS_AR: Record<ShipmentOutcome, string> = {
   open: "قيد التنفيذ",
   delivered: "تم التوصيل",
+  return_in_transit: "في الطريق إليك",
   customer_returned: "إرجاع بعد الاستلام",
-  returned: "فشل التوصيل والرجوع",
+  returned: "تم الإرجاع",
   exchanged: "تم الاستبدال",
   cancelled_before_dispatch: "إلغاء قبل الشحن",
 };
 const SHIPMENT_OUTCOME_LABELS_EN: Record<ShipmentOutcome, string> = {
   open: "In progress",
   delivered: "Delivered",
+  return_in_transit: "Returning to us",
   customer_returned: "Returned after delivery",
-  returned: "Failed delivery / returned",
+  returned: "Return received",
   exchanged: "Exchanged",
   cancelled_before_dispatch: "Cancelled before dispatch",
 };

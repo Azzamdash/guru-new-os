@@ -454,8 +454,7 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
           ? "cancelled_before_dispatch"
           : "open");
     const shopifyAction = shopifyActionForOrderStatus(data.orderStatus, outcome);
-    const shouldSyncShopify =
-      order.source === "shopify" && (shopifyAction === "fulfill" || shopifyAction === "cancel");
+    const shouldSyncShopify = order.source === "shopify" && shopifyAction !== "none";
     if (shouldSyncShopify && !order.external_id) throw new Error("Shopify order id is missing");
 
     const fulfillmentStatus =
@@ -487,13 +486,8 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
       erp_shipment_outcome: outcome,
       erp_lifecycle_updated_at: new Date().toISOString(),
     };
-    const shopifySyncStatus = shouldSyncShopify
-      ? "pending"
-      : shopifyAction === "review_return"
-        ? "pending"
-        : "not_applicable";
-    const shopifySyncError =
-      shopifyAction === "review_return" ? "Returned order requires return/refund review" : null;
+    const shopifySyncStatus = shouldSyncShopify ? "pending" : "not_applicable";
+    const shopifySyncError: string | null = null;
     const updated = await context.supabase.rpc("update_order_lifecycle_manually", {
       _order_id: data.id,
       _order_status: data.orderStatus,
@@ -539,8 +533,58 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
     return {
       ok: true,
       shopifyAction,
-      needsReturnReview: shopifyAction === "review_return",
     };
+  });
+
+/**
+ * Confirms a returned parcel was physically received back into the
+ * warehouse — the only thing that finalizes a return. Bosta reporting
+ * "returned"/"returning" only ever moves an order to the intermediate
+ * "return_in_transit" outcome; this is the manual step that closes it out
+ * and (for Shopify orders) fires the "cancel" action once, now that the
+ * return is confirmed rather than merely in progress.
+ */
+export const confirmReturnReceived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertPageWrite(context, ORDERS_PAGE);
+    const { data: order, error: orderError } = await context.supabase
+      .from("orders")
+      .select("id, brand_id, source, external_id")
+      .eq("id", data.id)
+      .single();
+    if (orderError) throw orderError;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (context.supabase as any).rpc("confirm_return_received", {
+      _order_id: data.id,
+    });
+    if (error) throw error;
+
+    if (order.source === "shopify" && order.external_id) {
+      try {
+        const { applyShopifyOrderAction } = await import("@/server/shopifySync.server");
+        await applyShopifyOrderAction({
+          brandId: order.brand_id,
+          externalOrderId: order.external_id,
+          action: "cancel",
+        });
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "synced", shopify_sync_error: null })
+          .eq("id", data.id);
+      } catch (shopifyError) {
+        const message = shopifyError instanceof Error ? shopifyError.message : String(shopifyError);
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "error", shopify_sync_error: message.slice(0, 500) })
+          .eq("id", data.id);
+        throw shopifyError;
+      }
+    }
+
+    return { ok: true };
   });
 
 export const deleteOrder = createServerFn({ method: "POST" })
