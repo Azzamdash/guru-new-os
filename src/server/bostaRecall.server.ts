@@ -163,7 +163,7 @@ export async function recallAllOpenBostaShipments(limit = 100) {
         if (syncStatusUpdate.error) throw syncStatusUpdate.error;
       }
 
-      await logIntegrationEvent(supabaseAdmin, {
+      await logIntegrationEvent({
         provider: "bosta", brand_id: order.brand_id, direction: "incoming",
         operation: "pull_status_cron", status: changed ? "success" : "info", http_status: httpStatus,
         order_id: order.id, order_number: order.external_order_number,
@@ -174,7 +174,7 @@ export async function recallAllOpenBostaShipments(limit = 100) {
 
     } catch (e) {
       failed += 1;
-      await logIntegrationEvent(supabaseAdmin, {
+      await logIntegrationEvent({
         provider: "bosta", brand_id: order.brand_id, direction: "incoming",
         operation: "pull_status_cron", status: "error",
         order_id: order.id, order_number: order.external_order_number,
