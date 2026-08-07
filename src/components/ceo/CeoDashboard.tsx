@@ -41,6 +41,7 @@ import { getValuationReport, getAssetsSummary } from "@/lib/assets.functions";
 import { getCashSummary } from "@/lib/internal.functions";
 import { getReceivablesAging } from "@/lib/receivables.functions";
 import { getCustomersSummary } from "@/lib/customers.functions";
+import { getCollectedFromCouriers } from "@/lib/reconciliation.functions";
 import { calculateHealthScore } from "@/lib/health-score.shared";
 
 import { SectionCard } from "./SectionCard";
@@ -101,6 +102,7 @@ export function CeoDashboard() {
   const getCash = useServerFn(getCashSummary);
   const getAging = useServerFn(getReceivablesAging);
   const getCust = useServerFn(getCustomersSummary);
+  const getCollected = useServerFn(getCollectedFromCouriers);
 
   const periodKey = [resolved.periodType ?? "year", resolved.dateFrom, resolved.dateTo, year].join(
     "|",
@@ -164,6 +166,13 @@ export function CeoDashboard() {
     enabled: tier1Settled,
     ...queryPresets.reference,
   });
+  const collectedQ = useQuery({
+    queryKey: ["ceo-collected", from, to],
+    queryFn: () => getCollected({ data: { from, to } }),
+    enabled: tier1Settled,
+    placeholderData: keepPreviousData,
+    ...queryPresets.report,
+  });
 
   const dash = dashQ.data;
   const is = isQ.data;
@@ -172,6 +181,7 @@ export function CeoDashboard() {
   const cash = cashQ.data;
   const aging = agingQ.data;
   const cust = custQ.data;
+  const collected = collectedQ.data;
 
   // Growth series from internal monthly (12 months of current year)
   const monthly = dash?.monthly ?? [];
@@ -254,6 +264,7 @@ export function CeoDashboard() {
     { label: T("الخزنة", "Cash/Treasury"), q: cashQ },
     { label: T("أعمار الديون", "Receivables aging"), q: agingQ },
     { label: T("العملاء", "Customers"), q: custQ },
+    { label: T("التحصيل من الشحن", "Courier collections"), q: collectedQ },
   ].filter((x) => x.q.isError);
 
   return (
@@ -353,6 +364,13 @@ export function CeoDashboard() {
             value={egp(is?.projectedNetRevenue ?? 0)}
             hint={T("أوردرات لسه ما اتسلمتش", "Orders not yet delivered")}
             icon={<Banknote className="w-4 h-4" />}
+          />
+          <KpiTile
+            label={T("إيراد التحصيل", "Collection revenue")}
+            value={egp(collected?.total ?? 0)}
+            hint={T("اللي اتحصّل فعليًا من شركات الشحن", "Actually collected from couriers")}
+            tone="positive"
+            icon={<Wallet className="w-4 h-4" />}
           />
         </div>
         <div className="mt-3 max-w-sm">

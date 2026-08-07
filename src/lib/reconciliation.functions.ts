@@ -107,3 +107,24 @@ export const getCourierReconciliation = createServerFn({ method: "POST" })
       },
     };
   });
+
+// Cash actually collected from couriers/shipping companies during the
+// period — distinct from netRevenue (which recognizes revenue as orders
+// settle, not as cash arrives). This is the real cash-basis figure: money
+// that has physically landed from a courier's collection/settlement.
+export const getCollectedFromCouriers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: ReconInput) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { from, to, brandId } = data;
+    const rows = await fetchAllRows<{ amount: number }>(() => {
+      let q = supabase.from("cash_transactions")
+        .select("amount")
+        .eq("type", "collection")
+        .gte("occurred_at", from).lte("occurred_at", to);
+      if (brandId) q = q.eq("brand_id", brandId);
+      return q;
+    });
+    return { from, to, total: rows.reduce((s, r) => s + (Number(r.amount) || 0), 0) };
+  });
