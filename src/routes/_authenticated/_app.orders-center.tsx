@@ -306,8 +306,9 @@ function AttentionPanel({
 const ORDER_STATUS_LABELS_EN: Record<OrderWorkflowStatus, string> = {
   new: "New",
   processing: "Processing",
+  shipped: "Out for delivery",
   postponed: "Postponed",
-  awaiting_response: "Awaiting your response",
+  awaiting_response: "Needs attention",
   succeeded: "Succeeded",
   cancelled: "Cancelled",
 };
@@ -400,6 +401,7 @@ function MyOrdersPanel() {
               [
                 "new",
                 "processing",
+                "shipped",
                 "postponed",
                 "awaiting_response",
                 "succeeded",

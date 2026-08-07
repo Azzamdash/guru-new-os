@@ -202,22 +202,41 @@ function PurchasesPage() {
           </p>
         </div>
         {canWrite && (
-          <Button
-            onClick={() => {
-              setEditing({
-                supplier_id: suppliers[0]?.id ?? "",
-                brand_id: null,
-                issued_at: getTodayInBusinessTimezone(),
-                due_at: null,
-                status: "open",
-                note: "",
-                type: "purchase",
-              });
-              setOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 me-2" /> {T("فاتورة جديدة", "New invoice")}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                setEditing({
+                  supplier_id: suppliers[0]?.id ?? "",
+                  brand_id: null,
+                  issued_at: getTodayInBusinessTimezone(),
+                  due_at: null,
+                  status: "open",
+                  note: "",
+                  type: "purchase",
+                });
+                setOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 me-2" /> {T("فاتورة جديدة", "New invoice")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditing({
+                  supplier_id: suppliers[0]?.id ?? "",
+                  brand_id: null,
+                  issued_at: getTodayInBusinessTimezone(),
+                  due_at: null,
+                  status: "open",
+                  note: "",
+                  type: "return",
+                });
+                setOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 me-2" /> {T("فاتورة مرتجع", "Return invoice")}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -329,6 +348,7 @@ function PurchasesPage() {
             <thead>
               <tr className="border-b border-border text-right text-muted-foreground">
                 <th className="p-3">{T("التاريخ", "Date")}</th>
+                <th className="p-3">{T("النوع", "Type")}</th>
                 <th className="p-3">{T("المورد", "Supplier")}</th>
                 <th className="p-3">{T("البراند", "Brand")}</th>
                 <th className="p-3">{T("النوع", "Type")}</th>
@@ -343,6 +363,13 @@ function PurchasesPage() {
                 <tr key={r.id} className="border-b border-border/50 hover:bg-muted/30">
                   <td className="p-3 num" dir="ltr">
                     {r.issued_at}
+                  </td>
+                  <td className="p-3">
+                    {r.type === "return" ? (
+                      <Badge variant="destructive">{T("مرتجع", "Return")}</Badge>
+                    ) : (
+                      <Badge variant="secondary">{T("شراء", "Purchase")}</Badge>
+                    )}
                   </td>
                   <td className="p-3 font-medium">{supplierName(r.supplier_id)}</td>
                   <td className="p-3 text-muted-foreground">{brandName(r.brand_id)}</td>
@@ -387,7 +414,7 @@ function PurchasesPage() {
                               due_at: r.due_at,
                               status: r.status,
                               note: r.note,
-                              type: r.type,
+                              type: r.type ?? "purchase",
                             });
                             setOpen(true);
                           }}
@@ -418,11 +445,32 @@ function PurchasesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editing?.id ? T("تعديل فاتورة", "Edit invoice") : T("فاتورة جديدة", "New invoice")}
+              {editing?.id
+                ? T("تعديل فاتورة", "Edit invoice")
+                : editing?.type === "return"
+                  ? T("فاتورة مرتجع مورد", "Supplier return invoice")
+                  : T("فاتورة جديدة", "New invoice")}
             </DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-3">
+              <div>
+                <Label>{T("نوع الفاتورة", "Invoice type")}</Label>
+                <Select
+                  value={editing.type}
+                  onValueChange={(v) =>
+                    setEditing({ ...editing, type: v as "purchase" | "return" })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="purchase">{T("شراء", "Purchase")}</SelectItem>
+                    <SelectItem value="return">{T("مرتجع مورد", "Supplier return")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label>{T("المورد", "Supplier")}</Label>
                 <Select

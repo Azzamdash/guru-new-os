@@ -9,6 +9,7 @@ import {
   isRecognizedBostaDeliveryStatus,
   isTerminalShipmentOutcome,
   mapBostaLifecycle,
+  preserveDeliveredStatusOnReturn,
   resolveBostaShipmentOutcome,
   shopifyActionForOrderStatus,
 } from "./order-lifecycle.shared";
@@ -369,7 +370,7 @@ export const testBosta = createServerFn({ method: "POST" })
     try {
       const { creds } = await loadCreds(context, data.brand_id, "bosta");
       const url = "https://app.bosta.co/api/v1/cities";
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -388,7 +389,7 @@ export const testBosta = createServerFn({ method: "POST" })
       });
       const body = await res.text();
       if (!res.ok) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -404,7 +405,7 @@ export const testBosta = createServerFn({ method: "POST" })
       }
       const parsed = JSON.parse(body);
       if (parsed?.success === false) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -428,7 +429,7 @@ export const testBosta = createServerFn({ method: "POST" })
           cities: Array.isArray(parsed?.data) ? parsed.data.length : undefined,
         },
       });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -446,7 +447,7 @@ export const testBosta = createServerFn({ method: "POST" })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await updateStatus(context, data.brand_id, "bosta", { status: "error", last_error: msg });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -473,7 +474,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
       const since = new Date(Date.now() - days * 86400_000).toISOString();
       const url = "https://app.bosta.co/api/v2/deliveries/search";
       const reqBody = { pageNumber: 0, pageLimit: 100, createdAtStart: since };
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -495,7 +496,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
       });
       const body = await res.text();
       if (!res.ok) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -511,7 +512,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
       }
       const parsed = JSON.parse(body);
       if (parsed?.success === false) {
-        await logIntegrationEvent(context.supabase, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: data.brand_id,
           direction: "outgoing",
@@ -548,7 +549,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
         last_sync_at: new Date().toISOString(),
         last_sync_summary: summary,
       });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -563,7 +564,7 @@ export const syncBostaDeliveries = createServerFn({ method: "POST" })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       await updateStatus(context, data.brand_id, "bosta", { status: "error", last_error: msg });
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: data.brand_id,
         direction: "outgoing",
@@ -724,7 +725,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
         .slice(0, 40)
         .map((c: any) => c.name ?? c.nameAr ?? c.cityName ?? c.code ?? c._id)
         .filter(Boolean);
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -847,7 +848,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
       null;
 
     if (!pickedDistrict?.districtId && !pickedDistrict?.districtName) {
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -927,7 +928,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     let dispatchPersisted = false;
     let providerMayHaveAccepted = false;
     try {
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "outgoing",
@@ -961,7 +962,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     if (!res.ok || parsed?.success === false) {
       providerMayHaveAccepted = false;
       const msg = parsed?.message || parsed?.error || `HTTP ${res.status}`;
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -980,7 +981,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
 
     const { tracking, deliveryId } = bostaDispatchIdentifiers(parsed);
     if (!tracking) {
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -1001,7 +1002,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     await finalizeOrderDispatch(context.supabase, order.id, dispatchClaim, tracking, deliveryId);
     dispatchPersisted = true;
 
-    await logIntegrationEvent(context.supabase, {
+    await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "outgoing",
@@ -1051,7 +1052,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
   const { data: order, error: oErr } = await context.supabase
     .from("orders")
     .select(
-      "id, brand_id, source, external_id, external_order_number, fulfillment_status, shipment_outcome, bosta_tracking, bosta_delivery_id",
+      "id, brand_id, source, external_id, external_order_number, order_status, fulfillment_status, shipment_outcome, bosta_tracking, bosta_delivery_id",
     )
     .eq("id", order_id)
     .maybeSingle();
@@ -1140,7 +1141,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
   });
   if (archiveResult.error) throw archiveResult.error;
   if (!successfulResponse && !notFoundOnBosta) {
-    await logIntegrationEvent(context.supabase, {
+    await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "incoming",
@@ -1169,7 +1170,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
     };
   }
   if (successfulResponse && !isRecognizedBostaDeliveryStatus(stateValue)) {
-    await logIntegrationEvent(context.supabase, {
+    await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
       direction: "incoming",
@@ -1203,39 +1204,38 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
     notFoundOnBosta ? "cancelled" : stateValue,
     collectionValue,
   );
-  const lifecycle = {
+  const resolved = {
     ...mappedLifecycle,
     shipmentOutcome: resolveBostaShipmentOutcome(
       order.shipment_outcome,
       mappedLifecycle.shipmentOutcome,
     ),
   };
+  const lifecycle = preserveDeliveredStatusOnReturn(
+    order.order_status,
+    order.shipment_outcome,
+    resolved,
+  );
   const shopifyAction = shopifyActionForOrderStatus(
     lifecycle.orderStatus,
     lifecycle.shipmentOutcome,
   );
-  const shouldSyncShopify =
-    order.source === "shopify" && (shopifyAction === "fulfill" || shopifyAction === "cancel");
+  const shouldSyncShopify = order.source === "shopify" && shopifyAction !== "none";
   if (shouldSyncShopify && !order.external_id) {
     throw new Error("Shopify order id is missing; lifecycle was not closed locally");
   }
 
   const patch: Record<string, unknown> = {
     order_status: lifecycle.orderStatus,
-    collection_status: lifecycle.collectionStatus,
+    collection_status: resolved.collectionStatus,
     shipment_outcome: lifecycle.shipmentOutcome,
     courier_status_raw: stateValue,
     courier_collection_status_raw: collectionValue,
     lifecycle_source: "bosta",
     lifecycle_updated_by: null,
     lifecycle_updated_at: new Date().toISOString(),
-    shopify_sync_status: shouldSyncShopify
-      ? "pending"
-      : shopifyAction === "review_return"
-        ? "pending"
-        : "not_applicable",
-    shopify_sync_error:
-      shopifyAction === "review_return" ? "Returned order requires return/refund review" : null,
+    shopify_sync_status: shouldSyncShopify ? "pending" : "not_applicable",
+    shopify_sync_error: null as string | null,
   };
   if (newStatus && newStatus !== order.fulfillment_status) patch.fulfillment_status = newStatus;
   const { data: applied, error: lifecycleError } = await context.supabase.rpc(
@@ -1247,7 +1247,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
       _state: stateValue,
       _collection_state: collectionValue,
       _order_status: lifecycle.orderStatus,
-      _collection_status: lifecycle.collectionStatus,
+      _collection_status: resolved.collectionStatus,
       _shipment_outcome: lifecycle.shipmentOutcome,
       _fulfillment_status: newStatus ?? "",
       _shopify_sync_status: String(patch.shopify_sync_status),
@@ -1292,7 +1292,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
     if (syncUpdate.error) throw syncUpdate.error;
   }
 
-  await logIntegrationEvent(context.supabase, {
+  await logIntegrationEvent({
     provider: "bosta",
     brand_id: order.brand_id,
     direction: "incoming",
@@ -1423,13 +1423,56 @@ export const listIntegrationLogs = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
+export const getCoreSecretStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertManager(context);
+    const { CORE_SECRET_MAP } = await import("@/server/coreSecretsSeed.server");
+    const { data, error } = await context.supabase.rpc("core_vault_secret_status");
+    if (error) throw error;
+    const present = new Map(
+      ((data ?? []) as Array<{ name: string; present: boolean }>).map((r) => [r.name, r.present]),
+    );
+    return CORE_SECRET_MAP.map((e) => ({
+      name: e.name,
+      env: e.env,
+      present: present.get(e.name) === true,
+    }));
+  });
+
+export const getCoreCronStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertManager(context);
+    const { CORE_CRON_JOBS } = await import("@/server/coreSecretsSeed.server");
+    const { data, error } = await context.supabase.rpc("core_cron_job_status");
+    if (error) throw error;
+    const live = new Map(
+      ((data ?? []) as Array<{ name: string; schedule: string; active: boolean }>).map((r) => [
+        r.name,
+        r,
+      ]),
+    );
+    return CORE_CRON_JOBS.map((j) => {
+      const row = live.get(j.name);
+      return {
+        name: j.name,
+        path: j.path,
+        schedule: row?.schedule ?? j.schedule,
+        scheduled: Boolean(row),
+        active: row?.active === true,
+      };
+    });
+  });
+
+
 export const getBostaWebhookInfo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { brand_id: string }) => d)
   .handler(async ({ data, context }) => {
     await assertManager(context);
     await assertBrandAccess(context, data.brand_id);
-    const secret = process.env.BOSTA_WEBHOOK_SECRET ?? "";
+    const secret = process.env["BOSTA_WEBHOOK_TOKEN"] ?? process.env.BOSTA_WEBHOOK_SECRET ?? "";
     return {
       path: `/api/public/webhooks/bosta/${data.brand_id}`,
       secret,

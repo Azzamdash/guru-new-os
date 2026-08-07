@@ -274,13 +274,14 @@ export const assignOrdersCourier = createServerFn({ method: "POST" })
     const ids = (data.orderIds ?? []).filter(Boolean).slice(0, 500);
     if (!ids.length) throw new Error("لم يتم اختيار أي أوردر");
 
-    const { error } = await ctx.supabase
+    const { data: rows, error } = await ctx.supabase
       .from("orders")
       .update({ courier_id: data.courierId })
       .in("id", ids)
-      .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER);
+      .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER)
+      .select("id");
     if (error) throw new Error(error.message);
-    return { updated: ids.length };
+    return { updated: (rows ?? []).length };
   });
 
 export const assignOrdersEmployee = createServerFn({ method: "POST" })
@@ -302,12 +303,15 @@ export const assignOrdersEmployee = createServerFn({ method: "POST" })
       reason: data.reason ?? null,
     });
 
-    const { error } = await ctx.supabase
+    const { data: rows, error } = await ctx.supabase
       .from("orders")
       .update({ assigned_user_id: data.employeeId })
-      .in("id", ids);
+      .in("id", ids)
+      .select("id");
     if (error) throw new Error(error.message);
-    return { updated: ids.length };
+    const updated = (rows ?? []).length;
+    if (!updated) throw new Error("لم يتم إسناد أي أوردر — صلاحيتك لا تسمح بتعديل هذه الأوردرات");
+    return { updated };
   });
 
 export const autoAssignOrders = createServerFn({ method: "POST" })
@@ -329,13 +333,15 @@ export const autoAssignOrders = createServerFn({ method: "POST" })
     let updated = 0;
     let failed = 0;
     for (const [courierId, ids] of byCourier) {
-      const { error } = await ctx.supabase
+      const { data: rows, error } = await ctx.supabase
         .from("orders")
         .update({ courier_id: courierId })
         .in("id", ids)
-        .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER);
-      if (error) failed += ids.length;
-      else updated += ids.length;
+        .not("shipment_outcome", "in", TERMINAL_SHIPMENT_OUTCOMES_FILTER)
+        .select("id");
+      const n = error ? 0 : (rows ?? []).length;
+      updated += n;
+      failed += ids.length - n;
     }
     return { updated, failed };
   });
@@ -384,12 +390,14 @@ export const autoAssignOrdersToStaff = createServerFn({ method: "POST" })
     let updated = 0;
     let failed = 0;
     for (const [employeeId, orderIds] of byEmployee) {
-      const { error } = await ctx.supabase
+      const { data: rows, error } = await ctx.supabase
         .from("orders")
         .update({ assigned_user_id: employeeId })
-        .in("id", orderIds);
-      if (error) failed += orderIds.length;
-      else updated += orderIds.length;
+        .in("id", orderIds)
+        .select("id");
+      const n = error ? 0 : (rows ?? []).length;
+      updated += n;
+      failed += orderIds.length - n;
     }
     return { updated, failed, staffCount: staffIds.length };
   });

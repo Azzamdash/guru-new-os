@@ -3,6 +3,7 @@ import {
   bostaProviderEventAt,
   isRecognizedBostaDeliveryStatus,
   mapBostaLifecycle,
+  preserveDeliveredStatusOnReturn,
   resolveBostaShipmentOutcome,
   shopifyActionForOrderStatus,
 } from "@/lib/order-lifecycle.shared";
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
       POST: async ({ request, params }) => {
         const started = Date.now();
         const providedSecret = request.headers.get("x-webhook-secret");
-        const expected = process.env.BOSTA_WEBHOOK_SECRET;
+        const expected = process.env["BOSTA_WEBHOOK_TOKEN"] ?? process.env.BOSTA_WEBHOOK_SECRET;
         const secretOk = await secretMatches(providedSecret, expected);
 
         const raw = await request.text();
@@ -46,7 +47,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
 
         if (!secretOk) {
           const httpStatus = expected ? 401 : 503;
-          await logIntegrationEvent(supabaseAdmin, {
+          await logIntegrationEvent({
             provider: "bosta",
             brand_id: params.brandId,
             direction: "webhook",
@@ -55,7 +56,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
             http_status: httpStatus,
             reason: expected
               ? "invalid or missing webhook secret"
-              : "BOSTA_WEBHOOK_SECRET is not configured",
+              : "BOSTA_WEBHOOK_TOKEN is not configured",
             metadata: {
               ip: request.headers.get("x-forwarded-for"),
               duration_ms: Date.now() - started,
@@ -100,11 +101,12 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
           if ((orderNumber || trackingNumber) && isRecognizedBostaDeliveryStatus(String(state))) {
             const mappedLifecycle = mapBostaLifecycle(String(state), collectionState);
             const selectOrder =
-              "id, source, external_id, fulfillment_status, shipment_outcome, bosta_tracking" as const;
+              "id, source, external_id, order_status, fulfillment_status, shipment_outcome, bosta_tracking" as const;
             type MatchedOrder = {
               id: string;
               source: string;
               external_id: string | null;
+              order_status: string | null;
               fulfillment_status: string | null;
               shipment_outcome: string | null;
               bosta_tracking: string | null;
@@ -153,7 +155,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
             }
 
             if (ambiguousMatch) {
-              await logIntegrationEvent(supabaseAdmin, {
+              await logIntegrationEvent({
                 provider: "bosta",
                 brand_id: params.brandId,
                 direction: "webhook",
@@ -169,20 +171,23 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
             }
 
             if (order) {
-              const lifecycle = {
+              const resolved = {
                 ...mappedLifecycle,
                 shipmentOutcome: resolveBostaShipmentOutcome(
                   order.shipment_outcome,
                   mappedLifecycle.shipmentOutcome,
                 ),
               };
+              const lifecycle = preserveDeliveredStatusOnReturn(
+                order.order_status,
+                order.shipment_outcome,
+                resolved,
+              );
               const shopifyAction = shopifyActionForOrderStatus(
                 lifecycle.orderStatus,
                 lifecycle.shipmentOutcome,
               );
-              const shouldSyncShopify =
-                order.source === "shopify" &&
-                (shopifyAction === "fulfill" || shopifyAction === "cancel");
+              const shouldSyncShopify = order.source === "shopify" && shopifyAction !== "none";
 
               const legacyFulfillment =
                 lifecycle.shipmentOutcome === "delivered" ||
@@ -203,14 +208,10 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
                   _state: String(state),
                   _collection_state: String(collectionState ?? "pending"),
                   _order_status: lifecycle.orderStatus,
-                  _collection_status: lifecycle.collectionStatus,
+                  _collection_status: resolved.collectionStatus,
                   _shipment_outcome: lifecycle.shipmentOutcome,
                   _fulfillment_status: legacyFulfillment as unknown as string,
-                  _shopify_sync_status: shouldSyncShopify
-                    ? "pending"
-                    : shopifyAction === "review_return"
-                      ? "pending"
-                      : "not_applicable",
+                  _shopify_sync_status: shouldSyncShopify ? "pending" : "not_applicable",
                   _shopify_sync_error: null as unknown as string,
                   _payload: payload,
                 },
@@ -255,7 +256,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
               }
             }
           } else if (orderNumber) {
-            await logIntegrationEvent(supabaseAdmin, {
+            await logIntegrationEvent({
               provider: "bosta",
               brand_id: params.brandId,
               direction: "webhook",
@@ -267,7 +268,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
             });
           }
         } catch (e) {
-          await logIntegrationEvent(supabaseAdmin, {
+          await logIntegrationEvent({
             provider: "bosta",
             brand_id: params.brandId,
             direction: "webhook",
@@ -281,7 +282,7 @@ export const Route = createFileRoute("/api/public/webhooks/bosta/$brandId")({
           return new Response("Failed to apply Bosta webhook", { status: 500 });
         }
 
-        await logIntegrationEvent(supabaseAdmin, {
+        await logIntegrationEvent({
           provider: "bosta",
           brand_id: params.brandId,
           direction: "webhook",

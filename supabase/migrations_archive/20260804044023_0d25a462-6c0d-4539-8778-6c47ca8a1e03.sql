@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.finalize_generic_order_dispatch(uuid, uuid, uuid, text, boolean, text) TO authenticated, service_role;
