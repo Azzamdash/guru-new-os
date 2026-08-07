@@ -423,11 +423,37 @@ async function shopifyAdminRequest<T>(
 export async function applyShopifyOrderAction(input: {
   brandId: string;
   externalOrderId: string;
-  action: "fulfill" | "cancel";
+  action: "fulfill" | "cancel" | "collect_payment";
 }) {
   const orderId = String(input.externalOrderId).trim();
   if (!/^\d+$/.test(orderId)) throw new Error("Invalid Shopify order id");
   const connection = await loadShopifyConnection(input.brandId);
+
+  if (input.action === "collect_payment") {
+    const orderData = await shopifyAdminRequest<{
+      order?: { financial_status?: string; total_price?: string; currency?: string };
+    }>(connection, `/orders/${orderId}.json`);
+    const shopifyOrder = orderData.order;
+    if (!shopifyOrder) throw new Error("Shopify order not found");
+    if (["paid", "partially_refunded", "refunded"].includes(shopifyOrder.financial_status ?? "")) {
+      return { ok: true as const, action: "collect_payment" as const, alreadyComplete: true };
+    }
+    // Records the COD cash the courier collected as a completed sale
+    // transaction — this is a manual/COD order, there's no payment gateway
+    // to actually capture through.
+    await shopifyAdminRequest(connection, `/orders/${orderId}/transactions.json`, {
+      method: "POST",
+      body: JSON.stringify({
+        transaction: {
+          kind: "sale",
+          status: "success",
+          amount: shopifyOrder.total_price,
+          currency: shopifyOrder.currency,
+        },
+      }),
+    });
+    return { ok: true as const, action: "collect_payment" as const, alreadyComplete: false };
+  }
 
   if (input.action === "cancel") {
     try {

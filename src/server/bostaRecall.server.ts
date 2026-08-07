@@ -5,6 +5,7 @@ import {
   isConfirmedBostaNotFound,
   isRecognizedBostaDeliveryStatus,
   mapBostaLifecycle,
+  preserveDeliveredStatusOnReturn,
   resolveBostaShipmentOutcome,
   shopifyActionForOrderStatus,
 } from "@/lib/order-lifecycle.shared";
@@ -23,6 +24,7 @@ type OrderRow = {
   id: string;
   brand_id: string;
   external_order_number: string | null;
+  order_status: string | null;
   fulfillment_status: string | null;
   shipment_outcome: string | null;
   source: string;
@@ -37,7 +39,7 @@ export async function recallAllOpenBostaShipments(limit = 100) {
 
   const { data: rows, error } = await supabaseAdmin
     .from("orders")
-    .select("id, brand_id, external_order_number, fulfillment_status, shipment_outcome, source, external_id, bosta_tracking, bosta_delivery_id")
+    .select("id, brand_id, external_order_number, order_status, fulfillment_status, shipment_outcome, source, external_id, bosta_tracking, bosta_delivery_id")
     .not("bosta_tracking", "is", null)
     .not("fulfillment_status", "in", "(delivered,returned,cancelled)")
     .limit(limit);
@@ -115,13 +117,13 @@ export async function recallAllOpenBostaShipments(limit = 100) {
 
       const effectiveState = notFoundOnBosta ? "cancelled" : stateValue;
       const mapped = mapBostaLifecycle(effectiveState, collectionValue);
-      const lifecycle = {
+      const resolved = {
         ...mapped,
         shipmentOutcome: resolveBostaShipmentOutcome(order.shipment_outcome, mapped.shipmentOutcome),
       };
+      const lifecycle = preserveDeliveredStatusOnReturn(order.order_status, order.shipment_outcome, resolved);
       const shopifyAction = shopifyActionForOrderStatus(lifecycle.orderStatus, lifecycle.shipmentOutcome);
-      const shouldSyncShopify =
-        order.source === "shopify" && (shopifyAction === "fulfill" || shopifyAction === "cancel");
+      const shouldSyncShopify = order.source === "shopify" && shopifyAction !== "none";
       const bostaPayload = {
           response: parsed,
           last_state: stateValue,
@@ -138,11 +140,11 @@ export async function recallAllOpenBostaShipments(limit = 100) {
         _state: effectiveState as unknown as string,
         _collection_state: collectionValue,
         _order_status: lifecycle.orderStatus,
-        _collection_status: lifecycle.collectionStatus,
+        _collection_status: resolved.collectionStatus,
         _shipment_outcome: lifecycle.shipmentOutcome,
         _fulfillment_status: newStatus ?? "",
-        _shopify_sync_status: shouldSyncShopify || shopifyAction === "review_return" ? "pending" : "not_applicable",
-        _shopify_sync_error: (shopifyAction === "review_return" ? "Returned order requires return/refund review" : null) as unknown as string,
+        _shopify_sync_status: shouldSyncShopify ? "pending" : "not_applicable",
+        _shopify_sync_error: null as unknown as string,
         _payload: bostaPayload,
       });
       if (updateError) throw updateError;
