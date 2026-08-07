@@ -10,6 +10,16 @@ import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
+// TODO(bosta-type): "return"/"exchange" still map to Bosta's normal "Send"
+// delivery type (10) until the real Bosta type codes for Customer Return
+// Pickup / Exchange are confirmed. Update these two values once known —
+// nothing else needs to change.
+const BOSTA_DELIVERY_TYPE_BY_KIND: Record<string, number> = {
+  sale: 10,
+  return: 10,
+  exchange: 10,
+};
+
 async function assertManager(ctx: Ctx) {
   for (const role of ["admin", "manager"] as const) {
     const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: role });
@@ -395,10 +405,11 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
   .inputValidator((d: { orderId: string; courierId?: string | null }) => d)
   .handler(async ({ data, context }) => {
     await assertPageWrite(context, COURIERS_PAGE);
-    const { data: order, error } = await context.supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: order, error } = await (context.supabase as any)
       .from("orders")
       .select(
-        "id, brand_id, source, external_id, shipping_governorate, external_order_number, customer_name, customer_phone, shipping_address, total_amount, shipping_amount, note, fulfillment_status, shipment_outcome, collection_status",
+        "id, brand_id, source, external_id, shipping_governorate, external_order_number, customer_name, customer_phone, shipping_address, total_amount, shipping_amount, note, fulfillment_status, shipment_outcome, collection_status, order_kind",
       )
       .eq("id", data.orderId)
       .single();
@@ -474,11 +485,22 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             providerAttempted = true;
             const started = Date.now();
             const orderNo = order.external_order_number ?? order.id;
+            const orderKind = (order.order_kind as string | null) ?? "sale";
             // Already collected manually (e.g. customer paid by transfer instead
             // of cash on delivery)? Don't ask the courier to collect it again.
-            const codAmount = order.collection_status === "paid" ? 0 : Number(order.total_amount) || 0;
+            // Returns/exchanges never carry a COD to collect from the customer.
+            const codAmount =
+              orderKind !== "sale" || order.collection_status === "paid"
+                ? 0
+                : Number(order.total_amount) || 0;
+            // TODO(bosta-type): type 10 is Bosta's "Send" (normal delivery) code.
+            // Returns need Bosta's "Customer Return Pickup" type and exchanges
+            // need its "Exchange" type — both still unconfirmed (see
+            // BOSTA_DELIVERY_TYPE_BY_KIND). Until they're wired in, a return/
+            // exchange order dispatches as a normal delivery, which tells the
+            // courier to drop something off rather than pick something up.
             const payload = {
-              type: 10,
+              type: BOSTA_DELIVERY_TYPE_BY_KIND[orderKind as keyof typeof BOSTA_DELIVERY_TYPE_BY_KIND] ?? 10,
               businessReference: order.id,
               specs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
               cod: codAmount,
