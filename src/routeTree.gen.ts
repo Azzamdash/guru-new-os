@@ -41,12 +41,15 @@ import { Route as AuthenticatedAppInvestorsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppInvoicePrintRouteImport } from './routes/_authenticated/_app.invoice-print'
 import { Route as AuthenticatedAppMaterialsRouteImport } from './routes/_authenticated/_app.materials'
 import { Route as AuthenticatedAppMyInvestmentsRouteImport } from './routes/_authenticated/_app.my-investments'
+import { Route as AuthenticatedAppMyOrdersRouteImport } from './routes/_authenticated/_app.my-orders'
 import { Route as AuthenticatedAppMyPrepRouteImport } from './routes/_authenticated/_app.my-prep'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/_app.operations'
 import { Route as AuthenticatedAppOrderDistributionRouteImport } from './routes/_authenticated/_app.order-distribution'
 import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
 import { Route as AuthenticatedAppOrderReturnsRouteImport } from './routes/_authenticated/_app.order-returns'
-import { Route as AuthenticatedAppOrdersCenterRouteImport } from './routes/_authenticated/_app.orders-center'
+import { Route as AuthenticatedAppOrderShippingRouteImport } from './routes/_authenticated/_app.order-shipping'
+import { Route as AuthenticatedAppOrderTimelineRouteImport } from './routes/_authenticated/_app.order-timeline'
+import { Route as AuthenticatedAppOrdersAttentionRouteImport } from './routes/_authenticated/_app.orders-attention'
 import { Route as AuthenticatedAppOrdersListRouteImport } from './routes/_authenticated/_app.orders-list'
 import { Route as AuthenticatedAppOrdersRadarRouteImport } from './routes/_authenticated/_app.orders-radar'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/_app.pos'
@@ -59,6 +62,7 @@ import { Route as AuthenticatedAppServicesDashboardRouteImport } from './routes/
 import { Route as AuthenticatedAppSuppliersRouteImport } from './routes/_authenticated/_app.suppliers'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/_app.tasks'
 import { Route as AuthenticatedAppTreasuryRouteImport } from './routes/_authenticated/_app.treasury'
+import { Route as AuthenticatedAppWhatsappInboxRouteImport } from './routes/_authenticated/_app.whatsapp-inbox'
 import { Route as AuthenticatedAppWhatsappSettingsRouteImport } from './routes/_authenticated/_app.whatsapp-settings'
 import { Route as AuthenticatedAppWhatsappTemplatesRouteImport } from './routes/_authenticated/_app.whatsapp-templates'
 import { Route as ApiPublicWhatsappRouteImport } from './routes/api/public/whatsapp'
@@ -290,6 +294,12 @@ const AuthenticatedAppMyInvestmentsRoute =
     path: '/my-investments',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppMyOrdersRoute =
+  AuthenticatedAppMyOrdersRouteImport.update({
+    id: '/my-orders',
+    path: '/my-orders',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppMyPrepRoute = AuthenticatedAppMyPrepRouteImport.update({
   id: '/my-prep',
   path: '/my-prep',
@@ -319,10 +329,22 @@ const AuthenticatedAppOrderReturnsRoute =
     path: '/order-returns',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
-const AuthenticatedAppOrdersCenterRoute =
-  AuthenticatedAppOrdersCenterRouteImport.update({
-    id: '/orders-center',
-    path: '/orders-center',
+const AuthenticatedAppOrderShippingRoute =
+  AuthenticatedAppOrderShippingRouteImport.update({
+    id: '/order-shipping',
+    path: '/order-shipping',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrderTimelineRoute =
+  AuthenticatedAppOrderTimelineRouteImport.update({
+    id: '/order-timeline',
+    path: '/order-timeline',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrdersAttentionRoute =
+  AuthenticatedAppOrdersAttentionRouteImport.update({
+    id: '/orders-attention',
+    path: '/orders-attention',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppOrdersListRoute =
@@ -393,6 +415,12 @@ const AuthenticatedAppTreasuryRoute =
   AuthenticatedAppTreasuryRouteImport.update({
     id: '/treasury',
     path: '/treasury',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppWhatsappInboxRoute =
+  AuthenticatedAppWhatsappInboxRouteImport.update({
+    id: '/whatsapp-inbox',
+    path: '/whatsapp-inbox',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppWhatsappSettingsRoute =
@@ -725,12 +753,15 @@ export interface FileRoutesByFullPath {
   '/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
   '/materials': typeof AuthenticatedAppMaterialsRoute
   '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
+  '/my-orders': typeof AuthenticatedAppMyOrdersRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
   '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
-  '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
+  '/order-shipping': typeof AuthenticatedAppOrderShippingRoute
+  '/order-timeline': typeof AuthenticatedAppOrderTimelineRoute
+  '/orders-attention': typeof AuthenticatedAppOrdersAttentionRoute
   '/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
@@ -743,6 +774,7 @@ export interface FileRoutesByFullPath {
   '/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/whatsapp-inbox': typeof AuthenticatedAppWhatsappInboxRoute
   '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
   '/whatsapp-templates': typeof AuthenticatedAppWhatsappTemplatesRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
@@ -825,12 +857,15 @@ export interface FileRoutesByTo {
   '/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
   '/materials': typeof AuthenticatedAppMaterialsRoute
   '/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
+  '/my-orders': typeof AuthenticatedAppMyOrdersRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
   '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
-  '/orders-center': typeof AuthenticatedAppOrdersCenterRoute
+  '/order-shipping': typeof AuthenticatedAppOrderShippingRoute
+  '/order-timeline': typeof AuthenticatedAppOrderTimelineRoute
+  '/orders-attention': typeof AuthenticatedAppOrdersAttentionRoute
   '/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
@@ -841,6 +876,7 @@ export interface FileRoutesByTo {
   '/services': typeof AuthenticatedAppServicesRoute
   '/tasks': typeof AuthenticatedAppTasksRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/whatsapp-inbox': typeof AuthenticatedAppWhatsappInboxRoute
   '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
   '/whatsapp-templates': typeof AuthenticatedAppWhatsappTemplatesRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
@@ -926,12 +962,15 @@ export interface FileRoutesById {
   '/_authenticated/_app/invoice-print': typeof AuthenticatedAppInvoicePrintRoute
   '/_authenticated/_app/materials': typeof AuthenticatedAppMaterialsRoute
   '/_authenticated/_app/my-investments': typeof AuthenticatedAppMyInvestmentsRoute
+  '/_authenticated/_app/my-orders': typeof AuthenticatedAppMyOrdersRoute
   '/_authenticated/_app/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/_authenticated/_app/operations': typeof AuthenticatedAppOperationsRoute
   '/_authenticated/_app/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/_authenticated/_app/order-returns': typeof AuthenticatedAppOrderReturnsRoute
-  '/_authenticated/_app/orders-center': typeof AuthenticatedAppOrdersCenterRoute
+  '/_authenticated/_app/order-shipping': typeof AuthenticatedAppOrderShippingRoute
+  '/_authenticated/_app/order-timeline': typeof AuthenticatedAppOrderTimelineRoute
+  '/_authenticated/_app/orders-attention': typeof AuthenticatedAppOrdersAttentionRoute
   '/_authenticated/_app/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/_authenticated/_app/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/_authenticated/_app/pos': typeof AuthenticatedAppPosRoute
@@ -944,6 +983,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
   '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
+  '/_authenticated/_app/whatsapp-inbox': typeof AuthenticatedAppWhatsappInboxRoute
   '/_authenticated/_app/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
   '/_authenticated/_app/whatsapp-templates': typeof AuthenticatedAppWhatsappTemplatesRoute
   '/api/public/whatsapp': typeof ApiPublicWhatsappRoute
@@ -1028,12 +1068,15 @@ export interface FileRouteTypes {
     | '/invoice-print'
     | '/materials'
     | '/my-investments'
+    | '/my-orders'
     | '/my-prep'
     | '/operations'
     | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
-    | '/orders-center'
+    | '/order-shipping'
+    | '/order-timeline'
+    | '/orders-attention'
     | '/orders-list'
     | '/orders-radar'
     | '/pos'
@@ -1046,6 +1089,7 @@ export interface FileRouteTypes {
     | '/suppliers'
     | '/tasks'
     | '/treasury'
+    | '/whatsapp-inbox'
     | '/whatsapp-settings'
     | '/whatsapp-templates'
     | '/api/public/whatsapp'
@@ -1128,12 +1172,15 @@ export interface FileRouteTypes {
     | '/invoice-print'
     | '/materials'
     | '/my-investments'
+    | '/my-orders'
     | '/my-prep'
     | '/operations'
     | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
-    | '/orders-center'
+    | '/order-shipping'
+    | '/order-timeline'
+    | '/orders-attention'
     | '/orders-list'
     | '/orders-radar'
     | '/pos'
@@ -1144,6 +1191,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/tasks'
     | '/treasury'
+    | '/whatsapp-inbox'
     | '/whatsapp-settings'
     | '/whatsapp-templates'
     | '/api/public/whatsapp'
@@ -1228,12 +1276,15 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/invoice-print'
     | '/_authenticated/_app/materials'
     | '/_authenticated/_app/my-investments'
+    | '/_authenticated/_app/my-orders'
     | '/_authenticated/_app/my-prep'
     | '/_authenticated/_app/operations'
     | '/_authenticated/_app/order-distribution'
     | '/_authenticated/_app/order-pipeline'
     | '/_authenticated/_app/order-returns'
-    | '/_authenticated/_app/orders-center'
+    | '/_authenticated/_app/order-shipping'
+    | '/_authenticated/_app/order-timeline'
+    | '/_authenticated/_app/orders-attention'
     | '/_authenticated/_app/orders-list'
     | '/_authenticated/_app/orders-radar'
     | '/_authenticated/_app/pos'
@@ -1246,6 +1297,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/suppliers'
     | '/_authenticated/_app/tasks'
     | '/_authenticated/_app/treasury'
+    | '/_authenticated/_app/whatsapp-inbox'
     | '/_authenticated/_app/whatsapp-settings'
     | '/_authenticated/_app/whatsapp-templates'
     | '/api/public/whatsapp'
@@ -1545,6 +1597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppMyInvestmentsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/my-orders': {
+      id: '/_authenticated/_app/my-orders'
+      path: '/my-orders'
+      fullPath: '/my-orders'
+      preLoaderRoute: typeof AuthenticatedAppMyOrdersRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/my-prep': {
       id: '/_authenticated/_app/my-prep'
       path: '/my-prep'
@@ -1580,11 +1639,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOrderReturnsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/_app/orders-center': {
-      id: '/_authenticated/_app/orders-center'
-      path: '/orders-center'
-      fullPath: '/orders-center'
-      preLoaderRoute: typeof AuthenticatedAppOrdersCenterRouteImport
+    '/_authenticated/_app/order-shipping': {
+      id: '/_authenticated/_app/order-shipping'
+      path: '/order-shipping'
+      fullPath: '/order-shipping'
+      preLoaderRoute: typeof AuthenticatedAppOrderShippingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/order-timeline': {
+      id: '/_authenticated/_app/order-timeline'
+      path: '/order-timeline'
+      fullPath: '/order-timeline'
+      preLoaderRoute: typeof AuthenticatedAppOrderTimelineRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/orders-attention': {
+      id: '/_authenticated/_app/orders-attention'
+      path: '/orders-attention'
+      fullPath: '/orders-attention'
+      preLoaderRoute: typeof AuthenticatedAppOrdersAttentionRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/orders-list': {
@@ -1669,6 +1742,13 @@ declare module '@tanstack/react-router' {
       path: '/treasury'
       fullPath: '/treasury'
       preLoaderRoute: typeof AuthenticatedAppTreasuryRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/whatsapp-inbox': {
+      id: '/_authenticated/_app/whatsapp-inbox'
+      path: '/whatsapp-inbox'
+      fullPath: '/whatsapp-inbox'
+      preLoaderRoute: typeof AuthenticatedAppWhatsappInboxRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/whatsapp-settings': {
@@ -2117,12 +2197,15 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppInvoicePrintRoute: typeof AuthenticatedAppInvoicePrintRoute
   AuthenticatedAppMaterialsRoute: typeof AuthenticatedAppMaterialsRoute
   AuthenticatedAppMyInvestmentsRoute: typeof AuthenticatedAppMyInvestmentsRoute
+  AuthenticatedAppMyOrdersRoute: typeof AuthenticatedAppMyOrdersRoute
   AuthenticatedAppMyPrepRoute: typeof AuthenticatedAppMyPrepRoute
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
   AuthenticatedAppOrderDistributionRoute: typeof AuthenticatedAppOrderDistributionRoute
   AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
   AuthenticatedAppOrderReturnsRoute: typeof AuthenticatedAppOrderReturnsRoute
-  AuthenticatedAppOrdersCenterRoute: typeof AuthenticatedAppOrdersCenterRoute
+  AuthenticatedAppOrderShippingRoute: typeof AuthenticatedAppOrderShippingRoute
+  AuthenticatedAppOrderTimelineRoute: typeof AuthenticatedAppOrderTimelineRoute
+  AuthenticatedAppOrdersAttentionRoute: typeof AuthenticatedAppOrdersAttentionRoute
   AuthenticatedAppOrdersListRoute: typeof AuthenticatedAppOrdersListRoute
   AuthenticatedAppOrdersRadarRoute: typeof AuthenticatedAppOrdersRadarRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
@@ -2135,6 +2218,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSuppliersRoute: typeof AuthenticatedAppSuppliersRouteWithChildren
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
   AuthenticatedAppTreasuryRoute: typeof AuthenticatedAppTreasuryRoute
+  AuthenticatedAppWhatsappInboxRoute: typeof AuthenticatedAppWhatsappInboxRoute
   AuthenticatedAppWhatsappSettingsRoute: typeof AuthenticatedAppWhatsappSettingsRoute
   AuthenticatedAppWhatsappTemplatesRoute: typeof AuthenticatedAppWhatsappTemplatesRoute
   AuthenticatedAppCustomersIdRoute: typeof AuthenticatedAppCustomersIdRoute
@@ -2196,13 +2280,16 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppInvoicePrintRoute: AuthenticatedAppInvoicePrintRoute,
   AuthenticatedAppMaterialsRoute: AuthenticatedAppMaterialsRoute,
   AuthenticatedAppMyInvestmentsRoute: AuthenticatedAppMyInvestmentsRoute,
+  AuthenticatedAppMyOrdersRoute: AuthenticatedAppMyOrdersRoute,
   AuthenticatedAppMyPrepRoute: AuthenticatedAppMyPrepRoute,
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
   AuthenticatedAppOrderDistributionRoute:
     AuthenticatedAppOrderDistributionRoute,
   AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,
   AuthenticatedAppOrderReturnsRoute: AuthenticatedAppOrderReturnsRoute,
-  AuthenticatedAppOrdersCenterRoute: AuthenticatedAppOrdersCenterRoute,
+  AuthenticatedAppOrderShippingRoute: AuthenticatedAppOrderShippingRoute,
+  AuthenticatedAppOrderTimelineRoute: AuthenticatedAppOrderTimelineRoute,
+  AuthenticatedAppOrdersAttentionRoute: AuthenticatedAppOrdersAttentionRoute,
   AuthenticatedAppOrdersListRoute: AuthenticatedAppOrdersListRoute,
   AuthenticatedAppOrdersRadarRoute: AuthenticatedAppOrdersRadarRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
@@ -2216,6 +2303,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSuppliersRoute: AuthenticatedAppSuppliersRouteWithChildren,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
   AuthenticatedAppTreasuryRoute: AuthenticatedAppTreasuryRoute,
+  AuthenticatedAppWhatsappInboxRoute: AuthenticatedAppWhatsappInboxRoute,
   AuthenticatedAppWhatsappSettingsRoute: AuthenticatedAppWhatsappSettingsRoute,
   AuthenticatedAppWhatsappTemplatesRoute:
     AuthenticatedAppWhatsappTemplatesRoute,

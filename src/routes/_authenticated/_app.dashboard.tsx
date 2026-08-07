@@ -286,7 +286,7 @@ function DashboardPage() {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        <QuickLink to="/orders-center" icon={Receipt} label={t("ql_sale")} />
+        <QuickLink to="/orders-list" icon={Receipt} label={t("ql_sale")} />
         <QuickLink to="/purchases" icon={ShoppingCart} label={t("ql_purchase")} />
         <QuickLink to="/expenses" icon={Wallet} label={t("ql_expense")} />
         <QuickLink to="/production" icon={Factory} label={t("ql_production")} />
@@ -366,7 +366,7 @@ function DashboardPage() {
       {/* Operational totals */}
       {!isService && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to="/orders-center">
+          <Link to="/orders-list">
             <KpiCard icon={Receipt} label={t("kpi_orders_total")} value={fmt(totals.ordersTotal)} />
           </Link>
           <Link to="/operations">
