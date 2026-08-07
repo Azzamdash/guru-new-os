@@ -21,15 +21,38 @@ export async function revenueByBrandSince(
   for (let i = 0; i < 200; i++) {
     let q = supabase
       .from("sales_invoices")
-      .select("brand_id,total_amount,type")
+      .select("id,brand_id,total_amount,type")
       .gte("occurred_at", sinceDate)
       .order("id", { ascending: true })
       .range(offset, offset + PAGE - 1);
     if (brandId) q = q.eq("brand_id", brandId);
     const { data, error } = await q;
     if (error) throw error;
-    const rows = (data ?? []) as Array<{ brand_id: string | null; total_amount: number; type: string }>;
+    const rows = (data ?? []) as Array<{ id: string; brand_id: string | null; total_amount: number; type: string }>;
+
+    // Only orders that actually settled (delivered or returned) count as
+    // realized revenue — see computeBrandNetProfit in profits.shared.ts for
+    // the same rule and rationale. Invoices with no linked order still count.
+    const ids = rows.map((r) => r.id);
+    const settled = new Set<string>();
+    if (ids.length) {
+      const { data: orderRows, error: oErr } = await supabase
+        .from("orders")
+        .select("invoice_id,fulfillment_status")
+        .in("invoice_id", ids);
+      if (oErr) throw oErr;
+      const linked = new Set<string>();
+      for (const o of (orderRows ?? []) as Array<{ invoice_id: string; fulfillment_status: string }>) {
+        linked.add(o.invoice_id);
+        if (o.fulfillment_status === "delivered" || o.fulfillment_status === "returned") {
+          settled.add(o.invoice_id);
+        }
+      }
+      for (const id of ids) if (!linked.has(id)) settled.add(id);
+    }
+
     for (const r of rows) {
+      if (!settled.has(r.id)) continue;
       const key = r.brand_id ?? "";
       const sign = r.type === "return" ? -1 : 1;
       totals.set(key, (totals.get(key) ?? 0) + sign * (Number(r.total_amount) || 0));
