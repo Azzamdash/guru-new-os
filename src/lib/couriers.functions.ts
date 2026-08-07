@@ -10,14 +10,12 @@ import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
 
-// TODO(bosta-type): "return"/"exchange" still map to Bosta's normal "Send"
-// delivery type (10) until the real Bosta type codes for Customer Return
-// Pickup / Exchange are confirmed. Update these two values once known —
-// nothing else needs to change.
+// Bosta delivery type codes (from Bosta's API spec): deliver/Send = 10,
+// Customer Return Pickup = 25, Exchange = 30.
 const BOSTA_DELIVERY_TYPE_BY_KIND: Record<string, number> = {
   sale: 10,
-  return: 10,
-  exchange: 10,
+  return: 25,
+  exchange: 30,
 };
 
 async function assertManager(ctx: Ctx) {
@@ -489,16 +487,13 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             // Already collected manually (e.g. customer paid by transfer instead
             // of cash on delivery)? Don't ask the courier to collect it again.
             // Returns/exchanges never carry a COD to collect from the customer.
+            // (Bosta's Customer Return Pickup type wants a negative cod when the
+            // courier is issuing a refund to the customer on pickup — we don't
+            // route refunds through the courier today, so 0 is correct here.)
             const codAmount =
               orderKind !== "sale" || order.collection_status === "paid"
                 ? 0
                 : Number(order.total_amount) || 0;
-            // TODO(bosta-type): type 10 is Bosta's "Send" (normal delivery) code.
-            // Returns need Bosta's "Customer Return Pickup" type and exchanges
-            // need its "Exchange" type — both still unconfirmed (see
-            // BOSTA_DELIVERY_TYPE_BY_KIND). Until they're wired in, a return/
-            // exchange order dispatches as a normal delivery, which tells the
-            // courier to drop something off rather than pick something up.
             const payload = {
               type: BOSTA_DELIVERY_TYPE_BY_KIND[orderKind as keyof typeof BOSTA_DELIVERY_TYPE_BY_KIND] ?? 10,
               businessReference: order.id,
