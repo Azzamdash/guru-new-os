@@ -16,6 +16,8 @@ export type IncomeStatement = {
   returns: number;
   discounts: number;
   netRevenue: number;
+  /** Revenue for orders still in flight (not yet delivered/returned) — not included in netRevenue. */
+  projectedNetRevenue: number;
   cogs: number;
   grossProfit: number;
   grossMargin: number;
@@ -48,6 +50,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
     const returns = Number(totals.returns) || 0;
     const discounts = Number(totals.discounts) || 0;
     const netRevenue = Number(totals.netRevenue) || 0;
+    const projectedNetRevenue = Number(totals.projectedNetRevenue) || 0;
     const cogs = Number(totals.cogs) || 0;
     const operatingExpensesTotal = Number(totals.expenses) || 0;
     const grossProfit = netRevenue - cogs;
@@ -59,6 +62,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       grossRevenue,
       returns,
       discounts,
+      projectedNetRevenue,
       netRevenue,
       cogs,
       grossProfit,
