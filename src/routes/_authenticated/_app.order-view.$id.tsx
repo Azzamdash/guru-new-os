@@ -15,6 +15,7 @@ import {
 import { ArrowRight, Package } from "lucide-react";
 import { toast } from "sonner";
 import { getOrderFull, listWhatsappTemplates, sendOrderTemplate } from "@/lib/orders-ops.functions";
+import { confirmReturnReceived } from "@/lib/orders.functions";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/order-view/$id")({
@@ -62,6 +63,7 @@ function OrderViewPage() {
   const fullFn = useServerFn(getOrderFull);
   const templatesFn = useServerFn(listWhatsappTemplates);
   const sendFn = useServerFn(sendOrderTemplate);
+  const confirmReturnFn = useServerFn(confirmReturnReceived);
   const [templateId, setTemplateId] = useState("");
 
   const q = useQuery({
@@ -74,6 +76,15 @@ function OrderViewPage() {
     mutationFn: () => sendFn({ data: { orderId: id, templateId } }),
     onSuccess: () => {
       toast.success(T("تم إرسال الرسالة", "Message sent"));
+      qc.invalidateQueries({ queryKey: ["order-full", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const confirmReturnM = useMutation({
+    mutationFn: () => confirmReturnFn({ data: { id } }),
+    onSuccess: () => {
+      toast.success(T("تم تأكيد استلام المرتجع", "Return receipt confirmed"));
       qc.invalidateQueries({ queryKey: ["order-full", id] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -100,6 +111,16 @@ function OrderViewPage() {
           <Badge variant="outline">{String(o["confirmation_status"])}</Badge>
         ) : null}
         <Badge variant="secondary">{money(Number(o["total_amount"] ?? 0))}</Badge>
+        {o["shipment_outcome"] === "return_in_transit" && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={confirmReturnM.isPending}
+            onClick={() => confirmReturnM.mutate()}
+          >
+            {T("تأكيد استلام المرتجع", "Confirm return receipt")}
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

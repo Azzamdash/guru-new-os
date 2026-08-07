@@ -1,6 +1,7 @@
 export const ORDER_WORKFLOW_STATUSES = [
   "new",
   "processing",
+  "shipped",
   "postponed",
   "awaiting_response",
   "succeeded",
@@ -16,6 +17,7 @@ export type CollectionStatus = (typeof COLLECTION_STATUSES)[number];
 export const SHIPMENT_OUTCOMES = [
   "open",
   "delivered",
+  "return_in_transit",
   "returned",
   "customer_returned",
   "exchanged",
@@ -24,7 +26,7 @@ export const SHIPMENT_OUTCOMES = [
 
 export type ShipmentOutcome = (typeof SHIPMENT_OUTCOMES)[number];
 
-export type ShopifyLifecycleAction = "none" | "fulfill" | "cancel" | "review_return";
+export type ShopifyLifecycleAction = "none" | "fulfill" | "collect_payment" | "cancel";
 
 export type CourierRate = {
   deliveryFee: number;
@@ -42,6 +44,7 @@ export type OrderLifecycle = {
 export function isTerminalShipmentOutcome(value: string | null | undefined): boolean {
   return [
     "delivered",
+    "return_in_transit",
     "returned",
     "customer_returned",
     "exchanged",
@@ -52,10 +55,21 @@ export function isTerminalShipmentOutcome(value: string | null | undefined): boo
 export const ORDER_STATUS_LABELS_AR: Record<OrderWorkflowStatus, string> = {
   new: "جديد",
   processing: "قيد التنفيذ",
+  shipped: "في الطريق للعميل",
   postponed: "مؤجل",
-  awaiting_response: "في انتظار ردك",
+  awaiting_response: "يحتاج تدخل",
   succeeded: "تم بنجاح",
   cancelled: "ملغي",
+};
+
+export const SHIPMENT_OUTCOME_LABELS_AR: Record<ShipmentOutcome, string> = {
+  open: "مفتوح",
+  delivered: "تم التسليم",
+  return_in_transit: "في الطريق إليك",
+  returned: "تم الإرجاع",
+  customer_returned: "مرتجع من العميل",
+  exchanged: "تبديل",
+  cancelled_before_dispatch: "ملغي قبل الشحن",
 };
 
 export const COLLECTION_STATUS_LABELS_AR: Record<CollectionStatus, string> = {
@@ -144,16 +158,22 @@ function mapBostaOrderStatus(rawStatus: string): {
     return { orderStatus: "succeeded", shipmentOutcome: "exchanged" };
   }
   if (/returned|returning|return to business|rtb|مرتجع/.test(rawStatus)) {
-    return { orderStatus: "cancelled", shipmentOutcome: "returned" };
+    // Never auto-finalize a return: Bosta saying "returned"/"returning" only
+    // means the parcel is on its way back to us. Only a manual confirm-
+    // receipt action (confirm_return_received) finalizes it, once it's
+    // physically back in the warehouse.
+    return { orderStatus: "processing", shipmentOutcome: "return_in_transit" };
   }
-  if (/cancelled|canceled|terminated|ملغي/.test(rawStatus)) {
-    return { orderStatus: "cancelled", shipmentOutcome: "cancelled_before_dispatch" };
-  }
-  if (/postponed|rescheduled|postpone|مؤجل/.test(rawStatus)) {
-    return { orderStatus: "postponed", shipmentOutcome: "open" };
+  if (/cancelled|canceled|terminated|ملغي|postponed|rescheduled|postpone|مؤجل/.test(rawStatus)) {
+    // A courier-side delay or cancellation always needs a human decision —
+    // never a silent final state.
+    return { orderStatus: "awaiting_response", shipmentOutcome: "open" };
   }
   if (/awaiting.*response|waiting.*response|exception|في انتظار رد/.test(rawStatus)) {
     return { orderStatus: "awaiting_response", shipmentOutcome: "open" };
+  }
+  if (/out.?for.?delivery|in.?transit|قيد التوصيل/.test(rawStatus)) {
+    return { orderStatus: "shipped", shipmentOutcome: "open" };
   }
   if (/new|created|جديد/.test(rawStatus)) {
     return { orderStatus: "new", shipmentOutcome: "open" };
@@ -196,10 +216,17 @@ export function shouldIgnoreStaleBostaLifecycle(
   const currentReturned = currentOutcome === "returned" || currentFulfillmentStatus === "returned";
   if (currentReturned) return incomingOutcome !== "returned";
 
+  // A return already in transit only accepts further "in transit" updates —
+  // physically confirming receipt happens through confirm_return_received,
+  // not through a Bosta webhook/recall event.
+  if (currentOutcome === "return_in_transit") return incomingOutcome !== "return_in_transit";
+
   const currentDelivered =
     currentOutcome === "delivered" || currentFulfillmentStatus === "delivered";
   if (currentDelivered) {
-    return !["delivered", "returned", "customer_returned", "exchanged"].includes(incomingOutcome);
+    return !["delivered", "return_in_transit", "returned", "customer_returned", "exchanged"].includes(
+      incomingOutcome,
+    );
   }
 
   const currentCancelled =
@@ -214,6 +241,29 @@ export function resolveBostaShipmentOutcome(
   return currentOutcome === "delivered" && incomingOutcome === "returned"
     ? "customer_returned"
     : incomingOutcome;
+}
+
+/**
+ * A return that started after the order was already counted delivered is a
+ * customer return, not a plain failed-delivery return — that distinction
+ * drives a different courier fee (calculateCourierExpense) and must survive
+ * the "in transit back to us" stage, not just the final one. Preserves
+ * order_status = "succeeded" while shipment_outcome moves to
+ * "return_in_transit", so confirm_return_received can tell the two apart
+ * once the parcel is physically back.
+ */
+export function preserveDeliveredStatusOnReturn(
+  currentOrderStatus: string | null | undefined,
+  currentOutcome: string | null | undefined,
+  incoming: { orderStatus: OrderWorkflowStatus; shipmentOutcome: ShipmentOutcome },
+): { orderStatus: OrderWorkflowStatus; shipmentOutcome: ShipmentOutcome } {
+  if (
+    incoming.shipmentOutcome === "return_in_transit" &&
+    (currentOutcome === "delivered" || currentOrderStatus === "succeeded")
+  ) {
+    return { orderStatus: "succeeded", shipmentOutcome: "return_in_transit" };
+  }
+  return incoming;
 }
 
 export function lifecycleForManualShipmentOutcome(
@@ -286,14 +336,21 @@ export function deriveOrderLifecycle(input: {
   return { ...shipment, collectionStatus };
 }
 
+/**
+ * Fulfilling on Shopify happens the moment an order is dispatched to a
+ * courier (see couriers.functions.ts), not from this status-driven mapping —
+ * by the time an order reaches "succeeded" it's already long fulfilled.
+ * From here on there are only two Shopify-facing events: the customer paid
+ * (collect_payment, fired on delivery) or the order came back unpaid
+ * (cancel, fired once a return is physically confirmed received — never
+ * while it's merely "in transit" back to us).
+ */
 export function shopifyActionForOrderStatus(
   status: OrderWorkflowStatus,
   outcome: ShipmentOutcome = "open",
 ): ShopifyLifecycleAction {
-  if (status === "succeeded") return "fulfill";
-  if (status === "cancelled") {
-    return outcome === "returned" || outcome === "customer_returned" ? "review_return" : "cancel";
-  }
+  if (outcome === "delivered") return "collect_payment";
+  if (status === "cancelled" && outcome !== "return_in_transit") return "cancel";
   return "none";
 }
 

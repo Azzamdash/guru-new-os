@@ -9,6 +9,7 @@ import {
   isRecognizedBostaDeliveryStatus,
   isTerminalShipmentOutcome,
   mapBostaLifecycle,
+  preserveDeliveredStatusOnReturn,
   resolveBostaShipmentOutcome,
   shopifyActionForOrderStatus,
 } from "./order-lifecycle.shared";
@@ -1051,7 +1052,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
   const { data: order, error: oErr } = await context.supabase
     .from("orders")
     .select(
-      "id, brand_id, source, external_id, external_order_number, fulfillment_status, shipment_outcome, bosta_tracking, bosta_delivery_id",
+      "id, brand_id, source, external_id, external_order_number, order_status, fulfillment_status, shipment_outcome, bosta_tracking, bosta_delivery_id",
     )
     .eq("id", order_id)
     .maybeSingle();
@@ -1203,39 +1204,38 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
     notFoundOnBosta ? "cancelled" : stateValue,
     collectionValue,
   );
-  const lifecycle = {
+  const resolved = {
     ...mappedLifecycle,
     shipmentOutcome: resolveBostaShipmentOutcome(
       order.shipment_outcome,
       mappedLifecycle.shipmentOutcome,
     ),
   };
+  const lifecycle = preserveDeliveredStatusOnReturn(
+    order.order_status,
+    order.shipment_outcome,
+    resolved,
+  );
   const shopifyAction = shopifyActionForOrderStatus(
     lifecycle.orderStatus,
     lifecycle.shipmentOutcome,
   );
-  const shouldSyncShopify =
-    order.source === "shopify" && (shopifyAction === "fulfill" || shopifyAction === "cancel");
+  const shouldSyncShopify = order.source === "shopify" && shopifyAction !== "none";
   if (shouldSyncShopify && !order.external_id) {
     throw new Error("Shopify order id is missing; lifecycle was not closed locally");
   }
 
   const patch: Record<string, unknown> = {
     order_status: lifecycle.orderStatus,
-    collection_status: lifecycle.collectionStatus,
+    collection_status: resolved.collectionStatus,
     shipment_outcome: lifecycle.shipmentOutcome,
     courier_status_raw: stateValue,
     courier_collection_status_raw: collectionValue,
     lifecycle_source: "bosta",
     lifecycle_updated_by: null,
     lifecycle_updated_at: new Date().toISOString(),
-    shopify_sync_status: shouldSyncShopify
-      ? "pending"
-      : shopifyAction === "review_return"
-        ? "pending"
-        : "not_applicable",
-    shopify_sync_error:
-      shopifyAction === "review_return" ? "Returned order requires return/refund review" : null,
+    shopify_sync_status: shouldSyncShopify ? "pending" : "not_applicable",
+    shopify_sync_error: null as string | null,
   };
   if (newStatus && newStatus !== order.fulfillment_status) patch.fulfillment_status = newStatus;
   const { data: applied, error: lifecycleError } = await context.supabase.rpc(
@@ -1247,7 +1247,7 @@ async function pullOneBostaOrder(context: Ctx, order_id: string) {
       _state: stateValue,
       _collection_state: collectionValue,
       _order_status: lifecycle.orderStatus,
-      _collection_status: lifecycle.collectionStatus,
+      _collection_status: resolved.collectionStatus,
       _shipment_outcome: lifecycle.shipmentOutcome,
       _fulfillment_status: newStatus ?? "",
       _shopify_sync_status: String(patch.shopify_sync_status),

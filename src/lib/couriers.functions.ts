@@ -398,7 +398,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     const { data: order, error } = await context.supabase
       .from("orders")
       .select(
-        "id, brand_id, shipping_governorate, external_order_number, customer_name, customer_phone, shipping_address, total_amount, shipping_amount, note, fulfillment_status, shipment_outcome",
+        "id, brand_id, source, external_id, shipping_governorate, external_order_number, customer_name, customer_phone, shipping_address, total_amount, shipping_amount, note, fulfillment_status, shipment_outcome, collection_status",
       )
       .eq("id", data.orderId)
       .single();
@@ -474,11 +474,14 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             providerAttempted = true;
             const started = Date.now();
             const orderNo = order.external_order_number ?? order.id;
+            // Already collected manually (e.g. customer paid by transfer instead
+            // of cash on delivery)? Don't ask the courier to collect it again.
+            const codAmount = order.collection_status === "paid" ? 0 : Number(order.total_amount) || 0;
             const payload = {
               type: 10,
               businessReference: order.id,
               specs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
-              cod: Number(order.total_amount) || 0,
+              cod: codAmount,
               dropOffAddress: {
                 city: order.shipping_governorate ?? "Cairo",
                 district: order.shipping_governorate ?? "Cairo",
@@ -594,6 +597,30 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     if (finalizeError) throw finalizeError;
     if (!finalized) throw new Error("تعذر تثبيت إسناد الشحنة");
     dispatchPersisted = true;
+
+      // Best-effort: dispatch already succeeded and is committed, so a Shopify
+      // hiccup here shouldn't fail the whole action — just flag it for retry.
+      if (order.source === "shopify" && order.external_id) {
+        try {
+          const { applyShopifyOrderAction } = await import("@/server/shopifySync.server");
+          await applyShopifyOrderAction({
+            brandId: order.brand_id,
+            externalOrderId: order.external_id,
+            action: "fulfill",
+          });
+          await context.supabase
+            .from("orders")
+            .update({ shopify_sync_status: "synced", shopify_sync_error: null })
+            .eq("id", order.id);
+        } catch (shopifyError) {
+          const message = shopifyError instanceof Error ? shopifyError.message : String(shopifyError);
+          await context.supabase
+            .from("orders")
+            .update({ shopify_sync_status: "error", shopify_sync_error: message.slice(0, 500) })
+            .eq("id", order.id);
+        }
+      }
+
       return {
         ok: true,
         courier: { id: courierId, name: courierName, type: courierType },

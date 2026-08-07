@@ -13,6 +13,7 @@ import {
   mapShopifyLifecycleFields,
   mapBostaLifecycle,
   preserveCourierTerminalStatus,
+  preserveDeliveredStatusOnReturn,
   resolveBostaShipmentOutcome,
   shouldIgnoreStaleBostaLifecycle,
   shopifyActionForOrderStatus,
@@ -62,18 +63,27 @@ describe("Bosta lifecycle mapping", () => {
     });
   });
 
-  it("keeps postponed and awaiting-response states actionable", () => {
-    expect(mapBostaLifecycle("Postponed", "Pending").orderStatus).toBe("postponed");
+  it("routes courier-side delays and cancellations to awaiting_response (needs intervention)", () => {
+    expect(mapBostaLifecycle("Postponed", "Pending").orderStatus).toBe("awaiting_response");
+    expect(mapBostaLifecycle("Cancelled", "N/A").orderStatus).toBe("awaiting_response");
+    expect(mapBostaLifecycle("Cancelled", "N/A").shipmentOutcome).toBe("open");
     expect(mapBostaLifecycle("Exception - Awaiting your response", "Pending").orderStatus).toBe(
       "awaiting_response",
     );
   });
 
-  it("distinguishes a returned shipment from cancellation before dispatch", () => {
+  it("maps out-for-delivery/in-transit states to shipped", () => {
+    expect(mapBostaLifecycle("Out for delivery", "Pending").orderStatus).toBe("shipped");
+    expect(mapBostaLifecycle("In transit", "Pending").orderStatus).toBe("shipped");
+  });
+
+  it("never auto-finalizes a return: it lands in return_in_transit, not returned", () => {
     expect(mapBostaLifecycle("Returned to business", "Not Collected").shipmentOutcome).toBe(
-      "returned",
+      "return_in_transit",
     );
-    expect(mapBostaLifecycle("Cancelled", "N/A").shipmentOutcome).toBe("cancelled_before_dispatch");
+    expect(mapBostaLifecycle("Returning", "Not Collected").shipmentOutcome).toBe(
+      "return_in_transit",
+    );
   });
 
   it("ignores stale non-terminal Bosta events after a terminal shipment outcome", () => {
@@ -125,14 +135,19 @@ describe("Shopify lifecycle action", () => {
     ).toBe("customer_returned");
   });
 
-  it("fulfills successful orders and cancels cancelled orders", () => {
-    expect(shopifyActionForOrderStatus("succeeded")).toBe("fulfill");
+  it("collects payment on delivery and cancels a finalized/before-dispatch cancellation", () => {
+    expect(shopifyActionForOrderStatus("succeeded", "delivered")).toBe("collect_payment");
     expect(shopifyActionForOrderStatus("cancelled")).toBe("cancel");
+    expect(shopifyActionForOrderStatus("cancelled", "returned")).toBe("cancel");
     expect(shopifyActionForOrderStatus("processing")).toBe("none");
   });
 
-  it("does not cancel a fulfilled Shopify order when the shipment is returned", () => {
-    expect(shopifyActionForOrderStatus("cancelled", "returned")).toBe("review_return");
+  it("does not cancel while a return is merely in transit back to us", () => {
+    expect(shopifyActionForOrderStatus("cancelled", "return_in_transit")).toBe("none");
+  });
+
+  it("fulfilling on Shopify no longer happens from this mapping — it's fired at dispatch time", () => {
+    expect(shopifyActionForOrderStatus("succeeded")).toBe("none");
   });
 });
 
@@ -155,7 +170,7 @@ describe("legacy order compatibility", () => {
         legacyFulfillmentStatus: "shipped",
         legacyFinancialStatus: "pending",
       }),
-    ).toMatchObject({ orderStatus: "postponed", collectionStatus: "unpaid" });
+    ).toMatchObject({ orderStatus: "awaiting_response", collectionStatus: "unpaid" });
   });
 });
 
@@ -185,6 +200,7 @@ describe("courier outcome transitions", () => {
     expect(isTerminalShipmentOutcome("open")).toBe(false);
     for (const outcome of [
       "delivered",
+      "return_in_transit",
       "returned",
       "customer_returned",
       "exchanged",
@@ -192,6 +208,27 @@ describe("courier outcome transitions", () => {
     ]) {
       expect(isTerminalShipmentOutcome(outcome)).toBe(true);
     }
+  });
+
+  it("preserves succeeded/delivered status through the return-in-transit stage so a later confirm can tell a customer return apart from a failed delivery", () => {
+    expect(
+      preserveDeliveredStatusOnReturn("succeeded", "delivered", {
+        orderStatus: "processing",
+        shipmentOutcome: "return_in_transit",
+      }),
+    ).toEqual({ orderStatus: "succeeded", shipmentOutcome: "return_in_transit" });
+    expect(
+      preserveDeliveredStatusOnReturn("new", "open", {
+        orderStatus: "processing",
+        shipmentOutcome: "return_in_transit",
+      }),
+    ).toEqual({ orderStatus: "processing", shipmentOutcome: "return_in_transit" });
+    expect(
+      preserveDeliveredStatusOnReturn("new", "open", {
+        orderStatus: "shipped",
+        shipmentOutcome: "open",
+      }),
+    ).toEqual({ orderStatus: "shipped", shipmentOutcome: "open" });
   });
 
   it("treats a Bosta return after delivery as a customer return", () => {
