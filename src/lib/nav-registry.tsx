@@ -31,6 +31,7 @@ import {
   Facebook,
   Music2,
   Clock,
+  MessageCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -328,14 +329,54 @@ export const NAV_PAGES: NavPage[] = [
 
   // ORDER MANAGEMENT — ordered by the order lifecycle
   {
-    to: "/orders-center",
-    ar: "مركز إدارة الأوردرات",
-    en: "Orders Center",
+    to: "/orders-attention",
+    ar: "يحتاج تدخل",
+    en: "Needs Attention",
     icon: Gauge,
     hub: "sales",
     extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
-    descAr: "الشاشة الرئيسية: أوردراتي، الشحن والتحصيل وسجل الحالات",
-    descEn: "Main screen: my orders, shipping, collections and timeline",
+    descAr: "أوردرات بدون شحنة، وأوردرات تم تسليمها بدون تحصيل كامل",
+    descEn: "Orders with no shipment, and orders delivered without full collection",
+  },
+  {
+    to: "/my-orders",
+    ar: "أوردراتي",
+    en: "My Orders",
+    icon: ShoppingBag,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "الأوردرات الموزَّعة عليك: تعديل، تأكيد، وإسناد لشركة شحن",
+    descEn: "Orders assigned to you: edit, confirm, and dispatch to a courier",
+  },
+  {
+    to: "/order-shipping",
+    ar: "الشحن والتحصيل",
+    en: "Shipping & Collection",
+    icon: Truck,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "تسجيل محاولات الشحن والتحصيلات لكل أوردر",
+    descEn: "Record shipment attempts and collections per order",
+  },
+  {
+    to: "/order-timeline",
+    ar: "سجل الأوردر",
+    en: "Order Timeline",
+    icon: Activity,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "سجل حالات كل أوردر: تحصيلات، محاولات شحن، وتغييرات الحالة",
+    descEn: "Order history: collections, shipment attempts, and status changes",
+  },
+  {
+    to: "/whatsapp-inbox",
+    ar: "واتساب",
+    en: "WhatsApp",
+    icon: MessageCircle,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "صندوق محادثات واتساب: إرسال، استقبال، وربط المحادثات بالأوردرات",
+    descEn: "WhatsApp inbox: send, receive, and link chats to orders",
   },
   {
     to: "/order-distribution",
