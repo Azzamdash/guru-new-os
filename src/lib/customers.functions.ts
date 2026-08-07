@@ -187,20 +187,31 @@ export const getCustomerProfile = createServerFn({ method: "GET" })
     const [customerR, invoicesR, ordersR, notesR, brandsR] = await Promise.all([
       context.supabase.from("customers").select("*").eq("id", data.id).maybeSingle(),
       context.supabase.from("sales_invoices").select("id, brand_id, type, total_amount, collected_amount, qty, occurred_at, note").eq("customer_id", data.id).order("occurred_at", { ascending: false }),
-      context.supabase.from("orders").select("id, brand_id, source, external_order_number, financial_status, fulfillment_status, total_amount, occurred_at").eq("customer_id", data.id).order("occurred_at", { ascending: false }),
+      context.supabase.from("orders").select("id, invoice_id, brand_id, source, external_order_number, financial_status, fulfillment_status, total_amount, occurred_at").eq("customer_id", data.id).order("occurred_at", { ascending: false }),
       context.supabase.from("customer_notes").select("id, author_id, body, created_at").eq("customer_id", data.id).order("created_at", { ascending: false }),
       context.supabase.from("brands").select("id, name"),
     ]);
     if (customerR.error) throw customerR.error;
     if (!customerR.data) throw new Error("Customer not found");
     const invoices = (invoicesR.data ?? []) as Array<{ id: string; brand_id: string; type: "sale"|"return"; total_amount: number; collected_amount: number; qty: number; occurred_at: string; note: string | null }>;
-    const orders = (ordersR.data ?? []) as Array<{ id: string; brand_id: string; source: string; external_order_number: string | null; financial_status: string; fulfillment_status: string; total_amount: number; occurred_at: string }>;
+    const orders = (ordersR.data ?? []) as Array<{ id: string; invoice_id: string | null; brand_id: string; source: string; external_order_number: string | null; financial_status: string; fulfillment_status: string; total_amount: number; occurred_at: string }>;
     const brands = (brandsR.data ?? []) as Array<{ id: string; name: string }>;
     const brandName = new Map(brands.map((b) => [b.id, b.name]));
+    // LTV reflects money actually earned, not orders still in flight: only
+    // count invoices whose linked order settled (delivered/returned), same
+    // rule as computeBrandNetProfit. Invoices with no linked order still count.
+    const linkedInvoiceIds = new Set(orders.filter((o) => o.invoice_id).map((o) => o.invoice_id as string));
+    const settledInvoiceIds = new Set(
+      orders
+        .filter((o) => o.fulfillment_status === "delivered" || o.fulfillment_status === "returned")
+        .map((o) => o.invoice_id)
+        .filter((id): id is string => !!id),
+    );
     let ltv = 0, orderCount = 0;
     const brandSpend = new Map<string, number>();
     let last: string | null = null; let firstO: string | null = null;
     for (const inv of invoices) {
+      if (linkedInvoiceIds.has(inv.id) && !settledInvoiceIds.has(inv.id)) continue;
       const amt = Number(inv.total_amount) || 0;
       if (inv.type === "sale") { ltv += amt; orderCount += 1; }
       else ltv -= amt;
