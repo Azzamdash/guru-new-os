@@ -15,7 +15,7 @@ export async function computeBrandNetProfit(
   from?: string,
   to?: string,
 ): Promise<{ revenue: number; cogs: number; grossProfit: number; expenses: number; netProfit: number }> {
-  const invoices = await fetchAllRows<{ id: string; type: string; total_amount: number; occurred_at: string }>(() => {
+  const allInvoices = await fetchAllRows<{ id: string; type: string; total_amount: number; occurred_at: string }>(() => {
     let q = supabase.from("sales_invoices")
       .select("id, type, total_amount, occurred_at")
       .eq("brand_id", brandId);
@@ -23,6 +23,27 @@ export async function computeBrandNetProfit(
     if (to) q = q.lte("occurred_at", to);
     return q;
   });
+
+  // Only orders that actually settled (delivered or returned) count as
+  // realized revenue — an invoice mirrors an order the moment it's placed,
+  // long before it's earned. Invoices with no linked order at all (shouldn't
+  // happen — every current insert path goes through orders_sync_invoice)
+  // are treated as settled so nothing silently disappears.
+  const settledIds = new Set<string>();
+  const allInvoiceIds = allInvoices.map((i) => i.id);
+  if (allInvoiceIds.length) {
+    const orderRows = await fetchAllRows<{ invoice_id: string; fulfillment_status: string }>(() =>
+      supabase.from("orders").select("invoice_id, fulfillment_status").in("invoice_id", allInvoiceIds));
+    const linkedIds = new Set<string>();
+    for (const o of orderRows) {
+      linkedIds.add(o.invoice_id);
+      if (o.fulfillment_status === "delivered" || o.fulfillment_status === "returned") {
+        settledIds.add(o.invoice_id);
+      }
+    }
+    for (const id of allInvoiceIds) if (!linkedIds.has(id)) settledIds.add(id);
+  }
+  const invoices = allInvoices.filter((i) => settledIds.has(i.id));
 
   const revenue = invoices.reduce((s, r) => s + (r.type === "return" ? -1 : 1) * (Number(r.total_amount) || 0), 0);
 
