@@ -113,6 +113,394 @@
   --sidebar-accent-foreground: oklch(0.96 0.005 220);
   --sidebar-border: oklch(0.28 0.03 222);
   --sidebar-ring: oklch(0.68 0.16 175);
+
+  --card-gradient-border: oklch(0.3 0.03 222 / 0.6);
+}
+
+/*
+ * Theme system: color identity is picked independently from light/dark mode.
+ * :root above is "emerald" + dark — the original, unchanged look, and the
+ * default for every user until they pick something else (see ThemeProvider).
+ * Every (theme, mode) pair is a fully-specified .theme-X.mode-Y class below
+ * (never a partial override), so the same class also works as a self-
+ * contained scope for the live preview cards on the Themes page, not just
+ * on <html>. ThemeProvider applies theme-X + mode-Y to <html> globally.
+ */
+
+/* ---------- Emerald — dark (same values as :root, for live preview) ---------- */
+.theme-emerald.mode-dark {
+  --background: oklch(0.15 0.025 220);
+  --foreground: oklch(0.96 0.005 220);
+  --card: oklch(0.19 0.03 222);
+  --card-foreground: oklch(0.96 0.005 220);
+  --popover: oklch(0.21 0.03 222);
+  --popover-foreground: oklch(0.96 0.005 220);
+  --primary: oklch(0.68 0.16 175);
+  --primary-foreground: oklch(0.15 0.025 220);
+  --secondary: oklch(0.28 0.04 220);
+  --secondary-foreground: oklch(0.96 0.005 220);
+  --muted: oklch(0.24 0.03 222);
+  --muted-foreground: oklch(0.68 0.02 220);
+  --accent: oklch(0.78 0.16 85);
+  --accent-foreground: oklch(0.15 0.025 220);
+  --success: oklch(0.72 0.18 155);
+  --success-foreground: oklch(0.15 0.025 220);
+  --warning: oklch(0.8 0.17 75);
+  --warning-foreground: oklch(0.15 0.025 220);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.28 0.03 222);
+  --input: oklch(0.24 0.03 222);
+  --ring: oklch(0.68 0.16 175);
+  --chart-1: oklch(0.68 0.16 175);
+  --chart-2: oklch(0.78 0.16 85);
+  --chart-3: oklch(0.72 0.18 155);
+  --chart-4: oklch(0.7 0.19 305);
+  --chart-5: oklch(0.75 0.18 30);
+  --sidebar: oklch(0.17 0.028 222);
+  --sidebar-foreground: oklch(0.96 0.005 220);
+  --sidebar-primary: oklch(0.68 0.16 175);
+  --sidebar-primary-foreground: oklch(0.15 0.025 220);
+  --sidebar-accent: oklch(0.24 0.03 222);
+  --sidebar-accent-foreground: oklch(0.96 0.005 220);
+  --sidebar-border: oklch(0.28 0.03 222);
+  --sidebar-ring: oklch(0.68 0.16 175);
+  --gradient-primary: linear-gradient(135deg, oklch(0.62 0.15 175) 0%, oklch(0.55 0.12 195) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.78 0.16 85) 0%, oklch(0.72 0.18 55) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(0.22 0.03 220) 0%, oklch(0.18 0.03 225) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.28 0.08 200 / 0.4), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.62 0.15 175 / 0.25);
+  --shadow-card: 0 4px 24px -8px oklch(0.1 0.03 220 / 0.4);
+  --card-gradient-border: oklch(0.3 0.03 222 / 0.6);
+}
+
+/* ---------- Emerald — light ---------- */
+.theme-emerald.mode-light {
+  --background: oklch(0.985 0.006 220);
+  --foreground: oklch(0.18 0.02 220);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 220);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 220);
+  --primary: oklch(0.5 0.15 175);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.012 220);
+  --secondary-foreground: oklch(0.18 0.02 220);
+  --muted: oklch(0.95 0.012 220);
+  --muted-foreground: oklch(0.46 0.02 220);
+  --accent: oklch(0.58 0.15 75);
+  --accent-foreground: oklch(0.99 0 0);
+  --success: oklch(0.5 0.15 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.68 0.16 75);
+  --warning-foreground: oklch(0.2 0.02 220);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.89 0.013 220);
+  --input: oklch(0.91 0.012 220);
+  --ring: oklch(0.5 0.15 175);
+  --chart-1: oklch(0.5 0.15 175);
+  --chart-2: oklch(0.58 0.15 75);
+  --chart-3: oklch(0.5 0.15 155);
+  --chart-4: oklch(0.52 0.17 305);
+  --chart-5: oklch(0.55 0.17 30);
+  --sidebar: oklch(0.97 0.008 220);
+  --sidebar-foreground: oklch(0.18 0.02 220);
+  --sidebar-primary: oklch(0.5 0.15 175);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.012 220);
+  --sidebar-accent-foreground: oklch(0.18 0.02 220);
+  --sidebar-border: oklch(0.89 0.013 220);
+  --sidebar-ring: oklch(0.5 0.15 175);
+  --gradient-primary: linear-gradient(135deg, oklch(0.5 0.15 175) 0%, oklch(0.46 0.12 195) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.6 0.15 85) 0%, oklch(0.55 0.17 55) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.98 0.006 220) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.9 0.02 200 / 0.35), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.5 0.15 175 / 0.18);
+  --shadow-card: 0 4px 20px -8px oklch(0.3 0.03 220 / 0.12);
+  --card-gradient-border: oklch(0.89 0.013 220 / 0.9);
+}
+
+/* ---------- Violet — dark ("Creative") ---------- */
+.theme-violet.mode-dark {
+  --background: oklch(0.15 0.03 290);
+  --foreground: oklch(0.96 0.006 290);
+  --card: oklch(0.19 0.035 290);
+  --card-foreground: oklch(0.96 0.006 290);
+  --popover: oklch(0.21 0.035 290);
+  --popover-foreground: oklch(0.96 0.006 290);
+  --primary: oklch(0.68 0.19 292);
+  --primary-foreground: oklch(0.14 0.03 290);
+  --secondary: oklch(0.28 0.045 290);
+  --secondary-foreground: oklch(0.96 0.006 290);
+  --muted: oklch(0.24 0.035 290);
+  --muted-foreground: oklch(0.7 0.025 290);
+  --accent: oklch(0.68 0.19 330);
+  --accent-foreground: oklch(0.98 0 0);
+  --success: oklch(0.7 0.17 155);
+  --success-foreground: oklch(0.14 0.03 290);
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.14 0.03 290);
+  --destructive: oklch(0.65 0.22 20);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.29 0.035 290);
+  --input: oklch(0.24 0.035 290);
+  --ring: oklch(0.68 0.19 292);
+  --chart-1: oklch(0.68 0.19 292);
+  --chart-2: oklch(0.68 0.19 330);
+  --chart-3: oklch(0.7 0.17 155);
+  --chart-4: oklch(0.62 0.17 245);
+  --chart-5: oklch(0.72 0.16 60);
+  --sidebar: oklch(0.17 0.032 290);
+  --sidebar-foreground: oklch(0.96 0.006 290);
+  --sidebar-primary: oklch(0.68 0.19 292);
+  --sidebar-primary-foreground: oklch(0.14 0.03 290);
+  --sidebar-accent: oklch(0.24 0.035 290);
+  --sidebar-accent-foreground: oklch(0.96 0.006 290);
+  --sidebar-border: oklch(0.29 0.035 290);
+  --sidebar-ring: oklch(0.68 0.19 292);
+  --gradient-primary: linear-gradient(135deg, oklch(0.68 0.19 292) 0%, oklch(0.62 0.18 320) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.68 0.19 330) 0%, oklch(0.62 0.2 355) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(0.22 0.035 288) 0%, oklch(0.18 0.035 292) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.32 0.09 292 / 0.4), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.68 0.19 292 / 0.28);
+  --shadow-card: 0 4px 24px -8px oklch(0.1 0.035 290 / 0.4);
+  --card-gradient-border: oklch(0.32 0.035 290 / 0.6);
+}
+
+/* ---------- Violet — light ---------- */
+.theme-violet.mode-light {
+  --background: oklch(0.985 0.007 292);
+  --foreground: oklch(0.2 0.03 292);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.03 292);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.03 292);
+  --primary: oklch(0.5 0.19 292);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.015 292);
+  --secondary-foreground: oklch(0.2 0.03 292);
+  --muted: oklch(0.95 0.015 292);
+  --muted-foreground: oklch(0.47 0.03 292);
+  --accent: oklch(0.52 0.2 330);
+  --accent-foreground: oklch(0.99 0 0);
+  --success: oklch(0.5 0.15 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.68 0.16 75);
+  --warning-foreground: oklch(0.2 0.02 292);
+  --destructive: oklch(0.55 0.22 20);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.9 0.016 292);
+  --input: oklch(0.92 0.015 292);
+  --ring: oklch(0.5 0.19 292);
+  --chart-1: oklch(0.5 0.19 292);
+  --chart-2: oklch(0.52 0.2 330);
+  --chart-3: oklch(0.5 0.15 155);
+  --chart-4: oklch(0.48 0.16 245);
+  --chart-5: oklch(0.55 0.15 60);
+  --sidebar: oklch(0.97 0.01 292);
+  --sidebar-foreground: oklch(0.2 0.03 292);
+  --sidebar-primary: oklch(0.5 0.19 292);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.014 292);
+  --sidebar-accent-foreground: oklch(0.2 0.03 292);
+  --sidebar-border: oklch(0.9 0.016 292);
+  --sidebar-ring: oklch(0.5 0.19 292);
+  --gradient-primary: linear-gradient(135deg, oklch(0.5 0.19 292) 0%, oklch(0.45 0.18 320) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.52 0.2 330) 0%, oklch(0.47 0.2 355) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.98 0.008 292) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.88 0.03 292 / 0.35), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.5 0.19 292 / 0.16);
+  --shadow-card: 0 4px 20px -8px oklch(0.3 0.035 292 / 0.12);
+  --card-gradient-border: oklch(0.9 0.016 292 / 0.9);
+}
+
+/* ---------- Midnight — dark ("Tech") ---------- */
+.theme-midnight.mode-dark {
+  --background: oklch(0.12 0.015 250);
+  --foreground: oklch(0.95 0.006 250);
+  --card: oklch(0.16 0.018 250);
+  --card-foreground: oklch(0.95 0.006 250);
+  --popover: oklch(0.18 0.018 250);
+  --popover-foreground: oklch(0.95 0.006 250);
+  --primary: oklch(0.62 0.18 240);
+  --primary-foreground: oklch(0.11 0.015 250);
+  --secondary: oklch(0.25 0.025 250);
+  --secondary-foreground: oklch(0.95 0.006 250);
+  --muted: oklch(0.21 0.018 250);
+  --muted-foreground: oklch(0.66 0.018 250);
+  --accent: oklch(0.72 0.13 200);
+  --accent-foreground: oklch(0.11 0.015 250);
+  --success: oklch(0.7 0.17 155);
+  --success-foreground: oklch(0.11 0.015 250);
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.11 0.015 250);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.25 0.02 250);
+  --input: oklch(0.21 0.018 250);
+  --ring: oklch(0.62 0.18 240);
+  --chart-1: oklch(0.62 0.18 240);
+  --chart-2: oklch(0.72 0.13 200);
+  --chart-3: oklch(0.7 0.17 155);
+  --chart-4: oklch(0.65 0.18 280);
+  --chart-5: oklch(0.74 0.16 60);
+  --sidebar: oklch(0.14 0.017 250);
+  --sidebar-foreground: oklch(0.95 0.006 250);
+  --sidebar-primary: oklch(0.62 0.18 240);
+  --sidebar-primary-foreground: oklch(0.11 0.015 250);
+  --sidebar-accent: oklch(0.21 0.018 250);
+  --sidebar-accent-foreground: oklch(0.95 0.006 250);
+  --sidebar-border: oklch(0.25 0.02 250);
+  --sidebar-ring: oklch(0.62 0.18 240);
+  --gradient-primary: linear-gradient(135deg, oklch(0.68 0.16 255) 0%, oklch(0.6 0.19 235) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.72 0.13 200) 0%, oklch(0.65 0.16 220) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(0.18 0.018 248) 0%, oklch(0.14 0.016 252) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.26 0.07 235 / 0.4), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.62 0.18 240 / 0.28);
+  --shadow-card: 0 4px 24px -8px oklch(0.06 0.02 250 / 0.5);
+  --card-gradient-border: oklch(0.27 0.02 250 / 0.6);
+}
+
+/* ---------- Midnight — light ---------- */
+.theme-midnight.mode-light {
+  --background: oklch(0.985 0.005 245);
+  --foreground: oklch(0.16 0.02 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0.02 250);
+  --primary: oklch(0.46 0.18 240);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.01 245);
+  --secondary-foreground: oklch(0.16 0.02 250);
+  --muted: oklch(0.95 0.01 245);
+  --muted-foreground: oklch(0.45 0.02 250);
+  --accent: oklch(0.5 0.13 200);
+  --accent-foreground: oklch(0.99 0 0);
+  --success: oklch(0.5 0.15 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.68 0.16 75);
+  --warning-foreground: oklch(0.18 0.02 250);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.89 0.012 245);
+  --input: oklch(0.91 0.011 245);
+  --ring: oklch(0.46 0.18 240);
+  --chart-1: oklch(0.46 0.18 240);
+  --chart-2: oklch(0.5 0.13 200);
+  --chart-3: oklch(0.5 0.15 155);
+  --chart-4: oklch(0.5 0.16 280);
+  --chart-5: oklch(0.55 0.15 60);
+  --sidebar: oklch(0.97 0.007 245);
+  --sidebar-foreground: oklch(0.16 0.02 250);
+  --sidebar-primary: oklch(0.46 0.18 240);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.01 245);
+  --sidebar-accent-foreground: oklch(0.16 0.02 250);
+  --sidebar-border: oklch(0.89 0.012 245);
+  --sidebar-ring: oklch(0.46 0.18 240);
+  --gradient-primary: linear-gradient(135deg, oklch(0.5 0.17 255) 0%, oklch(0.44 0.19 235) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.5 0.13 200) 0%, oklch(0.45 0.15 220) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.98 0.005 245) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.88 0.02 240 / 0.35), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.46 0.18 240 / 0.16);
+  --shadow-card: 0 4px 20px -8px oklch(0.3 0.02 250 / 0.12);
+  --card-gradient-border: oklch(0.89 0.012 245 / 0.9);
+}
+
+/* ---------- Amber — dark ("Creative") ---------- */
+.theme-amber.mode-dark {
+  --background: oklch(0.16 0.02 45);
+  --foreground: oklch(0.96 0.008 50);
+  --card: oklch(0.2 0.024 45);
+  --card-foreground: oklch(0.96 0.008 50);
+  --popover: oklch(0.22 0.024 45);
+  --popover-foreground: oklch(0.96 0.008 50);
+  --primary: oklch(0.72 0.17 50);
+  --primary-foreground: oklch(0.16 0.02 45);
+  --secondary: oklch(0.29 0.03 45);
+  --secondary-foreground: oklch(0.96 0.008 50);
+  --muted: oklch(0.25 0.025 45);
+  --muted-foreground: oklch(0.7 0.025 50);
+  --accent: oklch(0.64 0.2 25);
+  --accent-foreground: oklch(0.98 0 0);
+  --success: oklch(0.7 0.17 155);
+  --success-foreground: oklch(0.16 0.02 45);
+  --warning: oklch(0.8 0.15 90);
+  --warning-foreground: oklch(0.16 0.02 45);
+  --destructive: oklch(0.62 0.23 15);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.3 0.025 45);
+  --input: oklch(0.25 0.025 45);
+  --ring: oklch(0.72 0.17 50);
+  --chart-1: oklch(0.72 0.17 50);
+  --chart-2: oklch(0.64 0.2 25);
+  --chart-3: oklch(0.7 0.17 155);
+  --chart-4: oklch(0.62 0.16 235);
+  --chart-5: oklch(0.68 0.15 310);
+  --sidebar: oklch(0.18 0.022 45);
+  --sidebar-foreground: oklch(0.96 0.008 50);
+  --sidebar-primary: oklch(0.72 0.17 50);
+  --sidebar-primary-foreground: oklch(0.16 0.02 45);
+  --sidebar-accent: oklch(0.25 0.025 45);
+  --sidebar-accent-foreground: oklch(0.96 0.008 50);
+  --sidebar-border: oklch(0.3 0.025 45);
+  --sidebar-ring: oklch(0.72 0.17 50);
+  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.17 50) 0%, oklch(0.64 0.2 25) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.64 0.2 25) 0%, oklch(0.58 0.22 10) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(0.23 0.024 42) 0%, oklch(0.19 0.022 46) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.32 0.09 45 / 0.4), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.72 0.17 50 / 0.28);
+  --shadow-card: 0 4px 24px -8px oklch(0.08 0.02 45 / 0.45);
+  --card-gradient-border: oklch(0.32 0.025 45 / 0.6);
+}
+
+/* ---------- Amber — light ---------- */
+.theme-amber.mode-light {
+  --background: oklch(0.985 0.01 55);
+  --foreground: oklch(0.2 0.025 40);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.025 40);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.025 40);
+  --primary: oklch(0.58 0.19 45);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.018 50);
+  --secondary-foreground: oklch(0.2 0.025 40);
+  --muted: oklch(0.95 0.018 50);
+  --muted-foreground: oklch(0.48 0.03 45);
+  --accent: oklch(0.52 0.2 25);
+  --accent-foreground: oklch(0.99 0 0);
+  --success: oklch(0.5 0.15 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.68 0.15 90);
+  --warning-foreground: oklch(0.2 0.02 45);
+  --destructive: oklch(0.52 0.23 15);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.9 0.02 50);
+  --input: oklch(0.92 0.018 50);
+  --ring: oklch(0.58 0.19 45);
+  --chart-1: oklch(0.58 0.19 45);
+  --chart-2: oklch(0.52 0.2 25);
+  --chart-3: oklch(0.5 0.15 155);
+  --chart-4: oklch(0.48 0.15 235);
+  --chart-5: oklch(0.53 0.14 310);
+  --sidebar: oklch(0.97 0.013 50);
+  --sidebar-foreground: oklch(0.2 0.025 40);
+  --sidebar-primary: oklch(0.58 0.19 45);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.017 50);
+  --sidebar-accent-foreground: oklch(0.2 0.025 40);
+  --sidebar-border: oklch(0.9 0.02 50);
+  --sidebar-ring: oklch(0.58 0.19 45);
+  --gradient-primary: linear-gradient(135deg, oklch(0.58 0.19 45) 0%, oklch(0.52 0.2 25) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.52 0.2 25) 0%, oklch(0.46 0.22 10) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.98 0.012 55) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.87 0.03 50 / 0.35), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.58 0.19 45 / 0.16);
+  --shadow-card: 0 4px 20px -8px oklch(0.3 0.025 45 / 0.12);
+  --card-gradient-border: oklch(0.9 0.02 50 / 0.9);
 }
 
 .dark {
@@ -166,7 +554,7 @@
 @utility card-gradient {
   background-image: var(--gradient-card);
   box-shadow: var(--shadow-card);
-  border: 1px solid oklch(0.3 0.03 222 / 0.6);
+  border: 1px solid var(--card-gradient-border);
 }
 
 @utility text-gradient-primary {
@@ -190,7 +578,7 @@
 .article-content code { font-family: var(--font-mono); font-size: 0.9em; }
 .article-content blockquote { border-inline-start: 3px solid var(--primary, #38bdf8); padding-inline-start: 0.75rem; color: rgb(from currentColor r g b / 0.75); margin: 0.6em 0; }
 .article-content table { width: 100%; border-collapse: collapse; margin: 0.6em 0; }
-.article-content th, .article-content td { border: 1px solid oklch(0.3 0.03 222 / 0.6); padding: 0.5rem; }
+.article-content th, .article-content td { border: 1px solid var(--card-gradient-border); padding: 0.5rem; }
 
 /* Print styles for report pages */
 @media print {
