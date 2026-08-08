@@ -64,6 +64,24 @@ describe("theme persistence", () => {
     expect(initialTheme(fakeStore({ [THEME_STORAGE_KEY]: "{not json" }))).toEqual(defaultTheme());
   });
 
+  it("accepts every theme added in the second round", () => {
+    const store = fakeStore();
+    const added: ThemeValue[] = [
+      { theme: "lime", mode: "dark" },
+      { theme: "cyan", mode: "light" },
+      { theme: "gold", mode: "dark" },
+      { theme: "slate", mode: "light" },
+      { theme: "forest", mode: "dark" },
+      { theme: "sapphire", mode: "light" },
+      { theme: "rose", mode: "dark" },
+      { theme: "coral", mode: "light" },
+    ];
+    for (const choice of added) {
+      writeStoredTheme(store, choice);
+      expect(initialTheme(store)).toEqual(choice);
+    }
+  });
+
   it("never throws when storage rejects writes", () => {
     const throwing = {
       getItem: () => null,

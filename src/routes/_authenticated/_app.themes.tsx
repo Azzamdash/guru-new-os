@@ -61,6 +61,78 @@ const THEMES: Array<{
     noteAr: "دافئ وحيوي — أقل شبهًا بلوحة تحكم مالية، وده مقصود.",
     noteEn: "Warm and energetic — the one that feels least like a finance dashboard, on purpose.",
   },
+  {
+    id: "lime",
+    nameAr: "لايم",
+    nameEn: "Lime",
+    tagAr: "مرح",
+    tagEn: "Playful",
+    noteAr: "أخضر مائل للأصفر بحيوية عالية — الأكثر جرأة من بين الكل.",
+    noteEn: "High-energy yellow-green — the boldest of the bunch.",
+  },
+  {
+    id: "cyan",
+    nameAr: "سماوي",
+    nameEn: "Cyan",
+    tagAr: "تِك نضِر",
+    tagEn: "Fresh Tech",
+    noteAr: "فيروزي منعش مع لمسة ماجنتا — تقني وخفيف في نفس الوقت.",
+    noteEn: "A refreshing turquoise with a magenta pop — technical without feeling heavy.",
+  },
+  {
+    id: "gold",
+    nameAr: "ذهبي",
+    nameEn: "Gold",
+    tagAr: "فاخر",
+    tagEn: "Luxury",
+    noteAr: "ذهبي دافئ فخم — إحساس مختلف عن أي لوحة تحكم معتادة.",
+    noteEn: "A warm, premium gold — feels distinct from the usual dashboard palette.",
+  },
+  {
+    id: "slate",
+    nameAr: "رمادي أردوازي",
+    nameEn: "Slate",
+    tagAr: "بسيط ومؤسسي",
+    tagEn: "Minimal · Corporate",
+    noteAr: "رمادي مزرق هادئ ومحايد — الأقل صخبًا من بين الكل، مناسب لبيئة عمل جادة.",
+    noteEn: "A calm, neutral blue-grey — the quietest of the set, built for a serious workspace.",
+  },
+  {
+    id: "forest",
+    nameAr: "غابي",
+    nameEn: "Forest",
+    tagAr: "طبيعي",
+    tagEn: "Natural",
+    noteAr: "أخضر عميق طبيعي — مختلف عن الزمردي الفاتح، أقرب لألوان الطبيعة.",
+    noteEn: "A deep, natural green — distinct from Emerald's lighter teal, closer to nature's own tones.",
+  },
+  {
+    id: "sapphire",
+    nameAr: "ياقوتي أزرق",
+    nameEn: "Sapphire",
+    tagAr: "تِك",
+    tagEn: "Tech",
+    noteAr: "أزرق غني بلمسة بنفسجية — أكثر ثراءً من الميدنايت وأقل قتامة.",
+    noteEn: "A rich blue with a violet edge — richer and less stark than Midnight.",
+  },
+  {
+    id: "rose",
+    nameAr: "وردي",
+    nameEn: "Rose",
+    tagAr: "دافئ وإبداعي",
+    tagEn: "Warm · Creative",
+    noteAr: "وردي جريء بلمسة برتقالية — تعبيري ودافئ.",
+    noteEn: "A confident pink-red with a warm orange pop — expressive and warm.",
+  },
+  {
+    id: "coral",
+    nameAr: "مرجاني",
+    nameEn: "Coral",
+    tagAr: "حيوي",
+    tagEn: "Energetic",
+    noteAr: "مرجاني دافئ وحيوي بلمسة سماوية باردة تعمل كتباين — أكثر حيوية من الأورانج.",
+    noteEn: "A warm, energetic coral balanced by a cool cyan pop — livelier than Amber.",
+  },
 ];
 
 function ThemesPage() {
@@ -69,7 +141,7 @@ function ThemesPage() {
   const { theme, mode, setTheme, setMode } = useAppTheme();
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-5xl">
+    <div className="p-6 md:p-8 space-y-6 max-w-6xl">
       <div className="flex items-center gap-3">
         <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center">
           <Palette className="w-5 h-5 text-primary" />
@@ -117,7 +189,7 @@ function ThemesPage() {
       </Card>
 
       {/* Theme picker */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {THEMES.map((t) => {
           const active = theme === t.id;
           return (
