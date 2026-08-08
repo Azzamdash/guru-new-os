@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { useLang } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 
-export { defaultPeriod } from "@/lib/period-storage";
-export type { PeriodPreset, PeriodValue } from "@/lib/period-storage";
+export { defaultPeriod, resolvePeriod } from "@/lib/period-storage";
+export type { PeriodPreset, PeriodValue, ResolvedPeriod } from "@/lib/period-storage";
 import type { PeriodPreset, PeriodValue } from "@/lib/period-storage";
 
 
@@ -22,69 +22,10 @@ const PRESET_KEYS: Record<PeriodPreset, string> = {
 };
 export const PRESET_LABELS = PRESET_KEYS;
 
-function fmtISO(d: Date) { return d.toISOString().slice(0, 10); }
-
-export type ResolvedPeriod = {
-  periodType: "custom" | null;
-  dateFrom: string | null;
-  dateTo: string | null;
-  year: number;
-  previous: { dateFrom: string | null; dateTo: string | null; year: number } | null;
-};
-
-/** Compute effective { periodType, dateFrom, dateTo, year, previous } to pass to getInternalDashboard. */
-export function resolvePeriod(v: PeriodValue): ResolvedPeriod {
-  const today = new Date();
-  const y = today.getFullYear();
-  const iso = fmtISO;
-  let cur: { periodType: "custom" | null; dateFrom: string | null; dateTo: string | null; year: number };
-  switch (v.preset) {
-    case "today": {
-      const t = getTodayInBusinessTimezone();
-      cur = { periodType: "custom", dateFrom: t, dateTo: t, year: y }; break;
-    }
-    case "yesterday": {
-      const d = new Date(today); d.setDate(d.getDate() - 1);
-      cur = { periodType: "custom", dateFrom: iso(d), dateTo: iso(d), year: d.getFullYear() }; break;
-    }
-    case "this_week": {
-      const d = new Date(today);
-      const day = d.getDay(); const diff = day === 0 ? 6 : day - 1;
-      d.setDate(d.getDate() - diff);
-      cur = { periodType: "custom", dateFrom: iso(d), dateTo: iso(today), year: y }; break;
-    }
-    case "this_month": {
-      const d = new Date(today.getFullYear(), today.getMonth(), 1);
-      cur = { periodType: "custom", dateFrom: iso(d), dateTo: iso(today), year: y }; break;
-    }
-    case "this_year":
-      cur = { periodType: null, dateFrom: null, dateTo: null, year: v.year || y }; break;
-    case "last_12": {
-      const d = new Date(today); d.setMonth(d.getMonth() - 12);
-      cur = { periodType: "custom", dateFrom: iso(d), dateTo: iso(today), year: y }; break;
-    }
-    case "custom":
-      cur = { periodType: "custom", dateFrom: v.dateFrom || null, dateTo: v.dateTo || null, year: v.year || y }; break;
-  }
-  let previous: ResolvedPeriod["previous"] = null;
-  if (v.compare) {
-    if (cur.periodType === "custom" && cur.dateFrom && cur.dateTo) {
-      const df = new Date(cur.dateFrom); const dt = new Date(cur.dateTo);
-      const days = Math.max(1, Math.round((dt.getTime() - df.getTime()) / 86400000) + 1);
-      const pTo = new Date(df); pTo.setDate(pTo.getDate() - 1);
-      const pFrom = new Date(pTo); pFrom.setDate(pFrom.getDate() - (days - 1));
-      previous = { dateFrom: iso(pFrom), dateTo: iso(pTo), year: pFrom.getFullYear() };
-    } else if (cur.periodType === null) {
-      previous = { dateFrom: null, dateTo: null, year: cur.year - 1 };
-    }
-  }
-  return { ...cur, previous };
-}
-
 export function PeriodFilter({ value, onChange }: { value: PeriodValue; onChange: (v: PeriodValue) => void }) {
   const { t } = useLang();
   const years = useMemo(() => {
-    const cy = new Date().getFullYear();
+    const cy = Number(getTodayInBusinessTimezone().slice(0, 4));
     return Array.from({ length: 5 }, (_, i) => cy - i);
   }, []);
   return (
