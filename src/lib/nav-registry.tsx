@@ -32,6 +32,7 @@ import {
   Music2,
   Clock,
   MessageCircle,
+  Palette,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -1057,6 +1058,15 @@ export const NAV_PAGES: NavPage[] = [
     requiresWrite: true,
     descAr: "إدخال يومي وشهري",
     descEn: "Daily/monthly entry",
+  },
+  {
+    to: "/themes",
+    ar: "الثيمات",
+    en: "Themes",
+    icon: Palette,
+    hub: "settings",
+    descAr: "اختيار هوية الألوان ووضع الإضاءة للنظام كله",
+    descEn: "Pick the app's color identity and light/dark mode",
   },
 ];
 

@@ -61,6 +61,7 @@ import { Route as AuthenticatedAppServicesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppServicesDashboardRouteImport } from './routes/_authenticated/_app.services-dashboard'
 import { Route as AuthenticatedAppSuppliersRouteImport } from './routes/_authenticated/_app.suppliers'
 import { Route as AuthenticatedAppTasksRouteImport } from './routes/_authenticated/_app.tasks'
+import { Route as AuthenticatedAppThemesRouteImport } from './routes/_authenticated/_app.themes'
 import { Route as AuthenticatedAppTreasuryRouteImport } from './routes/_authenticated/_app.treasury'
 import { Route as AuthenticatedAppWhatsappInboxRouteImport } from './routes/_authenticated/_app.whatsapp-inbox'
 import { Route as AuthenticatedAppWhatsappSettingsRouteImport } from './routes/_authenticated/_app.whatsapp-settings'
@@ -409,6 +410,11 @@ const AuthenticatedAppSuppliersRoute =
 const AuthenticatedAppTasksRoute = AuthenticatedAppTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppThemesRoute = AuthenticatedAppThemesRouteImport.update({
+  id: '/themes',
+  path: '/themes',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppTreasuryRoute =
@@ -773,6 +779,7 @@ export interface FileRoutesByFullPath {
   '/services-dashboard': typeof AuthenticatedAppServicesDashboardRouteWithChildren
   '/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/tasks': typeof AuthenticatedAppTasksRoute
+  '/themes': typeof AuthenticatedAppThemesRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
   '/whatsapp-inbox': typeof AuthenticatedAppWhatsappInboxRoute
   '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
@@ -875,6 +882,7 @@ export interface FileRoutesByTo {
   '/purchases': typeof AuthenticatedAppPurchasesRoute
   '/services': typeof AuthenticatedAppServicesRoute
   '/tasks': typeof AuthenticatedAppTasksRoute
+  '/themes': typeof AuthenticatedAppThemesRoute
   '/treasury': typeof AuthenticatedAppTreasuryRoute
   '/whatsapp-inbox': typeof AuthenticatedAppWhatsappInboxRoute
   '/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
@@ -982,6 +990,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/services-dashboard': typeof AuthenticatedAppServicesDashboardRouteWithChildren
   '/_authenticated/_app/suppliers': typeof AuthenticatedAppSuppliersRouteWithChildren
   '/_authenticated/_app/tasks': typeof AuthenticatedAppTasksRoute
+  '/_authenticated/_app/themes': typeof AuthenticatedAppThemesRoute
   '/_authenticated/_app/treasury': typeof AuthenticatedAppTreasuryRoute
   '/_authenticated/_app/whatsapp-inbox': typeof AuthenticatedAppWhatsappInboxRoute
   '/_authenticated/_app/whatsapp-settings': typeof AuthenticatedAppWhatsappSettingsRoute
@@ -1088,6 +1097,7 @@ export interface FileRouteTypes {
     | '/services-dashboard'
     | '/suppliers'
     | '/tasks'
+    | '/themes'
     | '/treasury'
     | '/whatsapp-inbox'
     | '/whatsapp-settings'
@@ -1190,6 +1200,7 @@ export interface FileRouteTypes {
     | '/purchases'
     | '/services'
     | '/tasks'
+    | '/themes'
     | '/treasury'
     | '/whatsapp-inbox'
     | '/whatsapp-settings'
@@ -1296,6 +1307,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/services-dashboard'
     | '/_authenticated/_app/suppliers'
     | '/_authenticated/_app/tasks'
+    | '/_authenticated/_app/themes'
     | '/_authenticated/_app/treasury'
     | '/_authenticated/_app/whatsapp-inbox'
     | '/_authenticated/_app/whatsapp-settings'
@@ -1735,6 +1747,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/tasks'
       preLoaderRoute: typeof AuthenticatedAppTasksRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/themes': {
+      id: '/_authenticated/_app/themes'
+      path: '/themes'
+      fullPath: '/themes'
+      preLoaderRoute: typeof AuthenticatedAppThemesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/treasury': {
@@ -2217,6 +2236,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppServicesDashboardRoute: typeof AuthenticatedAppServicesDashboardRouteWithChildren
   AuthenticatedAppSuppliersRoute: typeof AuthenticatedAppSuppliersRouteWithChildren
   AuthenticatedAppTasksRoute: typeof AuthenticatedAppTasksRoute
+  AuthenticatedAppThemesRoute: typeof AuthenticatedAppThemesRoute
   AuthenticatedAppTreasuryRoute: typeof AuthenticatedAppTreasuryRoute
   AuthenticatedAppWhatsappInboxRoute: typeof AuthenticatedAppWhatsappInboxRoute
   AuthenticatedAppWhatsappSettingsRoute: typeof AuthenticatedAppWhatsappSettingsRoute
@@ -2302,6 +2322,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppServicesDashboardRouteWithChildren,
   AuthenticatedAppSuppliersRoute: AuthenticatedAppSuppliersRouteWithChildren,
   AuthenticatedAppTasksRoute: AuthenticatedAppTasksRoute,
+  AuthenticatedAppThemesRoute: AuthenticatedAppThemesRoute,
   AuthenticatedAppTreasuryRoute: AuthenticatedAppTreasuryRoute,
   AuthenticatedAppWhatsappInboxRoute: AuthenticatedAppWhatsappInboxRoute,
   AuthenticatedAppWhatsappSettingsRoute: AuthenticatedAppWhatsappSettingsRoute,
