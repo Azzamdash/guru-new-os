@@ -400,7 +400,7 @@ export function CeoDashboard() {
         title={T("العمليات", "Operations")}
         subtitle={T("الاوردرات وحالتها خلال الفترة", "Orders and their status during the period")}
       >
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           <KpiTile
             label={T("إجمالي الاوردرات", "Total orders")}
             value={nf0.format(ordersTotal)}
@@ -427,6 +427,13 @@ export function CeoDashboard() {
           <KpiTile
             label={T("متوسط قيمة الاوردر (AOV)", "Average order value (AOV)")}
             value={egp(aov)}
+            icon={<Truck className="w-4 h-4" />}
+          />
+          <KpiTile
+            label={T("تكلفة الشحن", "Shipping cost")}
+            value={egp(dash?.totals.shippingCost ?? 0)}
+            hint={egpFull(dash?.totals.shippingCost ?? 0)}
+            tone="warning"
             icon={<Truck className="w-4 h-4" />}
           />
           <KpiTile

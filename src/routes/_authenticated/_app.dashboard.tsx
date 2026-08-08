@@ -365,7 +365,7 @@ function DashboardPage() {
 
       {/* Operational totals */}
       {!isService && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <Link to="/orders-list">
             <KpiCard icon={Receipt} label={t("kpi_orders_total")} value={fmt(totals.ordersTotal)} />
           </Link>
@@ -391,6 +391,14 @@ function DashboardPage() {
               label={t("kpi_returned")}
               value={fmt(totals.ordersReturned)}
               tone={totals.ordersReturned > 0 ? "destructive" : "muted"}
+            />
+          </Link>
+          <Link to="/reports/couriers">
+            <KpiCard
+              icon={Truck}
+              label={t("kpi_shipping_cost")}
+              value={fmt(totals.shippingCost)}
+              tone="muted"
             />
           </Link>
         </div>

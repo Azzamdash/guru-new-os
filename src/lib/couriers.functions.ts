@@ -57,6 +57,7 @@ type OrderRow = {
   confirmation_status: string;
   total_amount: number;
   shipping_amount: number;
+  courier_expense: number;
   shipping_governorate: string | null;
   occurred_at: string;
 };
@@ -84,7 +85,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       let q = context.supabase
         .from("orders")
         .select(
-          "id, brand_id, courier_id, fulfillment_status, confirmation_status, total_amount, shipping_amount, shipping_governorate, occurred_at",
+          "id, brand_id, courier_id, fulfillment_status, confirmation_status, total_amount, shipping_amount, courier_expense, shipping_governorate, occurred_at",
         )
         .gte("occurred_at", businessDateStartUTC(from))
         .lte("occurred_at", businessDateEndUTC(to));
@@ -142,6 +143,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       collected: number;
       expectedCod: number;
       shipping: number;
+      shippingCost: number;
     };
     const zero = (): Agg => ({
       orders: 0,
@@ -158,6 +160,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       collected: 0,
       expectedCod: 0,
       shipping: 0,
+      shippingCost: 0,
     });
     const add = (a: Agg, o: OrderRow) => {
       a.orders += 1;
@@ -167,6 +170,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       const ship = Number(o.shipping_amount) || 0;
       a.revenue += amt;
       a.shipping += ship;
+      a.shippingCost += Number(o.courier_expense) || 0;
       if (o.confirmation_status === "confirmed") a.confirmed += 1;
       else if (o.confirmation_status === "cancelled") a.confirmationCancelled += 1;
       if (o.fulfillment_status === "delivered") {
