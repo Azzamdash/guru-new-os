@@ -3,12 +3,37 @@
  * Kept free of React/UI imports so it can be unit tested in a node environment.
  */
 
-export type AppTheme = "emerald" | "violet" | "midnight" | "amber";
+export type AppTheme =
+  | "emerald"
+  | "violet"
+  | "midnight"
+  | "amber"
+  | "lime"
+  | "cyan"
+  | "gold"
+  | "slate"
+  | "forest"
+  | "sapphire"
+  | "rose"
+  | "coral";
 export type AppMode = "dark" | "light";
 
 export type ThemeValue = { theme: AppTheme; mode: AppMode };
 
-const VALID_THEMES: readonly AppTheme[] = ["emerald", "violet", "midnight", "amber"];
+const VALID_THEMES: readonly AppTheme[] = [
+  "emerald",
+  "violet",
+  "midnight",
+  "amber",
+  "lime",
+  "cyan",
+  "gold",
+  "slate",
+  "forest",
+  "sapphire",
+  "rose",
+  "coral",
+];
 const VALID_MODES: readonly AppMode[] = ["dark", "light"];
 
 export const THEME_STORAGE_KEY = "egurus:app-theme:v1";
