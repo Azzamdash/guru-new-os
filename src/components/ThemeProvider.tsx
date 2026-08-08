@@ -3,10 +3,20 @@ import {
   defaultTheme,
   initialTheme,
   writeStoredTheme,
+  VALID_MODES,
+  VALID_THEMES,
   type AppMode,
   type AppTheme,
   type ThemeValue,
 } from "@/lib/theme-storage";
+
+// Built from VALID_THEMES/VALID_MODES rather than a hardcoded list — a
+// hardcoded list silently goes stale the next time a theme is added: the new
+// theme's class never gets removed on switch, so it lingers alongside
+// whatever theme replaces it and CSS source order (not the user's choice)
+// decides which one wins.
+const ALL_THEME_CLASSES = VALID_THEMES.map((t) => `theme-${t}`);
+const ALL_MODE_CLASSES = VALID_MODES.map((m) => `mode-${m}`);
 
 type ThemeCtxValue = ThemeValue & {
   setTheme: (theme: AppTheme) => void;
@@ -25,14 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const html = document.documentElement;
-    html.classList.remove(
-      "theme-emerald",
-      "theme-violet",
-      "theme-midnight",
-      "theme-amber",
-      "mode-dark",
-      "mode-light",
-    );
+    html.classList.remove(...ALL_THEME_CLASSES, ...ALL_MODE_CLASSES);
     html.classList.add(`theme-${value.theme}`, `mode-${value.mode}`);
   }, [value]);
 
