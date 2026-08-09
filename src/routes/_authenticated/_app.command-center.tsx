@@ -70,6 +70,25 @@ function CommandCenterPage() {
 
   const loading = stuck.isLoading || ops.isLoading || health.isLoading || debt.isLoading;
 
+  const delayedOrdersPreview = [
+    ...(stuck.data?.noShipment ?? []),
+    ...(stuck.data?.uncollected ?? []),
+  ]
+    .slice(0, 3)
+    .map(
+      (o) =>
+        `${o.customerName ?? t("بدون اسم", "No name")} · ${t(`${o.daysStuck} يوم`, `${o.daysStuck}d`)}`,
+    );
+
+  const lowStockPreview = (ops.data?.inventory ?? [])
+    .filter((p) => p.status !== "ok")
+    .slice(0, 3)
+    .map((p) => `${p.name} · ${nf(Math.max(0, p.stock))} ${p.unit}`);
+
+  const supplierDebtPreview = (debt.data?.topSuppliers ?? [])
+    .slice(0, 3)
+    .map((s) => `${s.name} · ${nf(s.outstanding)} ${t("ج.م", "EGP")}`);
+
   const attentionCards = [
     {
       key: "orders",
@@ -78,6 +97,7 @@ function CommandCenterPage() {
       title: t("أوردرات متأخرة", "Delayed orders"),
       hint: t("بدون شحنة أو بدون تحصيل كامل", "No shipment or not fully collected"),
       count: stuck.data?.total ?? 0,
+      preview: delayedOrdersPreview,
     },
     {
       key: "stock",
@@ -86,6 +106,7 @@ function CommandCenterPage() {
       title: t("مخزون منخفض", "Low stock"),
       hint: t("منتجات وصلت أو اقتربت من حد إعادة الطلب", "Products at or near reorder point"),
       count: ops.data?.kpis.lowCount ?? 0,
+      preview: lowStockPreview,
     },
     {
       key: "suppliers",
@@ -99,6 +120,7 @@ function CommandCenterPage() {
           )
         : t("إجمالي المديونية القائمة", "Total outstanding balance"),
       count: debt.data?.overdueCount ?? 0,
+      preview: supplierDebtPreview,
     },
     {
       key: "settlements",
@@ -112,6 +134,7 @@ function CommandCenterPage() {
           )
         : t("فواتير لم تتم تسويتها بعد", "Invoices not yet reconciled"),
       count: health.data?.couriers.unreconciledInvoices ?? 0,
+      preview: [] as string[],
     },
   ];
 
@@ -169,6 +192,18 @@ function CommandCenterPage() {
                 </div>
                 <div className="font-semibold text-sm">{c.title}</div>
                 <div className="text-xs text-muted-foreground">{c.hint}</div>
+                {c.preview.length > 0 && (
+                  <ul className="pt-1 space-y-0.5 border-t border-border/60">
+                    {c.preview.map((row, i) => (
+                      <li
+                        key={i}
+                        className="text-xs text-muted-foreground truncate pt-1 first:pt-1.5"
+                      >
+                        {row}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Card>
             </Link>
           ))}

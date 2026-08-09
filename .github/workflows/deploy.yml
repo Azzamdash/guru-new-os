@@ -1,4 +1,5 @@
 name: Deploy to Server
+
 on:
   workflow_dispatch:
     inputs:
@@ -10,7 +11,13 @@ on:
         description: 'Release version tag to deploy'
         required: false
         type: string
-
+      environment:
+        description: 'Which environment to deploy'
+        required: false
+        type: choice
+        options: [production, staging]
+        default: production
+        
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -23,6 +30,7 @@ jobs:
         env:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           MANUAL_IP: ${{ inputs.target_ip }}
+          
         run: |
           if [[ -n "$MANUAL_IP" || -n "$SERVER_IP" ]]; then
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
@@ -30,6 +38,7 @@ jobs:
             echo "No SERVER_IP secret configured and no target_ip provided — skipping deploy."
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
           fi
+          
       - name: Determine version
         id: ver
         run: |
@@ -41,9 +50,10 @@ jobs:
               | jq -r .tag_name | sed 's/^v//')
             echo "version=$V" >> "$GITHUB_OUTPUT"
           fi
+          
       - run: echo "version=${{ steps.ver.outputs.version }}" >> "$GITHUB_OUTPUT"
         id: gate2
-
+        
   deploy:
     needs: check
     if: needs.check.outputs.should_deploy == 'true'
@@ -52,29 +62,37 @@ jobs:
       VERSION: ${{ needs.check.outputs.version }}
       TARGET_IP: ${{ inputs.target_ip || secrets.SERVER_IP }}
       SSH_USER: ${{ secrets.SSH_USERNAME }}
+      ENVIRONMENT: ${{ inputs.environment || 'production' }}
+      
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
+      
       - name: Add host key
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "$TARGET_IP" >> ~/.ssh/known_hosts
-
-      - name: Resolve repository names
+          
+      - name: Resolve repository & service names
         id: repo
         run: |
           FULL="${{ github.repository }}"
-          echo "full=${FULL,,}" >> "$GITHUB_OUTPUT"
-          echo "name=$(echo "${FULL,,}" | cut -d'/' -f2)" >> "$GITHUB_OUTPUT"
-
+          FULL="${FULL,,}"
+          NAME=$(echo "$FULL" | cut -d'/' -f2)
+          if [[ "$ENVIRONMENT" == "staging" ]]; then
+            FULL="${FULL}-staging"
+            NAME="${NAME}-staging"
+          fi
+          echo "full=$FULL" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          
       - name: Sync compose files
         run: |
           ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/${{ steps.repo.outputs.name }}"
-          scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/${{ steps.repo.outputs.name }}/"
+          scp docker-compose.yml "$SSH_USER@$TARGET_IP:/opt/${{ steps.repo.outputs.name }}/"
 
       - name: Write env and deploy
         run: |
@@ -84,7 +102,6 @@ jobs:
           GITHUB_REPOSITORY=${{ steps.repo.outputs.full }}
           VERSION=$VERSION
           SERVICE_NAME=${{ steps.repo.outputs.name }}
-          DOMAIN=${{ secrets.DOMAIN }}
           SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE }}
           SUPABASE_URL=${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
