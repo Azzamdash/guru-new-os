@@ -489,6 +489,19 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             const started = Date.now();
             const orderNo = order.external_order_number ?? order.id;
             const orderKind = (order.order_kind as string | null) ?? "sale";
+            const { data: dispatchItems } = await context.supabase
+              .from("order_items")
+              .select("title, qty")
+              .eq("order_id", order.id);
+            const packageItems = (dispatchItems ?? []) as Array<{ title: string; qty: number }>;
+            const packageItemsCount =
+              packageItems.reduce((sum, i) => sum + (Number(i.qty) || 0), 0) || 1;
+            // Bosta's package description has no documented length cap, but a very long
+            // list of items can still push a request over their payload limits — cap it
+            // defensively rather than let a large order fail dispatch outright.
+            const packageDescription = packageItems.length
+              ? packageItems.map((i) => `${i.qty}x ${i.title}`).join(", ").slice(0, 500)
+              : `Order ${orderNo}`;
             // Already collected manually (e.g. customer paid by transfer instead
             // of cash on delivery)? Don't ask the courier to collect it again.
             // Returns/exchanges never carry a COD to collect from the customer.
@@ -503,7 +516,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             const payload = {
               type: BOSTA_DELIVERY_TYPE_BY_KIND[orderKind as keyof typeof BOSTA_DELIVERY_TYPE_BY_KIND] ?? 10,
               businessReference: order.id,
-              specs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
+              specs: {
+                packageDetails: { itemsCount: packageItemsCount, description: packageDescription },
+              },
               // Bosta's Customer Return Pickup / Exchange types also take
               // returnSpecs/returnNotes describing the item coming back from
               // the customer. returnAddress/pickupAddress (where the courier
@@ -515,7 +530,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
               // omitted.
               ...(isReturnOrExchange
                 ? {
-                    returnSpecs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
+                    returnSpecs: {
+                      packageDetails: { itemsCount: packageItemsCount, description: packageDescription },
+                    },
                     returnNotes:
                       order.note ||
                       (orderKind === "return" ? `Return for order ${orderNo}` : `Exchange for order ${orderNo}`),
