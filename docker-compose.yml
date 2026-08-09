@@ -9,10 +9,7 @@ services:
       - "3000"
     networks:
       - web
-
+      
 networks:
   web:
-
-volumes:
-  caddy_data:
-  caddy_config:
+    external: true
