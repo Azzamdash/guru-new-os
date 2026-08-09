@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
 import { assertPageWrite } from "./page-permissions.server";
 import { COURIERS_PAGE } from "./page-permission-paths";
-import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
+import { bostaDispatchIdentifiers, isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -457,6 +457,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     try {
       let externalNote = "";
       let trackingNumber: string | null = null;
+      let deliveryId: string | null = null;
       let providerAttempted = false;
       let providerTracking = false;
       const { logIntegrationEvent } = await import("@/server/integrationLogger");
@@ -575,10 +576,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             } catch {
               /* noop */
             }
-            trackingNumber =
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              ((parsed as any)?.data?.trackingNumber ?? (parsed as any)?.trackingNumber ?? null) as
-                string | null;
+            const identifiers = bostaDispatchIdentifiers(parsed);
+            trackingNumber = identifiers.tracking;
+            deliveryId = identifiers.deliveryId;
             const providerRejected =
               !res.ok ||
               (typeof parsed === "object" && parsed !== null && "success" in parsed && parsed.success === false);
@@ -649,6 +649,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
         _tracking: trackingNumber,
         _provider_tracking: providerTracking,
         _note: order.note ? `${order.note} ${noteAppend}` : noteAppend,
+        _delivery_id: deliveryId,
       },
     );
     if (finalizeError) throw finalizeError;
