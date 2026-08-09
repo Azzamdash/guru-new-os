@@ -9,6 +9,7 @@ export type AppTheme =
   | "cyan"
   | "gold"
   | "slate"
+  | "graphite"
   | "forest"
   | "sapphire";
 export type AppMode = "dark" | "light";
@@ -21,6 +22,7 @@ export const VALID_THEMES: readonly AppTheme[] = [
   "cyan",
   "gold",
   "slate",
+  "graphite",
   "forest",
   "sapphire",
 ];
