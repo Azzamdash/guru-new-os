@@ -4,8 +4,9 @@ import { assertPageWrite } from "./page-permissions.server";
 import { COURIERS_PAGE } from "./page-permission-paths";
 
 /**
- * Orders dispatched to Bosta (bosta_delivery_id is only ever set from a real
- * Bosta create-delivery response) that a merchant might want to reprint.
+ * Dispatched orders (any courier — Bosta's tracking number or a generic
+ * dispatch tracking reference) that a merchant might want to (re)print a
+ * label for.
  */
 export const listPrintableOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -14,10 +15,10 @@ export const listPrintableOrders = createServerFn({ method: "GET" })
     let q = context.supabase
       .from("orders")
       .select(
-        "id, brand_id, external_order_number, customer_name, shipping_governorate, bosta_tracking, bosta_delivery_id, bosta_sent_at, courier_id, couriers(name)",
+        "id, brand_id, external_order_number, customer_name, shipping_governorate, bosta_tracking, dispatch_tracking, updated_at, courier_id, couriers(name)",
       )
-      .not("bosta_delivery_id", "is", null)
-      .order("bosta_sent_at", { ascending: false })
+      .or("bosta_tracking.not.is.null,dispatch_tracking.not.is.null")
+      .order("updated_at", { ascending: false })
       .limit(200);
     if (data.brandId) q = q.eq("brand_id", data.brandId);
     // PostgREST's .or() filter syntax treats "," "(" ")" as grammar, not literal
@@ -26,7 +27,7 @@ export const listPrintableOrders = createServerFn({ method: "GET" })
     const search = data.search?.trim().replace(/[,()]/g, "");
     if (search) {
       q = q.or(
-        `external_order_number.ilike.%${search}%,bosta_tracking.ilike.%${search}%,customer_name.ilike.%${search}%`,
+        `external_order_number.ilike.%${search}%,bosta_tracking.ilike.%${search}%,dispatch_tracking.ilike.%${search}%,customer_name.ilike.%${search}%`,
       );
     }
     const { data: rows, error } = await q;
@@ -34,134 +35,113 @@ export const listPrintableOrders = createServerFn({ method: "GET" })
     return rows ?? [];
   });
 
-type LabelResult =
-  | { kind: "pdf"; base64: string; orderNumber: string; trackingNumber: string | null }
-  | { kind: "url"; url: string; orderNumber: string; trackingNumber: string | null };
+export type OrderLabelData = {
+  id: string;
+  orderNumber: string;
+  brandName: string;
+  courierName: string;
+  trackingNumber: string;
+  cod: number;
+  currency: string;
+  customerName: string;
+  customerPhone: string;
+  governorate: string;
+  address: string;
+  buildingNumber: string | null;
+  floorNumber: string | null;
+  apartmentNumber: string | null;
+  note: string | null;
+  items: { title: string; qty: number }[];
+};
+
+type OrderLabelRow = {
+  id: string;
+  external_order_number: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  shipping_governorate: string | null;
+  shipping_address: string | null;
+  building_number: string | null;
+  floor_number: string | null;
+  apartment_number: string | null;
+  total_amount: number | null;
+  currency: string | null;
+  collection_status: string | null;
+  order_kind: string | null;
+  note: string | null;
+  bosta_tracking: string | null;
+  dispatch_tracking: string | null;
+  couriers: { name: string } | null;
+  brands: { name: string } | null;
+};
 
 /**
- * Bosta's own AWB response shape isn't in any public docs we could reach —
- * the community Node SDK only confirms the endpoint, not the payload. Look
- * for a plausible PDF/link field under a few likely names rather than
- * assuming one; logIntegrationEvent captures the raw response either way so
- * a wrong guess here is a one-line fix, not a silent failure.
+ * Data for a self-rendered shipping label — printed from inside the system
+ * instead of pulled from the courier, since Bosta's AWB endpoint's response
+ * shape turned out not to match what we could confirm from their community
+ * SDK (see shipping-labels history). Everything here already lives in our
+ * own orders/order_items tables.
  */
-function findAwbUrl(parsed: unknown): string | null {
-  if (!parsed || typeof parsed !== "object") return null;
-  const root = parsed as Record<string, unknown>;
-  const data =
-    root.data && typeof root.data === "object" ? (root.data as Record<string, unknown>) : root;
-  const candidates = [data.deliveryAWB, data.awbUrl, data.url, data.awb, data.pdfUrl, data.link];
-  for (const c of candidates) {
-    if (typeof c === "string" && /^https?:\/\//.test(c)) return c;
-  }
-  return null;
-}
-
-export const fetchOrderShippingLabel = createServerFn({ method: "POST" })
+export const getOrderLabelsData = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { orderId: string }) => d)
-  .handler(async ({ data, context }): Promise<LabelResult> => {
+  .inputValidator((d: { orderIds: string[] }) => d)
+  .handler(async ({ data, context }): Promise<OrderLabelData[]> => {
     await assertPageWrite(context, COURIERS_PAGE);
-    const { data: order, error } = await context.supabase
+    if (!data.orderIds.length) return [];
+
+    // order_kind was added by a later migration (20260807010000) that the
+    // generated Database types haven't caught up with — same gap
+    // dispatchOrderToBestCourier already works around in couriers.functions.ts.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rawOrders, error } = await (context.supabase as any)
       .from("orders")
-      .select("id, brand_id, external_order_number, bosta_tracking, bosta_delivery_id")
-      .eq("id", data.orderId)
-      .single();
+      .select(
+        "id, external_order_number, customer_name, customer_phone, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, total_amount, currency, collection_status, order_kind, note, bosta_tracking, dispatch_tracking, couriers(name), brands(name)",
+      )
+      .in("id", data.orderIds);
     if (error) throw error;
-    if (!order.bosta_delivery_id) {
-      throw new Error("لا يوجد رقم شحنة بوسطة لهذا الأوردر — لسه متسندش لبوسطة");
+    const orders = rawOrders as OrderLabelRow[] | null;
+    if (!orders?.length) throw new Error("لم يتم العثور على الأوردرات المحددة");
+
+    const { data: items, error: itemsError } = await context.supabase
+      .from("order_items")
+      .select("order_id, title, qty")
+      .in("order_id", data.orderIds);
+    if (itemsError) throw itemsError;
+    const itemsByOrder = new Map<string, { title: string; qty: number }[]>();
+    for (const it of items ?? []) {
+      const list = itemsByOrder.get(it.order_id) ?? [];
+      list.push({ title: it.title, qty: Number(it.qty) });
+      itemsByOrder.set(it.order_id, list);
     }
 
-    const { data: integ } = await context.supabase
-      .from("brand_integrations")
-      .select("credentials_ciphertext")
-      .eq("brand_id", order.brand_id)
-      .eq("provider", "bosta")
-      .maybeSingle();
-    if (!integ?.credentials_ciphertext) throw new Error("لا يوجد اتصال ببوسطة لهذا البراند");
-    const { decryptConnectionKey } = await import("@/server/connectionKeyCrypto");
-    const creds = JSON.parse(decryptConnectionKey(integ.credentials_ciphertext)) as Record<
-      string,
-      string
-    >;
-    if (!creds.api_key) throw new Error("مفتاح بوسطة غير موجود لهذا البراند");
-
-    const { logIntegrationEvent } = await import("@/server/integrationLogger");
-    const orderNo = String(order.external_order_number ?? order.id);
-
-    const res = await fetch(`https://app.bosta.co/api/v2/deliveries/awb/${order.bosta_delivery_id}`, {
-      headers: { Authorization: creds.api_key, Accept: "application/json,application/pdf" },
-    });
-
-    if (!res.ok) {
-      const bodyText = await res.text().catch(() => "");
-      await logIntegrationEvent({
-        provider: "bosta",
-        brand_id: order.brand_id,
-        direction: "outgoing",
-        operation: "fetch_awb",
-        status: "error",
-        http_status: res.status,
-        order_number: orderNo,
-        order_id: order.id,
-        tracking_number: order.bosta_tracking,
-        reason: `HTTP ${res.status}`,
-        response: bodyText.slice(0, 500),
-        actor_id: context.userId,
+    // Preserve the order the caller asked for (selection order), not
+    // whatever order Postgres happened to return rows in.
+    const byId = new Map(orders.map((o) => [o.id, o]));
+    return data.orderIds
+      .map((id) => byId.get(id))
+      .filter((o): o is NonNullable<typeof o> => !!o)
+      .map((o) => {
+        const orderKind = (o.order_kind as string | null) ?? "sale";
+        const cod =
+          orderKind !== "sale" || o.collection_status === "paid" ? 0 : Number(o.total_amount ?? 0);
+        return {
+          id: o.id,
+          orderNumber: String(o.external_order_number ?? o.id),
+          brandName: o.brands?.name ?? "",
+          courierName: o.couriers?.name ?? "",
+          trackingNumber: o.bosta_tracking ?? o.dispatch_tracking ?? "",
+          cod,
+          currency: o.currency ?? "EGP",
+          customerName: o.customer_name ?? "",
+          customerPhone: o.customer_phone ?? "",
+          governorate: o.shipping_governorate ?? "",
+          address: o.shipping_address ?? "",
+          buildingNumber: o.building_number,
+          floorNumber: o.floor_number,
+          apartmentNumber: o.apartment_number,
+          note: o.note,
+          items: itemsByOrder.get(o.id) ?? [],
+        };
       });
-      throw new Error(`تعذر جلب بوليصة بوسطة (HTTP ${res.status})`);
-    }
-
-    const contentType = res.headers.get("content-type") ?? "";
-    if (contentType.includes("pdf")) {
-      const bytes = await res.arrayBuffer();
-      await logIntegrationEvent({
-        provider: "bosta",
-        brand_id: order.brand_id,
-        direction: "outgoing",
-        operation: "fetch_awb",
-        status: "success",
-        http_status: res.status,
-        order_number: orderNo,
-        order_id: order.id,
-        tracking_number: order.bosta_tracking,
-        reason: "awb pdf fetched",
-        actor_id: context.userId,
-      });
-      return {
-        kind: "pdf",
-        base64: Buffer.from(bytes).toString("base64"),
-        orderNumber: orderNo,
-        trackingNumber: order.bosta_tracking,
-      };
-    }
-
-    const bodyText = await res.text();
-    let parsed: unknown = null;
-    try {
-      parsed = JSON.parse(bodyText);
-    } catch {
-      /* fall through — findAwbUrl handles non-object input */
-    }
-    const url = findAwbUrl(parsed);
-    await logIntegrationEvent({
-      provider: "bosta",
-      brand_id: order.brand_id,
-      direction: "outgoing",
-      operation: "fetch_awb",
-      status: url ? "success" : "warning",
-      http_status: res.status,
-      order_number: orderNo,
-      order_id: order.id,
-      tracking_number: order.bosta_tracking,
-      reason: url ? "awb url fetched" : "unrecognized awb response shape",
-      response: parsed ?? bodyText.slice(0, 500),
-      actor_id: context.userId,
-    });
-    if (!url) {
-      throw new Error(
-        "شكل استجابة بوسطة غير متوقع — الرد اتسجل في سجل التكاملات (Integration Logs) لمراجعته",
-      );
-    }
-    return { kind: "url", url, orderNumber: orderNo, trackingNumber: order.bosta_tracking };
   });
