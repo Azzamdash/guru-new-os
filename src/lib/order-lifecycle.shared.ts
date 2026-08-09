@@ -147,6 +147,21 @@ export function bostaDispatchIdentifiers(payload: unknown): {
   };
 }
 
+/**
+ * Shopify separates a line item's product title from its variant title
+ * (e.g. "Perfume X" + "50ml") — folds them into the single descriptive
+ * string order_items.title stores. "Default Title" is Shopify's own
+ * sentinel for a single-variant product with nothing to show, not a real
+ * variant name.
+ */
+export function shopifyLineItemTitle(
+  title: string,
+  variantTitle: string | null | undefined,
+): string {
+  const variant = variantTitle?.trim();
+  return variant && variant !== "Default Title" ? `${title} - ${variant}` : title;
+}
+
 function mapBostaOrderStatus(rawStatus: string): {
   orderStatus: OrderWorkflowStatus;
   shipmentOutcome: ShipmentOutcome;
@@ -224,9 +239,13 @@ export function shouldIgnoreStaleBostaLifecycle(
   const currentDelivered =
     currentOutcome === "delivered" || currentFulfillmentStatus === "delivered";
   if (currentDelivered) {
-    return !["delivered", "return_in_transit", "returned", "customer_returned", "exchanged"].includes(
-      incomingOutcome,
-    );
+    return ![
+      "delivered",
+      "return_in_transit",
+      "returned",
+      "customer_returned",
+      "exchanged",
+    ].includes(incomingOutcome);
   }
 
   const currentCancelled =
