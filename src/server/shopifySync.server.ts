@@ -4,6 +4,7 @@ import { decryptConnectionKey } from "@/server/connectionKeyCrypto";
 import {
   mapShopifyLifecycleFields,
   mapShopifyFulfillmentStatus,
+  shopifyLineItemTitle,
 } from "@/lib/order-lifecycle.shared";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -12,6 +13,9 @@ type ShopifyLineItem = {
   product_id: number | null;
   sku: string | null;
   title: string;
+  /** e.g. "50ml" — Shopify's own "single variant, nothing to show" sentinel
+   *  is the literal string "Default Title", not null/empty. */
+  variant_title: string | null;
   quantity: number;
   price: string;
 };
@@ -199,7 +203,7 @@ export async function syncShopifyOrdersForBrand(brandId: string, opts: ShopifySy
       return {
         product_id: p?.id ?? null,
         sku: li.sku,
-        title: li.title,
+        title: shopifyLineItemTitle(li.title, li.variant_title),
         qty: li.quantity,
         unit_price,
         unit_cost,

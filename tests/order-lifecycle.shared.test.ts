@@ -17,6 +17,7 @@ import {
   resolveBostaShipmentOutcome,
   shouldIgnoreStaleBostaLifecycle,
   shopifyActionForOrderStatus,
+  shopifyLineItemTitle,
   type CourierRate,
 } from "../src/lib/order-lifecycle.shared";
 
@@ -46,6 +47,26 @@ describe("Bosta provider response safety", () => {
     expect(
       bostaDispatchIdentifiers({ data: { _id: "delivery-id", trackingNumber: "TRK-123" } }),
     ).toEqual({ tracking: "TRK-123", deliveryId: "delivery-id" });
+  });
+});
+
+describe("Shopify line item title", () => {
+  it("appends the variant title when present", () => {
+    expect(shopifyLineItemTitle("Perfume X", "50ml")).toBe("Perfume X - 50ml");
+  });
+
+  it("drops Shopify's single-variant sentinel instead of appending it", () => {
+    expect(shopifyLineItemTitle("Coffee Beans", "Default Title")).toBe("Coffee Beans");
+  });
+
+  it("handles a missing or blank variant title the same way", () => {
+    expect(shopifyLineItemTitle("Coffee Beans", null)).toBe("Coffee Beans");
+    expect(shopifyLineItemTitle("Coffee Beans", undefined)).toBe("Coffee Beans");
+    expect(shopifyLineItemTitle("Coffee Beans", "   ")).toBe("Coffee Beans");
+  });
+
+  it("trims surrounding whitespace on a real variant title", () => {
+    expect(shopifyLineItemTitle("Perfume X", "  100ml  ")).toBe("Perfume X - 100ml");
   });
 });
 
