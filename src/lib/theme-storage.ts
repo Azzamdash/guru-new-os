@@ -5,34 +5,24 @@
 
 export type AppTheme =
   | "emerald"
-  | "violet"
   | "midnight"
-  | "amber"
-  | "lime"
   | "cyan"
   | "gold"
   | "slate"
   | "forest"
-  | "sapphire"
-  | "rose"
-  | "coral";
+  | "sapphire";
 export type AppMode = "dark" | "light";
 
 export type ThemeValue = { theme: AppTheme; mode: AppMode };
 
 export const VALID_THEMES: readonly AppTheme[] = [
   "emerald",
-  "violet",
   "midnight",
-  "amber",
-  "lime",
   "cyan",
   "gold",
   "slate",
   "forest",
   "sapphire",
-  "rose",
-  "coral",
 ];
 export const VALID_MODES: readonly AppMode[] = ["dark", "light"];
 
