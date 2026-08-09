@@ -54,6 +54,7 @@ import { Route as AuthenticatedAppOrdersAttentionRouteImport } from './routes/_a
 import { Route as AuthenticatedAppOrdersListRouteImport } from './routes/_authenticated/_app.orders-list'
 import { Route as AuthenticatedAppOrdersRadarRouteImport } from './routes/_authenticated/_app.orders-radar'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/_app.pos'
+import { Route as AuthenticatedAppPrintOrdersRouteImport } from './routes/_authenticated/_app.print-orders'
 import { Route as AuthenticatedAppProductionRouteImport } from './routes/_authenticated/_app.production'
 import { Route as AuthenticatedAppProductionTasksRouteImport } from './routes/_authenticated/_app.production-tasks'
 import { Route as AuthenticatedAppProductsRouteImport } from './routes/_authenticated/_app.products'
@@ -372,6 +373,12 @@ const AuthenticatedAppPosRoute = AuthenticatedAppPosRouteImport.update({
   path: '/pos',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppPrintOrdersRoute =
+  AuthenticatedAppPrintOrdersRouteImport.update({
+    id: '/print-orders',
+    path: '/print-orders',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppProductionRoute =
   AuthenticatedAppProductionRouteImport.update({
     id: '/production',
@@ -779,6 +786,7 @@ export interface FileRoutesByFullPath {
   '/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
+  '/print-orders': typeof AuthenticatedAppPrintOrdersRoute
   '/production': typeof AuthenticatedAppProductionRoute
   '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
   '/products': typeof AuthenticatedAppProductsRoute
@@ -885,6 +893,7 @@ export interface FileRoutesByTo {
   '/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/pos': typeof AuthenticatedAppPosRoute
+  '/print-orders': typeof AuthenticatedAppPrintOrdersRoute
   '/production': typeof AuthenticatedAppProductionRoute
   '/production-tasks': typeof AuthenticatedAppProductionTasksRoute
   '/products': typeof AuthenticatedAppProductsRoute
@@ -992,6 +1001,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/orders-list': typeof AuthenticatedAppOrdersListRoute
   '/_authenticated/_app/orders-radar': typeof AuthenticatedAppOrdersRadarRoute
   '/_authenticated/_app/pos': typeof AuthenticatedAppPosRoute
+  '/_authenticated/_app/print-orders': typeof AuthenticatedAppPrintOrdersRoute
   '/_authenticated/_app/production': typeof AuthenticatedAppProductionRoute
   '/_authenticated/_app/production-tasks': typeof AuthenticatedAppProductionTasksRoute
   '/_authenticated/_app/products': typeof AuthenticatedAppProductsRoute
@@ -1100,6 +1110,7 @@ export interface FileRouteTypes {
     | '/orders-list'
     | '/orders-radar'
     | '/pos'
+    | '/print-orders'
     | '/production'
     | '/production-tasks'
     | '/products'
@@ -1206,6 +1217,7 @@ export interface FileRouteTypes {
     | '/orders-list'
     | '/orders-radar'
     | '/pos'
+    | '/print-orders'
     | '/production'
     | '/production-tasks'
     | '/products'
@@ -1312,6 +1324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/orders-list'
     | '/_authenticated/_app/orders-radar'
     | '/_authenticated/_app/pos'
+    | '/_authenticated/_app/print-orders'
     | '/_authenticated/_app/production'
     | '/_authenticated/_app/production-tasks'
     | '/_authenticated/_app/products'
@@ -1711,6 +1724,13 @@ declare module '@tanstack/react-router' {
       path: '/pos'
       fullPath: '/pos'
       preLoaderRoute: typeof AuthenticatedAppPosRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/print-orders': {
+      id: '/_authenticated/_app/print-orders'
+      path: '/print-orders'
+      fullPath: '/print-orders'
+      preLoaderRoute: typeof AuthenticatedAppPrintOrdersRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/production': {
@@ -2249,6 +2269,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrdersListRoute: typeof AuthenticatedAppOrdersListRoute
   AuthenticatedAppOrdersRadarRoute: typeof AuthenticatedAppOrdersRadarRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
+  AuthenticatedAppPrintOrdersRoute: typeof AuthenticatedAppPrintOrdersRoute
   AuthenticatedAppProductionRoute: typeof AuthenticatedAppProductionRoute
   AuthenticatedAppProductionTasksRoute: typeof AuthenticatedAppProductionTasksRoute
   AuthenticatedAppProductsRoute: typeof AuthenticatedAppProductsRoute
@@ -2335,6 +2356,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppOrdersListRoute: AuthenticatedAppOrdersListRoute,
   AuthenticatedAppOrdersRadarRoute: AuthenticatedAppOrdersRadarRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
+  AuthenticatedAppPrintOrdersRoute: AuthenticatedAppPrintOrdersRoute,
   AuthenticatedAppProductionRoute: AuthenticatedAppProductionRoute,
   AuthenticatedAppProductionTasksRoute: AuthenticatedAppProductionTasksRoute,
   AuthenticatedAppProductsRoute: AuthenticatedAppProductsRoute,

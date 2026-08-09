@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
 import { assertPageWrite } from "./page-permissions.server";
 import { COURIERS_PAGE } from "./page-permission-paths";
-import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
+import { bostaDispatchIdentifiers, isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -457,6 +457,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     try {
       let externalNote = "";
       let trackingNumber: string | null = null;
+      let deliveryId: string | null = null;
       let providerAttempted = false;
       let providerTracking = false;
       const { logIntegrationEvent } = await import("@/server/integrationLogger");
@@ -489,6 +490,19 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             const started = Date.now();
             const orderNo = order.external_order_number ?? order.id;
             const orderKind = (order.order_kind as string | null) ?? "sale";
+            const { data: dispatchItems } = await context.supabase
+              .from("order_items")
+              .select("title, qty")
+              .eq("order_id", order.id);
+            const packageItems = (dispatchItems ?? []) as Array<{ title: string; qty: number }>;
+            const packageItemsCount =
+              packageItems.reduce((sum, i) => sum + (Number(i.qty) || 0), 0) || 1;
+            // Bosta's package description has no documented length cap, but a very long
+            // list of items can still push a request over their payload limits — cap it
+            // defensively rather than let a large order fail dispatch outright.
+            const packageDescription = packageItems.length
+              ? packageItems.map((i) => `${i.qty}x ${i.title}`).join(", ").slice(0, 500)
+              : `Order ${orderNo}`;
             // Already collected manually (e.g. customer paid by transfer instead
             // of cash on delivery)? Don't ask the courier to collect it again.
             // Returns/exchanges never carry a COD to collect from the customer.
@@ -503,7 +517,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             const payload = {
               type: BOSTA_DELIVERY_TYPE_BY_KIND[orderKind as keyof typeof BOSTA_DELIVERY_TYPE_BY_KIND] ?? 10,
               businessReference: order.id,
-              specs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
+              specs: {
+                packageDetails: { itemsCount: packageItemsCount, description: packageDescription },
+              },
               // Bosta's Customer Return Pickup / Exchange types also take
               // returnSpecs/returnNotes describing the item coming back from
               // the customer. returnAddress/pickupAddress (where the courier
@@ -515,7 +531,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
               // omitted.
               ...(isReturnOrExchange
                 ? {
-                    returnSpecs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
+                    returnSpecs: {
+                      packageDetails: { itemsCount: packageItemsCount, description: packageDescription },
+                    },
                     returnNotes:
                       order.note ||
                       (orderKind === "return" ? `Return for order ${orderNo}` : `Exchange for order ${orderNo}`),
@@ -558,10 +576,9 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             } catch {
               /* noop */
             }
-            trackingNumber =
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              ((parsed as any)?.data?.trackingNumber ?? (parsed as any)?.trackingNumber ?? null) as
-                string | null;
+            const identifiers = bostaDispatchIdentifiers(parsed);
+            trackingNumber = identifiers.tracking;
+            deliveryId = identifiers.deliveryId;
             const providerRejected =
               !res.ok ||
               (typeof parsed === "object" && parsed !== null && "success" in parsed && parsed.success === false);
@@ -632,6 +649,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
         _tracking: trackingNumber,
         _provider_tracking: providerTracking,
         _note: order.note ? `${order.note} ${noteAppend}` : noteAppend,
+        _delivery_id: deliveryId,
       },
     );
     if (finalizeError) throw finalizeError;

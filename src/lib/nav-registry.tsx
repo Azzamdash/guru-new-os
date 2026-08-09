@@ -33,6 +33,7 @@ import {
   Clock,
   MessageCircle,
   Palette,
+  Printer,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -649,6 +650,17 @@ export const NAV_PAGES: NavPage[] = [
     requiresWrite: true,
     descAr: "بيانات شركات الشحن",
     descEn: "Couriers data",
+  },
+  {
+    to: "/print-orders",
+    ar: "طباعة الأوردرات",
+    en: "Print Orders",
+    icon: Printer,
+    hub: "fulfillment",
+    section: "couriers",
+    requiresWrite: true,
+    descAr: "طباعة بوليصة الشحن من داخل السيستم",
+    descEn: "Print shipping labels from inside the system",
   },
   {
     to: "/customers",
