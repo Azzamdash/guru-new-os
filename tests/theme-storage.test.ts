@@ -38,7 +38,7 @@ describe("theme default", () => {
 describe("theme persistence", () => {
   it("restores a saved choice", () => {
     const store = fakeStore();
-    const choice: ThemeValue = { theme: "violet", mode: "light" };
+    const choice: ThemeValue = { theme: "sapphire", mode: "light" };
     writeStoredTheme(store, choice);
     expect(initialTheme(store)).toEqual(choice);
   });
@@ -51,32 +51,38 @@ describe("theme persistence", () => {
 
   it("overwrites the previous choice", () => {
     const store = fakeStore();
-    writeStoredTheme(store, { theme: "amber", mode: "dark" });
-    writeStoredTheme(store, { theme: "amber", mode: "light" });
-    expect(initialTheme(store)).toEqual({ theme: "amber", mode: "light" });
+    writeStoredTheme(store, { theme: "gold", mode: "dark" });
+    writeStoredTheme(store, { theme: "gold", mode: "light" });
+    expect(initialTheme(store)).toEqual({ theme: "gold", mode: "light" });
   });
 
   it("ignores corrupted or unknown values and falls back to the default", () => {
     expect(readStoredTheme(fakeStore({ [THEME_STORAGE_KEY]: "{not json" }))).toBeNull();
     expect(readStoredTheme(fakeStore({ [THEME_STORAGE_KEY]: '{"theme":"bogus","mode":"dark"}' }))).toBeNull();
-    expect(readStoredTheme(fakeStore({ [THEME_STORAGE_KEY]: '{"theme":"violet","mode":"bogus"}' }))).toBeNull();
+    expect(readStoredTheme(fakeStore({ [THEME_STORAGE_KEY]: '{"theme":"sapphire","mode":"bogus"}' }))).toBeNull();
     expect(readStoredTheme(fakeStore({ [THEME_STORAGE_KEY]: "null" }))).toBeNull();
     expect(initialTheme(fakeStore({ [THEME_STORAGE_KEY]: "{not json" }))).toEqual(defaultTheme());
   });
 
-  it("accepts every theme added in the second round", () => {
+  it("no longer accepts a theme that was removed", () => {
+    expect(readStoredTheme(fakeStore({ [THEME_STORAGE_KEY]: '{"theme":"violet","mode":"dark"}' }))).toBeNull();
+    expect(initialTheme(fakeStore({ [THEME_STORAGE_KEY]: '{"theme":"coral","mode":"light"}' }))).toEqual(
+      defaultTheme(),
+    );
+  });
+
+  it("accepts every theme currently offered", () => {
     const store = fakeStore();
-    const added: ThemeValue[] = [
-      { theme: "lime", mode: "dark" },
+    const offered: ThemeValue[] = [
+      { theme: "emerald", mode: "light" },
+      { theme: "midnight", mode: "dark" },
       { theme: "cyan", mode: "light" },
       { theme: "gold", mode: "dark" },
       { theme: "slate", mode: "light" },
       { theme: "forest", mode: "dark" },
       { theme: "sapphire", mode: "light" },
-      { theme: "rose", mode: "dark" },
-      { theme: "coral", mode: "light" },
     ];
-    for (const choice of added) {
+    for (const choice of offered) {
       writeStoredTheme(store, choice);
       expect(initialTheme(store)).toEqual(choice);
     }
@@ -89,6 +95,6 @@ describe("theme persistence", () => {
         throw new Error("QuotaExceeded");
       },
     };
-    expect(() => writeStoredTheme(throwing, { theme: "violet", mode: "dark" })).not.toThrow();
+    expect(() => writeStoredTheme(throwing, { theme: "midnight", mode: "dark" })).not.toThrow();
   });
 });
