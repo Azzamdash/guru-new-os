@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -15,7 +15,9 @@ import {
 import { ArrowRight, Package } from "lucide-react";
 import { toast } from "sonner";
 import { getOrderFull, listWhatsappTemplates, sendOrderTemplate } from "@/lib/orders-ops.functions";
+import { confirmReturnReceived } from "@/lib/orders.functions";
 import { useLang } from "@/lib/i18n";
+import { OrderEditDialog } from "@/components/orders/OrderEditDialog";
 
 export const Route = createFileRoute("/_authenticated/_app/order-view/$id")({
   head: () => ({
@@ -59,9 +61,11 @@ function OrderViewPage() {
   const { T, money } = useT();
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const fullFn = useServerFn(getOrderFull);
   const templatesFn = useServerFn(listWhatsappTemplates);
   const sendFn = useServerFn(sendOrderTemplate);
+  const confirmReturnFn = useServerFn(confirmReturnReceived);
   const [templateId, setTemplateId] = useState("");
 
   const q = useQuery({
@@ -79,6 +83,17 @@ function OrderViewPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const confirmReturnM = useMutation({
+    mutationFn: () => confirmReturnFn({ data: { id } }),
+    onSuccess: () => {
+      toast.success(T("تم تأكيد استلام المرتجع", "Return receipt confirmed"));
+      qc.invalidateQueries({ queryKey: ["order-full", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [reDialogKind, setReDialogKind] = useState<"return" | "exchange" | null>(null);
+
   if (q.isLoading)
     return <div className="p-6 text-muted-foreground">{T("جارِ التحميل…", "Loading…")}</div>;
   if (q.error) return <div className="p-6 text-destructive">{(q.error as Error).message}</div>;
@@ -88,7 +103,7 @@ function OrderViewPage() {
   return (
     <div className="space-y-4 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Link to="/orders-center" className="text-sm text-muted-foreground hover:underline">
+        <Link to="/orders-list" className="text-sm text-muted-foreground hover:underline">
           <ArrowRight className="inline h-4 w-4" /> {T("الأوردرات", "Orders")}
         </Link>
         <h1 className="flex items-center gap-2 text-xl font-bold">
@@ -100,6 +115,40 @@ function OrderViewPage() {
           <Badge variant="outline">{String(o["confirmation_status"])}</Badge>
         ) : null}
         <Badge variant="secondary">{money(Number(o["total_amount"] ?? 0))}</Badge>
+        {Boolean(o["order_kind"]) && o["order_kind"] !== "sale" && (
+          <Badge variant="outline">
+            {o["order_kind"] === "return" ? T("مرتجع", "Return") : T("تبديل", "Exchange")}
+          </Badge>
+        )}
+        {typeof o["related_order_id"] === "string" && (
+          <Link
+            to="/order-view/$id"
+            params={{ id: o["related_order_id"] as string }}
+            className="text-sm text-muted-foreground hover:underline"
+          >
+            {T("الأوردر الأصلي", "Original order")}
+          </Link>
+        )}
+        {o["shipment_outcome"] === "return_in_transit" && (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={confirmReturnM.isPending}
+            onClick={() => confirmReturnM.mutate()}
+          >
+            {T("تأكيد استلام المرتجع", "Confirm return receipt")}
+          </Button>
+        )}
+        {(!o["order_kind"] || o["order_kind"] === "sale") && (
+          <>
+            <Button size="sm" variant="outline" onClick={() => setReDialogKind("return")}>
+              {T("إنشاء أوردر مرتجع", "Create return order")}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setReDialogKind("exchange")}>
+              {T("إنشاء أوردر تبديل", "Create exchange order")}
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -290,6 +339,34 @@ function OrderViewPage() {
           </div>
         </Section>
       </div>
+
+      <OrderEditDialog
+        open={!!reDialogKind}
+        orderId={null}
+        presetKind={reDialogKind ?? undefined}
+        relatedOrder={
+          reDialogKind
+            ? {
+                id,
+                brand_id: String(o["brand_id"] ?? ""),
+                customer_name: (o["customer_name"] as string | null) ?? null,
+                customer_phone: (o["customer_phone"] as string | null) ?? null,
+                shipping_governorate: (o["shipping_governorate"] as string | null) ?? null,
+                shipping_address: (o["shipping_address"] as string | null) ?? null,
+                building_number: (o["building_number"] as string | null) ?? null,
+                floor_number: (o["floor_number"] as string | null) ?? null,
+                apartment_number: (o["apartment_number"] as string | null) ?? null,
+              }
+            : undefined
+        }
+        onOpenChange={(v) => {
+          if (!v) setReDialogKind(null);
+        }}
+        onSaved={(newId) => {
+          setReDialogKind(null);
+          navigate({ to: "/order-view/$id", params: { id: newId } });
+        }}
+      />
     </div>
   );
 }

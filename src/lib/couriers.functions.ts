@@ -1,5 +1,6 @@
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
@@ -9,6 +10,14 @@ import { isTerminalShipmentOutcome } from "./order-lifecycle.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
+
+// Bosta delivery type codes (from Bosta's API spec): deliver/Send = 10,
+// Customer Return Pickup = 25, Exchange = 30.
+const BOSTA_DELIVERY_TYPE_BY_KIND: Record<string, number> = {
+  sale: 10,
+  return: 25,
+  exchange: 30,
+};
 
 async function assertManager(ctx: Ctx) {
   for (const role of ["admin", "manager"] as const) {
@@ -48,6 +57,7 @@ type OrderRow = {
   confirmation_status: string;
   total_amount: number;
   shipping_amount: number;
+  courier_expense: number;
   shipping_governorate: string | null;
   occurred_at: string;
 };
@@ -75,10 +85,10 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       let q = context.supabase
         .from("orders")
         .select(
-          "id, brand_id, courier_id, fulfillment_status, confirmation_status, total_amount, shipping_amount, shipping_governorate, occurred_at",
+          "id, brand_id, courier_id, fulfillment_status, confirmation_status, total_amount, shipping_amount, courier_expense, shipping_governorate, occurred_at",
         )
-        .gte("occurred_at", from)
-        .lte("occurred_at", `${to}T23:59:59`);
+        .gte("occurred_at", businessDateStartUTC(from))
+        .lte("occurred_at", businessDateEndUTC(to));
       if (data.brandId) q = q.eq("brand_id", data.brandId);
       if (data.courierId) q = q.eq("courier_id", data.courierId);
       if (data.confirmationStatus && data.confirmationStatus !== "all") {
@@ -133,6 +143,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       collected: number;
       expectedCod: number;
       shipping: number;
+      shippingCost: number;
     };
     const zero = (): Agg => ({
       orders: 0,
@@ -149,6 +160,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       collected: 0,
       expectedCod: 0,
       shipping: 0,
+      shippingCost: 0,
     });
     const add = (a: Agg, o: OrderRow) => {
       a.orders += 1;
@@ -158,6 +170,7 @@ export const getCouriersDashboard = createServerFn({ method: "GET" })
       const ship = Number(o.shipping_amount) || 0;
       a.revenue += amt;
       a.shipping += ship;
+      a.shippingCost += Number(o.courier_expense) || 0;
       if (o.confirmation_status === "confirmed") a.confirmed += 1;
       else if (o.confirmation_status === "cancelled") a.confirmationCancelled += 1;
       if (o.fulfillment_status === "delivered") {
@@ -395,10 +408,11 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
   .inputValidator((d: { orderId: string; courierId?: string | null }) => d)
   .handler(async ({ data, context }) => {
     await assertPageWrite(context, COURIERS_PAGE);
-    const { data: order, error } = await context.supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: order, error } = await (context.supabase as any)
       .from("orders")
       .select(
-        "id, brand_id, shipping_governorate, external_order_number, customer_name, customer_phone, shipping_address, total_amount, shipping_amount, note, fulfillment_status, shipment_outcome",
+        "id, brand_id, source, external_id, shipping_governorate, external_order_number, customer_name, customer_phone, shipping_address, total_amount, shipping_amount, note, fulfillment_status, shipment_outcome, collection_status, order_kind",
       )
       .eq("id", data.orderId)
       .single();
@@ -474,11 +488,40 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             providerAttempted = true;
             const started = Date.now();
             const orderNo = order.external_order_number ?? order.id;
+            const orderKind = (order.order_kind as string | null) ?? "sale";
+            // Already collected manually (e.g. customer paid by transfer instead
+            // of cash on delivery)? Don't ask the courier to collect it again.
+            // Returns/exchanges never carry a COD to collect from the customer.
+            // (Bosta's Customer Return Pickup type wants a negative cod when the
+            // courier is issuing a refund to the customer on pickup — we don't
+            // route refunds through the courier today, so 0 is correct here.)
+            const codAmount =
+              orderKind !== "sale" || order.collection_status === "paid"
+                ? 0
+                : Number(order.total_amount) || 0;
+            const isReturnOrExchange = orderKind === "return" || orderKind === "exchange";
             const payload = {
-              type: 10,
+              type: BOSTA_DELIVERY_TYPE_BY_KIND[orderKind as keyof typeof BOSTA_DELIVERY_TYPE_BY_KIND] ?? 10,
               businessReference: order.id,
               specs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
-              cod: Number(order.total_amount) || 0,
+              // Bosta's Customer Return Pickup / Exchange types also take
+              // returnSpecs/returnNotes describing the item coming back from
+              // the customer. returnAddress/pickupAddress (where the courier
+              // should drop off what they picked up) are deliberately left
+              // out — there's no warehouse/return address configured
+              // anywhere in this app yet, and guessing one risks sending a
+              // courier to the wrong place. Bosta falls back to the
+              // business's registered pickup location when these are
+              // omitted.
+              ...(isReturnOrExchange
+                ? {
+                    returnSpecs: { packageDetails: { itemsCount: 1, description: `Order ${orderNo}` } },
+                    returnNotes:
+                      order.note ||
+                      (orderKind === "return" ? `Return for order ${orderNo}` : `Exchange for order ${orderNo}`),
+                  }
+                : {}),
+              cod: codAmount,
               dropOffAddress: {
                 city: order.shipping_governorate ?? "Cairo",
                 district: order.shipping_governorate ?? "Cairo",
@@ -490,7 +533,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
                 phone: order.customer_phone ?? "",
               },
             };
-            await logIntegrationEvent(context.supabase, {
+            await logIntegrationEvent({
               provider: "bosta",
               brand_id: order.brand_id,
               direction: "outgoing",
@@ -525,7 +568,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
             if (providerRejected) providerMayHaveAccepted = false;
             const deliveryCreated = !providerRejected && !!trackingNumber;
             externalNote = deliveryCreated ? " · Bosta: ✔" : ` · Bosta: ✗ (${res.status})`;
-            await logIntegrationEvent(context.supabase, {
+            await logIntegrationEvent({
               provider: "bosta",
               brand_id: order.brand_id,
               direction: "outgoing",
@@ -555,7 +598,7 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     } catch (e) {
       const msg = (e as Error).message;
       externalNote = ` · Dispatch API error: ${msg}`;
-      await logIntegrationEvent(context.supabase, {
+      await logIntegrationEvent({
         provider: "bosta",
         brand_id: order.brand_id,
         direction: "outgoing",
@@ -594,6 +637,30 @@ export const dispatchOrderToBestCourier = createServerFn({ method: "POST" })
     if (finalizeError) throw finalizeError;
     if (!finalized) throw new Error("تعذر تثبيت إسناد الشحنة");
     dispatchPersisted = true;
+
+      // Best-effort: dispatch already succeeded and is committed, so a Shopify
+      // hiccup here shouldn't fail the whole action — just flag it for retry.
+      if (order.source === "shopify" && order.external_id) {
+        try {
+          const { applyShopifyOrderAction } = await import("@/server/shopifySync.server");
+          await applyShopifyOrderAction({
+            brandId: order.brand_id,
+            externalOrderId: order.external_id,
+            action: "fulfill",
+          });
+          await context.supabase
+            .from("orders")
+            .update({ shopify_sync_status: "synced", shopify_sync_error: null })
+            .eq("id", order.id);
+        } catch (shopifyError) {
+          const message = shopifyError instanceof Error ? shopifyError.message : String(shopifyError);
+          await context.supabase
+            .from("orders")
+            .update({ shopify_sync_status: "error", shopify_sync_error: message.slice(0, 500) })
+            .eq("id", order.id);
+        }
+      }
+
       return {
         ok: true,
         courier: { id: courierId, name: courierName, type: courierType },

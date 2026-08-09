@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "./paginate";
+import { businessDateEndUTC, businessDateStartUTC } from "./timezone";
 
 export type ReconInput = { from: string; to: string; brandId?: string | null };
 
@@ -10,20 +11,35 @@ export const getCourierReconciliation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { from, to, brandId } = data;
+    const fromUTC = businessDateStartUTC(from.slice(0, 10));
+    const toUTC = businessDateEndUTC(to.slice(0, 10));
 
-    const invs = await fetchAllRows<{ courier_id: string | null; brand_id: string; type: string; total_amount: number; collected_amount: number; stage: string; occurred_at: string }>(() => {
+    const invs = await fetchAllRows<{ id: string; courier_id: string | null; brand_id: string; type: string; total_amount: number; collected_amount: number; occurred_at: string }>(() => {
       let q = supabase.from("sales_invoices")
-        .select("courier_id, brand_id, type, total_amount, collected_amount, stage, occurred_at")
-        .gte("occurred_at", from).lte("occurred_at", to);
+        .select("id, courier_id, brand_id, type, total_amount, collected_amount, occurred_at")
+        .gte("occurred_at", fromUTC).lte("occurred_at", toUTC);
       if (brandId) q = q.eq("brand_id", brandId);
       return q;
     });
+
+    // sales_invoices.stage only gets recomputed when its order row is
+    // updated, and there's no historical backfill, so it can't be trusted
+    // for old data. orders.fulfillment_status is the reliable field.
+    const invoiceIds = (invs ?? []).map((inv) => inv.id);
+    const deliveredInvoiceIds = new Set<string>();
+    if (invoiceIds.length) {
+      const orderRows = await fetchAllRows<{ invoice_id: string; fulfillment_status: string }>(() =>
+        supabase.from("orders").select("invoice_id, fulfillment_status").in("invoice_id", invoiceIds));
+      for (const o of orderRows) {
+        if (o.fulfillment_status === "delivered") deliveredInvoiceIds.add(o.invoice_id);
+      }
+    }
 
     const cash = await fetchAllRows<{ courier_id: string | null; brand_id: string | null; amount: number; type: string; occurred_at: string }>(() => {
       let q = supabase.from("cash_transactions")
         .select("courier_id, brand_id, amount, type, occurred_at")
         .eq("type", "collection")
-        .gte("occurred_at", from).lte("occurred_at", to);
+        .gte("occurred_at", fromUTC).lte("occurred_at", toUTC);
       if (brandId) q = q.eq("brand_id", brandId);
       return q;
     });
@@ -57,7 +73,7 @@ export const getCourierReconciliation = createServerFn({ method: "POST" })
       const r = ensure(inv.courier_id as string | null);
       if (inv.type === "return") {
         r.returned_orders++;
-      } else if (inv.stage === "delivered") {
+      } else if (deliveredInvoiceIds.has(inv.id)) {
         r.delivered_orders++;
         r.expected_cod += Number(inv.total_amount || 0);
       }

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows } from "@/lib/paginate";
+import { businessDateStartUTC, businessDateEndUTC } from "@/lib/timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -458,8 +459,8 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       }
     }
     const isCustom = periodType === "custom" && dateFrom && dateTo;
-    const fromISO = isCustom ? dateFrom! : `${year}-01-01`;
-    const toISO = isCustom ? `${dateTo}T23:59:59` : `${year}-12-31T23:59:59`;
+    const fromISO = businessDateStartUTC(isCustom ? dateFrom! : `${year}-01-01`);
+    const toISO = businessDateEndUTC(isCustom ? dateTo! : `${year}-12-31`);
     const fromDay = isCustom ? dateFrom! : `${year}-01-01`;
     const toDay = isCustom ? dateTo! : `${year}-12-31`;
 
@@ -468,6 +469,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       _from: fromISO,
       _to: toISO,
       _brand_id: brandId || null,
+      _settled_only: false,
     });
     const supplierDebtQ = (context.supabase as any).rpc("dashboard_supplier_debt_summary", {
       _brand_id: brandId || null,
@@ -502,7 +504,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     const operations = (operationsR.data ?? {}) as {
       monthlySales: Array<{ month: number; brandId: string; revenue: number; cogs: number }>;
       productSales: Array<{ productId: string; sold: number; returned: number }>;
-      monthlyOrders: Array<{ month: number; total: number; confirmed: number; delivered: number; returned: number }>;
+      monthlyOrders: Array<{ month: number; total: number; confirmed: number; delivered: number; returned: number; shippingCost: number }>;
       couriers: Array<{ id: string; name: string; type: string; delivered: number; returned: number; collected: number }>;
       inventoryProducts: Array<{ productId: string; stock: number; produced: number }>;
       workers: Array<{ name: string; produced: number; productCount: number }>;
@@ -521,7 +523,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
 
     const monthly = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1, revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0,
-      ordersTotal: 0, ordersConfirmed: 0, ordersDelivered: 0, ordersReturned: 0,
+      ordersTotal: 0, ordersConfirmed: 0, ordersDelivered: 0, ordersReturned: 0, shippingCost: 0,
       clients: 0, projects: 0,
     }));
     for (const r of meRows) {
@@ -554,6 +556,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       m.ordersConfirmed += Number(order.confirmed) || 0;
       m.ordersDelivered += Number(order.delivered) || 0;
       m.ordersReturned += Number(order.returned) || 0;
+      m.shippingCost += Number(order.shippingCost) || 0;
     }
 
     for (const m of monthly) m.netProfit = m.revenue - m.expenses;
@@ -568,9 +571,10 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
         netProfit: a.netProfit + m.netProfit, cash: a.cash + m.cash,
         ordersTotal: a.ordersTotal + m.ordersTotal, ordersConfirmed: a.ordersConfirmed + m.ordersConfirmed,
         ordersDelivered: a.ordersDelivered + m.ordersDelivered, ordersReturned: a.ordersReturned + m.ordersReturned,
+        shippingCost: a.shippingCost + m.shippingCost,
         clients: a.clients + m.clients, projects: a.projects + m.projects,
       }),
-      { revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0, ordersTotal: 0, ordersConfirmed: 0, ordersDelivered: 0, ordersReturned: 0, clients: 0, projects: 0 },
+      { revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0, ordersTotal: 0, ordersConfirmed: 0, ordersDelivered: 0, ordersReturned: 0, shippingCost: 0, clients: 0, projects: 0 },
     );
     totals.revenue += yearlyRevenue;
     totals.cash += yearlyCash;
@@ -1017,8 +1021,8 @@ export const listFulfillmentEntries = createServerFn({ method: "GET" })
         .select("id, brand_id, employee_name, orders_prepared, occurred_at, note, employee_id")
         .order("occurred_at", { ascending: false });
       if (data.brandId) q = q.eq("brand_id", data.brandId);
-      if (data.dateFrom) q = q.gte("occurred_at", data.dateFrom);
-      if (data.dateTo) q = q.lte("occurred_at", data.dateTo);
+      if (data.dateFrom) q = q.gte("occurred_at", businessDateStartUTC(data.dateFrom.slice(0, 10)));
+      if (data.dateTo) q = q.lte("occurred_at", businessDateEndUTC(data.dateTo.slice(0, 10)));
       return q;
     });
     return rows as Array<{ id: string; brand_id: string | null; employee_name: string; orders_prepared: number; occurred_at: string; note: string | null; employee_id: string | null }>;
@@ -1055,8 +1059,8 @@ export const listCashTransactions = createServerFn({ method: "GET" })
       .select("id, type, amount, occurred_at, brand_id, courier_id, for_user_id, created_by, note, created_at, category_id, expense_entry_id, wallet_id, transfer_group")
       .order("occurred_at", { ascending: false })
       .order("created_at", { ascending: false });
-    if (data.from) q = q.gte("occurred_at", data.from);
-    if (data.to) q = q.lte("occurred_at", data.to);
+    if (data.from) q = q.gte("occurred_at", businessDateStartUTC(data.from.slice(0, 10)));
+    if (data.to) q = q.lte("occurred_at", businessDateEndUTC(data.to.slice(0, 10)));
     if (data.type) q = q.eq("type", data.type);
     if (data.brandId) q = q.eq("brand_id", data.brandId);
     if (data.courierId) q = q.eq("courier_id", data.courierId);

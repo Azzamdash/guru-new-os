@@ -22,10 +22,11 @@ export const Route = createFileRoute("/api/public/hooks/sync-core-secrets")({
             headers: { "Content-Type": "application/json" },
           });
         }
-        const { syncCoreSecretsToVault } = await import("@/server/coreSecretsSeed.server");
+        const { seedCoreConfiguration } = await import("@/server/coreSecretsSeed.server");
         try {
-          const results = await syncCoreSecretsToVault();
-          return Response.json({ ok: true, results });
+          const report = await seedCoreConfiguration();
+          return Response.json({ ok: true, results: report.secrets, cron: report.cron });
+
         } catch (e) {
           return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
             status: 500,

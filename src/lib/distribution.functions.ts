@@ -4,6 +4,7 @@ import { assertPageWrite } from "./page-permissions.server";
 import { ORDER_DISTRIBUTION_PAGE } from "./page-permission-paths";
 import { balanceAssignments, getEligibleStaff, recordAssignments } from "./distribution.server";
 import { ORDER_WORKFLOW_STATUSES, SHIPMENT_OUTCOMES } from "./order-lifecycle.shared";
+import { businessDateEndUTC, businessDateStartUTC } from "./timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -212,13 +213,15 @@ export const getDistributionBoard = createServerFn({ method: "POST" })
     });
 
     // courier load board (defaults to the last 90 days when no date filter is set)
-    const since = data.dateFrom ?? new Date(Date.now() - 90 * 86400000).toISOString();
+    const since = data.dateFrom
+      ? businessDateStartUTC(data.dateFrom.slice(0, 10))
+      : new Date(Date.now() - 90 * 86400000).toISOString();
     let statsQ = ctx.supabase
       .from("orders")
       .select("courier_id, order_status, shipment_outcome, total_amount")
       .not("courier_id", "is", null)
       .gte("occurred_at", since);
-    if (data.dateTo) statsQ = statsQ.lte("occurred_at", `${data.dateTo}T23:59:59.999Z`);
+    if (data.dateTo) statsQ = statsQ.lte("occurred_at", businessDateEndUTC(data.dateTo.slice(0, 10)));
     if (data.brandId) statsQ = statsQ.eq("brand_id", data.brandId);
     const { data: statRows } = await statsQ;
 
@@ -566,8 +569,8 @@ export const getEmployeeOrdersPerformance = createServerFn({ method: "POST" })
       .from("orders")
       .select("assigned_user_id, order_status, confirmation_status")
       .not("assigned_user_id", "is", null);
-    if (data.dateFrom) q = q.gte("occurred_at", data.dateFrom);
-    if (data.dateTo) q = q.lte("occurred_at", `${data.dateTo}T23:59:59.999Z`);
+    if (data.dateFrom) q = q.gte("occurred_at", businessDateStartUTC(data.dateFrom.slice(0, 10)));
+    if (data.dateTo) q = q.lte("occurred_at", businessDateEndUTC(data.dateTo.slice(0, 10)));
     if (data.brandId) q = q.eq("brand_id", data.brandId);
 
     const [{ data: rows, error }, staff] = await Promise.all([q, getEligibleStaff(ctx.supabase)]);

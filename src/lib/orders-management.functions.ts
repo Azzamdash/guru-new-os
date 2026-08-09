@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
 import { ORDERS_PAGE } from "./page-permission-paths";
 import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
+import { businessDateEndUTC, businessDateStartUTC } from "./timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -16,8 +17,10 @@ async function assertManager(ctx: Ctx) {
 }
 
 function dayRange(from: string | null, to: string | null) {
-  const start = from ? new Date(`${from}T00:00:00.000Z`) : new Date(Date.now() - 30 * 86400000);
-  const end = to ? new Date(`${to}T23:59:59.999Z`) : new Date();
+  const start = from
+    ? new Date(businessDateStartUTC(from.slice(0, 10)))
+    : new Date(Date.now() - 30 * 86400000);
+  const end = to ? new Date(businessDateEndUTC(to.slice(0, 10))) : new Date();
   return { start: start.toISOString(), end: end.toISOString() };
 }
 

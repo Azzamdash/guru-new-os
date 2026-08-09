@@ -31,6 +31,8 @@ import {
   Facebook,
   Music2,
   Clock,
+  MessageCircle,
+  Palette,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -262,6 +264,18 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "Profits, cash & trends",
     group: "executive",
   },
+  {
+    to: "/command-center",
+    ar: "مركز التحكم",
+    en: "Command Center",
+    icon: Gauge,
+    hub: "overview",
+    privilegedOnly: true,
+    descAr: "كل ما يحتاج تدخل الآن، ونبض التشغيل اليومي، في مكان واحد",
+    descEn:
+      "Everything needing attention right now, plus the daily operational pulse, in one place",
+    group: "executive",
+  },
 
   // MISSIONS (my missions section)
   {
@@ -326,16 +340,17 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "Leaves, permissions & advances",
   },
 
-  // ORDER MANAGEMENT — ordered by the order lifecycle
+  // ORDER MANAGEMENT — ordered by priority: create/see orders first, then
+  // distribution, working the queue, exceptions, history, then reporting.
   {
-    to: "/orders-center",
-    ar: "مركز إدارة الأوردرات",
-    en: "Orders Center",
-    icon: Gauge,
+    to: "/orders-list",
+    ar: "الأوردرات",
+    en: "Orders",
+    icon: ShoppingCart,
     hub: "sales",
     extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
-    descAr: "الشاشة الرئيسية: أوردراتي، الشحن والتحصيل وسجل الحالات",
-    descEn: "Main screen: my orders, shipping, collections and timeline",
+    descAr: "قائمة كل الأوردرات مع البحث والفلترة وإنشاء أوردر جديد",
+    descEn: "Full orders list with search, filters, and creating new orders",
   },
   {
     to: "/order-distribution",
@@ -346,9 +361,39 @@ export const NAV_PAGES: NavPage[] = [
     requiresWrite: true,
     extraRoles: ["fulfillment_manager", "operation_manager"],
     descAr:
-      "قائمة الأوردرات، توزيعها على موظفي النظام وشركات الشحن مع موازنة الأحمال، وتقارير أداء الموظفين",
+      "طابور الأوردرات غير الموزَّعة وتوزيعها على موظفي النظام وشركات الشحن مع موازنة الأحمال",
     descEn:
-      "Orders list, assignment to system users and couriers with load balancing, and employee performance reports",
+      "Queue of unassigned orders, assignment to system users and couriers with load balancing",
+  },
+  {
+    to: "/my-orders",
+    ar: "أوردراتي",
+    en: "My Orders",
+    icon: ShoppingBag,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "الأوردرات الموزَّعة عليك: تعديل، تأكيد، وإسناد لشركة شحن",
+    descEn: "Orders assigned to you: edit, confirm, and dispatch to a courier",
+  },
+  {
+    to: "/order-shipping",
+    ar: "الشحن والتحصيل",
+    en: "Shipping & Collection",
+    icon: Truck,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "تسجيل محاولات الشحن والتحصيلات لكل أوردر",
+    descEn: "Record shipment attempts and collections per order",
+  },
+  {
+    to: "/orders-attention",
+    ar: "يحتاج تدخل",
+    en: "Needs Attention",
+    icon: Gauge,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "أوردرات بدون شحنة، وأوردرات تم تسليمها بدون تحصيل كامل",
+    descEn: "Orders with no shipment, and orders delivered without full collection",
   },
   {
     to: "/orders-radar",
@@ -361,6 +406,16 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "SLA breaches and risky orders",
   },
   {
+    to: "/order-timeline",
+    ar: "سجل الأوردر",
+    en: "Order Timeline",
+    icon: Activity,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "سجل حالات كل أوردر: تحصيلات، محاولات شحن، وتغييرات الحالة",
+    descEn: "Order history: collections, shipment attempts, and status changes",
+  },
+  {
     to: "/order-returns",
     ar: "المرتجعات والاستبدال",
     en: "Returns & Exchanges",
@@ -370,6 +425,46 @@ export const NAV_PAGES: NavPage[] = [
     extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
     descAr: "دورة المرتجع: استلام، إرجاع للمخزون، واسترداد",
     descEn: "Return lifecycle: receive, restock, refund",
+  },
+  {
+    to: "/whatsapp-inbox",
+    ar: "واتساب",
+    en: "WhatsApp",
+    icon: MessageCircle,
+    hub: "sales",
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "صندوق محادثات واتساب: إرسال، استقبال، وربط المحادثات بالأوردرات",
+    descEn: "WhatsApp inbox: send, receive, and link chats to orders",
+  },
+  {
+    to: "/courier-loads",
+    ar: "أحمال شركات الشحن",
+    en: "Courier Loads",
+    icon: Truck,
+    hub: "sales",
+    extraRoles: ["fulfillment_manager", "operation_manager"],
+    descAr: "أحمال كل شركة شحن: مفتوحة، تم التسليم، مرتجع، ونسبة التسليم",
+    descEn: "Each courier's load: open, delivered, returned, and delivery rate",
+  },
+  {
+    to: "/distribution-performance",
+    ar: "تقارير الموظفين",
+    en: "Employee Reports",
+    icon: Users,
+    hub: "sales",
+    extraRoles: ["fulfillment_manager", "operation_manager"],
+    descAr: "أداء كل موظف في متابعة الأوردرات الموزَّعة عليه",
+    descEn: "Each employee's performance on assigned orders",
+  },
+  {
+    to: "/distribution-log",
+    ar: "سجل التوزيع",
+    en: "Distribution Log",
+    icon: Receipt,
+    hub: "sales",
+    extraRoles: ["fulfillment_manager", "operation_manager"],
+    descAr: "سجل كل عمليات توزيع الأوردرات على شركات الشحن والموظفين",
+    descEn: "Log of every order distribution action to couriers and employees",
   },
   {
     to: "/courier-settlements",
@@ -977,6 +1072,15 @@ export const NAV_PAGES: NavPage[] = [
     requiresWrite: true,
     descAr: "إدخال يومي وشهري",
     descEn: "Daily/monthly entry",
+  },
+  {
+    to: "/themes",
+    ar: "الثيمات",
+    en: "Themes",
+    icon: Palette,
+    hub: "settings",
+    descAr: "اختيار هوية الألوان ووضع الإضاءة للنظام كله",
+    descEn: "Pick the app's color identity and light/dark mode",
   },
 ];
 

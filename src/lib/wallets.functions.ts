@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 
 type Ctx = { supabase: SupabaseClient<Database>; userId: string };
 
@@ -96,8 +97,8 @@ export const getWalletBalances = createServerFn({ method: "GET" })
     const periodMap = new Map<string, { periodIn: number; periodOut: number }>();
     if (data.from || data.to) {
       let pQ = context.supabase.from("cash_transactions").select("wallet_id, type, amount, occurred_at, transfer_group");
-      if (data.from) pQ = pQ.gte("occurred_at", data.from);
-      if (data.to) pQ = pQ.lte("occurred_at", data.to);
+      if (data.from) pQ = pQ.gte("occurred_at", businessDateStartUTC(data.from.slice(0, 10)));
+      if (data.to) pQ = pQ.lte("occurred_at", businessDateEndUTC(data.to.slice(0, 10)));
       const pR = await pQ;
       if (pR.error) throw pR.error;
       for (const r of (pR.data ?? []) as Array<{ wallet_id: string | null; type: string; amount: number; transfer_group: string | null }>) {

@@ -226,13 +226,13 @@ function Page() {
         />
         <Kpi
           icon={Scale}
-          label={L(tr("المتوقع COD"), "Expected COD")}
+          label={L(tr("متوقع تحصيله (شركات الشحن)"), "Expected to collect (couriers)")}
           value={nf(d?.reconciliation.expected ?? 0)}
           sub="EGP"
         />
         <Kpi
           icon={Scale}
-          label={L(tr("المودَع"), "Deposited")}
+          label={L(tr("ما تم تحصيله (شركات الشحن)"), "Collected (couriers)")}
           value={nf(d?.reconciliation.deposited ?? 0)}
           sub="EGP"
           tone="text-emerald-500"

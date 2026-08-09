@@ -124,7 +124,11 @@ export function CeoDashboard() {
   });
   const isQ = useQuery({
     queryKey: ["ceo-is", from, to],
-    queryFn: () => getIS({ data: { from, to } }),
+    // The dashboard's headline P&L is order-based (Shopify-style, like
+    // before) — not gated by delivery. Valuation/investor reporting is a
+    // separate codepath (profits.shared.ts, revenue.server.ts) and stays
+    // gated to what's actually delivered/collected.
+    queryFn: () => getIS({ data: { from, to, settledOnly: false } }),
     placeholderData: keepPreviousData,
     ...queryPresets.report,
   });
@@ -341,6 +345,13 @@ export function CeoDashboard() {
             value={nfPct(is?.netMargin ?? 0)}
             tone={(is?.netMargin ?? 0) >= 0.05 ? "positive" : "warning"}
           />
+          <KpiTile
+            label={T("الخصومات", "Discounts")}
+            value={egp(is?.discounts ?? 0)}
+            hint={egpFull(is?.discounts ?? 0)}
+            tone="warning"
+            icon={<Wallet className="w-4 h-4" />}
+          />
         </div>
         <div className="mt-3 max-w-sm">
           <KpiTile
@@ -389,7 +400,7 @@ export function CeoDashboard() {
         title={T("العمليات", "Operations")}
         subtitle={T("الاوردرات وحالتها خلال الفترة", "Orders and their status during the period")}
       >
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           <KpiTile
             label={T("إجمالي الاوردرات", "Total orders")}
             value={nf0.format(ordersTotal)}
@@ -416,6 +427,13 @@ export function CeoDashboard() {
           <KpiTile
             label={T("متوسط قيمة الاوردر (AOV)", "Average order value (AOV)")}
             value={egp(aov)}
+            icon={<Truck className="w-4 h-4" />}
+          />
+          <KpiTile
+            label={T("تكلفة الشحن", "Shipping cost")}
+            value={egp(dash?.totals.shippingCost ?? 0)}
+            hint={egpFull(dash?.totals.shippingCost ?? 0)}
+            tone="warning"
             icon={<Truck className="w-4 h-4" />}
           />
           <KpiTile

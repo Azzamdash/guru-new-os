@@ -27,46 +27,197 @@ import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { queryPresets } from "@/lib/query-presets";
 import { FF, FIN, CONFIRM, EG_GOVERNORATES } from "./order-form-constants";
 
-const emptyItem = () => ({ product_id: "", title: "", qty: 1, unit_price: 0 });
-const emptyForm = () => ({
+type OrderKind = "sale" | "return" | "exchange";
+type ItemRow = { product_id: string; title: string; qty: number; unit_price: number };
+type Product = { id: string; brand_id: string; name: string; sell_price: number | null };
+
+/** Prefill for creating a return/exchange order linked to an existing one — see order-view. */
+export type RelatedOrderPrefill = {
+  id: string;
+  brand_id: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  shipping_governorate?: string | null;
+  shipping_address?: string | null;
+  building_number?: string | null;
+  floor_number?: string | null;
+  apartment_number?: string | null;
+};
+
+const emptyItem = (): ItemRow => ({ product_id: "", title: "", qty: 1, unit_price: 0 });
+const emptyForm = (seed?: { presetKind?: OrderKind; relatedOrder?: RelatedOrderPrefill }) => ({
   id: undefined as string | undefined,
-  brand_id: "",
+  brand_id: seed?.relatedOrder?.brand_id ?? "",
+  order_kind: seed?.presetKind ?? ("sale" as OrderKind),
+  related_order_id: seed?.relatedOrder?.id as string | undefined,
   external_order_number: "",
-  customer_name: "",
-  customer_phone: "",
-  shipping_governorate: "",
+  customer_name: seed?.relatedOrder?.customer_name ?? "",
+  customer_phone: seed?.relatedOrder?.customer_phone ?? "",
+  shipping_governorate: seed?.relatedOrder?.shipping_governorate ?? "",
   shipping_area: "",
-  shipping_address: "",
-  building_number: "",
-  floor_number: "",
-  apartment_number: "",
+  shipping_address: seed?.relatedOrder?.shipping_address ?? "",
+  building_number: seed?.relatedOrder?.building_number ?? "",
+  floor_number: seed?.relatedOrder?.floor_number ?? "",
+  apartment_number: seed?.relatedOrder?.apartment_number ?? "",
   courier_id: "",
   occurred_at: getTodayInBusinessTimezone(),
   fulfillment_status: "unfulfilled",
   financial_status: "pending",
-  confirmation_status: "pending",
+  confirmation_status: seed?.presetKind ? "confirmed" : "pending",
   shipping_amount: 0,
   discount_amount: 0,
   note: "",
-  items: [emptyItem()] as Array<{
-    product_id: string;
-    title: string;
-    qty: number;
-    unit_price: number;
-  }>,
+  // Primary list: "out" items for sale/exchange, "in" items for a plain return.
+  items: [emptyItem()] as ItemRow[],
+  // Only used for exchange — the "in" (returned) side.
+  returnItems: [emptyItem()] as ItemRow[],
 });
 
-/** Create/edit an order — same dialog used across Order Distribution and My Orders. */
+function itemsTotal(items: ItemRow[]) {
+  return items.reduce((s, i) => s + (Number(i.qty) || 0) * (Number(i.unit_price) || 0), 0);
+}
+
+/** One editable list of item rows (product/qty/price), reused for both sides of an exchange. */
+function ItemRowsEditor({
+  items,
+  onChange,
+  brandProducts,
+  t,
+  lang,
+}: {
+  items: ItemRow[];
+  onChange: (items: ItemRow[]) => void;
+  brandProducts: Product[];
+  t: (key: string) => string;
+  lang: string;
+}) {
+  return (
+    <div className="space-y-2">
+      {items.map((it, idx) => (
+        <div key={idx} className="grid grid-cols-12 gap-2 items-end">
+          <div className="col-span-5">
+            {brandProducts.length > 0 ? (
+              <Select
+                value={it.product_id || "__free"}
+                onValueChange={(v) => {
+                  if (v === "__free") {
+                    const next = [...items];
+                    next[idx] = { ...next[idx], product_id: "", title: next[idx].title };
+                    onChange(next);
+                    return;
+                  }
+                  const p = brandProducts.find((pp) => pp.id === v);
+                  const next = [...items];
+                  next[idx] = {
+                    ...next[idx],
+                    product_id: v,
+                    title: p?.name ?? "",
+                    unit_price: Number(p?.sell_price ?? next[idx].unit_price),
+                  };
+                  onChange(next);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("order_item_title")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__free">{lang === "ar" ? "بند حر" : "Free item"}</SelectItem>
+                  {brandProducts.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                placeholder={t("order_item_title")}
+                value={it.title}
+                onChange={(e) => {
+                  const next = [...items];
+                  next[idx] = { ...next[idx], title: e.target.value };
+                  onChange(next);
+                }}
+              />
+            )}
+          </div>
+          {it.product_id === "" && (
+            <div className="col-span-3">
+              <Input
+                placeholder={t("order_item_title")}
+                value={it.title}
+                onChange={(e) => {
+                  const next = [...items];
+                  next[idx] = { ...next[idx], title: e.target.value };
+                  onChange(next);
+                }}
+              />
+            </div>
+          )}
+          <div className={it.product_id === "" ? "col-span-2" : "col-span-3"}>
+            <Input
+              type="number"
+              min="1"
+              placeholder={t("order_item_qty")}
+              value={it.qty}
+              onChange={(e) => {
+                const next = [...items];
+                next[idx] = { ...next[idx], qty: Number(e.target.value) };
+                onChange(next);
+              }}
+            />
+          </div>
+          <div className={it.product_id === "" ? "col-span-2" : "col-span-3"}>
+            <Input
+              type="number"
+              placeholder={t("order_item_price")}
+              value={it.unit_price}
+              onChange={(e) => {
+                const next = [...items];
+                next[idx] = { ...next[idx], unit_price: Number(e.target.value) };
+                onChange(next);
+              }}
+            />
+          </div>
+          <div className="col-span-1">
+            {items.length > 1 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onChange(items.filter((_, i) => i !== idx))}
+              >
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </Button>
+            )}
+          </div>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={() => onChange([...items, emptyItem()])}>
+        <Plus className="w-3 h-3 me-1" />
+        {t("order_add_item")}
+      </Button>
+    </div>
+  );
+}
+
+/** Create/edit an order — same dialog used across Order Distribution and My Orders,
+ *  and (with presetKind + relatedOrder) for creating a return/exchange linked
+ *  to an existing order from order-view. */
 export function OrderEditDialog({
   open,
   orderId,
   onOpenChange,
   onSaved,
+  presetKind,
+  relatedOrder,
 }: {
   open: boolean;
   orderId: string | null;
   onOpenChange: (v: boolean) => void;
-  onSaved?: () => void;
+  onSaved?: (id: string) => void;
+  presetKind?: OrderKind;
+  relatedOrder?: RelatedOrderPrefill;
 }) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
@@ -76,13 +227,13 @@ export function OrderEditDialog({
   const listProductsFn = useServerFn(listProducts);
   const listCouriersFn = useServerFn(listCouriers);
 
-  const [form, setForm] = useState(emptyForm());
+  const [form, setForm] = useState(emptyForm({ presetKind, relatedOrder }));
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     if (!orderId) {
-      setForm(emptyForm());
+      setForm(emptyForm({ presetKind, relatedOrder }));
       return;
     }
     let cancelled = false;
@@ -90,9 +241,14 @@ export function OrderEditDialog({
     getOrderFn({ data: { id: orderId } })
       .then((o) => {
         if (cancelled) return;
+        const outItems = (o.items ?? []).filter((i) => i.direction !== "in");
+        const inItems = (o.items ?? []).filter((i) => i.direction === "in");
+        const kind = (o.order_kind ?? "sale") as OrderKind;
         setForm({
           id: o.id,
           brand_id: o.brand_id,
+          order_kind: kind,
+          related_order_id: undefined,
           external_order_number: o.external_order_number ?? "",
           customer_name: o.customer_name ?? "",
           customer_phone: o.customer_phone ?? "",
@@ -111,12 +267,23 @@ export function OrderEditDialog({
           shipping_amount: Number(o.shipping_amount ?? 0),
           discount_amount: Number(o.discount_amount ?? 0),
           note: o.note ?? "",
-          items: (o.items ?? []).map((i) => ({
+          // A plain return's items are stored with direction "in" (for stock
+          // purposes) but still belong in the primary list here.
+          items: (kind === "return" ? inItems : outItems).map((i) => ({
             product_id: i.product_id ?? "",
             title: i.title,
             qty: Number(i.qty),
             unit_price: Number(i.unit_price),
           })),
+          returnItems:
+            kind === "exchange" && inItems.length
+              ? inItems.map((i) => ({
+                  product_id: i.product_id ?? "",
+                  title: i.title,
+                  qty: Number(i.qty),
+                  unit_price: Number(i.unit_price),
+                }))
+              : [emptyItem()],
         });
       })
       .finally(() => {
@@ -148,23 +315,34 @@ export function OrderEditDialog({
     ...queryPresets.reference,
   });
 
+  const isExchange = form.order_kind === "exchange";
+
   const create = useMutation({
     mutationFn: () => {
       if (!form.brand_id) throw new Error(lang === "ar" ? "اختر البراند" : "Choose a brand");
-      const items = form.items
-        .filter((i) => (i.title || i.product_id) && Number(i.qty) > 0)
-        .map((i) => ({
-          product_id: i.product_id || null,
-          title: i.title || (brandProducts.find((p) => p.id === i.product_id)?.name ?? "Item"),
-          qty: Number(i.qty),
-          unit_price: Number(i.unit_price),
-        }));
+      const toPayloadItems = (rows: ItemRow[], direction: "out" | "in") =>
+        rows
+          .filter((i) => (i.title || i.product_id) && Number(i.qty) > 0)
+          .map((i) => ({
+            product_id: i.product_id || null,
+            title: i.title || (brandProducts.find((p) => p.id === i.product_id)?.name ?? "Item"),
+            qty: Number(i.qty),
+            unit_price: Number(i.unit_price),
+            direction,
+          }));
+      const primaryDirection = form.order_kind === "return" ? "in" : "out";
+      const items = [
+        ...toPayloadItems(form.items, primaryDirection),
+        ...(isExchange ? toPayloadItems(form.returnItems, "in") : []),
+      ];
       if (!items.length)
         throw new Error(lang === "ar" ? "أضف بند واحد على الأقل" : "Add at least one item");
       return createFn({
         data: {
           id: form.id,
           brand_id: form.brand_id,
+          order_kind: form.order_kind,
+          related_order_id: form.related_order_id,
           external_order_number: form.external_order_number || null,
           customer_name: form.customer_name || null,
           customer_phone: form.customer_phone || null,
@@ -186,7 +364,7 @@ export function OrderEditDialog({
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (r) => {
       toast.success(t("order_saved"));
       onOpenChange(false);
       setForm(emptyForm());
@@ -194,10 +372,16 @@ export function OrderEditDialog({
       qc.invalidateQueries({ queryKey: ["orders-summary"] });
       qc.invalidateQueries({ queryKey: ["sales"] });
       qc.invalidateQueries({ queryKey: ["ops-snapshot"] });
-      onSaved?.();
+      onSaved?.(r.id);
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const outTotal = itemsTotal(form.items);
+  const inTotal = isExchange ? itemsTotal(form.returnItems) : 0;
+  const netItemsTotal = outTotal - inTotal;
+  const grandTotal =
+    netItemsTotal + Number(form.shipping_amount || 0) - Number(form.discount_amount || 0);
 
   return (
     <Dialog
@@ -210,11 +394,40 @@ export function OrderEditDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {form.id ? (lang === "ar" ? "تعديل أوردر" : "Edit order") : t("order_new_title")}
+            {form.id
+              ? lang === "ar"
+                ? "تعديل أوردر"
+                : "Edit order"
+              : presetKind === "return"
+                ? lang === "ar"
+                  ? "إنشاء أوردر مرتجع"
+                  : "Create return order"
+                : presetKind === "exchange"
+                  ? lang === "ar"
+                    ? "إنشاء أوردر تبديل"
+                    : "Create exchange order"
+                  : t("order_new_title")}
           </DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">{t("order_new_hint")}</p>
         <div className="grid gap-3 mt-2">
+          <div>
+            <Label className="text-xs">{lang === "ar" ? "نوع الأوردر" : "Order type"}</Label>
+            <Select
+              value={form.order_kind}
+              onValueChange={(v) => setForm({ ...form, order_kind: v as OrderKind })}
+              disabled={!!presetKind}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sale">{lang === "ar" ? "توصيل" : "Delivery"}</SelectItem>
+                <SelectItem value="return">{lang === "ar" ? "استرجاع" : "Return"}</SelectItem>
+                <SelectItem value="exchange">{lang === "ar" ? "استبدال" : "Exchange"}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">{t("brand")}</Label>
@@ -426,136 +639,46 @@ export function OrderEditDialog({
             </div>
           </div>
           <div className="border-t border-border pt-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">{t("invoice_items")}</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setForm({ ...form, items: [...form.items, emptyItem()] })}
-              >
-                <Plus className="w-3 h-3 me-1" />
-                {t("order_add_item")}
-              </Button>
-            </div>
-            {form.items.map((it, idx) => (
-              <div key={idx} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-5">
-                  {brandProducts.length > 0 ? (
-                    <Select
-                      value={it.product_id || "__free"}
-                      onValueChange={(v) => {
-                        if (v === "__free") {
-                          const items = [...form.items];
-                          items[idx] = {
-                            ...items[idx],
-                            product_id: "",
-                            title: items[idx].title,
-                          };
-                          setForm({ ...form, items });
-                          return;
-                        }
-                        const p = brandProducts.find((pp) => pp.id === v);
-                        const items = [...form.items];
-                        items[idx] = {
-                          ...items[idx],
-                          product_id: v,
-                          title: p?.name ?? "",
-                          unit_price: Number(p?.sell_price ?? items[idx].unit_price),
-                        };
-                        setForm({ ...form, items });
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("order_item_title")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__free">
-                          {lang === "ar" ? "بند حر" : "Free item"}
-                        </SelectItem>
-                        {brandProducts.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      placeholder={t("order_item_title")}
-                      value={it.title}
-                      onChange={(e) => {
-                        const items = [...form.items];
-                        items[idx] = { ...items[idx], title: e.target.value };
-                        setForm({ ...form, items });
-                      }}
-                    />
-                  )}
-                </div>
-                {it.product_id === "" && (
-                  <div className="col-span-3">
-                    <Input
-                      placeholder={t("order_item_title")}
-                      value={it.title}
-                      onChange={(e) => {
-                        const items = [...form.items];
-                        items[idx] = { ...items[idx], title: e.target.value };
-                        setForm({ ...form, items });
-                      }}
-                    />
-                  </div>
-                )}
-                <div className={it.product_id === "" ? "col-span-2" : "col-span-3"}>
-                  <Input
-                    type="number"
-                    min="1"
-                    placeholder={t("order_item_qty")}
-                    value={it.qty}
-                    onChange={(e) => {
-                      const items = [...form.items];
-                      items[idx] = { ...items[idx], qty: Number(e.target.value) };
-                      setForm({ ...form, items });
-                    }}
-                  />
-                </div>
-                <div className={it.product_id === "" ? "col-span-2" : "col-span-3"}>
-                  <Input
-                    type="number"
-                    placeholder={t("order_item_price")}
-                    value={it.unit_price}
-                    onChange={(e) => {
-                      const items = [...form.items];
-                      items[idx] = { ...items[idx], unit_price: Number(e.target.value) };
-                      setForm({ ...form, items });
-                    }}
-                  />
-                </div>
-                <div className="col-span-1">
-                  {form.items.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        setForm({ ...form, items: form.items.filter((_, i) => i !== idx) })
-                      }
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
+            <span className="text-sm font-medium">
+              {isExchange
+                ? lang === "ar"
+                  ? "المنتجات اللي هتتبعت للعميل"
+                  : "Items going to the customer"
+                : form.order_kind === "return"
+                  ? lang === "ar"
+                    ? "المنتجات الراجعة"
+                    : "Returned items"
+                  : t("invoice_items")}
+            </span>
+            <ItemRowsEditor
+              items={form.items}
+              onChange={(items) => setForm({ ...form, items })}
+              brandProducts={brandProducts}
+              t={t}
+              lang={lang}
+            />
+            {isExchange && (
+              <>
+                <span className="text-sm font-medium">
+                  {lang === "ar" ? "المنتجات اللي هترجع من العميل" : "Items coming back from the customer"}
+                </span>
+                <ItemRowsEditor
+                  items={form.returnItems}
+                  onChange={(returnItems) => setForm({ ...form, returnItems })}
+                  brandProducts={brandProducts}
+                  t={t}
+                  lang={lang}
+                />
+              </>
+            )}
             <div className="text-right text-sm text-muted-foreground num" dir="ltr">
-              Total:{" "}
-              {(
-                form.items.reduce(
-                  (s, i) => s + (Number(i.qty) || 0) * (Number(i.unit_price) || 0),
-                  0,
-                ) +
-                Number(form.shipping_amount || 0) -
-                Number(form.discount_amount || 0)
-              ).toLocaleString("en-US")}
+              {isExchange && (
+                <div>
+                  Out: {outTotal.toLocaleString("en-US")} — In: {inTotal.toLocaleString("en-US")} — Net:{" "}
+                  {netItemsTotal.toLocaleString("en-US")}
+                </div>
+              )}
+              <div>Total: {grandTotal.toLocaleString("en-US")}</div>
             </div>
           </div>
           <div>

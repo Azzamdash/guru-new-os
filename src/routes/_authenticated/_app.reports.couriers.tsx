@@ -116,7 +116,7 @@ function CouriersReport() {
       </Card>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-9 gap-3">
         <Kpi label={AR ? tr("الأوردرات") : "Orders"} value={nf(d?.totals.orders ?? 0)} />
         <Kpi
           label={AR ? tr("مسلَّم (أوردرات)") : "Delivered (orders)"}
@@ -147,6 +147,11 @@ function CouriersReport() {
           label={AR ? tr("التحصيل") : "Collected"}
           value={nf(Math.round(d?.totals.collected ?? 0))}
         />
+        <Kpi
+          label={AR ? tr("تكلفة الشحن") : "Shipping cost"}
+          value={nf(Math.round(d?.totals.shippingCost ?? 0))}
+          tone="destructive"
+        />
       </div>
 
       {/* Couriers table */}
@@ -172,6 +177,7 @@ function CouriersReport() {
                 <th className="p-3 text-start">{AR ? tr("متوقع تحصيله") : "Expected COD"}</th>
                 <th className="p-3 text-start">{AR ? tr("التحصيل") : "Collected"}</th>
                 <th className="p-3 text-start">{AR ? tr("الشحن") : "Shipping"}</th>
+                <th className="p-3 text-start">{AR ? tr("تكلفة الشحن") : "Shipping cost"}</th>
               </tr>
             </thead>
             <tbody>
@@ -191,11 +197,12 @@ function CouriersReport() {
                   <td className="p-3 num text-amber-500">{nf(Math.round(c.expectedCod))}</td>
                   <td className="p-3 num">{nf(Math.round(c.collected))}</td>
                   <td className="p-3 num text-muted-foreground">{nf(Math.round(c.shipping))}</td>
+                  <td className="p-3 num text-destructive">{nf(Math.round(c.shippingCost))}</td>
                 </tr>
               ))}
               {(d?.couriers ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={13} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={14} className="p-8 text-center text-muted-foreground">
                     {AR ? tr("لا توجد بيانات في هذه المدة.") : "No data in this period."}
                   </td>
                 </tr>

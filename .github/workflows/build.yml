@@ -1,6 +1,5 @@
 name: Build & Push Image
 run-name: Build requested by @${{ github.actor }}
-
 on:
   release:
     types: [published]
@@ -10,23 +9,19 @@ on:
         type: string
         description: "Release Version"
         required: true
-
 concurrency:
   group: production-build-${{ github.ref }}
   cancel-in-progress: false
-
 permissions:
   contents: read
   packages: write
   actions: write
-
 jobs:
   build-and-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Extract Release Version
         id: version
         run: |
@@ -34,37 +29,43 @@ jobs:
           VERSION="${VERSION#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Release Version: $VERSION"
-
-      - name: Lowercase repository name
+      - name: Determine environment & repo name
         id: repo
-        run: echo "repo=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
-
+        run: |
+          REPO="${GITHUB_REPOSITORY,,}"
+          if [[ "${{ steps.version.outputs.version }}" == *-staging ]]; then
+            echo "repo=${REPO}-staging" >> "$GITHUB_OUTPUT"
+            echo "moving_tag=staging-latest" >> "$GITHUB_OUTPUT"
+            echo "environment=staging" >> "$GITHUB_OUTPUT"
+          else
+            echo "repo=${REPO}" >> "$GITHUB_OUTPUT"
+            echo "moving_tag=latest" >> "$GITHUB_OUTPUT"
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+          fi
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: docker/setup-buildx-action@v3
-
       - uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
             ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
-            ghcr.io/${{ steps.repo.outputs.repo }}:latest
+            ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.repo.outputs.moving_tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
             VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
             VITE_SUPABASE_PROJECT_ID=${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-
       - name: Trigger deploy workflow
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh workflow run deploy.yml \
             --ref ${{ github.ref_name }} \
-            -f release_version=${{ steps.version.outputs.version }}
+            -f release_version=${{ steps.version.outputs.version }} \
+            -f environment=${{ steps.repo.outputs.environment }}

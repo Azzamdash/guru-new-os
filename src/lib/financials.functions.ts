@@ -16,6 +16,8 @@ export type IncomeStatement = {
   returns: number;
   discounts: number;
   netRevenue: number;
+  /** Revenue for orders still in flight (not yet delivered/returned) — not included in netRevenue. */
+  projectedNetRevenue: number;
   cogs: number;
   grossProfit: number;
   grossMargin: number;
@@ -33,7 +35,7 @@ export type IncomeStatement = {
 
 export const getIncomeStatement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { from?: string; to?: string; brandId?: string | null; excludeBrandIds?: string[] } = {}) => d)
+  .inputValidator((d: { from?: string; to?: string; brandId?: string | null; excludeBrandIds?: string[]; settledOnly?: boolean } = {}) => d)
   .handler(async ({ data, context }): Promise<IncomeStatement> => {
     const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? `${new Date(to).getFullYear()}-01-01`;
@@ -42,12 +44,14 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       to,
       brandId: data.brandId,
       excludeBrandIds: data.excludeBrandIds,
+      settledOnly: data.settledOnly,
     });
     const totals = report.totals;
     const grossRevenue = Number(totals.grossRevenue) || 0;
     const returns = Number(totals.returns) || 0;
     const discounts = Number(totals.discounts) || 0;
     const netRevenue = Number(totals.netRevenue) || 0;
+    const projectedNetRevenue = Number(totals.projectedNetRevenue) || 0;
     const cogs = Number(totals.cogs) || 0;
     const operatingExpensesTotal = Number(totals.expenses) || 0;
     const grossProfit = netRevenue - cogs;
@@ -59,6 +63,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       grossRevenue,
       returns,
       discounts,
+      projectedNetRevenue,
       netRevenue,
       cogs,
       grossProfit,

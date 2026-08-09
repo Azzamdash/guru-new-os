@@ -13,6 +13,7 @@ import {
 import { assertPageWrite } from "./page-permissions.server";
 import { ORDERS_PAGE } from "./page-permission-paths";
 import { normalizePageRequest } from "./scalable-pagination.shared";
+import { businessDateStartUTC, businessDateEndUTC } from "./timezone";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -81,8 +82,10 @@ export const listOrders = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }): Promise<OrderPageResult> => {
     const normalized = normalizePageRequest({ pageSize: data.pageSize, search: data.search });
-    const from = data.from ?? new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
-    const to = data.to ? `${data.to.slice(0, 10)}T23:59:59.999Z` : new Date().toISOString();
+    const from = data.from
+      ? businessDateStartUTC(data.from.slice(0, 10))
+      : new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
+    const to = data.to ? businessDateEndUTC(data.to.slice(0, 10)) : new Date().toISOString();
     const { data: result, error } = await (context.supabase as any).rpc("orders_page", {
       _from: from,
       _to: to,
@@ -122,8 +125,10 @@ export const getOrdersFilterSummary = createServerFn({ method: "GET" })
   )
   .handler(async ({ data, context }) => {
     const normalized = normalizePageRequest({ search: data.search });
-    const from = data.from ?? new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
-    const to = data.to ? `${data.to.slice(0, 10)}T23:59:59.999Z` : new Date().toISOString();
+    const from = data.from
+      ? businessDateStartUTC(data.from.slice(0, 10))
+      : new Date(Date.now() - (data.days ?? 90) * 86400000).toISOString();
+    const to = data.to ? businessDateEndUTC(data.to.slice(0, 10)) : new Date().toISOString();
     const { data: result, error } = await (context.supabase as any).rpc("orders_filter_summary", {
       _from: from,
       _to: to,
@@ -144,8 +149,10 @@ export const getOrdersSummary = createServerFn({ method: "GET" })
     ) => d,
   )
   .handler(async ({ data, context }) => {
-    const from = data.from ?? new Date(Date.now() - (data.days ?? 30) * 86400000).toISOString();
-    const to = data.to ? `${data.to.slice(0, 10)}T23:59:59.999Z` : new Date().toISOString();
+    const from = data.from
+      ? businessDateStartUTC(data.from.slice(0, 10))
+      : new Date(Date.now() - (data.days ?? 30) * 86400000).toISOString();
+    const to = data.to ? businessDateEndUTC(data.to.slice(0, 10)) : new Date().toISOString();
     const { data: result, error } = await (context.supabase as any).rpc("orders_summary", {
       _from: from,
       _to: to,
@@ -187,8 +194,8 @@ export const getInvoiceCogsSummary = createServerFn({ method: "GET" })
     let invQ = context.supabase
       .from("sales_invoices")
       .select("id, brand_id, type, total_amount, brands(name)");
-    if (data.from) invQ = invQ.gte("occurred_at", data.from);
-    if (data.to) invQ = invQ.lte("occurred_at", `${data.to.slice(0, 10)}T23:59:59`);
+    if (data.from) invQ = invQ.gte("occurred_at", businessDateStartUTC(data.from.slice(0, 10)));
+    if (data.to) invQ = invQ.lte("occurred_at", businessDateEndUTC(data.to.slice(0, 10)));
     if (!data.from && !data.to) {
       const days = data.days ?? 30;
       const since = new Date(Date.now() - days * 86400000).toISOString();
@@ -294,6 +301,8 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
     (d: {
       id?: string;
       brand_id: string;
+      order_kind?: "sale" | "return" | "exchange";
+      related_order_id?: string | null;
       external_order_number?: string | null;
       customer_name?: string | null;
       customer_phone?: string | null;
@@ -312,11 +321,23 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
       discount_amount?: number;
       occurred_at?: string;
       note?: string | null;
-      items: Array<{ product_id?: string | null; title: string; qty: number; unit_price: number }>;
+      items: Array<{
+        product_id?: string | null;
+        title: string;
+        qty: number;
+        unit_price: number;
+        direction?: "out" | "in";
+      }>;
     }) => d,
   )
   .handler(async ({ data, context }) => {
     await assertPageWrite(context, ORDERS_PAGE);
+    const orderKind = data.order_kind ?? "sale";
+    // Exchange is the one case with items going both ways on a single order —
+    // a "return" order's items are all incoming but still price positive
+    // (the invoice's own type='return' carries the sign flip, same as before).
+    // Only exchange nets 'in' items against 'out' items directly here.
+    const isExchange = orderKind === "exchange";
     // Compute COGS per item using product_cogs()
     const costMap = await getCogsMap(
       context.supabase,
@@ -325,16 +346,23 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
     let subtotal = 0,
       cost_total = 0;
     const enriched = data.items.map((i) => {
+      const direction = i.direction === "in" ? "in" : "out";
+      const sign = isExchange && direction === "in" ? -1 : 1;
       const unit_cost = i.product_id ? (costMap.get(i.product_id) ?? 0) : 0;
       const line = Number(i.qty) * Number(i.unit_price);
-      subtotal += line;
-      cost_total += Number(i.qty) * unit_cost;
-      return { ...i, unit_cost, subtotal: line };
+      subtotal += sign * line;
+      cost_total += sign * Number(i.qty) * unit_cost;
+      return { ...i, direction, unit_cost, subtotal: line };
     });
     const total_amount =
       subtotal + Number(data.shipping_amount ?? 0) - Number(data.discount_amount ?? 0);
     const orderPayload = {
       brand_id: data.brand_id,
+      order_kind: orderKind,
+      // Only touch related_order_id when explicitly provided — omitting the
+      // key (rather than sending null) leaves an existing link untouched on
+      // edits instead of wiping it out.
+      ...(data.related_order_id !== undefined ? { related_order_id: data.related_order_id } : {}),
       source: "manual",
       external_order_number: data.external_order_number ?? null,
       customer_name: data.customer_name ?? null,
@@ -358,7 +386,8 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
       occurred_at: data.occurred_at ?? new Date().toISOString(),
       note: data.note ?? null,
     };
-    const { data: orderId, error } = await context.supabase.rpc("upsert_order_with_items", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: orderId, error } = await (context.supabase as any).rpc("upsert_order_with_items", {
       // Supabase's generator omits SQL argument nullability; PostgreSQL accepts NULL here.
       _order_id: (data.id ?? null) as unknown as string,
       _order_patch: orderPayload,
@@ -370,6 +399,7 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
         unit_price: i.unit_price,
         unit_cost: i.unit_cost,
         subtotal: i.subtotal,
+        direction: i.direction,
       })),
     });
     if (error) throw error;
@@ -454,8 +484,7 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
           ? "cancelled_before_dispatch"
           : "open");
     const shopifyAction = shopifyActionForOrderStatus(data.orderStatus, outcome);
-    const shouldSyncShopify =
-      order.source === "shopify" && (shopifyAction === "fulfill" || shopifyAction === "cancel");
+    const shouldSyncShopify = order.source === "shopify" && shopifyAction !== "none";
     if (shouldSyncShopify && !order.external_id) throw new Error("Shopify order id is missing");
 
     const fulfillmentStatus =
@@ -487,13 +516,8 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
       erp_shipment_outcome: outcome,
       erp_lifecycle_updated_at: new Date().toISOString(),
     };
-    const shopifySyncStatus = shouldSyncShopify
-      ? "pending"
-      : shopifyAction === "review_return"
-        ? "pending"
-        : "not_applicable";
-    const shopifySyncError =
-      shopifyAction === "review_return" ? "Returned order requires return/refund review" : null;
+    const shopifySyncStatus = shouldSyncShopify ? "pending" : "not_applicable";
+    const shopifySyncError: string | null = null;
     const updated = await context.supabase.rpc("update_order_lifecycle_manually", {
       _order_id: data.id,
       _order_status: data.orderStatus,
@@ -539,8 +563,58 @@ export const transitionOrderLifecycle = createServerFn({ method: "POST" })
     return {
       ok: true,
       shopifyAction,
-      needsReturnReview: shopifyAction === "review_return",
     };
+  });
+
+/**
+ * Confirms a returned parcel was physically received back into the
+ * warehouse — the only thing that finalizes a return. Bosta reporting
+ * "returned"/"returning" only ever moves an order to the intermediate
+ * "return_in_transit" outcome; this is the manual step that closes it out
+ * and (for Shopify orders) fires the "cancel" action once, now that the
+ * return is confirmed rather than merely in progress.
+ */
+export const confirmReturnReceived = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertPageWrite(context, ORDERS_PAGE);
+    const { data: order, error: orderError } = await context.supabase
+      .from("orders")
+      .select("id, brand_id, source, external_id")
+      .eq("id", data.id)
+      .single();
+    if (orderError) throw orderError;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (context.supabase as any).rpc("confirm_return_received", {
+      _order_id: data.id,
+    });
+    if (error) throw error;
+
+    if (order.source === "shopify" && order.external_id) {
+      try {
+        const { applyShopifyOrderAction } = await import("@/server/shopifySync.server");
+        await applyShopifyOrderAction({
+          brandId: order.brand_id,
+          externalOrderId: order.external_id,
+          action: "cancel",
+        });
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "synced", shopify_sync_error: null })
+          .eq("id", data.id);
+      } catch (shopifyError) {
+        const message = shopifyError instanceof Error ? shopifyError.message : String(shopifyError);
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "error", shopify_sync_error: message.slice(0, 500) })
+          .eq("id", data.id);
+        throw shopifyError;
+      }
+    }
+
+    return { ok: true };
   });
 
 export const deleteOrder = createServerFn({ method: "POST" })
@@ -553,29 +627,59 @@ export const deleteOrder = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+type ManualOrderRow = {
+  id: string;
+  brand_id: string;
+  external_order_number: string | null;
+  customer_name: string | null;
+  customer_phone: string | null;
+  customer_email: string | null;
+  shipping_governorate: string | null;
+  shipping_address: string | null;
+  building_number: string | null;
+  floor_number: string | null;
+  apartment_number: string | null;
+  courier_id: string | null;
+  employee_id: string | null;
+  fulfillment_status: string;
+  financial_status: string;
+  confirmation_status: string;
+  shipping_amount: number;
+  discount_amount: number;
+  occurred_at: string;
+  note: string | null;
+  source: string;
+  order_kind: "sale" | "return" | "exchange" | null;
+};
+
 export const getOrder = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)
   .handler(async ({ data, context }) => {
-    const { data: order, error } = await context.supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: order, error } = await (context.supabase as any)
       .from("orders")
       .select(
-        "id, brand_id, external_order_number, customer_name, customer_phone, customer_email, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, courier_id, employee_id, fulfillment_status, financial_status, confirmation_status, shipping_amount, discount_amount, occurred_at, note, source",
+        "id, brand_id, external_order_number, customer_name, customer_phone, customer_email, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, courier_id, employee_id, fulfillment_status, financial_status, confirmation_status, shipping_amount, discount_amount, occurred_at, note, source, order_kind",
       )
       .eq("id", data.id)
       .single();
     if (error) throw error;
-    const { data: items } = await context.supabase
+    const orderRow = order as ManualOrderRow;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: items } = await (context.supabase as any)
       .from("order_items")
-      .select("product_id, title, qty, unit_price")
+      .select("product_id, title, qty, unit_price, direction")
       .eq("order_id", data.id);
     return {
-      ...order,
+      ...orderRow,
+      order_kind: orderRow.order_kind ?? "sale",
       items: (items ?? []) as Array<{
         product_id: string | null;
         title: string;
         qty: number;
         unit_price: number;
+        direction: "out" | "in";
       }>,
     };
   });

@@ -1,5 +1,6 @@
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -84,8 +85,9 @@ import {
 const ORDER_STATUS_LABELS_EN: Record<OrderWorkflowStatus, string> = {
   new: "New",
   processing: "Processing",
+  shipped: "Out for delivery",
   postponed: "Postponed",
-  awaiting_response: "Awaiting your response",
+  awaiting_response: "Needs attention",
   succeeded: "Succeeded",
   cancelled: "Cancelled",
 };
@@ -98,16 +100,18 @@ const COLLECTION_STATUS_LABELS_EN: Record<CollectionStatus, string> = {
 const SHIPMENT_OUTCOME_LABELS_AR: Record<ShipmentOutcome, string> = {
   open: "قيد التنفيذ",
   delivered: "تم التوصيل",
+  return_in_transit: "في الطريق إليك",
   customer_returned: "إرجاع بعد الاستلام",
-  returned: "فشل التوصيل والرجوع",
+  returned: "تم الإرجاع",
   exchanged: "تم الاستبدال",
   cancelled_before_dispatch: "إلغاء قبل الشحن",
 };
 const SHIPMENT_OUTCOME_LABELS_EN: Record<ShipmentOutcome, string> = {
   open: "In progress",
   delivered: "Delivered",
+  return_in_transit: "Returning to us",
   customer_returned: "Returned after delivery",
-  returned: "Failed delivery / returned",
+  returned: "Return received",
   exchanged: "Exchanged",
   cancelled_before_dispatch: "Cancelled before dispatch",
 };
@@ -273,8 +277,8 @@ export function OrdersListTab() {
       backfillFn({
         data: {
           brandId: brandId === "all" ? null : brandId,
-          fromISO: `${backfillFrom}T00:00:00.000Z`,
-          toISO: `${backfillTo}T23:59:59.999Z`,
+          fromISO: businessDateStartUTC(backfillFrom),
+          toISO: businessDateEndUTC(backfillTo),
           deleteOutside: false,
         },
       }),

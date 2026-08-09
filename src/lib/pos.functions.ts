@@ -1,5 +1,6 @@
 import { formatBusinessDate } from "@/lib/timezone";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
+import { businessDateEndUTC, businessDateStartUTC } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAllRows, sanitizeOrFilterValue } from "./paginate";
@@ -173,7 +174,7 @@ export const listMyRecentSales = createServerFn({ method: "GET" })
       .from("sales_invoices")
       .select("id,total_amount,payment_method,customer_name,customer_phone,created_at,brand_id")
       .eq("sold_by", context.userId)
-      .gte("occurred_at", since)
+      .gte("occurred_at", businessDateStartUTC(since))
       .order("created_at", { ascending: false })
       .limit(50);
     if (error) throw error;
@@ -201,9 +202,9 @@ export const listBranchInvoicesForPrint = createServerFn({ method: "GET" })
         .from("sales_invoices")
         .select("id,brand_id,total_amount,payment_method,customer_name,customer_phone,occurred_at,created_at,sold_by")
         .in("brand_id", input?.brandId ? [input.brandId] : branchIds)
-        .gte("occurred_at", input?.startDate ?? since)
+        .gte("occurred_at", businessDateStartUTC((input?.startDate ?? since).slice(0, 10)))
         .order("created_at", { ascending: false });
-      if (input?.endDate) q = q.lte("occurred_at", input.endDate);
+      if (input?.endDate) q = q.lte("occurred_at", businessDateEndUTC(input.endDate.slice(0, 10)));
       if (input?.search?.trim()) {
         const s = input.search.trim();
         const safeS = sanitizeOrFilterValue(s);
@@ -279,9 +280,9 @@ export const listOfflineInvoices = createServerFn({ method: "GET" })
         .from("sales_invoices")
         .select("id,brand_id,customer_id,total_amount,cash_amount,card_amount,payment_method,customer_name,customer_phone,customer_email,occurred_at,created_at,sold_by,note,qty")
         .in("brand_id", data.brandId ? [data.brandId] : branchIds)
-        .gte("occurred_at", data.startDate ?? since)
+        .gte("occurred_at", businessDateStartUTC((data.startDate ?? since).slice(0, 10)))
         .order("created_at", { ascending: false });
-      if (data.endDate) q = q.lte("occurred_at", data.endDate);
+      if (data.endDate) q = q.lte("occurred_at", businessDateEndUTC(data.endDate.slice(0, 10)));
       if (data.search?.trim()) {
         const s = data.search.trim();
         const safeS = sanitizeOrFilterValue(s);
@@ -409,7 +410,7 @@ export const getBranchesReport = createServerFn({ method: "GET" })
     const [invRes, expRes, prodRes, sellersRes] = await Promise.all([
       context.supabase.from("sales_invoices")
         .select("id,brand_id,total_amount,cash_amount,card_amount,payment_method,sold_by,occurred_at")
-        .in("brand_id", branchIds).gte("occurred_at", start).lte("occurred_at", end),
+        .in("brand_id", branchIds).gte("occurred_at", businessDateStartUTC(start)).lte("occurred_at", businessDateEndUTC(end)),
       context.supabase.from("expense_entries")
         .select("brand_id,amount,year,month")
         .in("brand_id", branchIds),
@@ -418,7 +419,7 @@ export const getBranchesReport = createServerFn({ method: "GET" })
         .in("brand_id", branchIds),
       context.supabase.from("sales_invoices")
         .select("sold_by,total_amount,brand_id")
-        .in("brand_id", branchIds).gte("occurred_at", start).lte("occurred_at", end).not("sold_by", "is", null),
+        .in("brand_id", branchIds).gte("occurred_at", businessDateStartUTC(start)).lte("occurred_at", businessDateEndUTC(end)).not("sold_by", "is", null),
     ]);
 
     const branchMap = new Map<string, { id: string; name: string; revenue: number; cash: number; card: number; orders: number; pieces: number; expenses: number; stockUnits: number; stockValue: number }>();

@@ -18,6 +18,7 @@ import {
 } from "@/components/PeriodFilter";
 import { usePersistedPeriod } from "@/lib/global-period";
 import { getCourierReconciliation } from "@/lib/reconciliation.functions";
+import { getIncomeStatement } from "@/lib/financials.functions";
 import { listBrands } from "@/lib/internal.functions";
 import { useLang, tr } from "@/lib/i18n";
 import { Scale, AlertTriangle, CheckCircle2 } from "lucide-react";
@@ -37,22 +38,30 @@ function Page() {
   const { t, lang } = useLang();
   const brandsFn = useServerFn(listBrands);
   const fn = useServerFn(getCourierReconciliation);
+  const isFn = useServerFn(getIncomeStatement);
   const brandsQ = useQuery({ queryKey: ["brands"], queryFn: () => brandsFn() });
   const [brandId, setBrandId] = useState<string>("all");
   const [period, setPeriod] = usePersistedPeriod("reports.reconciliation");
   const r = resolvePeriod(period);
+  const from = r.dateFrom ?? `${r.year}-01-01`;
+  const to = r.dateTo ?? `${r.year}-12-31`;
   const q = useQuery({
-    queryKey: ["recon", brandId, r.dateFrom, r.dateTo, r.year],
+    queryKey: ["recon", brandId, from, to],
     queryFn: () =>
       fn({
         data: {
           brandId: brandId === "all" ? null : brandId,
-          from: r.dateFrom ?? `${r.year}-01-01`,
-          to: r.dateTo ?? `${r.year}-12-31`,
+          from,
+          to,
         },
       }),
   });
+  const isQ = useQuery({
+    queryKey: ["recon-is", brandId, from, to],
+    queryFn: () => isFn({ data: { from, to, brandId: brandId === "all" ? null : brandId } }),
+  });
   const d = q.data;
+  const is = isQ.data;
   const nf = (n: number) => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
   const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
   const L = (ar: string, en: string) => (lang === "ar" ? ar : en);
@@ -82,7 +91,11 @@ function Page() {
         </Select>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <Kpi
+          label={L(tr("إيراد متوقع (أوردرات لسه ما اتسلمتش)"), "Projected revenue (not yet delivered)")}
+          value={nf(is?.projectedNetRevenue ?? 0)}
+        />
         <Kpi
           label={L(tr("المتوقع تحصيله"), "Expected COD")}
           value={nf(d?.totals.expected_cod ?? 0)}
