@@ -1,98 +1,129 @@
-import React from 'react';
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Clock3, PackageSearch, Truck, Wallet } from "lucide-react";
+import { useLang } from "@/lib/i18n";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const priorities = [
-  { level: 'CRITICAL', title: 'Courier settlement mismatch', detail: '3 settlements need reconciliation', action: 'Review' },
-  { level: 'ATTENTION', title: '12 operations are delayed', detail: '5 are past the expected delivery window', action: 'Investigate' },
-  { level: 'ATTENTION', title: 'Low stock signal', detail: 'Brand X is trending below its safe level', action: 'Open stock' },
-  { level: 'NORMAL', title: '5 approvals pending', detail: 'No SLA breach yet', action: 'Review' },
+  { level: "critical", title: "تسويات شحن تحتاج مراجعة", detail: "3 تسويات تحتاج إلى مطابقة", action: "مراجعة", icon: Wallet },
+  { level: "warning", title: "12 عملية متأخرة", detail: "5 منها تجاوزت الموعد المتوقع للتسليم", action: "فحص", icon: Clock3 },
+  { level: "warning", title: "مخزون منخفض", detail: "مخزون أحد البراندات يقترب من الحد الآمن", action: "فتح المخزون", icon: PackageSearch },
+  { level: "normal", title: "5 موافقات معلقة", detail: "لا يوجد تجاوز للـ SLA حتى الآن", action: "مراجعة", icon: CheckCircle2 },
 ];
 
 const events = [
-  ['09:42', 'Order delivered', 'Customer · Ahmed Hassan', 'Completed'],
-  ['09:18', 'Courier assigned', 'Distribution · Branch A', 'Updated'],
-  ['08:51', 'Payment recorded', 'Customer · Sara Ali', 'Completed'],
-  ['08:27', 'Stock threshold crossed', 'Brand X · Warehouse', 'Attention'],
+  ["09:42", "تم تسليم أوردر", "العميل · أحمد حسن", "مكتمل"],
+  ["09:18", "تم إسناد مندوب", "التوزيع · فرع A", "محدث"],
+  ["08:51", "تم تسجيل تحصيل", "العميل · سارة علي", "مكتمل"],
+  ["08:27", "انخفاض المخزون تحت الحد", "Brand X · المخزن", "يحتاج انتباه"],
 ];
 
 export default function GuruCommandCenterDemo() {
-  return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">Guru OS · Demo</div>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">Command Center</h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-400">What happened, what matters, and what should happen next.</p>
-          </div>
-          <button className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm hover:bg-slate-800">Open Recall</button>
-        </header>
+  const { lang } = useLang();
+  const ar = lang === "ar";
 
-        <section className="grid gap-4 sm:grid-cols-3">
-          {[
-            ['3', 'Critical', 'Needs action now'],
-            ['7', 'Attention', 'Worth reviewing'],
-            ['24', 'Healthy', 'Running normally'],
-          ].map(([value, label, hint]) => (
-            <div key={label} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-              <div className="text-3xl font-semibold">{value}</div>
-              <div className="mt-1 text-sm font-medium">{label}</div>
-              <div className="mt-1 text-xs text-slate-500">{hint}</div>
+  return (
+    <main dir={ar ? "rtl" : "ltr"} className="relative min-h-full bg-background p-4 md:p-6 space-y-5">
+      <div className="pointer-events-none fixed top-[-10%] right-[-10%] w-72 h-72 rounded-full bg-primary/10 blur-[120px] -z-10" />
+      <div className="pointer-events-none fixed bottom-[-5%] left-[-10%] w-72 h-72 rounded-full bg-primary/5 blur-[120px] -z-10" />
+
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <GaugeIcon />
+          </div>
+          <div>
+            <div className="text-xs font-semibold text-primary">e-Gurus · مركز التحكم</div>
+            <h1 className="mt-1 text-xl md:text-2xl font-extrabold">مركز التحكم</h1>
+            <p className="text-xs text-muted-foreground mt-1">أهم ما يحدث في النظام وما يحتاج إلى انتباهك الآن.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/guru-recall">الذاكرة التشغيلية <ArrowLeft className="w-4 h-4" /></Link>
+          </Button>
+        </div>
+      </header>
+
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <SummaryCard value="3" label="يحتاج تدخل عاجل" icon={AlertTriangle} tone="destructive" />
+        <SummaryCard value="7" label="يحتاج مراجعة" icon={Clock3} tone="warning" />
+        <SummaryCard value="24" label="تعمل بشكل طبيعي" icon={CheckCircle2} tone="success" />
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-[1.2fr_.8fr]">
+        <Card className="p-4 md:p-5 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl shadow-2xl shadow-black/10">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-sm font-bold">يحتاج تدخل</h2>
+              <p className="text-xs text-muted-foreground mt-1">الأولوية الحالية من العمليات اليومية.</p>
+            </div>
+            <Badge variant="secondary">4 عناصر</Badge>
+          </div>
+          <div className="space-y-2">
+            {priorities.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-2xl border border-border/60 bg-background/50 p-4 flex items-center gap-3">
+                  <div className="w-9 h-9 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center"><Icon className="w-4 h-4 text-primary" /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={item.level === "critical" ? "destructive" : item.level === "warning" ? "secondary" : "outline"} className="text-[10px]">{item.level === "critical" ? "عاجل" : item.level === "warning" ? "انتباه" : "طبيعي"}</Badge>
+                      <span className="font-semibold text-sm truncate">{item.title}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{item.detail}</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="shrink-0">{item.action}</Button>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        <Card className="p-4 md:p-5 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl shadow-2xl shadow-black/10">
+          <div className="flex items-center gap-2"><Truck className="w-4 h-4 text-primary" /><h2 className="text-sm font-bold">نبض التشغيل</h2></div>
+          <div className="mt-5 space-y-5">
+            <Pulse label="الأوردرات" value="+18%" width="78%" />
+            <Pulse label="تأخير الشحن" value="+7%" width="46%" />
+            <Pulse label="صحة المخزون" value="82%" width="82%" />
+          </div>
+          <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">
+            <div className="font-semibold">ملاحظة من Guru</div>
+            <p className="text-xs text-muted-foreground mt-1">لاحظنا ارتفاعًا في تأخير عمليات الشحن مقارنة بالأسبوع الماضي.</p>
+            <Button variant="link" size="sm" className="px-0 mt-1">اعرف السبب</Button>
+          </div>
+        </Card>
+      </section>
+
+      <Card className="p-4 md:p-5 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl shadow-2xl shadow-black/10">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div><h2 className="text-sm font-bold">آخر النشاطات</h2><p className="text-xs text-muted-foreground mt-1">خط زمني موحد للعملاء والمندوبين والمخزون والتوزيع.</p></div>
+          <Button asChild variant="outline" size="sm"><Link to="/guru-recall">عرض الذاكرة كاملة</Link></Button>
+        </div>
+        <div className="mt-3 divide-y divide-border">
+          {events.map(([time, event, context, state]) => (
+            <div key={`${time}-${event}`} className="grid gap-2 py-4 md:grid-cols-[70px_1fr_auto] md:items-center">
+              <div className="text-xs text-muted-foreground">{time}</div>
+              <div><div className="text-sm font-semibold">{event}</div><div className="text-xs text-muted-foreground mt-1">{context}</div></div>
+              <Badge variant="outline" className="w-fit">{state}</Badge>
             </div>
           ))}
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[1.25fr_.75fr]">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold">Priority queue</h2>
-                <p className="mt-1 text-xs text-slate-500">Actions surfaced from current operations.</p>
-              </div>
-              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">4 items</span>
-            </div>
-            <div className="mt-5 space-y-3">
-              {priorities.map((item) => (
-                <article key={item.title} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="text-[10px] font-bold tracking-widest text-slate-500">{item.level}</div>
-                      <div className="mt-1 font-medium">{item.title}</div>
-                      <div className="mt-1 text-xs text-slate-500">{item.detail}</div>
-                    </div>
-                    <button className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-950">{item.action}</button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <h2 className="font-semibold">Operational pulse</h2>
-            <div className="mt-5 space-y-5">
-              <div><div className="flex justify-between text-xs"><span>Orders</span><span>+18%</span></div><div className="mt-2 h-2 rounded-full bg-slate-800"><div className="h-2 w-[78%] rounded-full bg-cyan-300" /></div></div>
-              <div><div className="flex justify-between text-xs"><span>Courier delays</span><span>+7%</span></div><div className="mt-2 h-2 rounded-full bg-slate-800"><div className="h-2 w-[46%] rounded-full bg-amber-300" /></div></div>
-              <div><div className="flex justify-between text-xs"><span>Stock health</span><span>82%</span></div><div className="mt-2 h-2 rounded-full bg-slate-800"><div className="h-2 w-[82%] rounded-full bg-emerald-300" /></div></div>
-            </div>
-            <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">Guru noticed a rise in courier delays this week. <button className="ml-1 font-medium text-cyan-300">Show why →</button></div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div><h2 className="font-semibold">Unified activity</h2><p className="mt-1 text-xs text-slate-500">A single timeline across customers, couriers, stock, and distribution.</p></div>
-            <button className="rounded-xl border border-slate-700 px-4 py-2 text-xs hover:bg-slate-800">View all events</button>
-          </div>
-          <div className="mt-5 divide-y divide-slate-800">
-            {events.map(([time, event, context, state]) => (
-              <div key={`${time}-${event}`} className="grid gap-2 py-4 md:grid-cols-[70px_1fr_auto] md:items-center">
-                <div className="text-xs text-slate-500">{time}</div>
-                <div><div className="text-sm font-medium">{event}</div><div className="mt-1 text-xs text-slate-500">{context}</div></div>
-                <div className="text-xs text-slate-400">{state}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+        </div>
+      </Card>
     </main>
   );
+}
+
+function SummaryCard({ value, label, icon: Icon, tone }: { value: string; label: string; icon: typeof AlertTriangle; tone: "destructive" | "warning" | "success" }) {
+  const toneClass = tone === "destructive" ? "text-destructive" : tone === "warning" ? "text-amber-500" : "text-emerald-500";
+  return <Card className="p-4 rounded-3xl border-border/60 bg-card/60 backdrop-blur-xl"><div className="flex items-center gap-3"><Icon className={`w-5 h-5 ${toneClass}`} /><div><div className="text-2xl font-extrabold">{value}</div><div className="text-xs text-muted-foreground mt-0.5">{label}</div></div></div></Card>;
+}
+
+function Pulse({ label, value, width }: { label: string; value: string; width: string }) {
+  return <div><div className="flex justify-between text-xs"><span>{label}</span><span className="font-semibold">{value}</span></div><div className="mt-2 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width }} /></div></div>;
+}
+
+function GaugeIcon() {
+  return <svg viewBox="0 0 24 24" className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 14a8 8 0 1 1 16 0" /><path d="M12 14l4-4" /><path d="M5 18h14" /></svg>;
 }
