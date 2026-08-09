@@ -16,6 +16,11 @@ dist-ssr
 .nitro
 *.local
 
+# This project's lockfile is bun.lock — package-lock.json is only ever a
+# local byproduct of running npm instead of bun (e.g. no access to the
+# private bun registry mirror), never meant to be committed.
+package-lock.json
+
 # Environment files (secrets and deployment configuration)
 .env
 .env.*
