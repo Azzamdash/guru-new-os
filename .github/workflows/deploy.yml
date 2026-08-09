@@ -74,7 +74,7 @@ jobs:
       - name: Sync compose files
         run: |
           ssh "$SSH_USER@$TARGET_IP" "mkdir -p /opt/${{ steps.repo.outputs.name }}"
-          scp docker-compose.yml Caddyfile "$SSH_USER@$TARGET_IP:/opt/${{ steps.repo.outputs.name }}/"
+          scp docker-compose.yml "$SSH_USER@$TARGET_IP:/opt/${{ steps.repo.outputs.name }}/"
 
       - name: Write env and deploy
         run: |
