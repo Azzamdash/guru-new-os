@@ -264,6 +264,18 @@ export const NAV_PAGES: NavPage[] = [
     descEn: "Profits, cash & trends",
     group: "executive",
   },
+  {
+    to: "/command-center",
+    ar: "مركز التحكم",
+    en: "Command Center",
+    icon: Gauge,
+    hub: "overview",
+    privilegedOnly: true,
+    descAr: "كل ما يحتاج تدخل الآن، ونبض التشغيل اليومي، في مكان واحد",
+    descEn:
+      "Everything needing attention right now, plus the daily operational pulse, in one place",
+    group: "executive",
+  },
 
   // MISSIONS (my missions section)
   {
@@ -348,8 +360,10 @@ export const NAV_PAGES: NavPage[] = [
     hub: "sales",
     requiresWrite: true,
     extraRoles: ["fulfillment_manager", "operation_manager"],
-    descAr: "طابور الأوردرات غير الموزَّعة وتوزيعها على موظفي النظام وشركات الشحن مع موازنة الأحمال",
-    descEn: "Queue of unassigned orders, assignment to system users and couriers with load balancing",
+    descAr:
+      "طابور الأوردرات غير الموزَّعة وتوزيعها على موظفي النظام وشركات الشحن مع موازنة الأحمال",
+    descEn:
+      "Queue of unassigned orders, assignment to system users and couriers with load balancing",
   },
   {
     to: "/my-orders",
