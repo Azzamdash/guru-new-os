@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppAssetsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppBranchStockRouteImport } from './routes/_authenticated/_app.branch-stock'
 import { Route as AuthenticatedAppBrandsRouteImport } from './routes/_authenticated/_app.brands'
 import { Route as AuthenticatedAppCategoriesRouteImport } from './routes/_authenticated/_app.categories'
+import { Route as AuthenticatedAppCommandCenterRouteImport } from './routes/_authenticated/_app.command-center'
 import { Route as AuthenticatedAppCourierLoadsRouteImport } from './routes/_authenticated/_app.courier-loads'
 import { Route as AuthenticatedAppCourierSettlementsRouteImport } from './routes/_authenticated/_app.courier-settlements'
 import { Route as AuthenticatedAppCouriersRouteImport } from './routes/_authenticated/_app.couriers'
@@ -191,6 +192,12 @@ const AuthenticatedAppCategoriesRoute =
   AuthenticatedAppCategoriesRouteImport.update({
     id: '/categories',
     path: '/categories',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppCommandCenterRoute =
+  AuthenticatedAppCommandCenterRouteImport.update({
+    id: '/command-center',
+    path: '/command-center',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppCourierLoadsRoute =
@@ -742,6 +749,7 @@ export interface FileRoutesByFullPath {
   '/branch-stock': typeof AuthenticatedAppBranchStockRoute
   '/brands': typeof AuthenticatedAppBrandsRoute
   '/categories': typeof AuthenticatedAppCategoriesRoute
+  '/command-center': typeof AuthenticatedAppCommandCenterRoute
   '/courier-loads': typeof AuthenticatedAppCourierLoadsRoute
   '/courier-settlements': typeof AuthenticatedAppCourierSettlementsRoute
   '/couriers': typeof AuthenticatedAppCouriersRoute
@@ -847,6 +855,7 @@ export interface FileRoutesByTo {
   '/branch-stock': typeof AuthenticatedAppBranchStockRoute
   '/brands': typeof AuthenticatedAppBrandsRoute
   '/categories': typeof AuthenticatedAppCategoriesRoute
+  '/command-center': typeof AuthenticatedAppCommandCenterRoute
   '/courier-loads': typeof AuthenticatedAppCourierLoadsRoute
   '/courier-settlements': typeof AuthenticatedAppCourierSettlementsRoute
   '/couriers': typeof AuthenticatedAppCouriersRoute
@@ -953,6 +962,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/branch-stock': typeof AuthenticatedAppBranchStockRoute
   '/_authenticated/_app/brands': typeof AuthenticatedAppBrandsRoute
   '/_authenticated/_app/categories': typeof AuthenticatedAppCategoriesRoute
+  '/_authenticated/_app/command-center': typeof AuthenticatedAppCommandCenterRoute
   '/_authenticated/_app/courier-loads': typeof AuthenticatedAppCourierLoadsRoute
   '/_authenticated/_app/courier-settlements': typeof AuthenticatedAppCourierSettlementsRoute
   '/_authenticated/_app/couriers': typeof AuthenticatedAppCouriersRoute
@@ -1060,6 +1070,7 @@ export interface FileRouteTypes {
     | '/branch-stock'
     | '/brands'
     | '/categories'
+    | '/command-center'
     | '/courier-loads'
     | '/courier-settlements'
     | '/couriers'
@@ -1165,6 +1176,7 @@ export interface FileRouteTypes {
     | '/branch-stock'
     | '/brands'
     | '/categories'
+    | '/command-center'
     | '/courier-loads'
     | '/courier-settlements'
     | '/couriers'
@@ -1270,6 +1282,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/branch-stock'
     | '/_authenticated/_app/brands'
     | '/_authenticated/_app/categories'
+    | '/_authenticated/_app/command-center'
     | '/_authenticated/_app/courier-loads'
     | '/_authenticated/_app/courier-settlements'
     | '/_authenticated/_app/couriers'
@@ -1488,6 +1501,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof AuthenticatedAppCategoriesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/command-center': {
+      id: '/_authenticated/_app/command-center'
+      path: '/command-center'
+      fullPath: '/command-center'
+      preLoaderRoute: typeof AuthenticatedAppCommandCenterRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/courier-loads': {
@@ -2199,6 +2219,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppBranchStockRoute: typeof AuthenticatedAppBranchStockRoute
   AuthenticatedAppBrandsRoute: typeof AuthenticatedAppBrandsRoute
   AuthenticatedAppCategoriesRoute: typeof AuthenticatedAppCategoriesRoute
+  AuthenticatedAppCommandCenterRoute: typeof AuthenticatedAppCommandCenterRoute
   AuthenticatedAppCourierLoadsRoute: typeof AuthenticatedAppCourierLoadsRoute
   AuthenticatedAppCourierSettlementsRoute: typeof AuthenticatedAppCourierSettlementsRoute
   AuthenticatedAppCouriersRoute: typeof AuthenticatedAppCouriersRoute
@@ -2280,6 +2301,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppBranchStockRoute: AuthenticatedAppBranchStockRoute,
   AuthenticatedAppBrandsRoute: AuthenticatedAppBrandsRoute,
   AuthenticatedAppCategoriesRoute: AuthenticatedAppCategoriesRoute,
+  AuthenticatedAppCommandCenterRoute: AuthenticatedAppCommandCenterRoute,
   AuthenticatedAppCourierLoadsRoute: AuthenticatedAppCourierLoadsRoute,
   AuthenticatedAppCourierSettlementsRoute:
     AuthenticatedAppCourierSettlementsRoute,
