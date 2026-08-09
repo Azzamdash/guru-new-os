@@ -20,7 +20,7 @@ export type AppMode = "dark" | "light";
 
 export type ThemeValue = { theme: AppTheme; mode: AppMode };
 
-const VALID_THEMES: readonly AppTheme[] = [
+export const VALID_THEMES: readonly AppTheme[] = [
   "emerald",
   "violet",
   "midnight",
@@ -34,7 +34,7 @@ const VALID_THEMES: readonly AppTheme[] = [
   "rose",
   "coral",
 ];
-const VALID_MODES: readonly AppMode[] = ["dark", "light"];
+export const VALID_MODES: readonly AppMode[] = ["dark", "light"];
 
 export const THEME_STORAGE_KEY = "egurus:app-theme:v1";
 
