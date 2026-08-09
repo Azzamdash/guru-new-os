@@ -41,6 +41,9 @@ type PrintableOrder = {
   couriers: { name: string } | null;
 };
 
+const POPUP_BLOCKED_MESSAGE =
+  "المتصفح منع فتح نافذة الطباعة — فعّل السماح بالنوافذ المنبثقة (popups) لهذا الموقع";
+
 function escapeHtml(s: string): string {
   return s.replace(
     /[&<>"']/g,
@@ -110,14 +113,25 @@ function labelHtml(label: OrderLabelData): string {
   </section>`;
 }
 
-function printLabels(labels: OrderLabelData[]) {
+/**
+ * Opens the popup synchronously, before any async work — window.open() only
+ * counts as a direct response to the user's click (and skips the popup
+ * blocker) if it runs on the same tick as the click handler. Calling it
+ * after an `await` (e.g. once the label data has been fetched) is exactly
+ * what silently trips the blocker, no matter what the site's popup
+ * permission is set to.
+ */
+function openPrintWindow(): Window | null {
   const w = window.open("", "_blank", "width=420,height=680");
-  if (!w) {
-    toast.error(
-      "المتصفح منع فتح نافذة الطباعة — فعّل السماح بالنوافذ المنبثقة (popups) لهذا الموقع",
+  if (w) {
+    w.document.write(
+      `<!doctype html><html dir="rtl" lang="ar"><body style="font-family:Tahoma,Arial,sans-serif;padding:16px;color:#666">جاري تجهيز البوليصة…</body></html>`,
     );
-    return;
   }
+  return w;
+}
+
+function writeLabelsToWindow(w: Window, labels: OrderLabelData[]) {
   const body = labels.map(labelHtml).join("\n");
   const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>بوليصة شحن</title>
 <style>
@@ -144,6 +158,11 @@ function printLabels(labels: OrderLabelData[]) {
 </style></head><body>${body}
 <script>window.onload = () => { window.print(); }</script>
 </body></html>`;
+  // Explicitly reopen the document stream rather than relying on write()'s
+  // implicit re-open — the placeholder page's parse has already finished by
+  // the time this runs, so an implicit open works in practice, but it's not
+  // worth trusting across browsers when open() is one explicit call away.
+  w.document.open();
   w.document.write(html);
   w.document.close();
 }
@@ -172,19 +191,25 @@ function PrintOrdersPage() {
     });
   };
 
-  const printOrders = async (orderIds: string[]) => {
+  const printOrders = async (orderIds: string[], w: Window) => {
     try {
       const labels = await labelsFn({ data: { orderIds } });
-      printLabels(labels);
+      writeLabelsToWindow(w, labels);
     } catch (e) {
+      w.close();
       toast.error((e as Error).message);
     }
   };
 
   const printSelected = async () => {
     if (!selected.size) return;
+    const w = openPrintWindow();
+    if (!w) {
+      toast.error(POPUP_BLOCKED_MESSAGE);
+      return;
+    }
     setBulkPrinting(true);
-    await printOrders([...selected]);
+    await printOrders([...selected], w);
     setBulkPrinting(false);
   };
 
@@ -266,9 +291,14 @@ function PrintOrdersPage() {
                           variant="outline"
                           disabled={printingId === r.id}
                           onClick={async () => {
+                            const w = openPrintWindow();
+                            if (!w) {
+                              toast.error(POPUP_BLOCKED_MESSAGE);
+                              return;
+                            }
                             setPrintingId(r.id);
                             try {
-                              await printOrders([r.id]);
+                              await printOrders([r.id], w);
                             } finally {
                               setPrintingId(null);
                             }
