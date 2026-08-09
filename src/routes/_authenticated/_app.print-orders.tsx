@@ -71,10 +71,12 @@ function barcodeDataUrl(value: string): string | null {
 }
 
 function labelHtml(label: OrderLabelData): string {
-  const barcode = barcodeDataUrl(label.trackingNumber);
-  const itemsRows = label.items.length
-    ? label.items.map((i) => `${i.qty}x ${escapeHtml(i.title)}`).join("<br/>")
-    : "—";
+  const bigBarcode = barcodeDataUrl(label.trackingNumber);
+  const smallBarcode = bigBarcode; // same value, rendered at two sizes like the courier's own AWB
+  const itemsText = label.items.length
+    ? label.items.map((i) => `${i.qty}x ${escapeHtml(i.title)}`).join(", ")
+    : `Order #${escapeHtml(label.orderNumber)}`;
+  const pieceCount = label.items.reduce((n, i) => n + i.qty, 0) || 1;
   const addressParts = [
     label.address,
     label.buildingNumber ? `مبنى ${label.buildingNumber}` : null,
@@ -83,32 +85,55 @@ function labelHtml(label: OrderLabelData): string {
   ]
     .filter(Boolean)
     .map((p) => escapeHtml(String(p)))
-    .join(" - ");
+    .join(" / ");
+  const tracking = escapeHtml(label.trackingNumber || "—");
 
   return `
   <section class="label">
-    <div class="row header">
-      <div class="brand">${escapeHtml(label.brandName || "—")}</div>
-      <div class="courier">${escapeHtml(label.courierName || "—")}</div>
+    <div class="big-barcode">
+      ${bigBarcode ? `<img src="${bigBarcode}" alt="${tracking}" />` : ""}
+      <div class="big-barcode-code">${tracking}</div>
     </div>
-    ${
-      barcode
-        ? `<div class="barcode"><img src="${barcode}" alt="${escapeHtml(label.trackingNumber)}" /><div class="tracking-no">${escapeHtml(label.trackingNumber)}</div></div>`
-        : `<div class="tracking-no big">${escapeHtml(label.trackingNumber || "—")}</div>`
-    }
-    <div class="cod">مبلغ التحصيل: <b>${label.cod.toLocaleString("ar-EG")} ${escapeHtml(label.currency)}</b></div>
-    <div class="box">
-      <div class="section-title">توصيل إلى</div>
-      <div class="customer-name">${escapeHtml(label.customerName || "—")}</div>
-      <div class="customer-phone">${escapeHtml(label.customerPhone || "—")}</div>
-      <div class="governorate">${escapeHtml(label.governorate || "—")}</div>
-      <div class="address">${addressParts || "—"}</div>
+
+    <div class="row hdr">
+      <div class="courier-name">${escapeHtml(label.courierName || "—")}</div>
+      <div class="delivery-tag">توصيل</div>
     </div>
-    <div class="box">
-      <div class="section-title">وصف الشحنة</div>
-      <div class="items">${itemsRows}</div>
+
+    <div class="cod-row">مبلغ التحصيل: <b dir="ltr">${label.cod.toLocaleString("en-US")} ${escapeHtml(label.currency)}</b></div>
+
+    <div class="row split">
+      <div class="col grow">
+        <div class="field-label">توصيل إلى:</div>
+        <div class="customer-name">${escapeHtml(label.customerName || "—")}</div>
+        <div class="customer-phone">${escapeHtml(label.customerPhone || "—")}</div>
+      </div>
+      <div class="col">
+        <div class="field-label">التاجر:</div>
+        <div class="brand-name">${escapeHtml(label.brandName || "—")}</div>
+      </div>
     </div>
-    ${label.note ? `<div class="box"><div class="section-title">ملاحظات</div><div>${escapeHtml(label.note)}</div></div>` : ""}
+
+    <div class="field-row"><span class="field-label">المنطقة</span> | ${escapeHtml(label.governorate || "—")}</div>
+    <div class="field-row"><span class="field-label">العنوان</span> | ${addressParts || "—"}</div>
+
+    <div class="row piece-row">
+      <div class="pill">${pieceCount} قطع</div>
+    </div>
+    <div class="field-row"><span class="field-label">وصف الشحنة</span> | ${itemsText}</div>
+
+    <div class="row split footer">
+      <div class="col">
+        <div class="field-label">Tracking Number</div>
+        ${smallBarcode ? `<img class="small-barcode" src="${smallBarcode}" alt="${tracking}" />` : ""}
+        <div class="tracking-no">${tracking}</div>
+      </div>
+      <div class="col grow">
+        <div class="field-label">ملاحظات</div>
+        <div>${label.note ? escapeHtml(label.note) : "-"}</div>
+      </div>
+    </div>
+
     <div class="order-no">Order #${escapeHtml(label.orderNumber)}</div>
   </section>`;
 }
@@ -135,25 +160,34 @@ function writeLabelsToWindow(w: Window, labels: OrderLabelData[]) {
   const body = labels.map(labelHtml).join("\n");
   const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>بوليصة شحن</title>
 <style>
-  @page { size: A6; margin: 5mm; }
+  @page { size: A6; margin: 3mm; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
-  body { font-family: 'Tahoma', 'Arial', sans-serif; color:#111; font-size: 12px; line-height: 1.5; }
-  .label { padding: 6px; page-break-after: always; }
+  body { font-family: 'Tahoma', 'Arial', sans-serif; color:#111; font-size: 11px; line-height: 1.4; }
+  .label { border: 2px solid #111; page-break-after: always; }
   .label:last-child { page-break-after: auto; }
-  .row.header { display:flex; justify-content: space-between; align-items:center; border-bottom: 2px solid #111; padding-bottom: 6px; margin-bottom: 8px; }
-  .brand { font-size: 18px; font-weight: 800; }
-  .courier { font-size: 12px; color:#444; font-weight: 700; }
-  .barcode { text-align: center; margin: 6px 0 10px; }
-  .barcode img { max-width: 100%; height: 55px; }
-  .tracking-no { text-align:center; font-family: 'Consolas','Menlo',monospace; letter-spacing: 1px; margin-top: 2px; }
-  .tracking-no.big { font-size: 20px; font-weight: 800; margin: 12px 0; }
-  .cod { text-align:center; font-size: 15px; border: 2px solid #111; border-radius: 4px; padding: 6px; margin-bottom: 8px; }
-  .box { border: 1px dashed #999; border-radius: 4px; padding: 6px 8px; margin-bottom: 8px; }
-  .section-title { font-size: 10px; color:#666; font-weight: 700; margin-bottom: 3px; }
-  .customer-name { font-size: 14px; font-weight: 800; }
-  .customer-phone { font-family: 'Consolas','Menlo',monospace; direction: ltr; text-align: right; }
-  .order-no { text-align:center; font-size: 10px; color:#666; margin-top: 4px; }
+  .row { display: flex; align-items: center; }
+  .big-barcode { text-align: center; padding: 8px 6px 6px; }
+  .big-barcode img { width: 100%; height: 60px; }
+  .big-barcode-code { font-size: 15px; font-weight: 800; letter-spacing: 1px; margin-top: 4px; direction: ltr; }
+  .hdr { justify-content: space-between; border-top: 2px solid #111; padding: 6px 10px; }
+  .courier-name { font-size: 14px; font-weight: 800; }
+  .delivery-tag { font-size: 13px; font-weight: 800; }
+  .cod-row { border-top: 2px solid #111; padding: 6px 10px; text-align: center; font-size: 14px; }
+  .split { border-top: 2px solid #111; }
+  .col { flex: 1; padding: 6px 10px; }
+  .col.grow { flex: 2; }
+  .col:not(:last-child) { border-left: 2px solid #111; }
+  .field-label { font-size: 9px; color: #555; font-weight: 700; }
+  .customer-name { font-size: 13px; font-weight: 800; margin-top: 2px; }
+  .customer-phone { font-family: 'Consolas','Menlo',monospace; margin-top: 1px; direction: ltr; text-align: right; }
+  .brand-name { font-size: 13px; font-weight: 800; margin-top: 2px; }
+  .field-row { border-top: 2px solid #111; padding: 6px 10px; }
+  .piece-row { border-top: 2px solid #111; padding: 6px 10px; }
+  .pill { display: inline-block; border: 1px solid #111; border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 10px; }
+  .footer .small-barcode { width: 100%; max-width: 140px; height: 30px; margin-top: 4px; }
+  .footer .tracking-no { font-family: 'Consolas','Menlo',monospace; font-size: 10px; margin-top: 2px; direction: ltr; }
+  .order-no { text-align: center; font-size: 9px; color: #666; border-top: 2px solid #111; padding: 4px; }
   @media print { body { padding: 0; } }
 </style></head><body>${body}
 <script>window.onload = () => { window.print(); }</script>
