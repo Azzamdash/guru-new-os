@@ -135,7 +135,7 @@ function writeLabelsToWindow(w: Window, labels: OrderLabelData[]) {
   const body = labels.map(labelHtml).join("\n");
   const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>بوليصة شحن</title>
 <style>
-  @page { size: 100mm 150mm; margin: 5mm; }
+  @page { size: A6; margin: 5mm; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body { font-family: 'Tahoma', 'Arial', sans-serif; color:#111; font-size: 12px; line-height: 1.5; }
