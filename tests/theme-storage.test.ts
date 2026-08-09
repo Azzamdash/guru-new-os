@@ -82,6 +82,13 @@ describe("theme persistence", () => {
     }
   });
 
+  it("accepts graphite", () => {
+    const store = fakeStore();
+    const choice: ThemeValue = { theme: "graphite", mode: "dark" };
+    writeStoredTheme(store, choice);
+    expect(initialTheme(store)).toEqual(choice);
+  });
+
   it("never throws when storage rejects writes", () => {
     const throwing = {
       getItem: () => null,

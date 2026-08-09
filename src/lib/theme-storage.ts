@@ -12,6 +12,7 @@ export type AppTheme =
   | "cyan"
   | "gold"
   | "slate"
+  | "graphite"
   | "forest"
   | "sapphire"
   | "rose"
@@ -29,6 +30,7 @@ export const VALID_THEMES: readonly AppTheme[] = [
   "cyan",
   "gold",
   "slate",
+  "graphite",
   "forest",
   "sapphire",
   "rose",

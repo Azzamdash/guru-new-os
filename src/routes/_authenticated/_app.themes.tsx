@@ -98,6 +98,15 @@ const THEMES: Array<{
     noteEn: "A calm, neutral blue-grey — the quietest of the set, built for a serious workspace.",
   },
   {
+    id: "graphite",
+    nameAr: "جرافيت",
+    nameEn: "Graphite",
+    tagAr: "رمادي محايد",
+    tagEn: "Neutral Grey",
+    noteAr: "رمادي محايد تمامًا بلا أي ميل للون — الأكثر حيادية من بين كل الثيمات.",
+    noteEn: "Pure neutral grey with no color lean at all — the most neutral theme in the set.",
+  },
+  {
     id: "forest",
     nameAr: "غابي",
     nameEn: "Forest",

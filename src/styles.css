@@ -879,6 +879,100 @@
   --card-gradient-border: oklch(0.89 0.007 230 / 0.9);
 }
 
+/* ---------- Graphite — dark ("Neutral mid-grey") ---------- */
+.theme-graphite.mode-dark {
+  --background: oklch(0.17 0.004 240);
+  --foreground: oklch(0.95 0.002 240);
+  --card: oklch(0.21 0.005 240);
+  --card-foreground: oklch(0.95 0.002 240);
+  --popover: oklch(0.23 0.005 240);
+  --popover-foreground: oklch(0.95 0.002 240);
+  --primary: oklch(0.75 0.012 240);
+  --primary-foreground: oklch(0.15 0.004 240);
+  --secondary: oklch(0.29 0.006 240);
+  --secondary-foreground: oklch(0.95 0.002 240);
+  --muted: oklch(0.25 0.005 240);
+  --muted-foreground: oklch(0.66 0.006 240);
+  --accent: oklch(0.6 0.01 240);
+  --accent-foreground: oklch(0.97 0 0);
+  --success: oklch(0.7 0.17 155);
+  --success-foreground: oklch(0.15 0.004 240);
+  --warning: oklch(0.78 0.15 75);
+  --warning-foreground: oklch(0.15 0.004 240);
+  --destructive: oklch(0.64 0.22 22);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.3 0.006 240);
+  --input: oklch(0.25 0.005 240);
+  --ring: oklch(0.75 0.012 240);
+  --chart-1: oklch(0.75 0.012 240);
+  --chart-2: oklch(0.6 0.01 240);
+  --chart-3: oklch(0.7 0.17 155);
+  --chart-4: oklch(0.65 0.15 280);
+  --chart-5: oklch(0.72 0.16 50);
+  --sidebar: oklch(0.19 0.004 240);
+  --sidebar-foreground: oklch(0.95 0.002 240);
+  --sidebar-primary: oklch(0.75 0.012 240);
+  --sidebar-primary-foreground: oklch(0.15 0.004 240);
+  --sidebar-accent: oklch(0.25 0.005 240);
+  --sidebar-accent-foreground: oklch(0.95 0.002 240);
+  --sidebar-border: oklch(0.3 0.006 240);
+  --sidebar-ring: oklch(0.75 0.012 240);
+  --gradient-primary: linear-gradient(135deg, oklch(0.78 0.012 240) 0%, oklch(0.6 0.01 240) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.6 0.01 240) 0%, oklch(0.48 0.01 240) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(0.24 0.005 240) 0%, oklch(0.2 0.005 240) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.3 0.01 240 / 0.35), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.75 0.012 240 / 0.2);
+  --shadow-card: 0 4px 24px -8px oklch(0.08 0.005 240 / 0.45);
+  --card-gradient-border: oklch(0.31 0.006 240 / 0.6);
+}
+
+/* ---------- Graphite — light ---------- */
+.theme-graphite.mode-light {
+  --background: oklch(0.98 0.002 240);
+  --foreground: oklch(0.2 0.006 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.006 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.006 240);
+  --primary: oklch(0.4 0.012 240);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.003 240);
+  --secondary-foreground: oklch(0.2 0.006 240);
+  --muted: oklch(0.95 0.003 240);
+  --muted-foreground: oklch(0.48 0.008 240);
+  --accent: oklch(0.5 0.012 240);
+  --accent-foreground: oklch(0.99 0 0);
+  --success: oklch(0.5 0.15 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.68 0.15 75);
+  --warning-foreground: oklch(0.2 0.02 240);
+  --destructive: oklch(0.54 0.22 22);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.89 0.004 240);
+  --input: oklch(0.91 0.004 240);
+  --ring: oklch(0.4 0.012 240);
+  --chart-1: oklch(0.4 0.012 240);
+  --chart-2: oklch(0.5 0.012 240);
+  --chart-3: oklch(0.5 0.15 155);
+  --chart-4: oklch(0.5 0.16 280);
+  --chart-5: oklch(0.55 0.16 50);
+  --sidebar: oklch(0.97 0.002 240);
+  --sidebar-foreground: oklch(0.2 0.006 240);
+  --sidebar-primary: oklch(0.4 0.012 240);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.003 240);
+  --sidebar-accent-foreground: oklch(0.2 0.006 240);
+  --sidebar-border: oklch(0.89 0.004 240);
+  --sidebar-ring: oklch(0.4 0.012 240);
+  --gradient-primary: linear-gradient(135deg, oklch(0.4 0.012 240) 0%, oklch(0.3 0.01 240) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.5 0.012 240) 0%, oklch(0.4 0.01 240) 100%);
+  --gradient-card: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.98 0.002 240) 100%);
+  --gradient-hero: radial-gradient(ellipse at top, oklch(0.88 0.006 240 / 0.3), transparent 60%);
+  --shadow-glow: 0 0 40px oklch(0.4 0.012 240 / 0.14);
+  --shadow-card: 0 4px 20px -8px oklch(0.3 0.006 240 / 0.12);
+  --card-gradient-border: oklch(0.89 0.004 240 / 0.9);
+}
+
 /* ---------- Forest — dark ("Natural") ---------- */
 .theme-forest.mode-dark {
   --background: oklch(0.14 0.022 145);
