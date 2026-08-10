@@ -175,6 +175,12 @@ export type PostClearingResult = {
   /** What actually lands in the treasury: gross - fees. */
   amount: number;
   settledCharges: number;
+  /**
+   * Orders posted with no shipping fee entered. Their charge is deliberately left
+   * open so the accrual can still correct it once the missing governorate rate is
+   * configured — and until then their shipping stays out of profit.
+   */
+  feesLeftOpen: number;
   cashTransactionId: string;
 };
 
@@ -351,12 +357,25 @@ export const postOrderClearing = createServerFn({ method: "POST" })
     // id (not just settled_at) is what lets a later reversal tell a fee the
     // courier withheld here from one paid separately.
     let settledCharges = 0;
+    let feesLeftOpen = 0;
     if (deductFees) {
       const settledAt = new Date().toISOString();
       try {
         for (const l of lines) {
           const fee = feeByOrder.get(l.orderId) ?? 0;
           const charge = chargeByOrder.get(l.orderId);
+          // A zero fee here almost always means "not entered yet" rather than
+          // "the courier charged nothing" — the usual cause is a governorate
+          // with no rate configured, which accrues 0 silently. Settling it
+          // would stamp settled_at, and persist_order_courier_charge only
+          // refreshes rows WHERE settled_at IS NULL, so the fee would stay
+          // frozen at zero even after the missing rate is added. Leave the
+          // charge open to be corrected instead. The receipt and the treasury
+          // movement are identical either way: a zero fee deducts nothing.
+          if (fee <= 0) {
+            feesLeftOpen += 1;
+            continue;
+          }
           if (charge) {
             // Write the confirmed fee onto the charge as it is settled, so the
             // ledger — and the P&L, which now reads it — carries the real
@@ -372,7 +391,7 @@ export const postOrderClearing = createServerFn({ method: "POST" })
               .is("settled_at", null);
             if (error) throw new Error(error.message);
             settledCharges += 1;
-          } else if (fee > 0) {
+          } else {
             // No accrual existed (no rate card for that governorate), but the
             // courier still charged something — record it so it is not lost.
             const order = orderById.get(l.orderId)!;
@@ -409,6 +428,7 @@ export const postOrderClearing = createServerFn({ method: "POST" })
       fees,
       amount,
       settledCharges,
+      feesLeftOpen,
       cashTransactionId,
     };
   });
