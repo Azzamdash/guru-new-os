@@ -336,7 +336,7 @@ function Page() {
             label={L(tr("تقييم المخزون"), "Inventory Valuation")}
           />
           <QuickLink to="/reports/profits" label={L(tr("الأرباح"), "Profits")} />
-          <QuickLink to="/reports/couriers" label={L(tr("شركات الشحن"), "Couriers")} />
+          <QuickLink to="/courier-reports" label={L(tr("شركات الشحن"), "Couriers")} />
           <QuickLink to="/reports/audit" label={L(tr("سجل التدقيق"), "Audit Log")} />
           <QuickLink
             to="/reports/brands-comparison"

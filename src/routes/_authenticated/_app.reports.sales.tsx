@@ -211,14 +211,14 @@ function SalesReports() {
           </p>
           <div className="flex flex-wrap gap-2 mt-3 text-xs">
             <Link
-              to="/reports/fulfillment"
+              to="/prep-performance"
               className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:bg-muted"
             >
               <PackageCheck className="w-3.5 h-3.5" />{" "}
-              {T("تقارير الـ Fulfillment", "Fulfillment Reports")}
+              {T("أداء التحضير والمخزن", "Prep & Warehouse Performance")}
             </Link>
             <Link
-              to="/reports/couriers"
+              to="/courier-reports"
               className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border hover:bg-muted"
             >
               <Truck className="w-3.5 h-3.5" />{" "}

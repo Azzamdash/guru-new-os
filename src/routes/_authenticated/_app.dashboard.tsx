@@ -377,7 +377,7 @@ function DashboardPage() {
               tone="success"
             />
           </Link>
-          <Link to="/reports/fulfillment">
+          <Link to="/courier-reports">
             <KpiCard
               icon={Truck}
               label={t("kpi_delivered")}
@@ -385,7 +385,7 @@ function DashboardPage() {
               tone="success"
             />
           </Link>
-          <Link to="/reports/fulfillment">
+          <Link to="/courier-reports">
             <KpiCard
               icon={RotateCcw}
               label={t("kpi_returned")}
@@ -393,7 +393,7 @@ function DashboardPage() {
               tone={totals.ordersReturned > 0 ? "destructive" : "muted"}
             />
           </Link>
-          <Link to="/reports/couriers">
+          <Link to="/courier-finance">
             <KpiCard
               icon={Truck}
               label={t("kpi_shipping_cost")}
@@ -407,7 +407,7 @@ function DashboardPage() {
       {/* Operational KPIs */}
       {!isService && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to="/reports/fulfillment">
+          <Link to="/courier-reports">
             <KpiCard
               icon={CheckCircle2}
               label={t("kpi_confirm_rate")}
@@ -416,7 +416,7 @@ function DashboardPage() {
               tone="success"
             />
           </Link>
-          <Link to="/reports/fulfillment">
+          <Link to="/courier-reports">
             <KpiCard
               icon={Truck}
               label={t("kpi_delivery_rate")}
@@ -425,7 +425,7 @@ function DashboardPage() {
               tone="success"
             />
           </Link>
-          <Link to="/reports/fulfillment">
+          <Link to="/courier-reports">
             <KpiCard
               icon={RotateCcw}
               label={t("kpi_return_rate")}

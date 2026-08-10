@@ -184,9 +184,9 @@ describe("nav-registry: main sections", () => {
 
 describe("nav-registry: orders and tasks placement", () => {
   it("shows the couriers dashboard only in the Fulfillment hub", () => {
-    expect(pagesForHub("fulfillment").some((page) => page.to === "/reports/couriers")).toBe(true);
-    expect(pagesForHub("overview").some((page) => page.to === "/reports/couriers")).toBe(false);
-    expect(pagesForHub("sales").some((page) => page.to === "/reports/couriers")).toBe(false);
+    expect(pagesForHub("fulfillment").some((page) => page.to === "/courier-reports")).toBe(true);
+    expect(pagesForHub("overview").some((page) => page.to === "/courier-reports")).toBe(false);
+    expect(pagesForHub("sales").some((page) => page.to === "/courier-reports")).toBe(false);
   });
 
   it("moves fulfillment from Orders to Tasks & Missions", () => {
