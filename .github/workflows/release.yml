@@ -27,7 +27,7 @@ jobs:
         id: branch
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
-            echo "name=staging" >> "$GITHUB_OUTPUT"
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "schedule" ]; then
             echo "name=main" >> "$GITHUB_OUTPUT"
           else
