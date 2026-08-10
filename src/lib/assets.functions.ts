@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { revenueByBrandSince, trailing12mStart } from "@/lib/revenue.server";
+import {
+  revenueByBrandSince,
+  serviceRevenueByBrandSince,
+  trailing12mStart,
+} from "@/lib/revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -12,7 +16,8 @@ async function hasAnyRole(context: Ctx, roles: string[]) {
   return results.some((r) => !r.error && r.data === true);
 }
 async function assertWriter(context: Ctx) {
-  if (!(await hasAnyRole(context, ["admin", "manager", "accountant"]))) throw new Error("Forbidden");
+  if (!(await hasAnyRole(context, ["admin", "manager", "accountant"])))
+    throw new Error("Forbidden");
 }
 async function assertManager(context: Ctx) {
   if (!(await hasAnyRole(context, ["admin", "manager"]))) throw new Error("Forbidden");
@@ -32,7 +37,10 @@ export const listAssets = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { brandId?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    let q = context.supabase.from("company_assets").select("*").order("purchase_date", { ascending: false });
+    let q = context.supabase
+      .from("company_assets")
+      .select("*")
+      .order("purchase_date", { ascending: false });
     if (data.brandId) q = q.eq("brand_id", data.brandId);
     const { data: rows, error } = await q;
     if (error) throw error;
@@ -41,7 +49,16 @@ export const listAssets = createServerFn({ method: "GET" })
 
 export const upsertAsset = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: Partial<CompanyAsset> & { name: string; cost: number; purchase_date: string; annual_depreciation_rate: number }) => d)
+  .inputValidator(
+    (
+      d: Partial<CompanyAsset> & {
+        name: string;
+        cost: number;
+        purchase_date: string;
+        annual_depreciation_rate: number;
+      },
+    ) => d,
+  )
   .handler(async ({ data, context }) => {
     await assertWriter(context);
     const { error } = await context.supabase.from("company_assets").upsert(data);
@@ -97,15 +114,27 @@ export const getValuationReport = createServerFn({ method: "GET" })
     const now = new Date();
     const yearAgo = trailing12mStart(now);
 
-    const [brandsRes, revByBrand, assetsRes] = await Promise.all([
-      context.supabase.from("brands").select("id,name,type,active").order("sort_order").order("name"),
+    const brandsRes = await context.supabase
+      .from("brands")
+      .select("id,name,type,active")
+      .order("sort_order")
+      .order("name");
+    if (brandsRes.error) throw brandsRes.error;
+    const brands = brandsRes.data as Array<{
+      id: string;
+      name: string;
+      type: string;
+      active: boolean;
+    }>;
+    const serviceBrandIds = brands.filter((b) => b.type === "service").map((b) => b.id);
+
+    const [revByBrand, serviceRevByBrand, assetsRes] = await Promise.all([
       revenueByBrandSince(context.supabase, yearAgo),
+      serviceRevenueByBrandSince(context.supabase, yearAgo, serviceBrandIds),
       context.supabase.from("company_assets").select("*"),
     ]);
-    if (brandsRes.error) throw brandsRes.error;
     if (assetsRes.error) throw assetsRes.error;
 
-    const brands = brandsRes.data as Array<{ id: string; name: string; type: string; active: boolean }>;
     const assets = (assetsRes.data ?? []) as CompanyAsset[];
     const assetsByBrand = new Map<string, { cost: number; net: number }>();
     let companyWideCost = 0;
@@ -118,28 +147,37 @@ export const getValuationReport = createServerFn({ method: "GET" })
         companyWideNet += net;
       } else {
         const cur = assetsByBrand.get(a.brand_id) ?? { cost: 0, net: 0 };
-        cur.cost += cost; cur.net += net;
+        cur.cost += cost;
+        cur.net += net;
         assetsByBrand.set(a.brand_id, cur);
       }
     }
 
     const rows = brands.map((b) => {
-      const revenue = revByBrand.get(b.id) ?? 0;
+      const revenue =
+        b.type === "service" ? (serviceRevByBrand.get(b.id) ?? 0) : (revByBrand.get(b.id) ?? 0);
       const assetsNet = assetsByBrand.get(b.id)?.net ?? 0;
       const assetsCost = assetsByBrand.get(b.id)?.cost ?? 0;
       const valuation = revenue * 1.5 + assetsNet;
       return {
-        brand_id: b.id, brand_name: b.name, brand_type: b.type,
-        annual_revenue: revenue, assets_cost: assetsCost, assets_net: assetsNet,
+        brand_id: b.id,
+        brand_name: b.name,
+        brand_type: b.type,
+        annual_revenue: revenue,
+        assets_cost: assetsCost,
+        assets_net: assetsNet,
         valuation,
       };
     });
 
-    const totals = rows.reduce((acc, r) => ({
-      annual_revenue: acc.annual_revenue + r.annual_revenue,
-      assets_net: acc.assets_net + r.assets_net + 0,
-      valuation: acc.valuation + r.valuation,
-    }), { annual_revenue: 0, assets_net: 0, valuation: 0 });
+    const totals = rows.reduce(
+      (acc, r) => ({
+        annual_revenue: acc.annual_revenue + r.annual_revenue,
+        assets_net: acc.assets_net + r.assets_net + 0,
+        valuation: acc.valuation + r.valuation,
+      }),
+      { annual_revenue: 0, assets_net: 0, valuation: 0 },
+    );
 
     return {
       rows,
