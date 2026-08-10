@@ -33,6 +33,11 @@ import {
   listSettlements,
   postSettlement,
 } from "@/lib/orders-ops.functions";
+import {
+  getCourierAccountStatement,
+  getSettlementFeeReconciliation,
+  type FeeReconIssue,
+} from "@/lib/courier-accounts.functions";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/courier-finance")({
@@ -52,6 +57,12 @@ export const Route = createFileRoute("/_authenticated/_app/courier-finance")({
 
 const money = (n: number, currency: string) =>
   `${Math.round(n).toLocaleString("en-US")} ${currency}`;
+
+function feeIssueLabel(issue: FeeReconIssue, T: (ar: string, en: string) => string) {
+  if (issue === "fee_mismatch") return T("رسم مختلف عن التسعيرة", "Differs from rate card");
+  if (issue === "missing_rate") return T("محافظة بدون تسعيرة", "No rate for governorate");
+  return T("مفيش رسم مسجَّل للأوردر", "No charge recorded for order");
+}
 
 function Kpi({
   icon: Icon,
@@ -138,6 +149,20 @@ function CourierFinancePage() {
     queryKey: ["settlement-lines", openId, lineFilter],
     queryFn: () => linesFn({ data: { settlementId: openId as string, matchStatus: lineFilter } }),
     enabled: Boolean(openId),
+  });
+
+  const statementFn = useServerFn(getCourierAccountStatement);
+  const statementQ = useQuery({
+    queryKey: ["courier-finance", "statement", from, to, brandId],
+    queryFn: () => statementFn({ data: { from, to, brandId: brandId === "all" ? null : brandId } }),
+  });
+
+  const [feeReconId, setFeeReconId] = useState<string | null>(null);
+  const feeReconFn = useServerFn(getSettlementFeeReconciliation);
+  const feeReconQ = useQuery({
+    queryKey: ["settlement-fee-recon", feeReconId],
+    queryFn: () => feeReconFn({ data: { settlementId: feeReconId as string } }),
+    enabled: Boolean(feeReconId),
   });
 
   const importM = useMutation({
@@ -241,6 +266,89 @@ function CourierFinancePage() {
           tone="success"
         />
       </div>
+
+      {/* Statement of account per courier */}
+      <Card className="overflow-hidden">
+        <div className="p-4">
+          <div className="font-semibold">
+            {T("كشف حساب شركات الشحن", "Courier statement of account")}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {T(
+              "اللي حصّلوه لينا مقابل اللي علينا لهم. الرصيد المفتوح بيشمل كل الرسوم غير المسدَّدة مهما كان تاريخها، مش الفترة المختارة بس.",
+              "What they collected for us against what we owe them. The open balance covers every unsettled fee regardless of date, not just the selected period.",
+            )}
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-xs">
+              <tr>
+                <th className="p-2 text-start">{T("شركة الشحن", "Courier")}</th>
+                <th className="p-2 text-start">{T("مسلَّم", "Delivered")}</th>
+                <th className="p-2 text-start">{T("قيمة التحصيل", "COD value")}</th>
+                <th className="p-2 text-start">{T("وصلنا", "Received")}</th>
+                <th className="p-2 text-start">{T("لسه معاهم", "Still with them")}</th>
+                <th className="p-2 text-start">{T("رسوم مفتوحة", "Open fees")}</th>
+                <th className="p-2 text-start">{T("الصافي المستحق لنا", "Net due to us")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(statementQ.data?.rows ?? []).map((r) => (
+                <tr key={r.courierId} className="border-t">
+                  <td className="p-2 font-medium">
+                    {r.courierName}
+                    {r.rateMissingCount > 0 && (
+                      <Badge variant="destructive" className="ms-2 text-[10px]">
+                        {T(
+                          `${r.rateMissingCount} بدون تسعيرة`,
+                          `${r.rateMissingCount} missing rate`,
+                        )}
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="p-2 num">{nf(r.deliveredOrders)}</td>
+                  <td className="p-2 num">{nf(Math.round(r.codValue))}</td>
+                  <td className="p-2 num text-emerald-500">{nf(Math.round(r.collected))}</td>
+                  <td className="p-2 num text-amber-500">{nf(Math.round(r.outstandingCod))}</td>
+                  <td className="p-2 num text-destructive">{nf(Math.round(r.openFees))}</td>
+                  <td
+                    className={`p-2 num font-semibold ${
+                      r.netDueToUs >= 0 ? "text-emerald-500" : "text-destructive"
+                    }`}
+                  >
+                    {nf(Math.round(r.netDueToUs))}
+                  </td>
+                </tr>
+              ))}
+              {(statementQ.data?.rows ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                    {statementQ.isLoading
+                      ? T("جارٍ التحميل…", "Loading…")
+                      : T("لا توجد حركة في هذه المدة.", "No activity in this period.")}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {statementQ.data && statementQ.data.rows.length > 0 && (
+              <tfoot>
+                <tr className="border-t bg-muted/30 font-semibold">
+                  <td className="p-2">{T("الإجمالي", "Total")}</td>
+                  <td className="p-2 num">{nf(statementQ.data.totals.deliveredOrders)}</td>
+                  <td className="p-2 num">{nf(Math.round(statementQ.data.totals.codValue))}</td>
+                  <td className="p-2 num">{nf(Math.round(statementQ.data.totals.collected))}</td>
+                  <td className="p-2 num">
+                    {nf(Math.round(statementQ.data.totals.outstandingCod))}
+                  </td>
+                  <td className="p-2 num">{nf(Math.round(statementQ.data.totals.openFees))}</td>
+                  <td className="p-2 num">{nf(Math.round(statementQ.data.totals.netDueToUs))}</td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </Card>
 
       {/* Per-courier financial breakdown */}
       <Card className="overflow-hidden">
@@ -356,6 +464,15 @@ function CourierFinancePage() {
                 </Button>
                 <Button
                   size="sm"
+                  variant="outline"
+                  onClick={() => setFeeReconId(feeReconId === s.id ? null : s.id)}
+                >
+                  {feeReconId === s.id
+                    ? T("إخفاء مطابقة الرسوم", "Hide Fee Check")
+                    : T("مطابقة الرسوم", "Check Fees")}
+                </Button>
+                <Button
+                  size="sm"
                   disabled={s.status === "posted" || postM.isPending}
                   onClick={() => postM.mutate(s.id)}
                 >
@@ -429,6 +546,103 @@ function CourierFinancePage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {feeReconId === s.id && (
+              <div className="mt-3 space-y-2 border-t pt-3">
+                {feeReconQ.isLoading ? (
+                  <div className="text-sm text-muted-foreground">
+                    {T("جارٍ مطابقة الرسوم…", "Checking fees…")}
+                  </div>
+                ) : !feeReconQ.data ? null : (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <Badge variant="secondary">
+                        {T(
+                          `${feeReconQ.data.summary.matched} مطابق`,
+                          `${feeReconQ.data.summary.matched} matched`,
+                        )}
+                      </Badge>
+                      {feeReconQ.data.summary.mismatched > 0 && (
+                        <Badge variant="destructive">
+                          {T(
+                            `${feeReconQ.data.summary.mismatched} فرق رسوم`,
+                            `${feeReconQ.data.summary.mismatched} fee diff`,
+                          )}
+                        </Badge>
+                      )}
+                      {feeReconQ.data.summary.missingRate > 0 && (
+                        <Badge variant="destructive">
+                          {T(
+                            `${feeReconQ.data.summary.missingRate} بدون تسعيرة`,
+                            `${feeReconQ.data.summary.missingRate} missing rate`,
+                          )}
+                        </Badge>
+                      )}
+                      {feeReconQ.data.summary.noSystemCharge > 0 && (
+                        <Badge variant="destructive">
+                          {T(
+                            `${feeReconQ.data.summary.noSystemCharge} بدون رسم مسجَّل`,
+                            `${feeReconQ.data.summary.noSystemCharge} no system charge`,
+                          )}
+                        </Badge>
+                      )}
+                      <span className="text-muted-foreground">
+                        {T(
+                          `الكشف ${money(feeReconQ.data.summary.declaredTotal, currency)} · النظام ${money(feeReconQ.data.summary.systemTotal, currency)} · الفرق ${money(feeReconQ.data.summary.diffTotal, currency)}`,
+                          `Statement ${money(feeReconQ.data.summary.declaredTotal, currency)} · System ${money(feeReconQ.data.summary.systemTotal, currency)} · Diff ${money(feeReconQ.data.summary.diffTotal, currency)}`,
+                        )}
+                      </span>
+                    </div>
+                    {feeReconQ.data.rows.length === 0 ? (
+                      <div className="text-sm text-emerald-500">
+                        {T("كل الرسوم مطابقة للتسعيرة. 👌", "Every fee matches the rate card. 👌")}
+                      </div>
+                    ) : (
+                      <div className="max-h-96 overflow-auto rounded border">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/50 text-xs">
+                            <tr>
+                              <th className="p-2 text-start">{T("الأوردر", "Order")}</th>
+                              <th className="p-2 text-start">{T("المحافظة", "Governorate")}</th>
+                              <th className="p-2 text-start">{T("رسم الكشف", "Statement fee")}</th>
+                              <th className="p-2 text-start">{T("رسم النظام", "System fee")}</th>
+                              <th className="p-2 text-start">{T("الفرق", "Diff")}</th>
+                              <th className="p-2 text-start">{T("السبب", "Issue")}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {feeReconQ.data.rows.map((r) => (
+                              <tr key={r.orderId} className="border-t">
+                                <td className="p-2">
+                                  <Link
+                                    to="/order-view/$id"
+                                    params={{ id: r.orderId }}
+                                    className="text-primary hover:underline"
+                                  >
+                                    #{r.orderNumber ?? r.tracking ?? r.orderId.slice(0, 8)}
+                                  </Link>
+                                </td>
+                                <td className="p-2">{r.governorate ?? "—"}</td>
+                                <td className="p-2 num">{money(r.declaredFee, currency)}</td>
+                                <td className="p-2 num">{money(r.systemFee, currency)}</td>
+                                <td
+                                  className={`p-2 num font-semibold ${
+                                    r.diff > 0 ? "text-destructive" : "text-emerald-500"
+                                  }`}
+                                >
+                                  {money(r.diff, currency)}
+                                </td>
+                                <td className="p-2 text-xs">{feeIssueLabel(r.issue, T)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </Card>
