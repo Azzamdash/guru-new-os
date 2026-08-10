@@ -197,7 +197,12 @@ export const postOrderClearing = createServerFn({ method: "POST" })
   .inputValidator(
     (d: {
       courierId: string;
-      lines: Array<{ orderId: string; amount: number }>;
+      /**
+       * fee is what the courier actually charged on their statement. Omitted
+       * falls back to the rate-card accrual; provided overwrites it, because
+       * the statement is the real number and the rate card was the estimate.
+       */
+      lines: Array<{ orderId: string; amount: number; fee?: number }>;
       occurredAt?: string | null;
       walletId?: string | null;
       note?: string | null;
@@ -256,18 +261,33 @@ export const postOrderClearing = createServerFn({ method: "POST" })
 
     const deductFees = data.deductFees !== false;
     const chargeRows = deductFees
-      ? await fetchAllRows<{ id: string; amount: number }>(() =>
+      ? await fetchAllRows<{ id: string; order_id: string; amount: number }>(() =>
           ctx.supabase
             .from("courier_charges")
-            .select("id, amount")
+            .select("id, order_id, amount")
             .in("order_id", orderIds)
             .is("settled_at", null),
         )
       : [];
-    const fees = chargeRows.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const chargeByOrder = new Map(chargeRows.map((c) => [c.order_id, c]));
+
+    // The fee that counts is whatever the accountant confirmed against the
+    // statement; the accrual is only the default they started from.
+    const feeByOrder = new Map<string, number>();
+    let fees = 0;
+    if (deductFees) {
+      for (const l of lines) {
+        const fee =
+          l.fee !== undefined && l.fee !== null
+            ? Math.max(0, Number(l.fee) || 0)
+            : Number(chargeByOrder.get(l.orderId)?.amount ?? 0) || 0;
+        feeByOrder.set(l.orderId, fee);
+        fees += fee;
+      }
+    }
     const amount = gross - fees;
     if (amount < 0) {
-      throw new Error("رسوم الشحن أكبر من المبلغ المحصَّل — راجع التسعيرة قبل الترحيل");
+      throw new Error("رسوم الشحن أكبر من المبلغ المحصَّل — راجع الرسوم قبل الترحيل");
     }
 
     let walletId = data.walletId ?? null;
@@ -331,28 +351,55 @@ export const postOrderClearing = createServerFn({ method: "POST" })
     // id (not just settled_at) is what lets a later reversal tell a fee the
     // courier withheld here from one paid separately.
     let settledCharges = 0;
-    if (deductFees && chargeRows.length > 0) {
-      const { data: settled, error: settleErr } = await ctx.supabase
-        .from("courier_charges")
-        .update({
-          settled_at: new Date().toISOString(),
-          settled_cash_transaction_id: cashTransactionId,
-        })
-        .in(
-          "id",
-          chargeRows.map((c) => c.id),
-        )
-        .is("settled_at", null)
-        .select("id");
-      if (settleErr) {
+    if (deductFees) {
+      const settledAt = new Date().toISOString();
+      try {
+        for (const l of lines) {
+          const fee = feeByOrder.get(l.orderId) ?? 0;
+          const charge = chargeByOrder.get(l.orderId);
+          if (charge) {
+            // Write the confirmed fee onto the charge as it is settled, so the
+            // ledger — and the P&L, which now reads it — carries the real
+            // number rather than the rate-card guess.
+            const { error } = await ctx.supabase
+              .from("courier_charges")
+              .update({
+                amount: fee,
+                settled_at: settledAt,
+                settled_cash_transaction_id: cashTransactionId,
+              })
+              .eq("id", charge.id)
+              .is("settled_at", null);
+            if (error) throw new Error(error.message);
+            settledCharges += 1;
+          } else if (fee > 0) {
+            // No accrual existed (no rate card for that governorate), but the
+            // courier still charged something — record it so it is not lost.
+            const order = orderById.get(l.orderId)!;
+            const { error } = await ctx.supabase.from("courier_charges").insert({
+              order_id: l.orderId,
+              brand_id: order.brand_id,
+              courier_id: data.courierId,
+              charge_type: "delivery",
+              amount: fee,
+              rate_missing: true,
+              note: "رسم مُدخل يدويًا من تصفية الأوردرات",
+              settled_at: settledAt,
+              settled_cash_transaction_id: cashTransactionId,
+            });
+            if (error) throw new Error(error.message);
+            settledCharges += 1;
+          }
+        }
+      } catch (e) {
         // The money is recorded correctly; only the fee ledger lagged. Surface
-        // it rather than unwinding a valid receipt — the fees stay open and can
-        // be closed from the statement page.
+        // it rather than unwinding a valid receipt — the rest can be closed
+        // from the statement page.
+        const message = e instanceof Error ? e.message : String(e);
         throw new Error(
-          `تم تسجيل التحصيل، لكن تعذر إقفال رسوم الشحن — اقفلها من كشف الحساب: ${settleErr.message}`,
+          `تم تسجيل التحصيل، لكن تعذر إقفال رسوم الشحن — اقفلها من كشف الحساب: ${message}`,
         );
       }
-      settledCharges = ((settled ?? []) as Array<{ id: string }>).length;
     }
 
     return {

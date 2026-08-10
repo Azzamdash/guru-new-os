@@ -74,6 +74,8 @@ function OrderClearingPage() {
 
   /** orderId -> amount the accountant is confirming for this batch. */
   const [picked, setPicked] = useState<Record<string, number>>({});
+  /** orderId -> fee the accountant corrected. Absent means "use the rate card". */
+  const [feeEdits, setFeeEdits] = useState<Record<string, number>>({});
 
   const couriersFn = useServerFn(listCouriers);
   const couriersQ = useQuery({ queryKey: ["couriers"], queryFn: () => couriersFn() });
@@ -107,6 +109,7 @@ function OrderClearingPage() {
   useEffect(() => {
     if (!clearingQ.data || autoFilledKey.current === filterKey) return;
     autoFilledKey.current = filterKey;
+    setFeeEdits({});
     const suggested: Record<string, number> = {};
     for (const r of clearingQ.data.rows) {
       if (r.courierSaysPaid && r.outstanding > 0.01) {
@@ -118,9 +121,11 @@ function OrderClearingPage() {
 
   const pickedEntries = Object.entries(picked).filter(([, amount]) => amount > 0);
   const pickedTotal = pickedEntries.reduce((s, [, amount]) => s + amount, 0);
-  const feeById = new Map(rows.map((r) => [r.orderId, r.courierFee]));
+  /** Fee the accountant confirmed, defaulting to the rate-card accrual. */
+  const feeFor = (orderId: string) =>
+    feeEdits[orderId] ?? rows.find((r) => r.orderId === orderId)?.courierFee ?? 0;
   const pickedFees = deductFees
-    ? pickedEntries.reduce((s, [orderId]) => s + (feeById.get(orderId) ?? 0), 0)
+    ? pickedEntries.reduce((s, [orderId]) => s + feeFor(orderId), 0)
     : 0;
   const pickedNet = pickedTotal - pickedFees;
   const suggestedCount = rows.filter((r) => r.courierSaysPaid && r.outstanding > 0.01).length;
@@ -131,7 +136,11 @@ function OrderClearingPage() {
       postFn({
         data: {
           courierId,
-          lines: pickedEntries.map(([orderId, amount]) => ({ orderId, amount })),
+          lines: pickedEntries.map(([orderId, amount]) => ({
+            orderId,
+            amount,
+            fee: feeFor(orderId),
+          })),
           occurredAt: to.slice(0, 10),
           note: note.trim() || null,
           deductFees,
@@ -150,6 +159,7 @@ function OrderClearingPage() {
             ),
       );
       setPicked({});
+      setFeeEdits({});
       setNote("");
       qc.invalidateQueries({ queryKey: ["order-clearing"] });
     },
@@ -382,8 +392,19 @@ function OrderClearingPage() {
                         <td className="p-2 tabular-nums text-destructive">
                           {money(r.outstanding, currency)}
                         </td>
-                        <td className="p-2 tabular-nums text-muted-foreground">
-                          {r.courierFee > 0 ? money(r.courierFee, currency) : "—"}
+                        <td className="p-2">
+                          <Input
+                            type="number"
+                            className="h-8 w-24"
+                            disabled={!isPicked || !deductFees}
+                            value={feeEdits[r.orderId] ?? r.courierFee}
+                            onChange={(e) =>
+                              setFeeEdits((prev) => ({
+                                ...prev,
+                                [r.orderId]: Math.max(0, Number(e.target.value) || 0),
+                              }))
+                            }
+                          />
                         </td>
                         <td className="p-2">
                           <div className="flex items-center gap-1">
