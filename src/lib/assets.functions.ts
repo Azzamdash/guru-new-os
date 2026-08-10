@@ -1,10 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  revenueByBrandSince,
-  serviceRevenueByBrandSince,
-  trailing12mStart,
-} from "@/lib/revenue.server";
+import { trailing12mStart, valuationRevenueByBrand } from "@/lib/revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -126,11 +122,9 @@ export const getValuationReport = createServerFn({ method: "GET" })
       type: string;
       active: boolean;
     }>;
-    const serviceBrandIds = brands.filter((b) => b.type === "service").map((b) => b.id);
 
-    const [revByBrand, serviceRevByBrand, assetsRes] = await Promise.all([
-      revenueByBrandSince(context.supabase, yearAgo),
-      serviceRevenueByBrandSince(context.supabase, yearAgo, serviceBrandIds),
+    const [revByBrand, assetsRes] = await Promise.all([
+      valuationRevenueByBrand(context.supabase, yearAgo),
       context.supabase.from("company_assets").select("*"),
     ]);
     if (assetsRes.error) throw assetsRes.error;
@@ -154,8 +148,7 @@ export const getValuationReport = createServerFn({ method: "GET" })
     }
 
     const rows = brands.map((b) => {
-      const revenue =
-        b.type === "service" ? (serviceRevByBrand.get(b.id) ?? 0) : (revByBrand.get(b.id) ?? 0);
+      const revenue = revByBrand.get(b.id) ?? 0;
       const assetsNet = assetsByBrand.get(b.id)?.net ?? 0;
       const assetsCost = assetsByBrand.get(b.id)?.cost ?? 0;
       const valuation = revenue * 1.5 + assetsNet;

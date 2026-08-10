@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeBrandNetProfit } from "./profits.shared";
-import { revenueByBrandSince, trailing12mStart } from "./revenue.server";
+import { trailing12mStart, valuationRevenueByBrand } from "./revenue.server";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -164,7 +164,7 @@ export type ValuationContext = {
 async function buildValuationContext(ctx: Ctx): Promise<ValuationContext> {
   const yearAgo = trailing12mStart();
   const [revMap, assetsRes, brandsRes] = await Promise.all([
-    revenueByBrandSince(ctx.supabase, yearAgo),
+    valuationRevenueByBrand(ctx.supabase, yearAgo),
     ctx.supabase.from("company_assets").select("cost, purchase_date, annual_depreciation_rate, brand_id"),
     ctx.supabase.from("brands").select("id").eq("active", true),
   ]);
