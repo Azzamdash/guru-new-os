@@ -41,7 +41,8 @@ export const getProfitsReport = createServerFn({ method: "GET" })
       // Shipping was missing from this report entirely, which happened to look right only
       // while the courier billed exactly what we charged the customer. Carry its margin so
       // this page and the income statement agree, and so an under-priced delivery shows up.
-      const shippingNet = (Number(row.shipping_revenue) || 0) - (Number(row.shipping_cost) || 0);
+      const shippingNet =
+        (Number(row.shipping_revenue_matched) || 0) - (Number(row.shipping_cost) || 0);
       const netProfit = grossProfit - expenses + shippingNet;
       const orders = Number(row.orders) || 0;
       return {

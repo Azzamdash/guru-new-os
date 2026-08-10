@@ -6,8 +6,14 @@ export type AccountingProfitRpcRow = {
   returns: number;
   /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
   shipping_revenue: number;
+  /** The part of shipping_revenue whose order has a known courier fee. Only this may offset profit. */
+  shipping_revenue_matched: number;
   /** What we owe the courier for this brand's orders (rate-card fees). A real cost. */
   shipping_cost: number;
+  /** Delivered orders that collected shipping but accrued no courier fee — usually a missing rate. */
+  shipping_unbilled_orders: number;
+  /** Shipping collected on those orders. Held out of profit because the courier's cut is unknown. */
+  shipping_unbilled_amount: number;
   discounts: number;
   invoice_net_revenue: number;
   net_revenue: number;
@@ -30,8 +36,14 @@ export type AccountingProfitRpcResult = {
     returns: number;
     /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
     shippingRevenue: number;
+    /** The part of shippingRevenue whose order has a known courier fee. Only this may offset profit. */
+    shippingRevenueMatched: number;
     /** What we owe couriers in rate-card fees for the period. A real cost, subtracted from profit. */
     shippingCost: number;
+    /** Delivered orders that collected shipping but accrued no courier fee — usually a missing rate. */
+    shippingUnbilledOrders: number;
+    /** Shipping collected on those orders. Held out of profit because the courier's cut is unknown. */
+    shippingUnbilledAmount: number;
     discounts: number;
     invoiceNetRevenue: number;
     netRevenue: number;
