@@ -34,6 +34,7 @@ import {
   MessageCircle,
   Palette,
   Printer,
+  Scale,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -846,6 +847,18 @@ export const NAV_PAGES: NavPage[] = [
     descAr: "أداء الحملات والقنوات",
     descEn: "Campaign & channel perf.",
     group: "sales_marketing",
+  },
+  {
+    to: "/order-clearing",
+    ar: "تصفيات الأوردرات",
+    en: "Order Clearing",
+    icon: Scale,
+    hub: "fulfillment",
+    section: "couriers",
+    requiresWrite: true,
+    extraRoles: ["operation_manager"],
+    descAr: "مراجعة تحصيل أوردرات شركة الشحن أوردر أوردر وترحيل المحصَّل للخزنة",
+    descEn: "Review a courier's collections order by order and post them to the treasury",
   },
   {
     to: "/courier-reports",
