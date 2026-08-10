@@ -1,7 +1,7 @@
 // Annual revenue aggregation used by valuation reports.
-// PostgREST caps rows at 1000 per request, so summing invoices without
+// PostgREST caps rows at 1000 per request, so summing orders without
 // pagination silently under-counts revenue (and therefore valuation).
-// This helper pages through every matching invoice.
+// This helper pages through every matching order.
 
 import { businessDateStartUTC, formatBusinessDate } from "@/lib/timezone";
 
@@ -10,72 +10,83 @@ type Db = any;
 
 const PAGE = 1000;
 
-export async function revenueByBrandSince(
+/**
+ * Revenue for the whole company, by brand, since a given date — the single
+ * source of truth for valuation (getValuationReport, investors'
+ * buildValuationContext). Reads orders.total_amount directly (a real
+ * timestamptz occurred_at, unlike sales_invoices.occurred_at which is a
+ * plain date column and historically got written in the wrong timezone —
+ * see 20260807220000_orders_sync_invoice_business_timezone_date.sql).
+ *
+ * Recognition rule differs by brand type, because "money realized" means
+ * something different for each:
+ *   - offline_branch: paid in full at the point of sale, so every order
+ *     counts the moment it's recorded — no delivery to wait for.
+ *   - product (online, Shopify or manual): only counts once the courier
+ *     confirms delivery (shipment_outcome = 'delivered') — matches "revenue
+ *     that actually entered the till", not merely shipped or dispatched.
+ *   - service: has no orders at all — see serviceRevenueByBrandSince.
+ * order_kind carries the sign (a manually-booked 'return' order is stored
+ * total_amount-positive but subtracts; 'exchange' is already net because
+ * upsertManualOrder nets its in/out items into total_amount itself).
+ */
+export async function valuationRevenueByBrand(
   supabase: Db,
   sinceDate: string,
-  brandId?: string,
 ): Promise<Map<string, number>> {
   const totals = new Map<string, number>();
+
+  const { data: brandRows, error: bErr } = await supabase.from("brands").select("id, type");
+  if (bErr) throw bErr;
+  const brandType = new Map<string, string>(
+    (brandRows ?? []).map((b: { id: string; type: string }) => [b.id, b.type]),
+  );
+  const serviceBrandIds = Array.from(brandType.entries())
+    .filter(([, type]) => type === "service")
+    .map(([id]) => id);
+
   let offset = 0;
-  // Hard safety bound: 200k invoices.
+  // Hard safety bound: 200k orders.
   for (let i = 0; i < 200; i++) {
-    let q = supabase
-      .from("sales_invoices")
-      .select("id,brand_id,total_amount,type")
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id, brand_id, total_amount, order_kind, shipment_outcome")
       .gte("occurred_at", businessDateStartUTC(sinceDate.slice(0, 10)))
       .order("id", { ascending: true })
       .range(offset, offset + PAGE - 1);
-    if (brandId) q = q.eq("brand_id", brandId);
-    const { data, error } = await q;
     if (error) throw error;
     const rows = (data ?? []) as Array<{
       id: string;
-      brand_id: string | null;
+      brand_id: string;
       total_amount: number;
-      type: string;
+      order_kind: string | null;
+      shipment_outcome: string;
     }>;
 
-    // Only orders that actually settled (delivered or returned) count as
-    // realized revenue — see computeBrandNetProfit in profits.shared.ts for
-    // the same rule and rationale. Invoices with no linked order still count.
-    const ids = rows.map((r) => r.id);
-    const settled = new Set<string>();
-    if (ids.length) {
-      const { data: orderRows, error: oErr } = await supabase
-        .from("orders")
-        .select("invoice_id,fulfillment_status")
-        .in("invoice_id", ids);
-      if (oErr) throw oErr;
-      const linked = new Set<string>();
-      for (const o of (orderRows ?? []) as Array<{
-        invoice_id: string;
-        fulfillment_status: string;
-      }>) {
-        linked.add(o.invoice_id);
-        if (o.fulfillment_status === "delivered" || o.fulfillment_status === "returned") {
-          settled.add(o.invoice_id);
-        }
-      }
-      for (const id of ids) if (!linked.has(id)) settled.add(id);
-    }
-
     for (const r of rows) {
-      if (!settled.has(r.id)) continue;
-      const key = r.brand_id ?? "";
-      const sign = r.type === "return" ? -1 : 1;
-      totals.set(key, (totals.get(key) ?? 0) + sign * (Number(r.total_amount) || 0));
+      const type = brandType.get(r.brand_id);
+      if (type === "service") continue; // has no orders — handled separately below
+      if (type !== "offline_branch" && r.shipment_outcome !== "delivered") continue;
+      const sign = r.order_kind === "return" ? -1 : 1;
+      totals.set(r.brand_id, (totals.get(r.brand_id) ?? 0) + sign * (Number(r.total_amount) || 0));
     }
     if (rows.length < PAGE) break;
     offset += PAGE;
   }
+
+  const serviceRevenue = await serviceRevenueByBrandSince(supabase, sinceDate, serviceBrandIds);
+  for (const [brandId, amount] of serviceRevenue) {
+    totals.set(brandId, (totals.get(brandId) ?? 0) + amount);
+  }
+
   return totals;
 }
 
 /**
- * Revenue for service brands, which never create a sales_invoices row —
+ * Revenue for service brands, which never create an orders row —
  * their money comes from service_projects (done projects, by pricing type)
  * and monthly_entries.revenue (the same "total revenue" definition
- * getServiceBrandOverview uses), not from delivered/returned orders.
+ * getServiceBrandOverview uses).
  */
 export async function serviceRevenueByBrandSince(
   supabase: Db,
