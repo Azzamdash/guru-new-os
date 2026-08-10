@@ -221,7 +221,7 @@ function CourierFinancePage() {
         />
         <Kpi
           icon={Truck}
-          label={T("تكلفة الشحن (لينا على شركة الشحن)", "Shipping cost (owed to courier)")}
+          label={T("تكلفة الشحن (مستحقة لشركة الشحن)", "Shipping cost (owed to courier)")}
           value={money(d?.totals.shippingCost ?? 0, currency)}
           tone="destructive"
         />
