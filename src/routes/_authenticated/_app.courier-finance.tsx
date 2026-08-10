@@ -305,6 +305,12 @@ function CourierFinancePage() {
           tone="muted"
         />
         <Kpi
+          icon={Truck}
+          label={T("صافي الشحن (المحصَّل − المستحق)", "Net shipping (collected − billed)")}
+          value={money(inc?.shippingNet ?? 0, currency)}
+          tone={(inc?.shippingNet ?? 0) < 0 ? "destructive" : "success"}
+        />
+        <Kpi
           icon={Wallet}
           label={T("الإيراد الصافي بعد خصم الشحن", "Net revenue after shipping")}
           value={money(inc?.netRevenue ?? 0, currency)}

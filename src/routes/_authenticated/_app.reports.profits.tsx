@@ -64,7 +64,14 @@ function ProfitsPage() {
 
   const d = q.data;
   const rows = d?.rows ?? [];
-  const totals = d?.totals ?? { revenue: 0, cogs: 0, grossProfit: 0, expenses: 0, netProfit: 0 };
+  const totals = d?.totals ?? {
+    revenue: 0,
+    cogs: 0,
+    grossProfit: 0,
+    expenses: 0,
+    shippingNet: 0,
+    netProfit: 0,
+  };
 
   return (
     <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
@@ -103,6 +110,11 @@ function ProfitsPage() {
               { key: "cogs", label: t("cogs_cost"), fmt: (v) => fmt(Number(v)) },
               { key: "grossProfit", label: t("cogs_gross_profit"), fmt: (v) => fmt(Number(v)) },
               { key: "expenses", label: t("kpi_expenses"), fmt: (v) => fmt(Number(v)) },
+              {
+                key: "shippingNet",
+                label: lang === "ar" ? "صافي الشحن" : "Net Shipping",
+                fmt: (v) => fmt(Number(v)),
+              },
               { key: "netProfit", label: t("kpi_net_profit"), fmt: (v) => fmt(Number(v)) },
             ]}
           />
@@ -138,7 +150,7 @@ function ProfitsPage() {
         <>
           <Card className="card-gradient overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[820px]">
+              <table className="w-full text-sm min-w-[920px]">
                 <thead>
                   <tr className="text-muted-foreground border-b border-border">
                     <th className="p-3 text-start">{t("brand")}</th>
@@ -146,6 +158,9 @@ function ProfitsPage() {
                     <th className="p-3 text-start">{t("cogs_cost")}</th>
                     <th className="p-3 text-start">{t("cogs_gross_profit")}</th>
                     <th className="p-3 text-start">{t("kpi_expenses")}</th>
+                    <th className="p-3 text-start">
+                      {lang === "ar" ? "صافي الشحن" : "Net Shipping"}
+                    </th>
                     <th className="p-3 text-start">{t("kpi_net_profit")}</th>
                     <th className="p-3 text-start">{t("margin_col")}</th>
                   </tr>
@@ -162,6 +177,11 @@ function ProfitsPage() {
                         {fmt(r.grossProfit)}
                       </td>
                       <td className="p-3 num text-muted-foreground">{fmt(r.expenses)}</td>
+                      <td
+                        className={`p-3 num ${r.shippingNet < 0 ? "text-destructive" : "text-muted-foreground"}`}
+                      >
+                        {fmt(r.shippingNet)}
+                      </td>
                       <td
                         className={`p-3 num font-bold ${r.netProfit >= 0 ? "text-emerald-500" : "text-destructive"}`}
                       >
@@ -180,6 +200,9 @@ function ProfitsPage() {
                     <td className="p-3 num">{fmt(totals.cogs)}</td>
                     <td className="p-3 num text-emerald-500">{fmt(totals.grossProfit)}</td>
                     <td className="p-3 num">{fmt(totals.expenses)}</td>
+                    <td className={`p-3 num ${totals.shippingNet < 0 ? "text-destructive" : ""}`}>
+                      {fmt(totals.shippingNet)}
+                    </td>
                     <td
                       className={`p-3 num ${totals.netProfit >= 0 ? "text-emerald-500" : "text-destructive"}`}
                     >

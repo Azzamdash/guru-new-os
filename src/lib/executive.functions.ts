@@ -23,7 +23,7 @@ export type ExecutiveSnapshot = {
     netMargin: number;
     /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
     shippingRevenue: number;
-    /** Rate-card fees owed to couriers. A real cost, already subtracted from netProfit. */
+    /** What couriers billed us. Only its gap to shippingRevenue reaches netProfit. */
     shippingCost: number;
   };
   cashFlow: { inflow: number; outflow: number; net: number };

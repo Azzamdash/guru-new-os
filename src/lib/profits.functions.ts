@@ -12,6 +12,8 @@ export type ProfitBrandRow = {
   grossProfit: number;
   expenses: number;
   expensesByCategory: Array<{ name: string; amount: number }>;
+  /** Shipping collected from customers minus what couriers billed. Negative = shipping loses money. */
+  shippingNet: number;
   netProfit: number;
   margin: number;
   orders: number;
@@ -36,7 +38,11 @@ export const getProfitsReport = createServerFn({ method: "GET" })
       const cogs = Number(row.cogs) || 0;
       const expenses = Number(row.expenses) || 0;
       const grossProfit = revenue - cogs;
-      const netProfit = grossProfit - expenses;
+      // Shipping was missing from this report entirely, which happened to look right only
+      // while the courier billed exactly what we charged the customer. Carry its margin so
+      // this page and the income statement agree, and so an under-priced delivery shows up.
+      const shippingNet = (Number(row.shipping_revenue) || 0) - (Number(row.shipping_cost) || 0);
+      const netProfit = grossProfit - expenses + shippingNet;
       const orders = Number(row.orders) || 0;
       return {
         brand_id: row.brand_id,
@@ -47,6 +53,7 @@ export const getProfitsReport = createServerFn({ method: "GET" })
         grossProfit,
         expenses,
         expensesByCategory: row.expense_categories ?? [],
+        shippingNet,
         netProfit,
         margin: revenue > 0 ? netProfit / revenue : 0,
         orders,
@@ -60,9 +67,10 @@ export const getProfitsReport = createServerFn({ method: "GET" })
         cogs: acc.cogs + row.cogs,
         grossProfit: acc.grossProfit + row.grossProfit,
         expenses: acc.expenses + row.expenses,
+        shippingNet: acc.shippingNet + row.shippingNet,
         netProfit: acc.netProfit + row.netProfit,
       }),
-      { revenue: 0, cogs: 0, grossProfit: 0, expenses: 0, netProfit: 0 },
+      { revenue: 0, cogs: 0, grossProfit: 0, expenses: 0, shippingNet: 0, netProfit: 0 },
     );
     return { rows, totals, expenseCategories: report.expenseCategories ?? [], from, to };
   });
