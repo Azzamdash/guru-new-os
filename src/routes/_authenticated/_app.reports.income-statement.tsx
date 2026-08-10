@@ -156,6 +156,16 @@ function Page() {
               negative
               small
             />
+            {(d?.shippingUnbilledOrders ?? 0) > 0 && (
+              <Row
+                label={L(
+                  `  منها ${nf(d?.shippingUnbilledAmount ?? 0)} على ${nf(d?.shippingUnbilledOrders ?? 0)} أوردر بدون رسوم شحن مسجّلة — خارج الربح`,
+                  `  incl. ${nf(d?.shippingUnbilledAmount ?? 0)} on ${nf(d?.shippingUnbilledOrders ?? 0)} orders with no courier fee recorded — excluded from profit`,
+                )}
+                val=""
+                small
+              />
+            )}
             <Row
               label={L(tr("صافي الشحن"), "Net Shipping")}
               val={nf(d?.shippingNet ?? 0)}

@@ -16,11 +16,17 @@ export type IncomeStatement = {
   /** What couriers actually bill us for the period (confirmed fee, else rate card). */
   shippingCost: number;
   /**
-   * shippingRevenue − shippingCost. Only this difference belongs in profit: what we
+   * shippingRevenueMatched − shippingCost. Only this difference belongs in profit: what we
    * collected for shipping is not ours to keep, and what the courier bills is paid out
    * of it. Positive = we over-charge for shipping, negative = shipping loses money.
+   * Orders whose courier fee never accrued are excluded from both sides — see
+   * shippingUnbilledOrders — so an unrecorded fee cannot masquerade as profit.
    */
   shippingNet: number;
+  /** Delivered orders that collected shipping but have no courier fee recorded. */
+  shippingUnbilledOrders: number;
+  /** Shipping collected on those orders, held out of profit until the fee is known. */
+  shippingUnbilledAmount: number;
   discounts: number;
   netRevenue: number;
   /** Revenue for orders still in flight (not yet delivered/returned) — not included in netRevenue. */
@@ -78,7 +84,10 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
     const grossRevenue = Number(totals.grossRevenue) || 0;
     const returns = Number(totals.returns) || 0;
     const shippingRevenue = Number(totals.shippingRevenue) || 0;
+    const shippingRevenueMatched = Number(totals.shippingRevenueMatched) || 0;
     const shippingCost = Number(totals.shippingCost) || 0;
+    const shippingUnbilledOrders = Number(totals.shippingUnbilledOrders) || 0;
+    const shippingUnbilledAmount = Number(totals.shippingUnbilledAmount) || 0;
     const discounts = Number(totals.discounts) || 0;
     const netRevenue = Number(totals.netRevenue) || 0;
     const projectedNetRevenue = Number(totals.projectedNetRevenue) || 0;
@@ -89,7 +98,10 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
     // excludes what the customer paid for shipping; subtracting the full courier bill on
     // top of that would charge the same delivery to us twice. Net the two instead: an
     // order that collects 50 and costs 50 is profit-neutral, and only the gap shows up.
-    const shippingNet = shippingRevenue - shippingCost;
+    // Only the matched half counts: an order whose courier fee never accrued would
+    // otherwise contribute collected shipping with nothing against it, booking money owed
+    // to a courier as profit. Those are reported as unbilled instead.
+    const shippingNet = shippingRevenueMatched - shippingCost;
     const operatingProfit = grossProfit - operatingExpensesTotal + shippingNet;
     const orders = Number(totals.orders) || 0;
     return {
@@ -100,6 +112,8 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       shippingRevenue,
       shippingCost,
       shippingNet,
+      shippingUnbilledOrders,
+      shippingUnbilledAmount,
       discounts,
       projectedNetRevenue,
       netRevenue,
@@ -124,7 +138,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
           const brandCogs = Number(row.cogs) || 0;
           const opex = Number(row.expenses) || 0;
           const brandShippingNet =
-            (Number(row.shipping_revenue) || 0) - (Number(row.shipping_cost) || 0);
+            (Number(row.shipping_revenue_matched) || 0) - (Number(row.shipping_cost) || 0);
           const brandGrossProfit = brandRevenue - brandCogs;
           const netProfit = brandGrossProfit - opex + brandShippingNet;
           return {
