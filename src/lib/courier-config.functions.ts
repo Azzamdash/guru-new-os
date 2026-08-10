@@ -201,6 +201,29 @@ export const getCourierRateGaps = createServerFn({ method: "GET" })
     return Array.from(gaps.values()).sort((a, b) => b.orders - a.orders);
   });
 
+/**
+ * Re-prices open courier charges from the current rate card.
+ *
+ * Adding a governorate rate does nothing to the orders that already needed it —
+ * the accrual triggers watch public.orders, not courier_governorate_rates — so
+ * an order delivered before its rate existed keeps the zero it accrued. This
+ * re-fires those triggers so the fee is recomputed by the same logic that
+ * priced it originally, instead of a second implementation drifting from it.
+ * Settled charges are left untouched.
+ */
+export const recalculateCourierCharges = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { courierId?: string | null } = {}) => data)
+  .handler(async ({ data, context }) => {
+    await assertPageWrite(context, COURIERS_PAGE);
+    const { data: result, error } = await context.supabase.rpc("recalculate_courier_charges", {
+      _courier_id: data.courierId || undefined,
+    });
+    if (error) throw error;
+    const updated = Number((result as { updated?: number } | null)?.updated) || 0;
+    return { ok: true, updated };
+  });
+
 export const upsertCourierStatusMapping = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(

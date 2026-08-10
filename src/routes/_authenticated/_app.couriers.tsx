@@ -31,6 +31,7 @@ import {
   upsertCourierRate,
   bulkUpsertCourierRates,
   getCourierRateGaps,
+  recalculateCourierCharges,
 } from "@/lib/courier-config.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/couriers")({
@@ -171,6 +172,22 @@ function CouriersPage() {
     setBulkOpen(true);
   };
 
+  const recalcFees = useServerFn(recalculateCourierCharges);
+  const recalcMutation = useMutation({
+    mutationFn: () => recalcFees({ data: {} }),
+    onSuccess: (r) => {
+      toast.success(
+        lang === "ar"
+          ? `تم إعادة تسعير ${r.updated} أوردر من الأسعار الحالية`
+          : `Re-priced ${r.updated} order(s) from the current rates`,
+      );
+      qc.invalidateQueries({ queryKey: ["courier-rates"] });
+      qc.invalidateQueries({ queryKey: ["courier-rate-gaps"] });
+      qc.invalidateQueries({ queryKey: ["order-clearing"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const bulkMutation = useMutation({
     mutationFn: () =>
       saveRatesBulk({
@@ -191,11 +208,15 @@ function CouriersPage() {
         lang === "ar" ? `تم حفظ ${r.saved} محافظة` : `Saved ${r.saved} governorate rate(s)`,
       );
       qc.invalidateQueries({ queryKey: ["courier-rates"] });
-      qc.invalidateQueries({ queryKey: ["courier-rate-gaps"] });
       setBulkOpen(false);
+      // Saving the card alone leaves every already-delivered order on the fee it
+      // accrued before, which is the whole complaint. Re-price immediately so the
+      // rates take effect instead of waiting on a second, easily-missed step.
+      recalcMutation.mutate();
     },
     onError: (error: Error) => toast.error(error.message),
   });
+
   const [editing, setEditing] = useState<null | {
     id?: string;
     name: string;
@@ -387,8 +408,21 @@ function CouriersPage() {
               <Truck className="w-4 h-4 me-2" />
               {lang === "ar" ? "تعبئة كل المحافظات" : "Fill all governorates"}
             </Button>
+            <Button
+              variant="outline"
+              disabled={!ratesQ.data?.ready || recalcMutation.isPending}
+              onClick={() => recalcMutation.mutate()}
+            >
+              {lang === "ar" ? "إعادة حساب الرسوم" : "Recalculate fees"}
+            </Button>
           </div>
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          {lang === "ar"
+            ? "إضافة سعر لمحافظة مش بيغيّر الأوردرات اللي اتسلّمت قبله — دوس «إعادة حساب الرسوم» بعد ما تعدّل الأسعار عشان الرسوم المفتوحة تتسعّر من جديد."
+            : "Adding a rate does not change orders delivered before it — use Recalculate fees after editing rates so open charges are re-priced."}
+        </p>
 
         {(gapsQ.data ?? []).length > 0 && (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm space-y-2">
