@@ -80,6 +80,127 @@ export const upsertCourierRate = createServerFn({ method: "POST" })
     return { ok: true, id: saved.id as string };
   });
 
+/**
+ * Sets a whole rate card in one call — one courier, one effective date, every
+ * governorate at once.
+ *
+ * Filling these one dialog at a time meant 27 round trips per courier, which is
+ * why they tend to go unset; and an unset governorate is not a loud failure but
+ * a silent zero fee (accrue_order_courier_charge finds no rate and lands on
+ * COALESCE(charge_amount, 0)), which then keeps that order's shipping out of
+ * profit entirely.
+ *
+ * Conflicts resolve on the natural key rather than the primary key, so re-saving
+ * the same courier and date updates the card instead of colliding with
+ * courier_governorate_rates_courier_id_governorate_effective__key. Sending the
+ * same card twice is therefore a no-op, and a later effective_from leaves the
+ * earlier card intact as history.
+ */
+export const bulkUpsertCourierRates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      courierId: string;
+      effectiveFrom?: string;
+      rows: Array<{
+        governorate: string;
+        deliveryFee: number;
+        customerReturnFee: number;
+        failedDeliveryFee: number;
+        exchangeFee: number;
+      }>;
+    }) => data,
+  )
+  .handler(async ({ data, context }) => {
+    await assertPageWrite(context, COURIERS_PAGE);
+    if (!data.courierId) throw new Error("Courier is required");
+    const effectiveFrom = data.effectiveFrom ?? getTodayInBusinessTimezone();
+    const now = new Date().toISOString();
+
+    const seen = new Set<string>();
+    const payload = data.rows.map((row) => {
+      const governorate = row.governorate.trim();
+      if (!governorate) throw new Error("Governorate is required");
+      const key = governorate.toLowerCase();
+      // The unique key is per (courier, governorate, date); two rows for the same
+      // governorate in one payload would make the upsert order decide the winner.
+      if (seen.has(key)) throw new Error(`محافظة مكررة في نفس الكشف: ${governorate}`);
+      seen.add(key);
+      const fees = [
+        row.deliveryFee,
+        row.customerReturnFee,
+        row.failedDeliveryFee,
+        row.exchangeFee,
+      ].map((fee) => Number(fee) || 0);
+      if (fees.some((fee) => fee < 0)) throw new Error("Courier fees cannot be negative");
+      const [deliveryFee, customerReturnFee, failedDeliveryFee, exchangeFee] = fees;
+      return {
+        courier_id: data.courierId,
+        governorate,
+        delivery_fee: deliveryFee,
+        // Legacy NOT NULL column with no default; kept in step with the fee that
+        // replaced it, exactly as upsertCourierRate does.
+        return_fee: failedDeliveryFee,
+        customer_return_fee: customerReturnFee,
+        failed_delivery_fee: failedDeliveryFee,
+        exchange_fee: exchangeFee,
+        effective_from: effectiveFrom,
+        effective_to: null,
+        active: true,
+        updated_at: now,
+      };
+    });
+    if (payload.length === 0) return { ok: true, saved: 0 };
+
+    const { error } = await context.supabase
+      .from("courier_governorate_rates")
+      .upsert(payload, { onConflict: "courier_id,governorate,effective_from" });
+    if (error) throw error;
+    return { ok: true, saved: payload.length };
+  });
+
+/**
+ * Governorates that priced an order at zero because no rate matched, grouped so
+ * the gap reads as "this courier needs these governorates" rather than as a list
+ * of individual orders. rate_missing is set by persist_order_courier_charge at
+ * accrual time, so this is the system's own record of what it could not price.
+ */
+export const getCourierRateGaps = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("courier_charges")
+      .select("courier_id, orders(shipping_governorate), couriers(name)")
+      .eq("rate_missing", true)
+      .is("settled_at", null)
+      .limit(2000);
+    if (error) throw error;
+
+    const gaps = new Map<
+      string,
+      { courierId: string; courierName: string; governorate: string; orders: number }
+    >();
+    for (const row of (data ?? []) as unknown as Array<{
+      courier_id: string;
+      orders: { shipping_governorate: string | null } | null;
+      couriers: { name: string } | null;
+    }>) {
+      const governorate = (row.orders?.shipping_governorate ?? "").trim();
+      if (!governorate) continue;
+      const key = `${row.courier_id}::${governorate.toLowerCase()}`;
+      const hit = gaps.get(key);
+      if (hit) hit.orders += 1;
+      else
+        gaps.set(key, {
+          courierId: row.courier_id,
+          courierName: row.couriers?.name ?? "—",
+          governorate,
+          orders: 1,
+        });
+    }
+    return Array.from(gaps.values()).sort((a, b) => b.orders - a.orders);
+  });
+
 export const upsertCourierStatusMapping = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
