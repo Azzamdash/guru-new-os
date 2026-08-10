@@ -124,7 +124,7 @@ function CommandCenterPage() {
     },
     {
       key: "settlements",
-      to: "/courier-settlements" as const,
+      to: "/courier-finance" as const,
       icon: Truck,
       title: t("تسويات معلقة", "Pending settlements"),
       hint: health.data
