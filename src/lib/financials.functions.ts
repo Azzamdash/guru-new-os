@@ -2,18 +2,17 @@ import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAccountingProfitReport } from "./accounting-read-model.server";
-import {
-  buildCashFlowReport,
-  type CashFlowCashRow,
-  type CashFlowReport,
-} from "./cash-flow.shared";
+import { buildCashFlowReport, type CashFlowCashRow, type CashFlowReport } from "./cash-flow.shared";
 
 export type { CashFlowReport } from "./cash-flow.shared";
 
 export type IncomeStatement = {
-  from: string; to: string;
+  from: string;
+  to: string;
   grossRevenue: number;
   returns: number;
+  /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
+  shippingRevenue: number;
   discounts: number;
   netRevenue: number;
   /** Revenue for orders still in flight (not yet delivered/returned) — not included in netRevenue. */
@@ -30,12 +29,31 @@ export type IncomeStatement = {
   orders: number;
   returnOrders: number;
   aov: number;
-  perBrand: Array<{ brand_id: string; brand_name: string; netRevenue: number; cogs: number; grossProfit: number; opex: number; netProfit: number; margin: number }>;
+  perBrand: Array<{
+    brand_id: string;
+    brand_name: string;
+    netRevenue: number;
+    cogs: number;
+    grossProfit: number;
+    opex: number;
+    netProfit: number;
+    margin: number;
+  }>;
 };
 
 export const getIncomeStatement = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { from?: string; to?: string; brandId?: string | null; excludeBrandIds?: string[]; settledOnly?: boolean } = {}) => d)
+  .inputValidator(
+    (
+      d: {
+        from?: string;
+        to?: string;
+        brandId?: string | null;
+        excludeBrandIds?: string[];
+        settledOnly?: boolean;
+      } = {},
+    ) => d,
+  )
   .handler(async ({ data, context }): Promise<IncomeStatement> => {
     const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? `${new Date(to).getFullYear()}-01-01`;
@@ -49,6 +67,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
     const totals = report.totals;
     const grossRevenue = Number(totals.grossRevenue) || 0;
     const returns = Number(totals.returns) || 0;
+    const shippingRevenue = Number(totals.shippingRevenue) || 0;
     const discounts = Number(totals.discounts) || 0;
     const netRevenue = Number(totals.netRevenue) || 0;
     const projectedNetRevenue = Number(totals.projectedNetRevenue) || 0;
@@ -62,6 +81,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       to,
       grossRevenue,
       returns,
+      shippingRevenue,
       discounts,
       projectedNetRevenue,
       netRevenue,

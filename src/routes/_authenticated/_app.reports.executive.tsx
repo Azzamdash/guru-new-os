@@ -32,6 +32,7 @@ import {
   AlertCircle,
   Info,
   ArrowRight,
+  Truck,
 } from "lucide-react";
 import {
   BarChart,
@@ -194,6 +195,15 @@ function Page() {
           icon={TrendingUp}
           label={L(tr("الإيراد الصافي"), "Net Revenue")}
           value={nf(d?.income.netRevenue ?? 0)}
+          sub="EGP"
+        />
+        <Kpi
+          icon={Truck}
+          label={L(
+            tr("إيراد الشحن (محصَّل للعميل، مش لينا)"),
+            "Shipping revenue (customer-charged, not ours)",
+          )}
+          value={nf(d?.income.shippingRevenue ?? 0)}
           sub="EGP"
         />
         <Kpi

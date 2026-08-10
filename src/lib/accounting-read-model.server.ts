@@ -4,6 +4,8 @@ export type AccountingProfitRpcRow = {
   brand_type: string;
   gross_revenue: number;
   returns: number;
+  /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
+  shipping_revenue: number;
   discounts: number;
   invoice_net_revenue: number;
   net_revenue: number;
@@ -24,6 +26,8 @@ export type AccountingProfitRpcResult = {
   totals: {
     grossRevenue: number;
     returns: number;
+    /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
+    shippingRevenue: number;
     discounts: number;
     invoiceNetRevenue: number;
     netRevenue: number;

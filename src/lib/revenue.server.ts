@@ -29,6 +29,11 @@ const PAGE = 1000;
  * order_kind carries the sign (a manually-booked 'return' order is stored
  * total_amount-positive but subtracts; 'exchange' is already net because
  * upsertManualOrder nets its in/out items into total_amount itself).
+ *
+ * total_amount itself is subtotal + shipping_amount, and shipping_amount is
+ * a pass-through fee owed to the courier, not revenue of ours — it's netted
+ * out here the same way accounting_profit_report and
+ * dashboard_operational_report do (20260810100000 / 20260810110000).
  */
 export async function valuationRevenueByBrand(
   supabase: Db,
@@ -50,7 +55,7 @@ export async function valuationRevenueByBrand(
   for (let i = 0; i < 200; i++) {
     const { data, error } = await supabase
       .from("orders")
-      .select("id, brand_id, total_amount, order_kind, shipment_outcome")
+      .select("id, brand_id, total_amount, shipping_amount, order_kind, shipment_outcome")
       .gte("occurred_at", businessDateStartUTC(sinceDate.slice(0, 10)))
       .order("id", { ascending: true })
       .range(offset, offset + PAGE - 1);
@@ -59,6 +64,7 @@ export async function valuationRevenueByBrand(
       id: string;
       brand_id: string;
       total_amount: number;
+      shipping_amount: number;
       order_kind: string | null;
       shipment_outcome: string;
     }>;
@@ -68,7 +74,8 @@ export async function valuationRevenueByBrand(
       if (type === "service") continue; // has no orders — handled separately below
       if (type !== "offline_branch" && r.shipment_outcome !== "delivered") continue;
       const sign = r.order_kind === "return" ? -1 : 1;
-      totals.set(r.brand_id, (totals.get(r.brand_id) ?? 0) + sign * (Number(r.total_amount) || 0));
+      const productAmount = (Number(r.total_amount) || 0) - (Number(r.shipping_amount) || 0);
+      totals.set(r.brand_id, (totals.get(r.brand_id) ?? 0) + sign * productAmount);
     }
     if (rows.length < PAGE) break;
     offset += PAGE;
