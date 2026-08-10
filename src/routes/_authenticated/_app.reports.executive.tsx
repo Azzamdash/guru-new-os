@@ -89,6 +89,7 @@ function Page() {
     ? [
         { name: L("إيراد صافي", "Net Rev"), value: d.income.netRevenue },
         { name: L("COGS", "COGS"), value: d.income.cogs },
+        { name: L("شحن", "Shipping"), value: d.income.shippingCost },
         { name: L("مصاريف", "OpEx"), value: d.income.opex },
         { name: L("صافي الربح", "Net Profit"), value: d.income.netProfit },
       ]
@@ -205,6 +206,13 @@ function Page() {
           )}
           value={nf(d?.income.shippingRevenue ?? 0)}
           sub="EGP"
+        />
+        <Kpi
+          icon={Truck}
+          label={L(tr("تكلفة الشحن (مستحقة لشركات الشحن)"), "Shipping cost (owed to couriers)")}
+          value={nf(d?.income.shippingCost ?? 0)}
+          sub="EGP"
+          tone="text-amber-500"
         />
         <Kpi
           icon={TrendingDown}

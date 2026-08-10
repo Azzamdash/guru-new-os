@@ -23,6 +23,8 @@ export type ExecutiveSnapshot = {
     netMargin: number;
     /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
     shippingRevenue: number;
+    /** Rate-card fees owed to couriers. A real cost, already subtracted from netProfit. */
+    shippingCost: number;
   };
   cashFlow: { inflow: number; outflow: number; net: number };
   reconciliation: { expected: number; deposited: number; variance: number; variancePct: number };
@@ -65,6 +67,7 @@ export const getExecutiveSnapshot = createServerFn({ method: "POST" })
           netProfit: 0,
           netMargin: 0,
           shippingRevenue: 0,
+          shippingCost: 0,
         },
         cashFlow: { inflow: 0, outflow: 0, net: 0 },
         reconciliation: { expected: 0, deposited: 0, variance: 0, variancePct: 0 },
@@ -184,6 +187,7 @@ export const getExecutiveSnapshot = createServerFn({ method: "POST" })
         netProfit: income.netProfit,
         netMargin: income.netMargin,
         shippingRevenue: income.shippingRevenue,
+        shippingCost: income.shippingCost,
       },
       cashFlow: { inflow, outflow, net: inflow - outflow },
       reconciliation: {
