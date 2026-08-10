@@ -33,6 +33,7 @@ import {
   Clock,
   MessageCircle,
   Palette,
+  Printer,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -465,6 +466,18 @@ export const NAV_PAGES: NavPage[] = [
     extraRoles: ["fulfillment_manager", "operation_manager"],
     descAr: "سجل كل عمليات توزيع الأوردرات على شركات الشحن والموظفين",
     descEn: "Log of every order distribution action to couriers and employees",
+  },
+  {
+    to: "/print-orders",
+    ar: "طباعة الأوردرات",
+    en: "Print Orders",
+    icon: Printer,
+    hub: "sales",
+    section: "couriers",
+    requiresWrite: true,
+    extraRoles: ["customer_service", "fulfillment_manager", "operation_manager"],
+    descAr: "طباعة بوليصة الشحن من داخل السيستم",
+    descEn: "Print shipping labels from inside the system",
   },
   {
     to: "/courier-settlements",
