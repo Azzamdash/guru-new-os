@@ -243,6 +243,7 @@ const DICT: Dict = {
   kpi_delivered: { ar: "مسلَّمة", en: "Delivered" },
   kpi_returned: { ar: "مرتجعة", en: "Returned" },
   kpi_shipping_cost: { ar: "تكلفة الشحن", en: "Shipping cost" },
+  kpi_shipping_net: { ar: "صافي الشحن", en: "Net shipping" },
   kpi_confirm_rate: { ar: "معدل التأكيد", en: "Confirm rate" },
   kpi_delivery_rate: { ar: "معدل التسليم", en: "Delivery rate" },
   kpi_return_rate: { ar: "معدل الإرجاع", en: "Return rate" },
