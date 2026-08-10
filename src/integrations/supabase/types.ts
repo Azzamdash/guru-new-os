@@ -4716,6 +4716,10 @@ export type Database = {
         Args: { _confirmed_absent_on_bosta: boolean; _order_id: string }
         Returns: boolean
       }
+      recalculate_courier_charges: {
+        Args: { _courier_id?: string }
+        Returns: Json
+      }
       refresh_customer_brand_metrics: {
         Args: { _brand_id: string; _customer_id: string }
         Returns: undefined
