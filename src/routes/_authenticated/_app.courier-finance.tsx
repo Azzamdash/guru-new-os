@@ -36,8 +36,19 @@ import {
 import {
   getCourierAccountStatement,
   getSettlementFeeReconciliation,
+  settleCourierCharges,
+  type CourierAccountRow,
   type FeeReconIssue,
 } from "@/lib/courier-accounts.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/_app/courier-finance")({
@@ -155,6 +166,40 @@ function CourierFinancePage() {
   const statementQ = useQuery({
     queryKey: ["courier-finance", "statement", from, to, brandId],
     queryFn: () => statementFn({ data: { from, to, brandId: brandId === "all" ? null : brandId } }),
+  });
+
+  const [settleFor, setSettleFor] = useState<CourierAccountRow | null>(null);
+  const [settleUpTo, setSettleUpTo] = useState<string>(to.slice(0, 10));
+  const [settleNote, setSettleNote] = useState("");
+  const settleFn = useServerFn(settleCourierCharges);
+  const settleM = useMutation({
+    mutationFn: () =>
+      settleFn({
+        data: {
+          courierId: settleFor?.courierId as string,
+          brandId: brandId === "all" ? null : brandId,
+          upToDate: settleUpTo,
+          note: settleNote.trim() || null,
+        },
+      }),
+    onSuccess: (r) => {
+      if (r.settledCount === 0) {
+        toast.info(
+          T("مفيش رسوم مفتوحة للإقفال في المدة دي", "No open fees to settle in that range"),
+        );
+      } else {
+        toast.success(
+          T(
+            `تم إقفال ${r.settledCount} رسم بإجمالي ${money(r.amount, currency)}`,
+            `Settled ${r.settledCount} charge(s) totalling ${money(r.amount, currency)}`,
+          ),
+        );
+      }
+      setSettleFor(null);
+      setSettleNote("");
+      qc.invalidateQueries({ queryKey: ["courier-finance"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const [feeReconId, setFeeReconId] = useState<string | null>(null);
@@ -291,6 +336,7 @@ function CourierFinancePage() {
                 <th className="p-2 text-start">{T("لسه معاهم", "Still with them")}</th>
                 <th className="p-2 text-start">{T("رسوم مفتوحة", "Open fees")}</th>
                 <th className="p-2 text-start">{T("الصافي المستحق لنا", "Net due to us")}</th>
+                <th className="p-2 text-start"></th>
               </tr>
             </thead>
             <tbody>
@@ -319,11 +365,25 @@ function CourierFinancePage() {
                   >
                     {nf(Math.round(r.netDueToUs))}
                   </td>
+                  <td className="p-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={r.openFees <= 0}
+                      onClick={() => {
+                        setSettleFor(r);
+                        setSettleUpTo(to.slice(0, 10));
+                        setSettleNote("");
+                      }}
+                    >
+                      {T("إقفال الرسوم", "Settle fees")}
+                    </Button>
+                  </td>
                 </tr>
               ))}
               {(statementQ.data?.rows ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-6 text-center text-muted-foreground">
                     {statementQ.isLoading
                       ? T("جارٍ التحميل…", "Loading…")
                       : T("لا توجد حركة في هذه المدة.", "No activity in this period.")}
@@ -343,6 +403,7 @@ function CourierFinancePage() {
                   </td>
                   <td className="p-2 num">{nf(Math.round(statementQ.data.totals.openFees))}</td>
                   <td className="p-2 num">{nf(Math.round(statementQ.data.totals.netDueToUs))}</td>
+                  <td className="p-2"></td>
                 </tr>
               </tfoot>
             )}
@@ -713,6 +774,76 @@ function CourierFinancePage() {
           </div>
         )}
       </Card>
+
+      <Dialog open={Boolean(settleFor)} onOpenChange={(o) => !o && setSettleFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {T("إقفال رسوم", "Settle fees")} — {settleFor?.courierName}
+            </DialogTitle>
+            <DialogDescription>
+              {T(
+                "هيتعلّم كل رسم مفتوح لحد التاريخ ده كمسدَّد، وهتتسجل حركة صرف من الخزنة بإجمالي المبلغ.",
+                "Every open fee up to this date is marked paid, and one cash-out movement is recorded for the total.",
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-lg border p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">
+                  {T("الرصيد المفتوح حاليًا", "Current open balance")}
+                </span>
+                <span className="font-bold num text-destructive">
+                  {money(settleFor?.openFees ?? 0, currency)}
+                </span>
+              </div>
+              {(settleFor?.rateMissingCount ?? 0) > 0 && (
+                <p className="mt-2 text-xs text-amber-500">
+                  {T(
+                    `تحذير: ${settleFor?.rateMissingCount} رسم منهم محافظته بدون تسعيرة، يعني محسوبين صفر والرصيد الحقيقي أكبر. راجع التسعيرة قبل الإقفال.`,
+                    `Warning: ${settleFor?.rateMissingCount} of these have no rate for their governorate, so they are counted as zero and the real balance is higher. Review the rate card before settling.`,
+                  )}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="settle-up-to">
+                {T("إقفال الرسوم حتى تاريخ", "Settle fees up to")}
+              </Label>
+              <Input
+                id="settle-up-to"
+                type="date"
+                value={settleUpTo}
+                onChange={(e) => setSettleUpTo(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {T(
+                  "الرسوم اللي اتسجلت بعد التاريخ ده هتفضل مفتوحة.",
+                  "Fees accrued after this date stay open.",
+                )}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="settle-note">{T("ملاحظة (اختياري)", "Note (optional)")}</Label>
+              <Input
+                id="settle-note"
+                value={settleNote}
+                onChange={(e) => setSettleNote(e.target.value)}
+                placeholder={T("رقم التحويل أو المرجع", "Transfer number or reference")}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettleFor(null)}>
+              {T("إلغاء", "Cancel")}
+            </Button>
+            <Button disabled={settleM.isPending} onClick={() => settleM.mutate()}>
+              {settleM.isPending ? T("جارٍ الإقفال…", "Settling…") : T("تأكيد الإقفال", "Confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -320,3 +320,121 @@ export const getSettlementFeeReconciliation = createServerFn({ method: "GET" })
     rows.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
     return { summary, rows };
   });
+
+export type SettleCourierChargesResult = {
+  ok: true;
+  settledCount: number;
+  amount: number;
+  cashTransactionId: string | null;
+};
+
+/**
+ * Closes out a courier's open fees: stamps settled_at on every unsettled
+ * charge up to a cut-off date and books the total as one cash movement out.
+ * Until this existed nothing ever wrote settled_at, so the fee ledger only
+ * ever grew.
+ *
+ * The two writes cannot share a transaction from here, so the order matters:
+ * charges are stamped first (guarded by settled_at IS NULL, which makes two
+ * people settling at once safe — the second gets zero rows and books
+ * nothing), and the cash row is written from the rows that actually changed.
+ * If the cash write fails, the stamp is rolled back on exactly those ids so
+ * a settled charge is never left without its matching cash movement.
+ */
+export const settleCourierCharges = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      courierId: string;
+      brandId?: string | null;
+      /** Settle charges accrued on or before this business date. Defaults to today. */
+      upToDate?: string | null;
+      walletId?: string | null;
+      note?: string | null;
+    }) => d,
+  )
+  .handler(async ({ data, context }): Promise<SettleCourierChargesResult> => {
+    const ctx = context as unknown as Ctx;
+    await assertManager(ctx);
+    if (!data.courierId) throw new Error("لازم تختار شركة الشحن");
+    const upTo = data.upToDate ?? getTodayInBusinessTimezone();
+    const cutoffUTC = businessDateEndUTC(upTo.slice(0, 10));
+
+    let openQ = ctx.supabase
+      .from("courier_charges")
+      .select("id")
+      .eq("courier_id", data.courierId)
+      .is("settled_at", null)
+      .lte("accrued_at", cutoffUTC);
+    if (data.brandId) openQ = openQ.eq("brand_id", data.brandId);
+    const { data: openRows, error: openErr } = await openQ;
+    if (openErr) throw new Error(openErr.message);
+    const ids = ((openRows ?? []) as Array<{ id: string }>).map((r) => r.id);
+    if (ids.length === 0) return { ok: true, settledCount: 0, amount: 0, cashTransactionId: null };
+
+    const settledAt = new Date().toISOString();
+    const { data: settled, error: setErr } = await ctx.supabase
+      .from("courier_charges")
+      .update({ settled_at: settledAt })
+      .in("id", ids)
+      .is("settled_at", null)
+      .select("id, amount");
+    if (setErr) throw new Error(setErr.message);
+    const settledRows = (settled ?? []) as Array<{ id: string; amount: number }>;
+    if (settledRows.length === 0) {
+      return { ok: true, settledCount: 0, amount: 0, cashTransactionId: null };
+    }
+    const amount = settledRows.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const settledIds = settledRows.map((r) => r.id);
+
+    const revert = async () => {
+      await ctx.supabase
+        .from("courier_charges")
+        .update({ settled_at: null })
+        .in("id", settledIds)
+        .eq("settled_at", settledAt);
+    };
+
+    let walletId = data.walletId ?? null;
+    if (!walletId) {
+      const { data: w } = await ctx.supabase
+        .from("wallets")
+        .select("id")
+        .eq("active", true)
+        .order("sort_order")
+        .limit(1)
+        .maybeSingle();
+      walletId = (w as { id: string } | null)?.id ?? null;
+    }
+
+    // Zero-value close-outs are legitimate (e.g. every charge sat on a
+    // governorate with no rate card) but there is no cash to book for them.
+    if (!(amount > 0))
+      return { ok: true, settledCount: settledRows.length, amount: 0, cashTransactionId: null };
+
+    const { data: cash, error: cashErr } = await ctx.supabase
+      .from("cash_transactions")
+      .insert({
+        type: "other_out",
+        amount,
+        occurred_at: upTo.slice(0, 10),
+        brand_id: data.brandId ?? null,
+        courier_id: data.courierId,
+        wallet_id: walletId,
+        note: data.note?.trim() || `إقفال رسوم شحن حتى ${upTo.slice(0, 10)}`,
+        created_by: ctx.userId,
+      })
+      .select("id")
+      .single();
+    if (cashErr) {
+      await revert();
+      throw new Error(`تعذر تسجيل حركة الخزنة، وتم التراجع عن الإقفال: ${cashErr.message}`);
+    }
+
+    return {
+      ok: true,
+      settledCount: settledRows.length,
+      amount,
+      cashTransactionId: (cash as { id: string } | null)?.id ?? null,
+    };
+  });

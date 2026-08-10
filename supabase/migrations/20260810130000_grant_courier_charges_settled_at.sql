@@ -1,0 +1,14 @@
+-- courier_charges carries an RLS write policy (courier_charges_write, gated on
+-- write access to /couriers plus brand access) but the table itself was only
+-- ever granted SELECT to authenticated. Postgres checks table privileges in
+-- addition to RLS, so the policy could never actually be exercised: any
+-- UPDATE from a user-scoped client failed with "permission denied for table
+-- courier_charges" no matter what the policy said. That is why nothing has
+-- ever been able to close out a courier's fee ledger.
+--
+-- Granted at column level rather than on the whole table, matching how
+-- public.orders is granted: settling may only ever stamp settled_at, never
+-- rewrite amount, charge_type or rate_id — so a settle action cannot be used
+-- to quietly alter what a courier is owed. RLS still decides who may touch
+-- which rows.
+GRANT UPDATE(settled_at) ON TABLE public.courier_charges TO authenticated;
