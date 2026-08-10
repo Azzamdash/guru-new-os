@@ -158,6 +158,17 @@ function OrderClearingPage() {
               `Collected ${r.postedOrders} order(s) totalling ${money(r.amount, currency)} and posted to the treasury`,
             ),
       );
+      // Not an error — the money posted fine. But a fee left at zero is almost
+      // always a missing governorate rate, and its shipping stays out of profit
+      // until it is filled in, so say so rather than let it pass unnoticed.
+      if (r.feesLeftOpen > 0) {
+        toast.warning(
+          T(
+            `${r.feesLeftOpen} أوردر بدون رسوم شحن — رسومها فضلت مفتوحة وشحنها خارج الربح لحد ما تظبّط تعريفة المحافظة`,
+            `${r.feesLeftOpen} order(s) with no shipping fee — their charge stays open and their shipping is excluded from profit until the governorate rate is set`,
+          ),
+        );
+      }
       setPicked({});
       setFeeEdits({});
       setNote("");
