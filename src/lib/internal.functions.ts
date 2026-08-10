@@ -502,9 +502,10 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       topSuppliers?: Array<{ name: string; outstanding: number; overdue: number }>;
     };
     const operations = (operationsR.data ?? {}) as {
-      monthlySales: Array<{ month: number; brandId: string; revenue: number; cogs: number }>;
+      monthlySales: Array<{ month: number; brandId: string; revenue: number; shippingRevenue: number; cogs: number }>;
       productSales: Array<{ productId: string; sold: number; returned: number }>;
       monthlyOrders: Array<{ month: number; total: number; confirmed: number; delivered: number; returned: number; shippingCost: number }>;
+      shippingCostByBrand: Array<{ month: number; brandId: string; shippingCost: number }>;
       couriers: Array<{ id: string; name: string; type: string; delivered: number; returned: number; collected: number }>;
       inventoryProducts: Array<{ productId: string; stock: number; produced: number }>;
       workers: Array<{ name: string; produced: number; productCount: number }>;
@@ -524,7 +525,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     const monthly = Array.from({ length: 12 }, (_, i) => ({
       month: i + 1, revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0,
       ordersTotal: 0, ordersConfirmed: 0, ordersDelivered: 0, ordersReturned: 0, shippingCost: 0,
-      clients: 0, projects: 0,
+      shippingRevenue: 0, shippingNet: 0, clients: 0, projects: 0,
     }));
     for (const r of meRows) {
       // Aggregate monthly & daily rows into month buckets (yearly rows sum into full year via totals)
@@ -541,11 +542,26 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
     for (const r of eeRows) monthly[r.month - 1].expenses += Number(r.amount) || 0;
 
     const salesRevByBrand = new Map<string, number>();
+    // Shipping charged to the customer is excluded from revenue (it funds the courier), so
+    // it is tracked alongside it and later netted against the courier bill -- never left to
+    // reduce profit on its own, which would charge the same delivery to us twice.
+    const shippingRevByBrand = new Map<string, number>();
     for (const sale of operations.monthlySales ?? []) {
       const monthIdx = Number(sale.month) - 1;
       const revenue = Number(sale.revenue) || 0;
+      const shipRev = Number(sale.shippingRevenue) || 0;
       salesRevByBrand.set(sale.brandId, (salesRevByBrand.get(sale.brandId) ?? 0) + revenue);
-      if (monthly[monthIdx]) monthly[monthIdx].revenue += revenue;
+      shippingRevByBrand.set(sale.brandId, (shippingRevByBrand.get(sale.brandId) ?? 0) + shipRev);
+      if (monthly[monthIdx]) {
+        monthly[monthIdx].revenue += revenue;
+        monthly[monthIdx].shippingRevenue += shipRev;
+      }
+    }
+
+    const shippingCostByBrand = new Map<string, number>();
+    for (const row of operations.shippingCostByBrand ?? []) {
+      const cost = Number(row.shippingCost) || 0;
+      shippingCostByBrand.set(row.brandId, (shippingCostByBrand.get(row.brandId) ?? 0) + cost);
     }
 
     for (const order of operations.monthlyOrders ?? []) {
@@ -572,9 +588,11 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
         ordersTotal: a.ordersTotal + m.ordersTotal, ordersConfirmed: a.ordersConfirmed + m.ordersConfirmed,
         ordersDelivered: a.ordersDelivered + m.ordersDelivered, ordersReturned: a.ordersReturned + m.ordersReturned,
         shippingCost: a.shippingCost + m.shippingCost,
+        shippingRevenue: a.shippingRevenue + m.shippingRevenue,
+        shippingNet: a.shippingNet + m.shippingNet,
         clients: a.clients + m.clients, projects: a.projects + m.projects,
       }),
-      { revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0, ordersTotal: 0, ordersConfirmed: 0, ordersDelivered: 0, ordersReturned: 0, shippingCost: 0, clients: 0, projects: 0 },
+      { revenue: 0, expenses: 0, cogs: 0, grossProfit: 0, netProfit: 0, cash: 0, ordersTotal: 0, ordersConfirmed: 0, ordersDelivered: 0, ordersReturned: 0, shippingCost: 0, shippingRevenue: 0, shippingNet: 0, clients: 0, projects: 0 },
     );
     totals.revenue += yearlyRevenue;
     totals.cash += yearlyCash;
@@ -598,7 +616,7 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       for (const [cid, amt] of catTotals) if (amt > topCatAmt) { topCatId = cid; topCatAmt = amt; }
       return {
         id: b.id, name: b.name, type: b.type,
-        revenue: rev, cogs: 0, grossProfit: 0, expenses: exp, netProfit: rev - exp, cash,
+        revenue: rev, cogs: 0, grossProfit: 0, expenses: exp, shippingNet: 0, netProfit: rev - exp, cash,
         margin: rev > 0 ? (rev - exp) / rev : 0,
         topCategory: topCatId ? { name: catName.get(topCatId) ?? "—", amount: topCatAmt, pct: exp > 0 ? topCatAmt / exp : 0 } : null,
       };
@@ -693,20 +711,26 @@ export const getInternalDashboard = createServerFn({ method: "GET" })
       cogsByBrand.set(sale.brandId, (cogsByBrand.get(sale.brandId) ?? 0) + cogs);
     }
     let totalCogs = 0;
+    let totalShippingNet = 0;
     monthly.forEach((m, i) => {
       m.cogs = monthlyCogs[i];
       m.grossProfit = m.revenue - m.cogs;
-      m.netProfit = m.revenue - m.cogs - m.expenses;
+      m.shippingNet = m.shippingRevenue - m.shippingCost;
+      m.netProfit = m.revenue - m.cogs - m.expenses + m.shippingNet;
       totalCogs += m.cogs;
+      totalShippingNet += m.shippingNet;
     });
     totals.cogs = totalCogs;
     totals.grossProfit = totals.revenue - totalCogs;
-    totals.netProfit = totals.revenue - totalCogs - totals.expenses;
+    totals.shippingNet = totalShippingNet;
+    totals.netProfit = totals.revenue - totalCogs - totals.expenses + totalShippingNet;
     for (const b of perBrand) {
       const c = cogsByBrand.get(b.id) ?? 0;
+      const shippingNet = (shippingRevByBrand.get(b.id) ?? 0) - (shippingCostByBrand.get(b.id) ?? 0);
       b.cogs = c;
       b.grossProfit = b.revenue - c;
-      b.netProfit = b.revenue - c - b.expenses;
+      b.shippingNet = shippingNet;
+      b.netProfit = b.revenue - c - b.expenses + shippingNet;
       b.margin = b.revenue > 0 ? b.netProfit / b.revenue : 0;
     }
 
