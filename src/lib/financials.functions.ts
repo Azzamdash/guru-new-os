@@ -13,6 +13,8 @@ export type IncomeStatement = {
   returns: number;
   /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
   shippingRevenue: number;
+  /** Rate-card fees owed to couriers for the period. Subtracted after gross profit. */
+  shippingCost: number;
   discounts: number;
   netRevenue: number;
   /** Revenue for orders still in flight (not yet delivered/returned) — not included in netRevenue. */
@@ -68,13 +70,16 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
     const grossRevenue = Number(totals.grossRevenue) || 0;
     const returns = Number(totals.returns) || 0;
     const shippingRevenue = Number(totals.shippingRevenue) || 0;
+    const shippingCost = Number(totals.shippingCost) || 0;
     const discounts = Number(totals.discounts) || 0;
     const netRevenue = Number(totals.netRevenue) || 0;
     const projectedNetRevenue = Number(totals.projectedNetRevenue) || 0;
     const cogs = Number(totals.cogs) || 0;
     const operatingExpensesTotal = Number(totals.expenses) || 0;
     const grossProfit = netRevenue - cogs;
-    const operatingProfit = grossProfit - operatingExpensesTotal;
+    // Courier fees are a real operating cost that never reaches expense_entries,
+    // so they are subtracted here alongside opex rather than left out entirely.
+    const operatingProfit = grossProfit - operatingExpensesTotal - shippingCost;
     const orders = Number(totals.orders) || 0;
     return {
       from,
@@ -82,6 +87,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       grossRevenue,
       returns,
       shippingRevenue,
+      shippingCost,
       discounts,
       projectedNetRevenue,
       netRevenue,
@@ -105,8 +111,9 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
           const brandRevenue = Number(row.net_revenue) || 0;
           const brandCogs = Number(row.cogs) || 0;
           const opex = Number(row.expenses) || 0;
+          const brandShipping = Number(row.shipping_cost) || 0;
           const brandGrossProfit = brandRevenue - brandCogs;
-          const netProfit = brandGrossProfit - opex;
+          const netProfit = brandGrossProfit - opex - brandShipping;
           return {
             brand_id: row.brand_id,
             brand_name: row.brand_name,

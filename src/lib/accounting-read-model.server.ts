@@ -6,6 +6,8 @@ export type AccountingProfitRpcRow = {
   returns: number;
   /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
   shipping_revenue: number;
+  /** What we owe the courier for this brand's orders (rate-card fees). A real cost. */
+  shipping_cost: number;
   discounts: number;
   invoice_net_revenue: number;
   net_revenue: number;
@@ -28,6 +30,8 @@ export type AccountingProfitRpcResult = {
     returns: number;
     /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
     shippingRevenue: number;
+    /** What we owe couriers in rate-card fees for the period. A real cost, subtracted from profit. */
+    shippingCost: number;
     discounts: number;
     invoiceNetRevenue: number;
     netRevenue: number;
