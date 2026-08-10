@@ -591,7 +591,7 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     const { data: order, error: oErr } = await context.supabase
       .from("orders")
       .select(
-        "id, brand_id, external_order_number, customer_name, customer_phone, customer_email, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, total_amount, financial_status, fulfillment_status, shipment_outcome, note, bosta_tracking",
+        "id, brand_id, source, external_id, external_order_number, customer_name, customer_phone, customer_email, shipping_governorate, shipping_address, building_number, floor_number, apartment_number, total_amount, financial_status, fulfillment_status, shipment_outcome, note, bosta_tracking",
       )
       .eq("id", data.order_id)
       .maybeSingle();
@@ -1002,6 +1002,32 @@ export const sendBostaShipment = createServerFn({ method: "POST" })
     await finalizeOrderDispatch(context.supabase, order.id, dispatchClaim, tracking, deliveryId);
     dispatchPersisted = true;
 
+    // Best-effort: dispatch already succeeded and is committed, so a Shopify
+    // hiccup here shouldn't fail the whole action — just flag it for retry.
+    // Same fulfill-on-dispatch rule as dispatchOrderToBestCourier
+    // (couriers.functions.ts) — this was the only dispatch path missing it.
+    if (order.source === "shopify" && order.external_id) {
+      try {
+        const { applyShopifyOrderAction } = await import("@/server/shopifySync.server");
+        await applyShopifyOrderAction({
+          brandId: order.brand_id,
+          externalOrderId: order.external_id,
+          action: "fulfill",
+        });
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "synced", shopify_sync_error: null })
+          .eq("id", order.id);
+      } catch (shopifyError) {
+        const message =
+          shopifyError instanceof Error ? shopifyError.message : String(shopifyError);
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "error", shopify_sync_error: message.slice(0, 500) })
+          .eq("id", order.id);
+      }
+    }
+
     await logIntegrationEvent({
       provider: "bosta",
       brand_id: order.brand_id,
@@ -1360,7 +1386,7 @@ export const attachBostaTracking = createServerFn({ method: "POST" })
     await assertPageWrite(context, ORDERS_PAGE);
     const { data: order, error } = await context.supabase
       .from("orders")
-      .select("id, brand_id, fulfillment_status")
+      .select("id, brand_id, source, external_id, fulfillment_status")
       .eq("id", data.order_id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -1382,6 +1408,31 @@ export const attachBostaTracking = createServerFn({ method: "POST" })
     const { error: uErr } = await context.supabase.from("orders").update(patch).eq("id", order.id);
 
     if (uErr) throw new Error(uErr.message);
+
+    // Best-effort, same rule as sendBostaShipment/dispatchOrderToBestCourier:
+    // attaching a tracking number means the order was handed to a courier.
+    if (order.source === "shopify" && order.external_id) {
+      try {
+        const { applyShopifyOrderAction } = await import("@/server/shopifySync.server");
+        await applyShopifyOrderAction({
+          brandId: order.brand_id,
+          externalOrderId: order.external_id,
+          action: "fulfill",
+        });
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "synced", shopify_sync_error: null })
+          .eq("id", order.id);
+      } catch (shopifyError) {
+        const message =
+          shopifyError instanceof Error ? shopifyError.message : String(shopifyError);
+        await context.supabase
+          .from("orders")
+          .update({ shopify_sync_status: "error", shopify_sync_error: message.slice(0, 500) })
+          .eq("id", order.id);
+      }
+    }
+
     return { ok: true, tracking };
   });
 
