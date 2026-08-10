@@ -21,11 +21,26 @@ export type ClearingRow = {
   status: ClearingStatus;
   /** True when at least one of this order's collections is tied to a treasury movement. */
   postedToTreasury: boolean;
+  /**
+   * The courier's own word on whether the customer paid (orders.collection_status,
+   * kept current by the Bosta webhook/recall). Only ever a suggestion: the customer
+   * paying the courier is not the same event as the money reaching us.
+   */
+  courierSaysPaid: boolean;
+  /** Unsettled rate-card fee for this order — what the courier deducts at source. */
+  courierFee: number;
 };
 
 export type OrderClearingList = {
   rows: ClearingRow[];
-  totals: { orders: number; totalAmount: number; collected: number; outstanding: number };
+  totals: {
+    orders: number;
+    totalAmount: number;
+    collected: number;
+    outstanding: number;
+    /** Unsettled fees across the listed orders. */
+    courierFees: number;
+  };
 };
 
 /**
@@ -46,7 +61,10 @@ export const getOrderClearing = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<OrderClearingList> => {
     const ctx = context as unknown as Ctx;
     if (!data.courierId)
-      return { rows: [], totals: { orders: 0, totalAmount: 0, collected: 0, outstanding: 0 } };
+      return {
+        rows: [],
+        totals: { orders: 0, totalAmount: 0, collected: 0, outstanding: 0, courierFees: 0 },
+      };
     const to = data.to ?? getTodayInBusinessTimezone();
     const from = data.from ?? `${to.slice(0, 4)}-01-01`;
 
@@ -56,10 +74,13 @@ export const getOrderClearing = createServerFn({ method: "GET" })
       customer_name: string | null;
       occurred_at: string;
       total_amount: number;
+      collection_status: string | null;
     }>(() => {
       let q = ctx.supabase
         .from("orders")
-        .select("id, external_order_number, customer_name, occurred_at, total_amount")
+        .select(
+          "id, external_order_number, customer_name, occurred_at, total_amount, collection_status",
+        )
         .eq("courier_id", data.courierId)
         .eq("shipment_outcome", "delivered")
         .gte("occurred_at", businessDateStartUTC(from.slice(0, 10)))
@@ -71,20 +92,32 @@ export const getOrderClearing = createServerFn({ method: "GET" })
 
     const collectedByOrder = new Map<string, number>();
     const postedOrders = new Set<string>();
+    const feeByOrder = new Map<string, number>();
     const ids = orders.map((o) => o.id);
     const CHUNK = 500;
     for (let i = 0; i < ids.length; i += CHUNK) {
       const chunk = ids.slice(i, i + CHUNK);
-      const cols = await fetchAllRows<{
-        order_id: string;
-        amount: number;
-        cash_transaction_id: string | null;
-      }>(() =>
-        ctx.supabase
-          .from("order_collections")
-          .select("order_id, amount, cash_transaction_id")
-          .in("order_id", chunk),
-      );
+      const [cols, charges] = await Promise.all([
+        fetchAllRows<{
+          order_id: string;
+          amount: number;
+          cash_transaction_id: string | null;
+        }>(() =>
+          ctx.supabase
+            .from("order_collections")
+            .select("order_id, amount, cash_transaction_id")
+            .in("order_id", chunk),
+        ),
+        // Only unsettled fees: a fee already closed out is not deductible from
+        // a new transfer, it has been accounted for.
+        fetchAllRows<{ order_id: string; amount: number }>(() =>
+          ctx.supabase
+            .from("courier_charges")
+            .select("order_id, amount")
+            .in("order_id", chunk)
+            .is("settled_at", null),
+        ),
+      ]);
       for (const c of cols) {
         collectedByOrder.set(
           c.order_id,
@@ -92,6 +125,7 @@ export const getOrderClearing = createServerFn({ method: "GET" })
         );
         if (c.cash_transaction_id) postedOrders.add(c.order_id);
       }
+      for (const ch of charges) feeByOrder.set(ch.order_id, Number(ch.amount) || 0);
     }
 
     const all: ClearingRow[] = orders.map((o) => {
@@ -110,6 +144,8 @@ export const getOrderClearing = createServerFn({ method: "GET" })
         outstanding,
         status,
         postedToTreasury: postedOrders.has(o.id),
+        courierSaysPaid: o.collection_status === "paid",
+        courierFee: feeByOrder.get(o.id) ?? 0,
       };
     });
 
@@ -121,9 +157,10 @@ export const getOrderClearing = createServerFn({ method: "GET" })
         acc.totalAmount += r.totalAmount;
         acc.collected += r.collected;
         acc.outstanding += r.outstanding;
+        acc.courierFees += r.courierFee;
         return acc;
       },
-      { orders: 0, totalAmount: 0, collected: 0, outstanding: 0 },
+      { orders: 0, totalAmount: 0, collected: 0, outstanding: 0, courierFees: 0 },
     );
     return { rows, totals };
   });
@@ -131,7 +168,13 @@ export const getOrderClearing = createServerFn({ method: "GET" })
 export type PostClearingResult = {
   ok: true;
   postedOrders: number;
+  /** Full COD collected across the batch, before the courier's fees. */
+  gross: number;
+  /** Fees the courier kept out of the transfer. Zero when deductFees is off. */
+  fees: number;
+  /** What actually lands in the treasury: gross - fees. */
   amount: number;
+  settledCharges: number;
   cashTransactionId: string;
 };
 
@@ -141,6 +184,13 @@ export type PostClearingResult = {
  * actually arrives. The cash row is written first because the collections
  * carry its id; if any collection then fails to insert, the cash row is
  * removed again so the treasury never shows money that no order accounts for.
+ *
+ * With deductFees on (the usual COD arrangement) the courier keeps its fees
+ * out of the transfer, so the treasury movement is booked NET and the fees are
+ * marked settled against it — matching the single figure the bank shows,
+ * instead of a gross receipt plus a separate outflow that never happened.
+ * The P&L is untouched either way: shipping cost is recognised from the
+ * accrual when the order was delivered, not from how it was paid.
  */
 export const postOrderClearing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -151,6 +201,8 @@ export const postOrderClearing = createServerFn({ method: "POST" })
       occurredAt?: string | null;
       walletId?: string | null;
       note?: string | null;
+      /** Courier keeps its fees out of the transfer. Defaults to true. */
+      deductFees?: boolean;
     }) => d,
   )
   .handler(async ({ data, context }): Promise<PostClearingResult> => {
@@ -184,7 +236,7 @@ export const postOrderClearing = createServerFn({ method: "POST" })
 
     // Validate everything before writing anything: a partially-applied batch
     // would leave the treasury total disagreeing with its own collections.
-    let amount = 0;
+    let gross = 0;
     const brandIds = new Set<string>();
     for (const l of lines) {
       const order = orderById.get(l.orderId);
@@ -198,8 +250,24 @@ export const postOrderClearing = createServerFn({ method: "POST" })
           `المبلغ يتخطى المتبقي من قيمة الأوردر ${order.id.slice(0, 8)} — راجع المبلغ`,
         );
       }
-      amount += Number(l.amount);
+      gross += Number(l.amount);
       brandIds.add(order.brand_id);
+    }
+
+    const deductFees = data.deductFees !== false;
+    const chargeRows = deductFees
+      ? await fetchAllRows<{ id: string; amount: number }>(() =>
+          ctx.supabase
+            .from("courier_charges")
+            .select("id, amount")
+            .in("order_id", orderIds)
+            .is("settled_at", null),
+        )
+      : [];
+    const fees = chargeRows.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const amount = gross - fees;
+    if (amount < 0) {
+      throw new Error("رسوم الشحن أكبر من المبلغ المحصَّل — راجع التسعيرة قبل الترحيل");
     }
 
     let walletId = data.walletId ?? null;
@@ -226,7 +294,11 @@ export const postOrderClearing = createServerFn({ method: "POST" })
         brand_id: brandIds.size === 1 ? [...brandIds][0] : null,
         courier_id: data.courierId,
         wallet_id: walletId,
-        note: data.note?.trim() || `تصفية أوردرات — ${lines.length} أوردر`,
+        note:
+          data.note?.trim() ||
+          (fees > 0
+            ? `تصفية أوردرات — ${lines.length} أوردر (صافي بعد خصم رسوم ${Math.round(fees)})`
+            : `تصفية أوردرات — ${lines.length} أوردر`),
         created_by: ctx.userId,
       })
       .select("id")
@@ -255,7 +327,43 @@ export const postOrderClearing = createServerFn({ method: "POST" })
       throw new Error(`تعذر تسجيل التحصيل، وتم التراجع عن حركة الخزنة: ${colErr.message}`);
     }
 
-    return { ok: true, postedOrders: lines.length, amount, cashTransactionId };
+    // Mark the deducted fees settled against this very movement. Stamping the
+    // id (not just settled_at) is what lets a later reversal tell a fee the
+    // courier withheld here from one paid separately.
+    let settledCharges = 0;
+    if (deductFees && chargeRows.length > 0) {
+      const { data: settled, error: settleErr } = await ctx.supabase
+        .from("courier_charges")
+        .update({
+          settled_at: new Date().toISOString(),
+          settled_cash_transaction_id: cashTransactionId,
+        })
+        .in(
+          "id",
+          chargeRows.map((c) => c.id),
+        )
+        .is("settled_at", null)
+        .select("id");
+      if (settleErr) {
+        // The money is recorded correctly; only the fee ledger lagged. Surface
+        // it rather than unwinding a valid receipt — the fees stay open and can
+        // be closed from the statement page.
+        throw new Error(
+          `تم تسجيل التحصيل، لكن تعذر إقفال رسوم الشحن — اقفلها من كشف الحساب: ${settleErr.message}`,
+        );
+      }
+      settledCharges = ((settled ?? []) as Array<{ id: string }>).length;
+    }
+
+    return {
+      ok: true,
+      postedOrders: lines.length,
+      gross,
+      fees,
+      amount,
+      settledCharges,
+      cashTransactionId,
+    };
   });
 
 export type ClearOrderCollectionsResult = {
@@ -311,11 +419,42 @@ export const clearOrderCollections = createServerFn({ method: "POST" })
       }
     }
 
+    // A fee the courier withheld inside one of these batches was never a
+    // separate outflow — it was already netted off the receipt. Re-open it and
+    // subtract it from what we take back out, so the movement still equals
+    // (collections - fees) for whatever is left in the batch.
+    const reopened = await fetchAllRows<{
+      id: string;
+      amount: number;
+      settled_cash_transaction_id: string | null;
+    }>(() =>
+      ctx.supabase
+        .from("courier_charges")
+        .select("id, amount, settled_cash_transaction_id")
+        .eq("order_id", data.orderId)
+        .not("settled_cash_transaction_id", "is", null),
+    );
+    const feeByCash = new Map<string, number>();
+    const reopenIds: string[] = [];
+    for (const ch of reopened) {
+      const cashId = ch.settled_cash_transaction_id as string;
+      if (!byCash.has(cashId)) continue; // settled by some other movement — leave it alone
+      feeByCash.set(cashId, (feeByCash.get(cashId) ?? 0) + (Number(ch.amount) || 0));
+      reopenIds.push(ch.id);
+    }
+
     const { error: delErr } = await ctx.supabase
       .from("order_collections")
       .delete()
       .eq("order_id", data.orderId);
     if (delErr) throw new Error(delErr.message);
+
+    if (reopenIds.length > 0) {
+      await ctx.supabase
+        .from("courier_charges")
+        .update({ settled_at: null, settled_cash_transaction_id: null })
+        .in("id", reopenIds);
+    }
 
     let adjusted = 0;
     let deleted = 0;
@@ -326,7 +465,9 @@ export const clearOrderCollections = createServerFn({ method: "POST" })
         .eq("id", cashId)
         .maybeSingle();
       if (!txn) continue;
-      const remaining = (Number((txn as { amount: number }).amount) || 0) - removedAmount;
+      // The batch was booked net, so take back the net of this order too.
+      const removedNet = removedAmount - (feeByCash.get(cashId) ?? 0);
+      const remaining = (Number((txn as { amount: number }).amount) || 0) - removedNet;
       if (remaining > 0.01) {
         await ctx.supabase.from("cash_transactions").update({ amount: remaining }).eq("id", cashId);
         adjusted += 1;
