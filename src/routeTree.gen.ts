@@ -45,6 +45,7 @@ import { Route as AuthenticatedAppMyInvestmentsRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppMyOrdersRouteImport } from './routes/_authenticated/_app.my-orders'
 import { Route as AuthenticatedAppMyPrepRouteImport } from './routes/_authenticated/_app.my-prep'
 import { Route as AuthenticatedAppOperationsRouteImport } from './routes/_authenticated/_app.operations'
+import { Route as AuthenticatedAppOrderClearingRouteImport } from './routes/_authenticated/_app.order-clearing'
 import { Route as AuthenticatedAppOrderDistributionRouteImport } from './routes/_authenticated/_app.order-distribution'
 import { Route as AuthenticatedAppOrderPipelineRouteImport } from './routes/_authenticated/_app.order-pipeline'
 import { Route as AuthenticatedAppOrderReturnsRouteImport } from './routes/_authenticated/_app.order-returns'
@@ -316,6 +317,12 @@ const AuthenticatedAppOperationsRoute =
   AuthenticatedAppOperationsRouteImport.update({
     id: '/operations',
     path: '/operations',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrderClearingRoute =
+  AuthenticatedAppOrderClearingRouteImport.update({
+    id: '/order-clearing',
+    path: '/order-clearing',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppOrderDistributionRoute =
@@ -763,6 +770,7 @@ export interface FileRoutesByFullPath {
   '/my-orders': typeof AuthenticatedAppMyOrdersRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
+  '/order-clearing': typeof AuthenticatedAppOrderClearingRoute
   '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
@@ -868,6 +876,7 @@ export interface FileRoutesByTo {
   '/my-orders': typeof AuthenticatedAppMyOrdersRoute
   '/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/operations': typeof AuthenticatedAppOperationsRoute
+  '/order-clearing': typeof AuthenticatedAppOrderClearingRoute
   '/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/order-returns': typeof AuthenticatedAppOrderReturnsRoute
@@ -974,6 +983,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/my-orders': typeof AuthenticatedAppMyOrdersRoute
   '/_authenticated/_app/my-prep': typeof AuthenticatedAppMyPrepRoute
   '/_authenticated/_app/operations': typeof AuthenticatedAppOperationsRoute
+  '/_authenticated/_app/order-clearing': typeof AuthenticatedAppOrderClearingRoute
   '/_authenticated/_app/order-distribution': typeof AuthenticatedAppOrderDistributionRoute
   '/_authenticated/_app/order-pipeline': typeof AuthenticatedAppOrderPipelineRoute
   '/_authenticated/_app/order-returns': typeof AuthenticatedAppOrderReturnsRoute
@@ -1081,6 +1091,7 @@ export interface FileRouteTypes {
     | '/my-orders'
     | '/my-prep'
     | '/operations'
+    | '/order-clearing'
     | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
@@ -1186,6 +1197,7 @@ export interface FileRouteTypes {
     | '/my-orders'
     | '/my-prep'
     | '/operations'
+    | '/order-clearing'
     | '/order-distribution'
     | '/order-pipeline'
     | '/order-returns'
@@ -1291,6 +1303,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/my-orders'
     | '/_authenticated/_app/my-prep'
     | '/_authenticated/_app/operations'
+    | '/_authenticated/_app/order-clearing'
     | '/_authenticated/_app/order-distribution'
     | '/_authenticated/_app/order-pipeline'
     | '/_authenticated/_app/order-returns'
@@ -1635,6 +1648,13 @@ declare module '@tanstack/react-router' {
       path: '/operations'
       fullPath: '/operations'
       preLoaderRoute: typeof AuthenticatedAppOperationsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/order-clearing': {
+      id: '/_authenticated/_app/order-clearing'
+      path: '/order-clearing'
+      fullPath: '/order-clearing'
+      preLoaderRoute: typeof AuthenticatedAppOrderClearingRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/order-distribution': {
@@ -2220,6 +2240,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppMyOrdersRoute: typeof AuthenticatedAppMyOrdersRoute
   AuthenticatedAppMyPrepRoute: typeof AuthenticatedAppMyPrepRoute
   AuthenticatedAppOperationsRoute: typeof AuthenticatedAppOperationsRoute
+  AuthenticatedAppOrderClearingRoute: typeof AuthenticatedAppOrderClearingRoute
   AuthenticatedAppOrderDistributionRoute: typeof AuthenticatedAppOrderDistributionRoute
   AuthenticatedAppOrderPipelineRoute: typeof AuthenticatedAppOrderPipelineRoute
   AuthenticatedAppOrderReturnsRoute: typeof AuthenticatedAppOrderReturnsRoute
@@ -2303,6 +2324,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppMyOrdersRoute: AuthenticatedAppMyOrdersRoute,
   AuthenticatedAppMyPrepRoute: AuthenticatedAppMyPrepRoute,
   AuthenticatedAppOperationsRoute: AuthenticatedAppOperationsRoute,
+  AuthenticatedAppOrderClearingRoute: AuthenticatedAppOrderClearingRoute,
   AuthenticatedAppOrderDistributionRoute:
     AuthenticatedAppOrderDistributionRoute,
   AuthenticatedAppOrderPipelineRoute: AuthenticatedAppOrderPipelineRoute,
