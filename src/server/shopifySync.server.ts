@@ -478,7 +478,20 @@ export async function applyShopifyOrderAction(input: {
   const fulfillmentOrders = await shopifyAdminRequest<{
     fulfillment_orders?: Array<{ id: number; status: string; supported_actions?: string[] }>;
   }>(connection, `/orders/${orderId}/fulfillment_orders.json`);
-  const open = (fulfillmentOrders.fulfillment_orders ?? []).filter(
+  const all = fulfillmentOrders.fulfillment_orders ?? [];
+  // Any order Shopify knows about has at least one fulfillment order. An
+  // empty list means the access token cannot see them at all — in practice
+  // the connected app is missing the fulfillment-order scopes, which
+  // read_fulfillments/write_fulfillments do NOT cover. Folding that into
+  // "already fulfilled" below marked orders synced while nothing happened on
+  // Shopify, and left no error anywhere to find. Fail loudly instead so the
+  // reason lands in shopify_sync_error.
+  if (all.length === 0) {
+    throw new Error(
+      "Shopify returned no fulfillment orders for this order — the connected app is most likely missing the fulfillment-order scopes (read/write_merchant_managed_fulfillment_orders). Reconnect Shopify after granting them.",
+    );
+  }
+  const open = all.filter(
     (order) =>
       !["closed", "cancelled"].includes(order.status) &&
       (order.supported_actions ?? ["create_fulfillment"]).includes("create_fulfillment"),

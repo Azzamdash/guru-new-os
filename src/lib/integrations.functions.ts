@@ -243,7 +243,12 @@ export const registerShopifyWebhooks = createServerFn({ method: "POST" })
 
 // ============ SHOPIFY OAUTH (Client ID / Secret) ============
 const SHOPIFY_OAUTH_SCOPES =
-  "read_orders,write_orders,read_products,write_products,read_customers,write_customers,read_inventory,write_inventory,read_fulfillments,write_fulfillments,read_locations";
+  // The fulfillment-order scopes are what actually authorize
+  // GET /orders/{id}/fulfillment_orders.json and POST /fulfillments.json,
+  // which is how applyShopifyOrderAction fulfills an order on dispatch.
+  // read_fulfillments/write_fulfillments alone do NOT cover that API —
+  // without these the endpoint returns an empty list and nothing fulfills.
+  "read_orders,write_orders,read_products,write_products,read_customers,write_customers,read_inventory,write_inventory,read_fulfillments,write_fulfillments,read_merchant_managed_fulfillment_orders,write_merchant_managed_fulfillment_orders,read_assigned_fulfillment_orders,write_assigned_fulfillment_orders,read_locations";
 
 function normalizeShopDomain(input: string): string {
   const shop = input
