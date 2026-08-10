@@ -1391,7 +1391,7 @@ export const attachBostaTracking = createServerFn({ method: "POST" })
     await assertPageWrite(context, ORDERS_PAGE);
     const { data: order, error } = await context.supabase
       .from("orders")
-      .select("id, brand_id, source, external_id, fulfillment_status")
+      .select("id, brand_id, source, external_id, fulfillment_status, confirmation_status")
       .eq("id", data.order_id)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -1404,12 +1404,17 @@ export const attachBostaTracking = createServerFn({ method: "POST" })
       bosta_delivery_id?: string;
       bosta_manual_attached_at: string;
       fulfillment_status?: string;
+      confirmation_status?: string;
     } = {
       bosta_tracking: tracking,
       ...(data.delivery_id ? { bosta_delivery_id: data.delivery_id } : {}),
       bosta_manual_attached_at: new Date().toISOString(),
     };
     if (order.fulfillment_status === "unfulfilled") patch.fulfillment_status = "shipped";
+    // Handing the parcel to a courier is the confirmation decision — same
+    // rule the dispatch RPCs apply (20260810120000). Never overrides an
+    // explicit 'cancelled'.
+    if (order.confirmation_status === "pending") patch.confirmation_status = "confirmed";
     const { error: uErr } = await context.supabase.from("orders").update(patch).eq("id", order.id);
 
     if (uErr) throw new Error(uErr.message);
