@@ -430,11 +430,21 @@ export const settleCourierCharges = createServerFn({ method: "POST" })
       await revert();
       throw new Error(`تعذر تسجيل حركة الخزنة، وتم التراجع عن الإقفال: ${cashErr.message}`);
     }
+    const cashTransactionId = (cash as { id: string } | null)?.id ?? null;
+
+    // Record which movement paid these off, so a clearing reversal can tell a
+    // fee paid separately here from one the courier withheld from a transfer.
+    if (cashTransactionId) {
+      await ctx.supabase
+        .from("courier_charges")
+        .update({ settled_cash_transaction_id: cashTransactionId })
+        .in("id", settledIds);
+    }
 
     return {
       ok: true,
       settledCount: settledRows.length,
       amount,
-      cashTransactionId: (cash as { id: string } | null)?.id ?? null,
+      cashTransactionId,
     };
   });

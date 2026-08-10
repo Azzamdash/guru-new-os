@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,8 +97,33 @@ function OrderClearingPage() {
   });
 
   const rows = clearingQ.data?.rows ?? [];
+  const [deductFees, setDeductFees] = useState(true);
+
+  // Pre-tick what the courier already reported as collected, once per result
+  // set, so the accountant reviews a filled-in sheet instead of starting from
+  // scratch. Keyed on the filters so re-selecting never wipes edits in progress.
+  const autoFilledKey = useRef<string>("");
+  const filterKey = `${courierId}|${brandId}|${from}|${to}|${status}`;
+  useEffect(() => {
+    if (!clearingQ.data || autoFilledKey.current === filterKey) return;
+    autoFilledKey.current = filterKey;
+    const suggested: Record<string, number> = {};
+    for (const r of clearingQ.data.rows) {
+      if (r.courierSaysPaid && r.outstanding > 0.01) {
+        suggested[r.orderId] = Number(r.outstanding.toFixed(2));
+      }
+    }
+    setPicked(suggested);
+  }, [clearingQ.data, filterKey]);
+
   const pickedEntries = Object.entries(picked).filter(([, amount]) => amount > 0);
   const pickedTotal = pickedEntries.reduce((s, [, amount]) => s + amount, 0);
+  const feeById = new Map(rows.map((r) => [r.orderId, r.courierFee]));
+  const pickedFees = deductFees
+    ? pickedEntries.reduce((s, [orderId]) => s + (feeById.get(orderId) ?? 0), 0)
+    : 0;
+  const pickedNet = pickedTotal - pickedFees;
+  const suggestedCount = rows.filter((r) => r.courierSaysPaid && r.outstanding > 0.01).length;
 
   const postFn = useServerFn(postOrderClearing);
   const postM = useMutation({
@@ -109,14 +134,20 @@ function OrderClearingPage() {
           lines: pickedEntries.map(([orderId, amount]) => ({ orderId, amount })),
           occurredAt: to.slice(0, 10),
           note: note.trim() || null,
+          deductFees,
         },
       }),
     onSuccess: (r) => {
       toast.success(
-        T(
-          `تم تحصيل ${r.postedOrders} أوردر بإجمالي ${money(r.amount, currency)} وترحيلها للخزنة`,
-          `Collected ${r.postedOrders} order(s) totalling ${money(r.amount, currency)} and posted to the treasury`,
-        ),
+        r.fees > 0
+          ? T(
+              `تم تحصيل ${r.postedOrders} أوردر: ${money(r.gross, currency)} ناقص رسوم ${money(r.fees, currency)} = ${money(r.amount, currency)} في الخزنة`,
+              `Collected ${r.postedOrders} order(s): ${money(r.gross, currency)} less ${money(r.fees, currency)} fees = ${money(r.amount, currency)} to the treasury`,
+            )
+          : T(
+              `تم تحصيل ${r.postedOrders} أوردر بإجمالي ${money(r.amount, currency)} وترحيلها للخزنة`,
+              `Collected ${r.postedOrders} order(s) totalling ${money(r.amount, currency)} and posted to the treasury`,
+            ),
       );
       setPicked({});
       setNote("");
@@ -288,6 +319,14 @@ function OrderClearingPage() {
                   {T("مسح التحديد", "Clear selection")}
                 </Button>
               )}
+              {suggestedCount > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {T(
+                    `✅ ${suggestedCount} أوردر شركة الشحن مؤكدة تحصيلها — متعلّمين لك مبدئيًا`,
+                    `✅ ${suggestedCount} order(s) the courier reports as collected — pre-ticked for you`,
+                  )}
+                </span>
+              )}
               <span className="ms-auto text-sm text-muted-foreground">
                 {T(
                   `محدَّد: ${pickedEntries.length} أوردر — ${money(pickedTotal, currency)}`,
@@ -305,6 +344,7 @@ function OrderClearingPage() {
                     <th className="p-2 text-start">{T("القيمة", "Total")}</th>
                     <th className="p-2 text-start">{T("محصَّل", "Collected")}</th>
                     <th className="p-2 text-start">{T("متبقي", "Outstanding")}</th>
+                    <th className="p-2 text-start">{T("رسوم الشحن", "Courier fee")}</th>
                     <th className="p-2 text-start">{T("الحالة", "Status")}</th>
                     <th className="p-2 text-start">{T("مبلغ التحصيل", "Amount to collect")}</th>
                     <th className="p-2 text-start"></th>
@@ -342,9 +382,23 @@ function OrderClearingPage() {
                         <td className="p-2 tabular-nums text-destructive">
                           {money(r.outstanding, currency)}
                         </td>
+                        <td className="p-2 tabular-nums text-muted-foreground">
+                          {r.courierFee > 0 ? money(r.courierFee, currency) : "—"}
+                        </td>
                         <td className="p-2">
                           <div className="flex items-center gap-1">
                             {statusBadge(r.status, T)}
+                            {r.courierSaysPaid && (
+                              <span
+                                className="text-[10px]"
+                                title={T(
+                                  "شركة الشحن مؤكدة التحصيل من العميل",
+                                  "Courier confirmed collection from the customer",
+                                )}
+                              >
+                                ✅
+                              </span>
+                            )}
                             {r.postedToTreasury && (
                               <span
                                 className="text-[10px] text-muted-foreground"
@@ -390,7 +444,7 @@ function OrderClearingPage() {
                   })}
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={10} className="p-8 text-center text-muted-foreground">
                         {clearingQ.isLoading
                           ? T("جارٍ التحميل…", "Loading…")
                           : T("لا توجد أوردرات بالفلاتر دي.", "No orders match these filters.")}
@@ -415,11 +469,31 @@ function OrderClearingPage() {
               />
             </div>
             <div className="space-y-1">
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={deductFees} onCheckedChange={(v) => setDeductFees(Boolean(v))} />
+                {T(
+                  "شركة الشحن بتخصم رسومها من التحويل",
+                  "Courier deducts its fees from the transfer",
+                )}
+              </label>
+              <div className="text-xs text-muted-foreground">
+                {deductFees
+                  ? T(
+                      `${money(pickedTotal, currency)} تحصيل − ${money(pickedFees, currency)} رسوم`,
+                      `${money(pickedTotal, currency)} collected − ${money(pickedFees, currency)} fees`,
+                    )
+                  : T(
+                      "الرسوم هتفضل مفتوحة وتقفلها من كشف الحساب",
+                      "Fees stay open, settle them from the statement",
+                    )}
+              </div>
+            </div>
+            <div className="space-y-1">
               <div className="text-xs text-muted-foreground">
                 {T("هيتسجل في الخزنة", "Will post to treasury")}
               </div>
               <div className="text-2xl font-bold tabular-nums text-emerald-500">
-                {money(pickedTotal, currency)}
+                {money(pickedNet, currency)}
               </div>
             </div>
             <Button
