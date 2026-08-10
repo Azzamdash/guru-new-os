@@ -2,10 +2,10 @@ name: Create Release
 
 on:
   push:
-    branches: [staging]
+    branches: [main, staging]
 
-  schedule:
-    - cron: '0 */12 * * *'
+  # schedule:
+  #   - cron: '0 */12 * * *'
 
   workflow_dispatch:
     inputs:
