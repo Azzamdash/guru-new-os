@@ -26,7 +26,12 @@ import { toast } from "sonner";
 import { useLang } from "@/lib/i18n";
 import { Plus, Pencil, Trash2, Truck } from "lucide-react";
 import { listCouriers, upsertCourier, deleteCourier, listBrands } from "@/lib/internal.functions";
-import { listCourierRates, upsertCourierRate } from "@/lib/courier-config.functions";
+import {
+  listCourierRates,
+  upsertCourierRate,
+  bulkUpsertCourierRates,
+  getCourierRateGaps,
+} from "@/lib/courier-config.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/couriers")({
   head: () => ({
@@ -57,6 +62,7 @@ type CourierRateRow = {
   failed_delivery_fee: number;
   exchange_fee: number;
   effective_from: string;
+  active: boolean;
   couriers?: { name?: string } | null;
 };
 const GOVERNORATES = [
@@ -116,6 +122,80 @@ function CouriersPage() {
     effectiveFrom: getTodayInBusinessTimezone(),
   });
   const [rate, setRate] = useState(emptyRate());
+
+  // Bulk rate card: one courier, one date, every governorate in a single save.
+  const saveRatesBulk = useServerFn(bulkUpsertCourierRates);
+  const listGaps = useServerFn(getCourierRateGaps);
+  const gapsQ = useQuery({ queryKey: ["courier-rate-gaps"], queryFn: () => listGaps() });
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkCourierId, setBulkCourierId] = useState("");
+  const [bulkFrom, setBulkFrom] = useState(getTodayInBusinessTimezone());
+  type BulkFees = { delivery: number; customerReturn: number; failed: number; exchange: number };
+  const [bulkFees, setBulkFees] = useState<Record<string, BulkFees>>({});
+  const [bulkFillAll, setBulkFillAll] = useState(0);
+
+  /**
+   * Seeds the grid from whatever that courier already has, so opening it on a
+   * partly-filled card shows the real numbers instead of blanking them. Only
+   * active rates already in effect count, and the newest wins — the same order
+   * accrue_order_courier_charge picks when it prices an order.
+   */
+  const openBulkFor = (courierId: string) => {
+    const today = getTodayInBusinessTimezone();
+    const existing = new Map<string, BulkFees>();
+    for (const r of (ratesQ.data?.rates ?? []) as CourierRateRow[]) {
+      if (r.courier_id !== courierId || !r.active) continue;
+      if (r.effective_from > today) continue; // a future card is not what prices orders today
+      const key = r.governorate.trim().toLowerCase();
+      if (existing.has(key)) continue; // list arrives newest-first per governorate
+      existing.set(key, {
+        delivery: Number(r.delivery_fee) || 0,
+        customerReturn: Number(r.customer_return_fee) || 0,
+        failed: Number(r.failed_delivery_fee) || 0,
+        exchange: Number(r.exchange_fee) || 0,
+      });
+    }
+    const seeded: Record<string, BulkFees> = {};
+    for (const g of GOVERNORATES) {
+      seeded[g] = existing.get(g.trim().toLowerCase()) ?? {
+        delivery: 0,
+        customerReturn: 0,
+        failed: 0,
+        exchange: 0,
+      };
+    }
+    setBulkCourierId(courierId);
+    setBulkFees(seeded);
+    setBulkFrom(getTodayInBusinessTimezone());
+    setBulkFillAll(0);
+    setBulkOpen(true);
+  };
+
+  const bulkMutation = useMutation({
+    mutationFn: () =>
+      saveRatesBulk({
+        data: {
+          courierId: bulkCourierId,
+          effectiveFrom: bulkFrom,
+          rows: GOVERNORATES.map((g) => ({
+            governorate: g,
+            deliveryFee: bulkFees[g]?.delivery ?? 0,
+            customerReturnFee: bulkFees[g]?.customerReturn ?? 0,
+            failedDeliveryFee: bulkFees[g]?.failed ?? 0,
+            exchangeFee: bulkFees[g]?.exchange ?? 0,
+          })),
+        },
+      }),
+    onSuccess: (r) => {
+      toast.success(
+        lang === "ar" ? `تم حفظ ${r.saved} محافظة` : `Saved ${r.saved} governorate rate(s)`,
+      );
+      qc.invalidateQueries({ queryKey: ["courier-rates"] });
+      qc.invalidateQueries({ queryKey: ["courier-rate-gaps"] });
+      setBulkOpen(false);
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const [editing, setEditing] = useState<null | {
     id?: string;
     name: string;
@@ -289,17 +369,48 @@ function CouriersPage() {
                 : "Four independent fees per company, governorate, and effective date."}
             </p>
           </div>
-          <Button
-            variant="outline"
-            disabled={!ratesQ.data?.ready}
-            onClick={() => {
-              setRate(emptyRate());
-              setRateOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4 me-2" /> {lang === "ar" ? "إضافة سعر" : "Add Rate"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              disabled={!ratesQ.data?.ready}
+              onClick={() => {
+                setRate(emptyRate());
+                setRateOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 me-2" /> {lang === "ar" ? "إضافة سعر" : "Add Rate"}
+            </Button>
+            <Button
+              disabled={!ratesQ.data?.ready || (couriersQ.data ?? []).length === 0}
+              onClick={() => openBulkFor((couriersQ.data ?? [])[0]?.id ?? "")}
+            >
+              <Truck className="w-4 h-4 me-2" />
+              {lang === "ar" ? "تعبئة كل المحافظات" : "Fill all governorates"}
+            </Button>
+          </div>
         </div>
+
+        {(gapsQ.data ?? []).length > 0 && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm space-y-2">
+            <div className="font-medium text-amber-700 dark:text-amber-300">
+              {lang === "ar"
+                ? "محافظات عليها أوردرات من غير سعر — رسومها بتتحسب صفر وشحنها خارج الربح"
+                : "Governorates with orders but no rate — their fee accrues as zero and their shipping is excluded from profit"}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(gapsQ.data ?? []).map((g) => (
+                <button
+                  key={`${g.courierId}-${g.governorate}`}
+                  onClick={() => openBulkFor(g.courierId)}
+                  className="rounded-md border border-amber-500/40 bg-background/60 px-2 py-1 text-xs hover:bg-amber-500/20"
+                >
+                  {g.courierName} — {g.governorate}
+                  <span className="text-muted-foreground ms-1">({g.orders})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {ratesQ.data && !ratesQ.data.ready ? (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
@@ -603,6 +714,139 @@ function CouriersPage() {
               onClick={() => saveRateMutation.mutate()}
             >
               {lang === "ar" ? "حفظ" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              {lang === "ar" ? "تعبئة أسعار كل المحافظات" : "Fill all governorate rates"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label>{lang === "ar" ? "شركة الشحن" : "Shipping Company"}</Label>
+                <Select value={bulkCourierId} onValueChange={openBulkFor}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(couriersQ.data ?? []).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>{lang === "ar" ? "ساري من" : "Effective From"}</Label>
+                <Input type="date" value={bulkFrom} onChange={(e) => setBulkFrom(e.target.value)} />
+              </div>
+              <div>
+                <Label>
+                  {lang === "ar" ? "املأ التسليم الفاضي بـ" : "Fill empty delivery with"}
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={bulkFillAll}
+                    onChange={(e) => setBulkFillAll(Math.max(0, Number(e.target.value) || 0))}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      setBulkFees((prev) => {
+                        const next = { ...prev };
+                        for (const g of GOVERNORATES) {
+                          const row = next[g];
+                          // Only fills blanks, so a card that is half done keeps
+                          // the governorates already priced by hand.
+                          if (!row || row.delivery > 0) continue;
+                          next[g] = { ...row, delivery: bulkFillAll };
+                        }
+                        return next;
+                      })
+                    }
+                  >
+                    {lang === "ar" ? "طبّق" : "Apply"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="max-h-[45vh] overflow-y-auto rounded-lg border">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-background">
+                  <tr className="border-b text-muted-foreground">
+                    <th className="p-2 text-start">{lang === "ar" ? "المحافظة" : "Governorate"}</th>
+                    <th className="p-2 text-start">{lang === "ar" ? "التسليم" : "Delivery"}</th>
+                    <th className="p-2 text-start">
+                      {lang === "ar" ? "إرجاع بعد الاستلام" : "Return After Receipt"}
+                    </th>
+                    <th className="p-2 text-start">
+                      {lang === "ar" ? "فشل التوصيل" : "Failed Delivery"}
+                    </th>
+                    <th className="p-2 text-start">{lang === "ar" ? "الاستبدال" : "Exchange"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {GOVERNORATES.map((g) => {
+                    const row = bulkFees[g] ?? {
+                      delivery: 0,
+                      customerReturn: 0,
+                      failed: 0,
+                      exchange: 0,
+                    };
+                    const set = (patch: Partial<BulkFees>) =>
+                      setBulkFees((prev) => ({ ...prev, [g]: { ...row, ...patch } }));
+                    return (
+                      <tr key={g} className="border-b border-border/50">
+                        <td className="p-2 font-medium whitespace-nowrap">{g}</td>
+                        {(
+                          [
+                            ["delivery", row.delivery],
+                            ["customerReturn", row.customerReturn],
+                            ["failed", row.failed],
+                            ["exchange", row.exchange],
+                          ] as Array<[keyof BulkFees, number]>
+                        ).map(([key, value]) => (
+                          <td key={key} className="p-1">
+                            <Input
+                              type="number"
+                              className="h-8 w-24"
+                              value={value}
+                              onChange={(e) =>
+                                set({ [key]: Math.max(0, Number(e.target.value) || 0) })
+                              }
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {lang === "ar"
+                ? "المحافظة اللي سعرها صفر هتفضل بتتحسب صفر — سيبها صفر بس لو الشحن فعلاً مجاني."
+                : "A governorate left at zero keeps accruing zero — leave it only if shipping there is genuinely free."}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setBulkOpen(false)}>
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button
+              disabled={!bulkCourierId || bulkMutation.isPending}
+              onClick={() => bulkMutation.mutate()}
+            >
+              {lang === "ar" ? "حفظ كل المحافظات" : "Save all governorates"}
             </Button>
           </DialogFooter>
         </DialogContent>
