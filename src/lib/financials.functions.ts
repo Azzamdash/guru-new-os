@@ -11,10 +11,16 @@ export type IncomeStatement = {
   to: string;
   grossRevenue: number;
   returns: number;
-  /** Shipping fee charged to the customer — a pass-through owed to the courier, not our revenue. */
+  /** Shipping fee charged to the customer — excluded from revenue, since it funds the courier. */
   shippingRevenue: number;
-  /** Rate-card fees owed to couriers for the period. Subtracted after gross profit. */
+  /** What couriers actually bill us for the period (confirmed fee, else rate card). */
   shippingCost: number;
+  /**
+   * shippingRevenue − shippingCost. Only this difference belongs in profit: what we
+   * collected for shipping is not ours to keep, and what the courier bills is paid out
+   * of it. Positive = we over-charge for shipping, negative = shipping loses money.
+   */
+  shippingNet: number;
   discounts: number;
   netRevenue: number;
   /** Revenue for orders still in flight (not yet delivered/returned) — not included in netRevenue. */
@@ -38,6 +44,8 @@ export type IncomeStatement = {
     cogs: number;
     grossProfit: number;
     opex: number;
+    /** Shipping collected minus shipping billed, for this brand. */
+    shippingNet: number;
     netProfit: number;
     margin: number;
   }>;
@@ -77,9 +85,12 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
     const cogs = Number(totals.cogs) || 0;
     const operatingExpensesTotal = Number(totals.expenses) || 0;
     const grossProfit = netRevenue - cogs;
-    // Courier fees are a real operating cost that never reaches expense_entries,
-    // so they are subtracted here alongside opex rather than left out entirely.
-    const operatingProfit = grossProfit - operatingExpensesTotal - shippingCost;
+    // Shipping is a pass-through, so only its margin may touch profit. netRevenue already
+    // excludes what the customer paid for shipping; subtracting the full courier bill on
+    // top of that would charge the same delivery to us twice. Net the two instead: an
+    // order that collects 50 and costs 50 is profit-neutral, and only the gap shows up.
+    const shippingNet = shippingRevenue - shippingCost;
+    const operatingProfit = grossProfit - operatingExpensesTotal + shippingNet;
     const orders = Number(totals.orders) || 0;
     return {
       from,
@@ -88,6 +99,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
       returns,
       shippingRevenue,
       shippingCost,
+      shippingNet,
       discounts,
       projectedNetRevenue,
       netRevenue,
@@ -111,9 +123,10 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
           const brandRevenue = Number(row.net_revenue) || 0;
           const brandCogs = Number(row.cogs) || 0;
           const opex = Number(row.expenses) || 0;
-          const brandShipping = Number(row.shipping_cost) || 0;
+          const brandShippingNet =
+            (Number(row.shipping_revenue) || 0) - (Number(row.shipping_cost) || 0);
           const brandGrossProfit = brandRevenue - brandCogs;
-          const netProfit = brandGrossProfit - opex - brandShipping;
+          const netProfit = brandGrossProfit - opex + brandShippingNet;
           return {
             brand_id: row.brand_id,
             brand_name: row.brand_name,
@@ -121,6 +134,7 @@ export const getIncomeStatement = createServerFn({ method: "GET" })
             cogs: brandCogs,
             grossProfit: brandGrossProfit,
             opex,
+            shippingNet: brandShippingNet,
             netProfit,
             margin: brandRevenue > 0 ? netProfit / brandRevenue : 0,
           };

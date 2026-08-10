@@ -140,6 +140,28 @@ function Page() {
               negative
               bold
             />
+            <tr>
+              <td colSpan={3} className="pt-4 pb-1 text-xs uppercase text-muted-foreground">
+                {L(tr("الشحن"), "Shipping")}
+              </td>
+            </tr>
+            <Row
+              label={L(tr("  محصّل من العملاء"), "  Collected from customers")}
+              val={nf(d?.shippingRevenue ?? 0)}
+              small
+            />
+            <Row
+              label={L(tr("  (−) مستحق لشركات الشحن"), "  (−) Billed by couriers")}
+              val={`(${nf(d?.shippingCost ?? 0)})`}
+              negative
+              small
+            />
+            <Row
+              label={L(tr("صافي الشحن"), "Net Shipping")}
+              val={nf(d?.shippingNet ?? 0)}
+              bold
+              negative={(d?.shippingNet ?? 0) < 0}
+            />
             <Row
               label={L(tr("الربح التشغيلي"), "Operating Profit")}
               val={nf(d?.operatingProfit ?? 0)}
@@ -170,6 +192,7 @@ function Page() {
                   <th className="p-2 text-start">COGS</th>
                   <th className="p-2 text-start">{L(tr("مجمل الربح"), "Gross Profit")}</th>
                   <th className="p-2 text-start">OpEx</th>
+                  <th className="p-2 text-start">{L(tr("صافي الشحن"), "Net Shipping")}</th>
                   <th className="p-2 text-start">{L(tr("صافي الربح"), "Net Profit")}</th>
                   <th className="p-2 text-start">{L(tr("هامش"), "Margin")}</th>
                 </tr>
@@ -182,6 +205,11 @@ function Page() {
                     <td className="p-2 num text-muted-foreground">{nf(r.cogs)}</td>
                     <td className="p-2 num">{nf(r.grossProfit)}</td>
                     <td className="p-2 num text-muted-foreground">{nf(r.opex)}</td>
+                    <td
+                      className={`p-2 num ${r.shippingNet < 0 ? "text-destructive" : "text-muted-foreground"}`}
+                    >
+                      {nf(r.shippingNet)}
+                    </td>
                     <td
                       className={`p-2 num ${r.netProfit >= 0 ? "text-emerald-500" : "text-destructive"}`}
                     >
