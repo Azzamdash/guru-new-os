@@ -7,6 +7,7 @@ import {
   shopifyLineItemTitle,
 } from "@/lib/order-lifecycle.shared";
 import type { Json } from "@/integrations/supabase/types";
+import { canonicalGovernorate } from "@/lib/governorate.shared";
 
 type ShopifyLineItem = {
   id: number;
@@ -227,7 +228,9 @@ export async function syncShopifyOrdersForBrand(brandId: string, opts: ShopifySy
       customer_name: customerName,
       customer_phone: phone,
       customer_email: o.customer?.email || o.email,
-      shipping_governorate: addr?.province ?? null,
+      // Shopify sends the province in the store's own language; store the one
+      // canonical spelling so courier rates resolve without relying on the fold.
+      shipping_governorate: canonicalGovernorate(addr?.province),
       shipping_address: addr?.address1 ?? null,
       financial_status: mapFinancial(o.financial_status),
       fulfillment_status: fulfillmentStatus,

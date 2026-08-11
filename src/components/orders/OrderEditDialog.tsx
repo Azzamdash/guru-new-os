@@ -26,6 +26,7 @@ import { useLang } from "@/lib/i18n";
 import { getTodayInBusinessTimezone } from "@/lib/timezone";
 import { queryPresets } from "@/lib/query-presets";
 import { FF, FIN, CONFIRM, EG_GOVERNORATES } from "./order-form-constants";
+import { canonicalGovernorate } from "@/lib/governorate.shared";
 
 type OrderKind = "sale" | "return" | "exchange";
 type ItemRow = { product_id: string; title: string; qty: number; unit_price: number };
@@ -53,7 +54,9 @@ const emptyForm = (seed?: { presetKind?: OrderKind; relatedOrder?: RelatedOrderP
   external_order_number: "",
   customer_name: seed?.relatedOrder?.customer_name ?? "",
   customer_phone: seed?.relatedOrder?.customer_phone ?? "",
-  shipping_governorate: seed?.relatedOrder?.shipping_governorate ?? "",
+  // Fold whatever is stored onto the canonical name, so an order saved before
+  // this — or by Shopify in English — still selects its governorate here.
+  shipping_governorate: canonicalGovernorate(seed?.relatedOrder?.shipping_governorate) ?? "",
   shipping_area: "",
   shipping_address: seed?.relatedOrder?.shipping_address ?? "",
   building_number: seed?.relatedOrder?.building_number ?? "",
@@ -253,7 +256,9 @@ export function OrderEditDialog({
           customer_name: o.customer_name ?? "",
           customer_phone: o.customer_phone ?? "",
           shipping_governorate:
-            (o as { shipping_governorate?: string | null }).shipping_governorate ?? "",
+            canonicalGovernorate(
+              (o as { shipping_governorate?: string | null }).shipping_governorate,
+            ) ?? "",
           shipping_area: "",
           shipping_address: (o as { shipping_address?: string | null }).shipping_address ?? "",
           building_number: (o as { building_number?: string | null }).building_number ?? "",
@@ -487,8 +492,14 @@ export function OrderEditDialog({
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
                   <SelectItem value="none">— {lang === "ar" ? "بدون" : "None"} —</SelectItem>
+                  {/*
+                    The value is always the Arabic name; only the label follows the
+                    UI language. Submitting the displayed string meant the same
+                    governorate was stored as "القاهرة" or "Cairo" purely by which
+                    language the order happened to be typed in.
+                  */}
                   {EG_GOVERNORATES.map((g) => (
-                    <SelectItem key={g.en} value={lang === "ar" ? g.ar : g.en}>
+                    <SelectItem key={g.en} value={g.ar}>
                       {lang === "ar" ? g.ar : g.en}
                     </SelectItem>
                   ))}
