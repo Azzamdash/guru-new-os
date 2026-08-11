@@ -11,8 +11,6 @@
 --
 -- Nothing else in the function changes; it is restated in full because
 -- CREATE OR REPLACE FUNCTION has no partial form.
-CREATE OR REPLACE FUNCTION has no partial form.
-CREATE OR REPLACE FUNCTION has no partial form.
 CREATE OR REPLACE FUNCTION public.dashboard_operational_report(_from timestamp with time zone, _to timestamp with time zone, _brand_id uuid DEFAULT NULL::uuid, _settled_only boolean DEFAULT false) RETURNS jsonb
     LANGUAGE plpgsql STABLE
     SET search_path TO 'public', 'pg_temp'
