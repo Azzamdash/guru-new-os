@@ -187,7 +187,13 @@ function OrderClearingPage() {
       setNote("");
       qc.invalidateQueries({ queryKey: ["order-clearing"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      toast.error(e.message);
+      // A rejected post means the sheet and the server disagreed about this
+      // order. Refetch so the numbers on screen are the ones the next attempt
+      // will actually be judged against.
+      qc.invalidateQueries({ queryKey: ["order-clearing"] });
+    },
   });
 
   const undoFn = useServerFn(clearOrderCollections);
@@ -473,12 +479,16 @@ function OrderClearingPage() {
                               className="h-8 w-24"
                               disabled={!isPicked || !deductFees}
                               value={feeEdits[r.orderId] ?? r.courierFee}
-                              onChange={(e) =>
-                                setFeeEdits((prev) => ({
-                                  ...prev,
-                                  [r.orderId]: Math.max(0, Number(e.target.value) || 0),
-                                }))
-                              }
+                              onChange={(e) => {
+                                const v = Math.max(0, Number(e.target.value) || 0);
+                                // Typing after a leading 0 leaves "014915" sitting in
+                                // the DOM: React skips rewriting the node because
+                                // "014915" == 14915 is loosely true. The stored number
+                                // is right, the field just reads wrong — so normalise
+                                // the node itself.
+                                e.target.value = String(v);
+                                setFeeEdits((prev) => ({ ...prev, [r.orderId]: v }));
+                              }}
                             />
                             {/* A bare 0 cannot say whether shipping was free or never
                                 priced, so every cell states which number it is. */}
@@ -547,12 +557,11 @@ function OrderClearingPage() {
                               type="number"
                               className="h-8 w-28"
                               value={picked[r.orderId]}
-                              onChange={(e) =>
-                                setPicked((prev) => ({
-                                  ...prev,
-                                  [r.orderId]: Math.max(0, Number(e.target.value) || 0),
-                                }))
-                              }
+                              onChange={(e) => {
+                                const v = Math.max(0, Number(e.target.value) || 0);
+                                e.target.value = String(v);
+                                setPicked((prev) => ({ ...prev, [r.orderId]: v }));
+                              }}
                             />
                           ) : (
                             <span className="text-muted-foreground">—</span>

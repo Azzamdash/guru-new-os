@@ -311,10 +311,11 @@ export const postOrderClearing = createServerFn({ method: "POST" })
       brand_id: string;
       courier_id: string | null;
       total_amount: number;
+      external_order_number: string | null;
     }>(() =>
       ctx.supabase
         .from("orders")
-        .select("id, brand_id, courier_id, total_amount")
+        .select("id, brand_id, courier_id, total_amount, external_order_number")
         .in("id", orderIds),
     );
     const orderById = new Map(orders.map((o) => [o.id, o]));
@@ -339,8 +340,20 @@ export const postOrderClearing = createServerFn({ method: "POST" })
       }
       const already = priorByOrder.get(l.orderId) ?? 0;
       if (already + Number(l.amount) > Number(order.total_amount) + 0.01) {
+        // Name the order the way the sheet does, and show every figure that went
+        // into the decision. "Check the amount" on its own leaves the accountant
+        // guessing which of the three numbers disagrees — and when it is the
+        // already-collected one, the sheet in front of them is showing something
+        // stale, which they cannot know from the message alone.
+        const label = order.external_order_number ?? order.id.slice(0, 8);
+        const round = (n: number) => Math.round(n).toLocaleString("en-US");
         throw new Error(
-          `المبلغ يتخطى المتبقي من قيمة الأوردر ${order.id.slice(0, 8)} — راجع المبلغ`,
+          `المبلغ يتخطى المتبقي من قيمة الأوردر ${label}: ` +
+            `قيمة الأوردر ${round(Number(order.total_amount))}، ` +
+            `محصَّل قبل كده ${round(already)}، ` +
+            `فالمتبقي ${round(Number(order.total_amount) - already)} — ` +
+            `وانت بتحاول تحصّل ${round(Number(l.amount))}. ` +
+            `لو الصفحة بتقول غير كده، اعمل تحديث للصفحة الأول.`,
         );
       }
       gross += Number(l.amount);
