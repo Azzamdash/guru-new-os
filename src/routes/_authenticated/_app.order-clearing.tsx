@@ -404,18 +404,44 @@ function OrderClearingPage() {
                           {money(r.outstanding, currency)}
                         </td>
                         <td className="p-2">
-                          <Input
-                            type="number"
-                            className="h-8 w-24"
-                            disabled={!isPicked || !deductFees}
-                            value={feeEdits[r.orderId] ?? r.courierFee}
-                            onChange={(e) =>
-                              setFeeEdits((prev) => ({
-                                ...prev,
-                                [r.orderId]: Math.max(0, Number(e.target.value) || 0),
-                              }))
-                            }
-                          />
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              className="h-8 w-24"
+                              disabled={!isPicked || !deductFees}
+                              value={feeEdits[r.orderId] ?? r.courierFee}
+                              onChange={(e) =>
+                                setFeeEdits((prev) => ({
+                                  ...prev,
+                                  [r.orderId]: Math.max(0, Number(e.target.value) || 0),
+                                }))
+                              }
+                            />
+                            {/* A bare 0 cannot say whether shipping was free or never
+                                priced, so every cell states which number it is. */}
+                            {feeEdits[r.orderId] === undefined && r.feeSource === "suggested" && (
+                              <span
+                                className="text-[10px] text-muted-foreground"
+                                title={T(
+                                  "من تعريفة المحافظة الحالية — لسه ما اتحسبتش على الأوردر",
+                                  "From the current governorate rate — not yet accrued on the order",
+                                )}
+                              >
+                                {T("مقترح", "suggested")}
+                              </span>
+                            )}
+                            {feeEdits[r.orderId] === undefined && r.feeSource === "missing" && (
+                              <span
+                                className="text-[10px] text-amber-600 dark:text-amber-400"
+                                title={T(
+                                  `مفيش تعريفة لـ «${r.governorate ?? "—"}» — الصفر ده معناه مش محسوب`,
+                                  `No rate for "${r.governorate ?? "—"}" — this zero means not priced`,
+                                )}
+                              >
+                                {T("بدون تعريفة", "no rate")}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="p-2">
                           <div className="flex items-center gap-1">

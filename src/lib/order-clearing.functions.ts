@@ -27,8 +27,19 @@ export type ClearingRow = {
    * paying the courier is not the same event as the money reaching us.
    */
   courierSaysPaid: boolean;
-  /** Unsettled rate-card fee for this order — what the courier deducts at source. */
+  /** Unsettled fee for this order — what the courier deducts at source. */
   courierFee: number;
+  /**
+   * Where courierFee came from, because a bare 0 cannot tell "free" from "never
+   * priced" and the accountant has to know which they are looking at.
+   *  - accrued:   a real charge row, priced when the order was delivered.
+   *  - suggested: nothing accrued, but the courier's current rate card covers
+   *               this governorate — shown as a default to accept or overwrite.
+   *  - missing:   no charge and no matching rate. The 0 is an absence.
+   */
+  feeSource: "accrued" | "suggested" | "missing";
+  /** Governorate the fee was (or would be) priced from, for explaining a missing rate. */
+  governorate: string | null;
 };
 
 export type OrderClearingList = {
@@ -75,11 +86,12 @@ export const getOrderClearing = createServerFn({ method: "GET" })
       occurred_at: string;
       total_amount: number;
       collection_status: string | null;
+      shipping_governorate: string | null;
     }>(() => {
       let q = ctx.supabase
         .from("orders")
         .select(
-          "id, external_order_number, customer_name, occurred_at, total_amount, collection_status",
+          "id, external_order_number, customer_name, occurred_at, total_amount, collection_status, shipping_governorate",
         )
         .eq("courier_id", data.courierId)
         .eq("shipment_outcome", "delivered")
@@ -128,12 +140,49 @@ export const getOrderClearing = createServerFn({ method: "GET" })
       for (const ch of charges) feeByOrder.set(ch.order_id, Number(ch.amount) || 0);
     }
 
+    // The accrual only priced orders whose governorate had a rate at the time of
+    // delivery, and it never revisits them. Rather than show those as a bare 0 —
+    // indistinguishable from genuinely free shipping — fall back to the courier's
+    // current rate card so the sheet opens with a real number to accept or edit.
+    const { data: rateRows, error: rateErr } = await ctx.supabase
+      .from("courier_governorate_rates")
+      .select("governorate, delivery_fee, effective_from, effective_to")
+      .eq("courier_id", data.courierId)
+      .eq("active", true)
+      .order("effective_from", { ascending: false });
+    if (rateErr) throw rateErr;
+    const rates = (rateRows ?? []) as Array<{
+      governorate: string;
+      delivery_fee: number;
+      effective_from: string;
+      effective_to: string | null;
+    }>;
+    // Matched the way accrue_order_courier_charge matches: case- and
+    // whitespace-insensitive, newest card in effect on the order's own date.
+    const suggestedFee = (governorate: string | null, occurredAt: string): number | null => {
+      const key = (governorate ?? "").trim().toLowerCase();
+      if (!key) return null;
+      const day = occurredAt.slice(0, 10);
+      for (const r of rates) {
+        if (r.governorate.trim().toLowerCase() !== key) continue;
+        if (r.effective_from > day) continue;
+        if (r.effective_to && r.effective_to < day) continue;
+        return Number(r.delivery_fee) || 0;
+      }
+      return null;
+    };
+
     const all: ClearingRow[] = orders.map((o) => {
       const totalAmount = Number(o.total_amount) || 0;
       const collected = collectedByOrder.get(o.id) ?? 0;
       const outstanding = totalAmount - collected;
       const status: ClearingStatus =
         collected <= 0.01 ? "unpaid" : outstanding > 0.01 ? "partial" : "paid";
+      const accrued = feeByOrder.get(o.id) ?? 0;
+      const suggested = accrued > 0 ? null : suggestedFee(o.shipping_governorate, o.occurred_at);
+      const courierFee = accrued > 0 ? accrued : (suggested ?? 0);
+      const feeSource: ClearingRow["feeSource"] =
+        accrued > 0 ? "accrued" : suggested !== null ? "suggested" : "missing";
       return {
         orderId: o.id,
         orderNumber: o.external_order_number,
@@ -145,7 +194,9 @@ export const getOrderClearing = createServerFn({ method: "GET" })
         status,
         postedToTreasury: postedOrders.has(o.id),
         courierSaysPaid: o.collection_status === "paid",
-        courierFee: feeByOrder.get(o.id) ?? 0,
+        courierFee,
+        feeSource,
+        governorate: o.shipping_governorate,
       };
     });
 
