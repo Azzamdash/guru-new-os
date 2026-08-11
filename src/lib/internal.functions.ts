@@ -1172,10 +1172,16 @@ export const getCashSummary = createServerFn({ method: "GET" })
     });
     if (error) throw error;
     return result as {
+      /** Cash actually held: movements plus opening balances. Reconciles with the wallets. */
       balance: number;
       periodIn: number;
+      /** Cash actually paid out. Accrued-but-unpaid expenses are reported separately. */
       periodOut: number;
       periodNet: number;
+      /** Expenses recorded with no cash movement — owed, not yet paid out of any wallet. */
+      unpaidExpenses: number;
+      /** The same, limited to the selected period. */
+      periodUnpaidExpenses: number;
       personalTotal: number;
       courierDebts: Array<{
         id: string;

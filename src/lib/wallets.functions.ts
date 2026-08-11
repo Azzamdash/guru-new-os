@@ -83,7 +83,7 @@ export type TreasuryReconciliation = {
   /** Expenses recorded with no cash_transaction — the treasury subtracts these, no wallet can. */
   unbookedExpenses: number;
   unbookedExpensesCount: number;
-  /** walletsTotal + unassignedNet − unbookedExpenses: what the headline balance should equal. */
+  /** walletsTotal + unassignedNet: what the headline balance should equal, now that it is cash-only. */
   expectedBalance: number;
 };
 
@@ -91,11 +91,14 @@ export type TreasuryReconciliation = {
  * Explains why the headline treasury balance and the wallet cards disagree.
  *
  * They are computed from different places and always have been.
- * cash_summary_report reads the cash_daily_metrics rollup, adds every wallet's
- * opening balance, and subtracts expense_entries that were never booked as
- * cash. getWalletBalances reads cash_transactions directly and skips any row
- * without a wallet_id. So a movement with no wallet, and an expense with no
- * cash row at all, both move the headline while appearing in no wallet.
+ * cash_summary_report reads the cash_daily_metrics rollup and adds every
+ * wallet's opening balance; getWalletBalances reads cash_transactions directly
+ * and skips any row without a wallet_id. So a movement carrying no wallet moves
+ * the headline while appearing in no wallet card.
+ *
+ * unbookedExpenses no longer belongs in that arithmetic — 20260810250000 stopped
+ * the headline subtracting accrued expenses — but it is still reported, since
+ * "recorded but never paid from a wallet" is worth seeing on its own.
  *
  * This does not change either number — it accounts for the distance between
  * them, so the gap is a figure with a name instead of two totals that look
@@ -151,8 +154,33 @@ export const getTreasuryReconciliation = createServerFn({ method: "GET" })
       unassignedCount,
       unbookedExpenses,
       unbookedExpensesCount,
-      expectedBalance: walletsTotal + unassignedNet - unbookedExpenses,
+      // 20260810250000 stopped the headline subtracting accrued expenses, so the
+      // only thing still standing between it and the wallets is unassigned cash.
+      expectedBalance: walletsTotal + unassignedNet,
     };
+  });
+
+/**
+ * Files historical cash movements that carry no wallet into one the user picks.
+ *
+ * New rows can no longer land without a wallet — the database defaults it
+ * (20260810250000). Existing ones still have none, and no rule can infer where
+ * that money actually sat, so it is asked for rather than guessed: the caller
+ * names the wallet, and only rows with no wallet at all are touched.
+ */
+export const assignOrphanCashToWallet = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { walletId: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertWriter(context);
+    if (!data.walletId) throw new Error("اختر المحفظة الأول");
+    const { data: updated, error } = await context.supabase
+      .from("cash_transactions")
+      .update({ wallet_id: data.walletId })
+      .is("wallet_id", null)
+      .select("id");
+    if (error) throw error;
+    return { ok: true, assigned: (updated ?? []).length };
   });
 
 export const getWalletBalances = createServerFn({ method: "GET" })
