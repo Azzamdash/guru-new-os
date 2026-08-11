@@ -41,8 +41,11 @@ export type ClearingRow = {
    *                card saved today never reaches orders delivered before today.
    *                The amount is still offered; the fix is to backdate the card.
    *  - missing:    no charge and no rate for this governorate at all.
+   *  - settled:    already closed out against a past transfer. Shown so a
+   *                cleared order does not read as unpriced, but never deducted
+   *                again and never counted in the unsettled total.
    */
-  feeSource: "accrued" | "suggested" | "laterRate" | "missing";
+  feeSource: "accrued" | "suggested" | "laterRate" | "missing" | "settled";
   /** Governorate the fee was (or would be) priced from, for explaining a missing rate. */
   governorate: string | null;
   /**
@@ -118,6 +121,8 @@ export const getOrderClearing = createServerFn({ method: "GET" })
     const collectedByOrder = new Map<string, number>();
     const postedOrders = new Set<string>();
     const feeByOrder = new Map<string, number>();
+    /** Fees already closed out — displayed, never deducted a second time. */
+    const settledFeeByOrder = new Map<string, number>();
     const ids = orders.map((o) => o.id);
     const CHUNK = 500;
     for (let i = 0; i < ids.length; i += CHUNK) {
@@ -133,14 +138,15 @@ export const getOrderClearing = createServerFn({ method: "GET" })
             .select("order_id, amount, cash_transaction_id")
             .in("order_id", chunk),
         ),
-        // Only unsettled fees: a fee already closed out is not deductible from
-        // a new transfer, it has been accounted for.
-        fetchAllRows<{ order_id: string; amount: number }>(() =>
+        // Both settled and unsettled. Only an unsettled fee is deductible from a
+        // new transfer — a closed one has been accounted for. But a closed one
+        // still has to be *shown*, or the sheet reports "no rate" for a fee it
+        // charged minutes earlier and read as an absence.
+        fetchAllRows<{ order_id: string; amount: number; settled_at: string | null }>(() =>
           ctx.supabase
             .from("courier_charges")
-            .select("order_id, amount")
-            .in("order_id", chunk)
-            .is("settled_at", null),
+            .select("order_id, amount, settled_at")
+            .in("order_id", chunk),
         ),
       ]);
       for (const c of cols) {
@@ -150,7 +156,11 @@ export const getOrderClearing = createServerFn({ method: "GET" })
         );
         if (c.cash_transaction_id) postedOrders.add(c.order_id);
       }
-      for (const ch of charges) feeByOrder.set(ch.order_id, Number(ch.amount) || 0);
+      for (const ch of charges) {
+        const amt = Number(ch.amount) || 0;
+        if (ch.settled_at) settledFeeByOrder.set(ch.order_id, amt);
+        else feeByOrder.set(ch.order_id, amt);
+      }
     }
 
     // The accrual only priced orders whose governorate had a rate at the time of
@@ -202,17 +212,24 @@ export const getOrderClearing = createServerFn({ method: "GET" })
       const outstanding = totalAmount - collected;
       const status: ClearingStatus =
         collected <= 0.01 ? "unpaid" : outstanding > 0.01 ? "partial" : "paid";
+      // A closed fee wins over everything: it is what was actually charged, and
+      // falling through to the rate card would report "no rate" for a fee this
+      // very sheet booked.
+      const closed = settledFeeByOrder.get(o.id);
       const accrued = feeByOrder.get(o.id) ?? 0;
-      const rate = accrued > 0 ? null : rateFor(o.shipping_governorate, o.occurred_at);
-      const courierFee = accrued > 0 ? accrued : (rate?.amount ?? 0);
+      const rate =
+        closed !== undefined || accrued > 0 ? null : rateFor(o.shipping_governorate, o.occurred_at);
+      const courierFee = closed ?? (accrued > 0 ? accrued : (rate?.amount ?? 0));
       const feeSource: ClearingRow["feeSource"] =
-        accrued > 0
-          ? "accrued"
-          : rate === null
-            ? "missing"
-            : rate.startsLater
-              ? "laterRate"
-              : "suggested";
+        closed !== undefined
+          ? "settled"
+          : accrued > 0
+            ? "accrued"
+            : rate === null
+              ? "missing"
+              : rate.startsLater
+                ? "laterRate"
+                : "suggested";
       return {
         orderId: o.id,
         orderNumber: o.external_order_number,
@@ -239,7 +256,7 @@ export const getOrderClearing = createServerFn({ method: "GET" })
         acc.totalAmount += r.totalAmount;
         acc.collected += r.collected;
         acc.outstanding += r.outstanding;
-        acc.courierFees += r.courierFee;
+        if (r.feeSource !== "settled") acc.courierFees += r.courierFee;
         return acc;
       },
       { orders: 0, totalAmount: 0, collected: 0, outstanding: 0, courierFees: 0 },
