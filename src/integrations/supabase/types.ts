@@ -4716,8 +4716,9 @@ export type Database = {
         Args: { _confirmed_absent_on_bosta: boolean; _order_id: string }
         Returns: boolean
       }
+      normalize_governorate: { Args: { _name: string }; Returns: string }
       recalculate_courier_charges: {
-        Args: { _courier_id?: string }
+        Args: { _courier_id?: string | null }
         Returns: Json
       }
       refresh_customer_brand_metrics: {

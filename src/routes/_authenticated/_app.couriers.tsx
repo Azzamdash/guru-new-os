@@ -780,6 +780,23 @@ function CouriersPage() {
               <div>
                 <Label>{lang === "ar" ? "ساري من" : "Effective From"}</Label>
                 <Input type="date" value={bulkFrom} onChange={(e) => setBulkFrom(e.target.value)} />
+                {/* Rates match on effective_from <= the order's date, so a card saved
+                    today never reaches orders delivered earlier. That is invisible
+                    until the fees come out as zero, so say it here and offer the fix. */}
+                <div className="mt-1 flex items-center gap-2">
+                  <p className="text-[11px] text-muted-foreground">
+                    {lang === "ar"
+                      ? "الأسعار مش هتسري على أوردرات قبل التاريخ ده."
+                      : "Rates will not apply to orders before this date."}
+                  </p>
+                  <button
+                    type="button"
+                    className="text-[11px] underline text-primary whitespace-nowrap"
+                    onClick={() => setBulkFrom(`${new Date().getFullYear()}-01-01`)}
+                  >
+                    {lang === "ar" ? "من أول السنة" : "Start of year"}
+                  </button>
+                </div>
               </div>
               <div>
                 <Label>

@@ -430,6 +430,17 @@ function OrderClearingPage() {
                                 {T("مقترح", "suggested")}
                               </span>
                             )}
+                            {feeEdits[r.orderId] === undefined && r.feeSource === "laterRate" && (
+                              <span
+                                className="text-[10px] text-amber-600 dark:text-amber-400"
+                                title={T(
+                                  `التعريفة موجودة لـ «${r.governorate ?? "—"}» بس تاريخ سريانها بعد الأوردر ده — رجّع تاريخ السريان في صفحة شركات الشحن عشان تسري عليه`,
+                                  `A rate exists for "${r.governorate ?? "—"}" but starts after this order — backdate its effective date on the couriers page to cover it`,
+                                )}
+                              >
+                                {T("تعريفة أحدث", "later rate")}
+                              </span>
+                            )}
                             {feeEdits[r.orderId] === undefined && r.feeSource === "missing" && (
                               <span
                                 className="text-[10px] text-amber-600 dark:text-amber-400"

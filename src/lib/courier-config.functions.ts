@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPageWrite } from "./page-permissions.server";
 import { COURIERS_PAGE } from "./page-permission-paths";
+import { normalizeGovernorate } from "./governorate.shared";
 
 const rateInput = (data: {
   id?: string;
@@ -121,7 +122,7 @@ export const bulkUpsertCourierRates = createServerFn({ method: "POST" })
     const payload = data.rows.map((row) => {
       const governorate = row.governorate.trim();
       if (!governorate) throw new Error("Governorate is required");
-      const key = governorate.toLowerCase();
+      const key = normalizeGovernorate(governorate);
       // The unique key is per (courier, governorate, date); two rows for the same
       // governorate in one payload would make the upsert order decide the winner.
       if (seen.has(key)) throw new Error(`محافظة مكررة في نفس الكشف: ${governorate}`);
@@ -187,7 +188,7 @@ export const getCourierRateGaps = createServerFn({ method: "GET" })
     }>) {
       const governorate = (row.orders?.shipping_governorate ?? "").trim();
       if (!governorate) continue;
-      const key = `${row.courier_id}::${governorate.toLowerCase()}`;
+      const key = `${row.courier_id}::${normalizeGovernorate(governorate)}`;
       const hit = gaps.get(key);
       if (hit) hit.orders += 1;
       else
@@ -217,7 +218,7 @@ export const recalculateCourierCharges = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertPageWrite(context, COURIERS_PAGE);
     const { data: result, error } = await context.supabase.rpc("recalculate_courier_charges", {
-      _courier_id: data.courierId || undefined,
+      _courier_id: data.courierId || null,
     });
     if (error) throw error;
     const updated = Number((result as { updated?: number } | null)?.updated) || 0;
