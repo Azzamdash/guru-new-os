@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Scale, Undo2 } from "lucide-react";
+import { Scale, Search, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   PeriodFilter,
@@ -98,8 +98,21 @@ function OrderClearingPage() {
     enabled: Boolean(courierId),
   });
 
-  const rows = clearingQ.data?.rows ?? [];
+  const allRows = useMemo(() => clearingQ.data?.rows ?? [], [clearingQ.data]);
   const [deductFees, setDeductFees] = useState(true);
+  const [search, setSearch] = useState("");
+
+  // Filtered on the client: the sheet already holds every row for the chosen
+  // courier and period, so narrowing it is instant and needs no refetch. Matches
+  // whichever identifier the accountant happens to be holding — our order
+  // number, the customer, or the courier's own waybill.
+  const rows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return allRows;
+    return allRows.filter((r) =>
+      [r.orderNumber, r.customerName, r.tracking].some((v) => (v ?? "").toLowerCase().includes(q)),
+    );
+  }, [allRows, search]);
 
   // Pre-tick what the courier already reported as collected, once per result
   // set, so the accountant reviews a filled-in sheet instead of starting from
@@ -214,11 +227,14 @@ function OrderClearingPage() {
   };
 
   const selectAllUnpaid = () => {
+    // Over the visible rows, so it means "everything I am currently looking at".
+    // Merged into the existing picks rather than replacing them: with a search
+    // active, replacing would quietly untick orders filtered out of view.
     const next: Record<string, number> = {};
     for (const r of rows) {
       if (r.outstanding > 0.01) next[r.orderId] = Number(r.outstanding.toFixed(2));
     }
-    setPicked(next);
+    setPicked((prev) => ({ ...prev, ...next }));
   };
 
   return (
@@ -293,6 +309,15 @@ function OrderClearingPage() {
           </SelectContent>
         </Select>
         <PeriodFilter value={period} onChange={setPeriod} />
+        <div className="relative">
+          <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-2 text-muted-foreground pointer-events-none" />
+          <Input
+            className="w-64 ps-8"
+            placeholder={T("رقم أوردر أو تتبع أو عميل…", "Order no., tracking, or customer…")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </Card>
 
       {!courierId ? (
@@ -362,6 +387,7 @@ function OrderClearingPage() {
                     <th className="p-2 w-10"></th>
                     <th className="p-2 text-start">{T("الأوردر", "Order")}</th>
                     <th className="p-2 text-start">{T("العميل", "Customer")}</th>
+                    <th className="p-2 text-start">{T("رقم التتبع", "Tracking")}</th>
                     <th className="p-2 text-start">{T("القيمة", "Total")}</th>
                     <th className="p-2 text-start">{T("محصَّل", "Collected")}</th>
                     <th className="p-2 text-start">{T("متبقي", "Outstanding")}</th>
@@ -396,6 +422,15 @@ function OrderClearingPage() {
                           </div>
                         </td>
                         <td className="p-2">{r.customerName ?? "—"}</td>
+                        <td className="p-2">
+                          {r.tracking ? (
+                            <span className="font-mono text-xs" dir="ltr">
+                              {r.tracking}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
                         <td className="p-2 tabular-nums">{money(r.totalAmount, currency)}</td>
                         <td className="p-2 tabular-nums text-emerald-500">
                           {money(r.collected, currency)}
@@ -513,7 +548,7 @@ function OrderClearingPage() {
                   })}
                   {rows.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={11} className="p-8 text-center text-muted-foreground">
                         {clearingQ.isLoading
                           ? T("جارٍ التحميل…", "Loading…")
                           : T("لا توجد أوردرات بالفلاتر دي.", "No orders match these filters.")}

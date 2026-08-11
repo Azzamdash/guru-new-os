@@ -45,6 +45,12 @@ export type ClearingRow = {
   feeSource: "accrued" | "suggested" | "laterRate" | "missing";
   /** Governorate the fee was (or would be) priced from, for explaining a missing rate. */
   governorate: string | null;
+  /**
+   * The courier's own waybill number — what an accountant reads off the courier's
+   * statement to find the order. bosta_tracking for Bosta, dispatch_tracking for
+   * every other courier; only one is ever set.
+   */
+  tracking: string | null;
 };
 
 export type OrderClearingList = {
@@ -92,11 +98,13 @@ export const getOrderClearing = createServerFn({ method: "GET" })
       total_amount: number;
       collection_status: string | null;
       shipping_governorate: string | null;
+      bosta_tracking: string | null;
+      dispatch_tracking: string | null;
     }>(() => {
       let q = ctx.supabase
         .from("orders")
         .select(
-          "id, external_order_number, customer_name, occurred_at, total_amount, collection_status, shipping_governorate",
+          "id, external_order_number, customer_name, occurred_at, total_amount, collection_status, shipping_governorate, bosta_tracking, dispatch_tracking",
         )
         .eq("courier_id", data.courierId)
         .eq("shipment_outcome", "delivered")
@@ -219,6 +227,7 @@ export const getOrderClearing = createServerFn({ method: "GET" })
         courierFee,
         feeSource,
         governorate: o.shipping_governorate,
+        tracking: o.bosta_tracking || o.dispatch_tracking || null,
       };
     });
 
