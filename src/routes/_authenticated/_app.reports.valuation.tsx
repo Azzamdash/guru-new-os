@@ -135,6 +135,77 @@ function ValuationPage() {
             />
           </div>
 
+          {/*
+            The recurring question this answers: money the couriers collected is
+            always larger than the revenue valuation multiplies, and until now
+            nothing on the page said why. Each line is an amount held back, not
+            an amount lost.
+          */}
+          <Card className="card-gradient p-4 space-y-2">
+            <h3 className="font-semibold text-sm">
+              {T("ليه الإيراد أقل من التحصيلات؟", "Why is revenue lower than what was collected?")}
+            </h3>
+            <table className="w-full text-sm">
+              <tbody>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">{T("إيراد معتمد في التقييم", "Revenue recognised")}</td>
+                  <td className="py-2 num text-end font-semibold">
+                    {fmt(data.revenueBreakdown.recognised)}
+                  </td>
+                </tr>
+                {data.revenueBreakdown.pendingDelivery !== 0 && (
+                  <tr className="border-b border-border/50">
+                    <td className="py-2">
+                      {T("مستنّي التسليم", "Awaiting delivery")}
+                      <span className="text-muted-foreground text-xs ms-1">
+                        ({data.revenueBreakdown.pendingDeliveryOrders} {T("أوردر", "orders")})
+                      </span>
+                    </td>
+                    <td className="py-2 num text-end text-amber-600 dark:text-amber-400">
+                      {fmt(data.revenueBreakdown.pendingDelivery)}
+                    </td>
+                  </tr>
+                )}
+                {data.revenueBreakdown.pendingByOutcome.map((o) => (
+                  <tr key={o.outcome} className="border-b border-border/30">
+                    <td className="py-1 ps-6 text-xs text-muted-foreground">
+                      {o.outcome} ({o.orders})
+                    </td>
+                    <td className="py-1 num text-end text-xs text-muted-foreground">
+                      {fmt(o.amount)}
+                    </td>
+                  </tr>
+                ))}
+                {data.revenueBreakdown.shippingExcluded !== 0 && (
+                  <tr className="border-b border-border/50">
+                    <td className="py-2">
+                      {T("شحن محصَّل للعميل (مش إيراد)", "Shipping collected (not revenue)")}
+                    </td>
+                    <td className="py-2 num text-end text-muted-foreground">
+                      {fmt(data.revenueBreakdown.shippingExcluded)}
+                    </td>
+                  </tr>
+                )}
+                {data.revenueBreakdown.serviceRevenue !== 0 && (
+                  <tr>
+                    <td className="py-2">
+                      {T("إيراد البراندات الخدمية", "Service brand revenue")}
+                    </td>
+                    <td className="py-2 num text-end">
+                      {fmt(data.revenueBreakdown.serviceRevenue)}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <p className="text-xs text-muted-foreground">
+              {T(
+                `التقييم = إيراد آخر ١٢ شهر × 1.5 + صافي الأصول. الإيراد بيتحسب من ${data.since} ولما الأوردر يتسلّم بس.`,
+                `Valuation = last 12 months revenue × 1.5 + net assets. Revenue counts from ${data.since}, and only once an order is delivered.`,
+              )}
+            </p>
+          </Card>
+
           <Card className="card-gradient p-4">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-primary" />

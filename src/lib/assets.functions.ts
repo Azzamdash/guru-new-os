@@ -123,10 +123,11 @@ export const getValuationReport = createServerFn({ method: "GET" })
       active: boolean;
     }>;
 
-    const [revByBrand, assetsRes] = await Promise.all([
+    const [revenue, assetsRes] = await Promise.all([
       valuationRevenueByBrand(context.supabase, yearAgo),
       context.supabase.from("company_assets").select("*"),
     ]);
+    const revByBrand = revenue.totals;
     if (assetsRes.error) throw assetsRes.error;
 
     const assets = (assetsRes.data ?? []) as CompanyAsset[];
@@ -177,5 +178,9 @@ export const getValuationReport = createServerFn({ method: "GET" })
       totals,
       companyWide: { cost: companyWideCost, net: companyWideNet },
       totalCompanyValuation: totals.valuation + companyWideNet,
+      // Why the recognised base is smaller than the money the couriers handed
+      // over: revenue waits for delivery, and shipping was never ours.
+      revenueBreakdown: revenue.breakdown,
+      since: yearAgo,
     };
   });

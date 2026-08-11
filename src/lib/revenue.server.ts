@@ -35,11 +35,30 @@ const PAGE = 1000;
  * out here the same way accounting_profit_report and
  * dashboard_operational_report do (20260810100000 / 20260810110000).
  */
+export type ValuationRevenueBreakdown = {
+  /** Product revenue actually recognised — the number valuation multiplies. */
+  recognised: number;
+  /** Product revenue on orders held back purely because they are not delivered yet. */
+  pendingDelivery: number;
+  pendingDeliveryOrders: number;
+  /** The above split by the outcome that held it back, so the biggest bucket is obvious. */
+  pendingByOutcome: Array<{ outcome: string; amount: number; orders: number }>;
+  /** Shipping stripped out of recognised orders — collected, but owed to the courier. */
+  shippingExcluded: number;
+  /** Service-brand revenue, which arrives from projects rather than orders. */
+  serviceRevenue: number;
+};
+
 export async function valuationRevenueByBrand(
   supabase: Db,
   sinceDate: string,
-): Promise<Map<string, number>> {
+): Promise<{ totals: Map<string, number>; breakdown: ValuationRevenueBreakdown }> {
   const totals = new Map<string, number>();
+  let recognised = 0;
+  let pendingDelivery = 0;
+  let pendingDeliveryOrders = 0;
+  let shippingExcluded = 0;
+  const pending = new Map<string, { amount: number; orders: number }>();
 
   const { data: brandRows, error: bErr } = await supabase.from("brands").select("id, type");
   if (bErr) throw bErr;
@@ -72,9 +91,24 @@ export async function valuationRevenueByBrand(
     for (const r of rows) {
       const type = brandType.get(r.brand_id);
       if (type === "service") continue; // has no orders — handled separately below
-      if (type !== "offline_branch" && r.shipment_outcome !== "delivered") continue;
       const sign = r.order_kind === "return" ? -1 : 1;
-      const productAmount = (Number(r.total_amount) || 0) - (Number(r.shipping_amount) || 0);
+      const shipping = Number(r.shipping_amount) || 0;
+      const productAmount = (Number(r.total_amount) || 0) - shipping;
+      if (type !== "offline_branch" && r.shipment_outcome !== "delivered") {
+        // Not lost, just not realised yet. Tracked so the valuation page can say
+        // where the difference from money collected has gone, instead of leaving
+        // a smaller-than-expected figure unexplained.
+        const outcome = r.shipment_outcome || "—";
+        const hit = pending.get(outcome) ?? { amount: 0, orders: 0 };
+        hit.amount += sign * productAmount;
+        hit.orders += 1;
+        pending.set(outcome, hit);
+        pendingDelivery += sign * productAmount;
+        pendingDeliveryOrders += 1;
+        continue;
+      }
+      recognised += sign * productAmount;
+      shippingExcluded += sign * shipping;
       totals.set(r.brand_id, (totals.get(r.brand_id) ?? 0) + sign * productAmount);
     }
     if (rows.length < PAGE) break;
@@ -82,11 +116,25 @@ export async function valuationRevenueByBrand(
   }
 
   const serviceRevenue = await serviceRevenueByBrandSince(supabase, sinceDate, serviceBrandIds);
+  let serviceTotal = 0;
   for (const [brandId, amount] of serviceRevenue) {
     totals.set(brandId, (totals.get(brandId) ?? 0) + amount);
+    serviceTotal += amount;
   }
 
-  return totals;
+  return {
+    totals,
+    breakdown: {
+      recognised,
+      pendingDelivery,
+      pendingDeliveryOrders,
+      pendingByOutcome: Array.from(pending.entries())
+        .map(([outcome, v]) => ({ outcome, amount: v.amount, orders: v.orders }))
+        .sort((a, b) => b.amount - a.amount),
+      shippingExcluded,
+      serviceRevenue: serviceTotal,
+    },
+  };
 }
 
 /**
