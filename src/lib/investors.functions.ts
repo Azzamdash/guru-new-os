@@ -163,11 +163,12 @@ export type ValuationContext = {
 
 async function buildValuationContext(ctx: Ctx): Promise<ValuationContext> {
   const yearAgo = trailing12mStart();
-  const [revMap, assetsRes, brandsRes] = await Promise.all([
+  const [revenue, assetsRes, brandsRes] = await Promise.all([
     valuationRevenueByBrand(ctx.supabase, yearAgo),
     ctx.supabase.from("company_assets").select("cost, purchase_date, annual_depreciation_rate, brand_id"),
     ctx.supabase.from("brands").select("id").eq("active", true),
   ]);
+  const revMap = revenue.totals;
   const assets = (assetsRes.data ?? []) as AssetRow[];
   const now = Date.now();
   const byBrand = new Map<string, AssetRow[]>();
