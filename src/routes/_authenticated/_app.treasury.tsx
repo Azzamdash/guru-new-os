@@ -55,7 +55,7 @@ import {
   Truck,
 } from "lucide-react";
 import { WalletsPanel } from "@/components/WalletsPanel";
-import { listWallets } from "@/lib/wallets.functions";
+import { listWallets, getTreasuryReconciliation } from "@/lib/wallets.functions";
 import { useEffect } from "react";
 import { useLang } from "@/lib/i18n";
 
@@ -295,7 +295,12 @@ function TreasuryPage() {
     return m;
   }, [actorsQ.data]);
 
+  const reconFn = useServerFn(getTreasuryReconciliation);
+  const reconQ = useQuery({ queryKey: ["treasury-reconciliation"], queryFn: () => reconFn() });
   const s = summaryQ.data;
+  const recon = reconQ.data;
+  // Only worth showing when the two really are apart; a rounding-level gap is noise.
+  const reconGap = Math.abs((recon?.expectedBalance ?? 0) - (s?.balance ?? 0));
 
   const selectedCourierDebt = useMemo(() => {
     if (form.type !== "collection" || !form.courier_id) return null;
@@ -429,6 +434,76 @@ function TreasuryPage() {
           </button>
         </Card>
       </div>
+
+      {/*
+        The headline balance and the wallet cards come from different places:
+        cash_summary_report reads the cash_daily_metrics rollup, adds every
+        wallet's opening balance and subtracts expenses never booked as cash,
+        while the wallet cards read cash_transactions and skip rows with no
+        wallet_id. Rather than leave two totals looking broken side by side,
+        name what sits between them.
+      */}
+      {recon && (recon.unassignedCount > 0 || recon.unbookedExpensesCount > 0 || reconGap > 1) && (
+        <Card className="p-4 space-y-2">
+          <div className="text-sm font-semibold">
+            {T(
+              "ليه الرصيد مختلف عن مجموع المحافظ؟",
+              "Why does the balance differ from the wallets?",
+            )}
+          </div>
+          <table className="w-full text-sm">
+            <tbody>
+              <tr className="border-b border-border/50">
+                <td className="py-2">{T("مجموع المحافظ والخزائن", "Wallets total")}</td>
+                <td className="py-2 num text-end font-semibold">{fmt(recon.walletsTotal)}</td>
+              </tr>
+              {recon.unassignedCount > 0 && (
+                <tr className="border-b border-border/50">
+                  <td className="py-2">
+                    {T("حركات من غير محفظة", "Movements with no wallet")}
+                    <span className="text-muted-foreground text-xs ms-1">
+                      ({recon.unassignedCount})
+                    </span>
+                  </td>
+                  <td className="py-2 num text-end text-amber-600 dark:text-amber-400">
+                    {fmt(recon.unassignedNet)}
+                  </td>
+                </tr>
+              )}
+              {recon.unbookedExpensesCount > 0 && (
+                <tr className="border-b border-border/50">
+                  <td className="py-2">
+                    {T(
+                      "(−) مصاريف مسجّلة مش متخصومة من محفظة",
+                      "(−) Expenses never booked as cash",
+                    )}
+                    <span className="text-muted-foreground text-xs ms-1">
+                      ({recon.unbookedExpensesCount})
+                    </span>
+                  </td>
+                  <td className="py-2 num text-end text-destructive">
+                    {fmt(recon.unbookedExpenses)}
+                  </td>
+                </tr>
+              )}
+              <tr>
+                <td className="py-2 font-semibold">
+                  {T("الرصيد المتاح في الخزنة", "Available treasury balance")}
+                </td>
+                <td className="py-2 num text-end font-semibold">{fmt(s?.balance ?? 0)}</td>
+              </tr>
+            </tbody>
+          </table>
+          {recon.unassignedCount > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {T(
+                "الحركات اللي من غير محفظة فلوس حقيقية بس مش محسوبة على أي خزنة — افتحها وحدّد المحفظة عشان الأرقام تتطابق.",
+                "Movements with no wallet are real cash that no wallet accounts for — open them and set a wallet so the two agree.",
+              )}
+            </p>
+          )}
+        </Card>
+      )}
 
       <WalletsPanel canWrite={canWrite} from={from} to={to} />
 
