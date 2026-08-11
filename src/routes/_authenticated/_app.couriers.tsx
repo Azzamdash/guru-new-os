@@ -32,6 +32,7 @@ import {
   bulkUpsertCourierRates,
   getCourierRateGaps,
   recalculateCourierCharges,
+  dedupeCourierRates,
 } from "@/lib/courier-config.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/couriers")({
@@ -184,6 +185,32 @@ function CouriersPage() {
       qc.invalidateQueries({ queryKey: ["courier-rates"] });
       qc.invalidateQueries({ queryKey: ["courier-rate-gaps"] });
       qc.invalidateQueries({ queryKey: ["order-clearing"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  // Two-step on purpose: the first click only counts what would go, so a delete
+  // is never the first thing a click does.
+  const dedupeRates = useServerFn(dedupeCourierRates);
+  const [pendingDedupe, setPendingDedupe] = useState<number | null>(null);
+  const dedupeMutation = useMutation({
+    mutationFn: (confirmed: boolean) => dedupeRates({ data: { dryRun: !confirmed } }),
+    onSuccess: (r, confirmed) => {
+      if (!confirmed) {
+        if (r.redundant === 0) {
+          toast.success(lang === "ar" ? "مفيش أسعار مكررة" : "No duplicate rates");
+          setPendingDedupe(null);
+          return;
+        }
+        setPendingDedupe(r.redundant);
+        return;
+      }
+      setPendingDedupe(null);
+      toast.success(
+        lang === "ar" ? `تم حذف ${r.removed} سعر مكرر` : `Removed ${r.removed} duplicate rate(s)`,
+      );
+      qc.invalidateQueries({ queryKey: ["courier-rates"] });
+      qc.invalidateQueries({ queryKey: ["courier-rate-gaps"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -415,6 +442,13 @@ function CouriersPage() {
             >
               {lang === "ar" ? "إعادة حساب الرسوم" : "Recalculate fees"}
             </Button>
+            <Button
+              variant="outline"
+              disabled={!ratesQ.data?.ready || dedupeMutation.isPending}
+              onClick={() => dedupeMutation.mutate(false)}
+            >
+              {lang === "ar" ? "تنظيف المكرر" : "Clean duplicates"}
+            </Button>
           </div>
         </div>
 
@@ -423,6 +457,28 @@ function CouriersPage() {
             ? "إضافة سعر لمحافظة مش بيغيّر الأوردرات اللي اتسلّمت قبله — دوس «إعادة حساب الرسوم» بعد ما تعدّل الأسعار عشان الرسوم المفتوحة تتسعّر من جديد."
             : "Adding a rate does not change orders delivered before it — use Recalculate fees after editing rates so open charges are re-priced."}
         </p>
+
+        {pendingDedupe !== null && pendingDedupe > 0 && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm flex flex-wrap items-center justify-between gap-3">
+            <span>
+              {lang === "ar"
+                ? `${pendingDedupe} سعر بيكرّر اللي قبله من غير ما يغيّر أي رقم. الحذف مش هيغيّر أي رسم محسوب.`
+                : `${pendingDedupe} rate(s) repeat the card before them without changing any figure. Deleting them changes no calculated fee.`}
+            </span>
+            <span className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setPendingDedupe(null)}>
+                {lang === "ar" ? "إلغاء" : "Cancel"}
+              </Button>
+              <Button
+                size="sm"
+                disabled={dedupeMutation.isPending}
+                onClick={() => dedupeMutation.mutate(true)}
+              >
+                {lang === "ar" ? "احذفهم" : "Delete them"}
+              </Button>
+            </span>
+          </div>
+        )}
 
         {(gapsQ.data ?? []).length > 0 && (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm space-y-2">

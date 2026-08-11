@@ -225,6 +225,76 @@ export const recalculateCourierCharges = createServerFn({ method: "POST" })
     return { ok: true, updated };
   });
 
+/**
+ * Removes rate cards that repeat the card before them without changing a price.
+ *
+ * Re-saving a rate card stamps a new effective_from, so a governorate collects a
+ * row per save even when nothing about its fees moved. Those rows are inert —
+ * the newest card in effect wins, and it charges the same — but they bury the
+ * genuine price changes in the table.
+ *
+ * Only a row identical to the one it supersedes is dropped, walking each
+ * governorate oldest-first, so a real change is always kept and the fee in force
+ * on any past date is unaffected. Both rows must be open-ended: a card with an
+ * explicit effective_to describes a deliberate window and is never touched, nor
+ * are inactive rows, which no longer take part in matching.
+ *
+ * Deleting a rate fires refresh_courier_charges_for_rate, which re-prices that
+ * governorate's open orders — the fee is unchanged, so this is a no-op in
+ * practice, but it is why the delete is left to the database rather than
+ * batched behind its back.
+ */
+export const dedupeCourierRates = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { courierId?: string | null; dryRun?: boolean } = {}) => data)
+  .handler(async ({ data, context }) => {
+    await assertPageWrite(context, COURIERS_PAGE);
+    let query = context.supabase
+      .from("courier_governorate_rates")
+      .select(
+        "id, courier_id, governorate, delivery_fee, customer_return_fee, failed_delivery_fee, exchange_fee, effective_from, effective_to, active",
+      )
+      .eq("active", true)
+      .is("effective_to", null)
+      .order("effective_from", { ascending: true });
+    if (data.courierId) query = query.eq("courier_id", data.courierId);
+    const { data: rows, error } = await query;
+    if (error) throw error;
+
+    type Rate = {
+      id: string;
+      courier_id: string;
+      governorate: string;
+      delivery_fee: number;
+      customer_return_fee: number;
+      failed_delivery_fee: number;
+      exchange_fee: number;
+    };
+    const feeKey = (r: Rate) =>
+      [r.delivery_fee, r.customer_return_fee, r.failed_delivery_fee, r.exchange_fee]
+        .map((f) => Number(f) || 0)
+        .join("|");
+
+    const lastKept = new Map<string, string>();
+    const redundant: string[] = [];
+    for (const r of (rows ?? []) as Rate[]) {
+      const group = `${r.courier_id}::${normalizeGovernorate(r.governorate)}`;
+      const fees = feeKey(r);
+      if (lastKept.get(group) === fees) redundant.push(r.id);
+      else lastKept.set(group, fees);
+    }
+
+    if (data.dryRun) return { ok: true, removed: 0, redundant: redundant.length };
+    if (redundant.length === 0) return { ok: true, removed: 0, redundant: 0 };
+
+    const { error: delErr } = await context.supabase
+      .from("courier_governorate_rates")
+      .delete()
+      .in("id", redundant);
+    if (delErr) throw delErr;
+    return { ok: true, removed: redundant.length, redundant: redundant.length };
+  });
+
 export const upsertCourierStatusMapping = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
