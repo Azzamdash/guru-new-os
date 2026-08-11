@@ -4717,6 +4717,10 @@ export type Database = {
         Returns: boolean
       }
       normalize_governorate: { Args: { _name: string }; Returns: string }
+      credit_courier_withheld_fee: {
+        Args: { _amount: number; _brand_id?: string | null; _courier_id: string }
+        Returns: undefined
+      }
       recalculate_courier_charges: {
         Args: { _courier_id?: string | null }
         Returns: Json

@@ -326,7 +326,7 @@ function OrderClearingPage() {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
             <Card className="p-4">
               <div className="text-xs text-muted-foreground">{T("أوردرات", "Orders")}</div>
               <div className="mt-1 text-2xl font-bold tabular-nums">
@@ -342,7 +342,9 @@ function OrderClearingPage() {
               </div>
             </Card>
             <Card className="p-4">
-              <div className="text-xs text-muted-foreground">{T("محصَّل", "Collected")}</div>
+              <div className="text-xs text-muted-foreground">
+                {T("محصَّل من العميل", "Collected from customers")}
+              </div>
               <div className="mt-1 text-2xl font-bold tabular-nums text-emerald-500">
                 {money(clearingQ.data?.totals.collected ?? 0, currency)}
               </div>
@@ -351,6 +353,32 @@ function OrderClearingPage() {
               <div className="text-xs text-muted-foreground">{T("متبقي", "Outstanding")}</div>
               <div className="mt-1 text-2xl font-bold tabular-nums text-destructive">
                 {money(clearingQ.data?.totals.outstanding ?? 0, currency)}
+              </div>
+            </Card>
+            {/*
+              "محصَّل" used to be one number doing two jobs: the gross the customer
+              paid, sitting next to a treasury movement booked net. Same word, two
+              amounts, no way to tell. Both are named now, with the courier's cut
+              between them, so the last figure is the one that reached the bank.
+            */}
+            <Card className="p-4">
+              <div className="text-xs text-muted-foreground">
+                {T("(−) رسوم الشحن غير المقفولة", "(−) Unsettled courier fees")}
+              </div>
+              <div className="mt-1 text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                {money(clearingQ.data?.totals.courierFees ?? 0, currency)}
+              </div>
+            </Card>
+            <Card className="border-primary/40 bg-primary/5 p-4">
+              <div className="text-xs text-muted-foreground">
+                {T("صافي يوصل للخزنة", "Net reaching the treasury")}
+              </div>
+              <div className="mt-1 text-2xl font-bold tabular-nums">
+                {money(
+                  (clearingQ.data?.totals.collected ?? 0) -
+                    (clearingQ.data?.totals.courierFees ?? 0),
+                  currency,
+                )}
               </div>
             </Card>
           </div>
