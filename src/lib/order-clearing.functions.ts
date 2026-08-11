@@ -4,6 +4,7 @@ import { assertPageWrite } from "./page-permissions.server";
 import { ORDERS_PAGE } from "./page-permission-paths";
 import { fetchAllRows } from "./paginate";
 import { businessDateEndUTC, businessDateStartUTC, getTodayInBusinessTimezone } from "./timezone";
+import { normalizeGovernorate } from "./governorate.shared";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Ctx = { supabase: any; userId: string };
@@ -32,12 +33,16 @@ export type ClearingRow = {
   /**
    * Where courierFee came from, because a bare 0 cannot tell "free" from "never
    * priced" and the accountant has to know which they are looking at.
-   *  - accrued:   a real charge row, priced when the order was delivered.
-   *  - suggested: nothing accrued, but the courier's current rate card covers
-   *               this governorate — shown as a default to accept or overwrite.
-   *  - missing:   no charge and no matching rate. The 0 is an absence.
+   *  - accrued:    a real charge row, priced when the order was delivered.
+   *  - suggested:  nothing accrued, but the courier's rate card covers this
+   *                governorate on this order's date — a default to accept or edit.
+   *  - laterRate:  the governorate IS priced, but every card for it starts after
+   *                this order. Rates match on effective_from <= occurred_at, so a
+   *                card saved today never reaches orders delivered before today.
+   *                The amount is still offered; the fix is to backdate the card.
+   *  - missing:    no charge and no rate for this governorate at all.
    */
-  feeSource: "accrued" | "suggested" | "missing";
+  feeSource: "accrued" | "suggested" | "laterRate" | "missing";
   /** Governorate the fee was (or would be) priced from, for explaining a missing rate. */
   governorate: string | null;
 };
@@ -159,17 +164,28 @@ export const getOrderClearing = createServerFn({ method: "GET" })
     }>;
     // Matched the way accrue_order_courier_charge matches: case- and
     // whitespace-insensitive, newest card in effect on the order's own date.
-    const suggestedFee = (governorate: string | null, occurredAt: string): number | null => {
-      const key = (governorate ?? "").trim().toLowerCase();
+    //
+    // When nothing is in effect we do NOT give up, because the overwhelmingly
+    // common reason is a card saved today (the default effective_from) against
+    // orders delivered earlier — the governorate is priced, just not yet on that
+    // date. Offer the earliest card's fee and flag it, so the sheet is usable and
+    // the real remedy (backdate the card) is stated rather than guessed at.
+    const rateFor = (
+      governorate: string | null,
+      occurredAt: string,
+    ): { amount: number; startsLater: boolean } | null => {
+      const key = normalizeGovernorate(governorate);
       if (!key) return null;
       const day = occurredAt.slice(0, 10);
-      for (const r of rates) {
-        if (r.governorate.trim().toLowerCase() !== key) continue;
-        if (r.effective_from > day) continue;
-        if (r.effective_to && r.effective_to < day) continue;
-        return Number(r.delivery_fee) || 0;
-      }
-      return null;
+      // rates arrive newest-first, so the first in-window hit is the right card.
+      const forGovernorate = rates.filter((r) => normalizeGovernorate(r.governorate) === key);
+      if (forGovernorate.length === 0) return null;
+      const inEffect = forGovernorate.find(
+        (r) => r.effective_from <= day && (!r.effective_to || r.effective_to >= day),
+      );
+      if (inEffect) return { amount: Number(inEffect.delivery_fee) || 0, startsLater: false };
+      const earliest = forGovernorate[forGovernorate.length - 1];
+      return { amount: Number(earliest.delivery_fee) || 0, startsLater: true };
     };
 
     const all: ClearingRow[] = orders.map((o) => {
@@ -179,10 +195,16 @@ export const getOrderClearing = createServerFn({ method: "GET" })
       const status: ClearingStatus =
         collected <= 0.01 ? "unpaid" : outstanding > 0.01 ? "partial" : "paid";
       const accrued = feeByOrder.get(o.id) ?? 0;
-      const suggested = accrued > 0 ? null : suggestedFee(o.shipping_governorate, o.occurred_at);
-      const courierFee = accrued > 0 ? accrued : (suggested ?? 0);
+      const rate = accrued > 0 ? null : rateFor(o.shipping_governorate, o.occurred_at);
+      const courierFee = accrued > 0 ? accrued : (rate?.amount ?? 0);
       const feeSource: ClearingRow["feeSource"] =
-        accrued > 0 ? "accrued" : suggested !== null ? "suggested" : "missing";
+        accrued > 0
+          ? "accrued"
+          : rate === null
+            ? "missing"
+            : rate.startsLater
+              ? "laterRate"
+              : "suggested";
       return {
         orderId: o.id,
         orderNumber: o.external_order_number,
