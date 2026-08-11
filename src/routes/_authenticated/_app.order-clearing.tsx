@@ -492,6 +492,17 @@ function OrderClearingPage() {
                             />
                             {/* A bare 0 cannot say whether shipping was free or never
                                 priced, so every cell states which number it is. */}
+                            {feeEdits[r.orderId] === undefined && r.feeSource === "settled" && (
+                              <span
+                                className="text-[10px] text-emerald-500"
+                                title={T(
+                                  "الرسم ده اتقفل مع تحويل سابق — معروض للمراجعة، ومش هيتخصم تاني",
+                                  "This fee was closed against an earlier transfer — shown for review, never deducted again",
+                                )}
+                              >
+                                {T("مقفولة", "settled")}
+                              </span>
+                            )}
                             {feeEdits[r.orderId] === undefined && r.feeSource === "suggested" && (
                               <span
                                 className="text-[10px] text-muted-foreground"
