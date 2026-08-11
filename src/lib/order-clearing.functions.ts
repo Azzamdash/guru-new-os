@@ -503,6 +503,28 @@ export const postOrderClearing = createServerFn({ method: "POST" })
       }
     }
 
+    // The courier collected the full COD from the customer and kept the fee out
+    // of the transfer. Their debt is discharged by the gross, not by the net that
+    // reached the bank — without this the fee they were entitled to keep sits in
+    // their balance as money still owed. Deliberately not a cash movement: no
+    // cash moved, so booking one would credit the treasury with money that never
+    // arrived.
+    if (fees > 0) {
+      const brandForCredit = brandIds.size === 1 ? [...brandIds][0] : null;
+      const { error: creditErr } = await ctx.supabase.rpc("credit_courier_withheld_fee", {
+        _courier_id: data.courierId,
+        _brand_id: brandForCredit,
+        _amount: fees,
+      });
+      // The money is recorded correctly either way; only the courier's balance
+      // would read high. Say so rather than unwinding a valid receipt.
+      if (creditErr) {
+        throw new Error(
+          `تم تسجيل التحصيل، لكن تعذر خصم الرسوم من مديونية شركة الشحن: ${creditErr.message}`,
+        );
+      }
+    }
+
     return {
       ok: true,
       postedOrders: lines.length,
@@ -603,6 +625,28 @@ export const clearOrderCollections = createServerFn({ method: "POST" })
         .from("courier_charges")
         .update({ settled_at: null, settled_cash_transaction_id: null })
         .in("id", reopenIds);
+
+      // Posting credited the withheld fee against the courier's debt, since
+      // keeping it discharges the same debt as handing the money over. Taking
+      // the collection back has to take that credit back too, or the courier
+      // ends up owing less than they do.
+      const reopenedFees = [...feeByCash.values()].reduce((a, b) => a + b, 0);
+      if (reopenedFees > 0) {
+        const order = await ctx.supabase
+          .from("orders")
+          .select("brand_id, courier_id")
+          .eq("id", data.orderId)
+          .maybeSingle();
+        const o = order.data as { brand_id: string; courier_id: string | null } | null;
+        if (o?.courier_id) {
+          const { error: creditErr } = await ctx.supabase.rpc("credit_courier_withheld_fee", {
+            _courier_id: o.courier_id,
+            _brand_id: o.brand_id,
+            _amount: -reopenedFees,
+          });
+          if (creditErr) throw new Error(creditErr.message);
+        }
+      }
     }
 
     let adjusted = 0;
