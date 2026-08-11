@@ -74,6 +74,87 @@ export const deleteWallet = createServerFn({ method: "POST" })
 
 export type WalletBalance = Wallet & { balance: number; periodIn: number; periodOut: number };
 
+export type TreasuryReconciliation = {
+  /** Sum of every wallet's balance — the money the wallet cards account for. */
+  walletsTotal: number;
+  /** Signed total of cash movements carrying no wallet_id. In no wallet card, but real cash. */
+  unassignedNet: number;
+  unassignedCount: number;
+  /** Expenses recorded with no cash_transaction — the treasury subtracts these, no wallet can. */
+  unbookedExpenses: number;
+  unbookedExpensesCount: number;
+  /** walletsTotal + unassignedNet − unbookedExpenses: what the headline balance should equal. */
+  expectedBalance: number;
+};
+
+/**
+ * Explains why the headline treasury balance and the wallet cards disagree.
+ *
+ * They are computed from different places and always have been.
+ * cash_summary_report reads the cash_daily_metrics rollup, adds every wallet's
+ * opening balance, and subtracts expense_entries that were never booked as
+ * cash. getWalletBalances reads cash_transactions directly and skips any row
+ * without a wallet_id. So a movement with no wallet, and an expense with no
+ * cash row at all, both move the headline while appearing in no wallet.
+ *
+ * This does not change either number — it accounts for the distance between
+ * them, so the gap is a figure with a name instead of two totals that look
+ * broken next to each other.
+ */
+export const getTreasuryReconciliation = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<TreasuryReconciliation> => {
+    const [walletsR, txnR, expR] = await Promise.all([
+      context.supabase.from("wallets").select("id, opening_balance"),
+      context.supabase.from("cash_transactions").select("wallet_id, type, amount"),
+      context.supabase.from("expense_entries").select("amount, cash_transaction_id"),
+    ]);
+    if (walletsR.error) throw walletsR.error;
+    if (txnR.error) throw txnR.error;
+    if (expR.error) throw expR.error;
+
+    let walletsTotal = 0;
+    for (const w of (walletsR.data ?? []) as Array<{ opening_balance: number }>) {
+      walletsTotal += Number(w.opening_balance) || 0;
+    }
+
+    let unassignedNet = 0;
+    let unassignedCount = 0;
+    for (const r of (txnR.data ?? []) as Array<{
+      wallet_id: string | null;
+      type: string;
+      amount: number;
+    }>) {
+      const amt = Number(r.amount) || 0;
+      const signed = r.type === "collection" || r.type === "deposit" ? amt : -amt;
+      if (r.wallet_id) walletsTotal += signed;
+      else {
+        unassignedNet += signed;
+        unassignedCount += 1;
+      }
+    }
+
+    let unbookedExpenses = 0;
+    let unbookedExpensesCount = 0;
+    for (const e of (expR.data ?? []) as Array<{
+      amount: number;
+      cash_transaction_id: string | null;
+    }>) {
+      if (e.cash_transaction_id) continue;
+      unbookedExpenses += Number(e.amount) || 0;
+      unbookedExpensesCount += 1;
+    }
+
+    return {
+      walletsTotal,
+      unassignedNet,
+      unassignedCount,
+      unbookedExpenses,
+      unbookedExpensesCount,
+      expectedBalance: walletsTotal + unassignedNet - unbookedExpenses,
+    };
+  });
+
 export const getWalletBalances = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { from?: string | null; to?: string | null } = {}) => d)
