@@ -55,7 +55,11 @@ import {
   Truck,
 } from "lucide-react";
 import { WalletsPanel } from "@/components/WalletsPanel";
-import { listWallets, getTreasuryReconciliation } from "@/lib/wallets.functions";
+import {
+  listWallets,
+  getTreasuryReconciliation,
+  assignOrphanCashToWallet,
+} from "@/lib/wallets.functions";
 import { useEffect } from "react";
 import { useLang } from "@/lib/i18n";
 
@@ -301,6 +305,24 @@ function TreasuryPage() {
   const recon = reconQ.data;
   // Only worth showing when the two really are apart; a rounding-level gap is noise.
   const reconGap = Math.abs((recon?.expectedBalance ?? 0) - (s?.balance ?? 0));
+  const assignOrphans = useServerFn(assignOrphanCashToWallet);
+  const [orphanWallet, setOrphanWallet] = useState("");
+  const orphanMutation = useMutation({
+    mutationFn: () => assignOrphans({ data: { walletId: orphanWallet } }),
+    onSuccess: (r) => {
+      toast.success(
+        lang === "ar"
+          ? `تم ربط ${r.assigned} حركة بالمحفظة`
+          : `Linked ${r.assigned} movement(s) to the wallet`,
+      );
+      setOrphanWallet("");
+      qc.invalidateQueries({ queryKey: ["treasury-reconciliation"] });
+      qc.invalidateQueries({ queryKey: ["wallet-balances"] });
+      qc.invalidateQueries({ queryKey: ["cash-summary"] });
+      qc.invalidateQueries({ queryKey: ["wallets"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const selectedCourierDebt = useMemo(() => {
     if (form.type !== "collection" || !form.courier_id) return null;
@@ -443,7 +465,7 @@ function TreasuryPage() {
         wallet_id. Rather than leave two totals looking broken side by side,
         name what sits between them.
       */}
-      {recon && (recon.unassignedCount > 0 || recon.unbookedExpensesCount > 0 || reconGap > 1) && (
+      {recon && (recon.unassignedCount > 0 || reconGap > 1) && (
         <Card className="p-4 space-y-2">
           <div className="text-sm font-semibold">
             {T(
@@ -470,37 +492,57 @@ function TreasuryPage() {
                   </td>
                 </tr>
               )}
-              {recon.unbookedExpensesCount > 0 && (
-                <tr className="border-b border-border/50">
-                  <td className="py-2">
-                    {T(
-                      "(−) مصاريف مسجّلة مش متخصومة من محفظة",
-                      "(−) Expenses never booked as cash",
-                    )}
-                    <span className="text-muted-foreground text-xs ms-1">
-                      ({recon.unbookedExpensesCount})
-                    </span>
-                  </td>
-                  <td className="py-2 num text-end text-destructive">
-                    {fmt(recon.unbookedExpenses)}
-                  </td>
-                </tr>
-              )}
               <tr>
                 <td className="py-2 font-semibold">
                   {T("الرصيد المتاح في الخزنة", "Available treasury balance")}
                 </td>
                 <td className="py-2 num text-end font-semibold">{fmt(s?.balance ?? 0)}</td>
               </tr>
+              {(s?.unpaidExpenses ?? 0) > 0 && (
+                <tr className="border-t border-border">
+                  <td className="py-2 text-muted-foreground">
+                    {T(
+                      "مصاريف مستحقة لسه ما اتدفعتش (مش مخصومة من الرصيد)",
+                      "Expenses owed but not yet paid (not deducted from the balance)",
+                    )}
+                  </td>
+                  <td className="py-2 num text-end text-amber-600 dark:text-amber-400">
+                    {fmt(s?.unpaidExpenses ?? 0)}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
           {recon.unassignedCount > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {T(
-                "الحركات اللي من غير محفظة فلوس حقيقية بس مش محسوبة على أي خزنة — افتحها وحدّد المحفظة عشان الأرقام تتطابق.",
-                "Movements with no wallet are real cash that no wallet accounts for — open them and set a wallet so the two agree.",
-              )}
-            </p>
+            <div className="space-y-2 pt-1">
+              <p className="text-xs text-muted-foreground">
+                {T(
+                  "الحركات دي فلوس حقيقية بس مش محسوبة على أي خزنة. الحركات الجديدة بقت بتتربط تلقائي — دي القديمة، اختار تروح لأنهي محفظة.",
+                  "These are real cash that no wallet accounts for. New movements are linked automatically — these are the old ones; choose which wallet they belong to.",
+                )}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={orphanWallet} onValueChange={setOrphanWallet}>
+                  <SelectTrigger className="w-56">
+                    <SelectValue placeholder={T("اختر المحفظة", "Choose a wallet")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(walletsQ.data ?? []).map((w) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  disabled={!orphanWallet || orphanMutation.isPending}
+                  onClick={() => orphanMutation.mutate()}
+                >
+                  {T(`اربط ${recon.unassignedCount} حركة`, `Link ${recon.unassignedCount}`)}
+                </Button>
+              </div>
+            </div>
           )}
         </Card>
       )}
