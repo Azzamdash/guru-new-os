@@ -87,3 +87,53 @@ export function normalizeGovernorate(name: string | null | undefined): string {
     .trim();
   return ALIASES[s] ?? s;
 }
+
+/**
+ * The one spelling a governorate is stored as.
+ *
+ * normalizeGovernorate produces a comparison key, not something to show a
+ * human — it strips the article and flattens letters. This maps that key back
+ * to the proper Arabic name, so every write path can agree on a single stored
+ * value instead of each recording whatever its own source happened to say:
+ * Shopify's English province, or the order form's Arabic or English depending
+ * on which language the UI was in when the order was typed.
+ *
+ * A name with no known canonical form is returned trimmed but otherwise as
+ * given. Rewriting something unrecognised would lose information, and the
+ * normalised match already handles it.
+ */
+const CANONICAL: Record<string, string> = {
+  قاهره: "القاهرة",
+  جيزه: "الجيزة",
+  اسكندريه: "الإسكندرية",
+  قليوبيه: "القليوبية",
+  شرقيه: "الشرقية",
+  دقهليه: "الدقهلية",
+  منوفيه: "المنوفية",
+  غربيه: "الغربية",
+  "كفر الشيخ": "كفر الشيخ",
+  دمياط: "دمياط",
+  بورسعيد: "بورسعيد",
+  اسماعيليه: "الإسماعيلية",
+  سويس: "السويس",
+  "شمال سيناء": "شمال سيناء",
+  "جنوب سيناء": "جنوب سيناء",
+  بحيره: "البحيرة",
+  مطروح: "مطروح",
+  فيوم: "الفيوم",
+  "بني سويف": "بني سويف",
+  منيا: "المنيا",
+  اسيوط: "أسيوط",
+  سوهاج: "سوهاج",
+  قنا: "قنا",
+  اقصر: "الأقصر",
+  اسوان: "أسوان",
+  "بحر الاحمر": "البحر الأحمر",
+  "وادي الجديد": "الوادي الجديد",
+};
+
+export function canonicalGovernorate(name: string | null | undefined): string | null {
+  const raw = (name ?? "").trim();
+  if (!raw) return null;
+  return CANONICAL[normalizeGovernorate(raw)] ?? raw;
+}

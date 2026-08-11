@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeGovernorate } from "../src/lib/governorate.shared";
+import { canonicalGovernorate, normalizeGovernorate } from "../src/lib/governorate.shared";
 
 describe("normalizeGovernorate", () => {
   it("folds the English name Shopify sends onto the Arabic one rates are entered in", () => {
@@ -56,5 +56,35 @@ describe("normalizeGovernorate", () => {
     expect(normalizeGovernorate(null)).toBe("");
     expect(normalizeGovernorate(undefined)).toBe("");
     expect(normalizeGovernorate("   ")).toBe("");
+  });
+
+  it("canonicalises every write path onto one stored spelling", () => {
+    // Shopify's English, the order form in English, and the order form in Arabic
+    // all used to store a different string for the same governorate.
+    expect(canonicalGovernorate("Cairo")).toBe("القاهرة");
+    expect(canonicalGovernorate("cairo")).toBe("القاهرة");
+    expect(canonicalGovernorate("القاهره")).toBe("القاهرة");
+    expect(canonicalGovernorate("القاهرة")).toBe("القاهرة");
+    expect(canonicalGovernorate("Kafr el-Sheikh")).toBe("كفر الشيخ");
+    expect(canonicalGovernorate("Red Sea")).toBe("البحر الأحمر");
+  });
+
+  it("is stable — canonicalising an already-canonical name changes nothing", () => {
+    for (const name of ["القاهرة", "أسيوط", "كفر الشيخ", "البحر الأحمر", "شمال سيناء"]) {
+      expect(canonicalGovernorate(name)).toBe(name);
+    }
+  });
+
+  it("leaves an unrecognised name alone rather than rewriting it", () => {
+    expect(canonicalGovernorate("Somewhere Else")).toBe("Somewhere Else");
+    expect(canonicalGovernorate("  padded  ")).toBe("padded");
+    expect(canonicalGovernorate(null)).toBeNull();
+    expect(canonicalGovernorate("   ")).toBeNull();
+  });
+
+  it("agrees with normalizeGovernorate, so a canonical write still matches a rate", () => {
+    for (const name of ["Cairo", "القاهره", "Kafr el-Sheikh", "Assiut"]) {
+      expect(normalizeGovernorate(canonicalGovernorate(name))).toBe(normalizeGovernorate(name));
+    }
   });
 });

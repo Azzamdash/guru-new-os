@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { canonicalGovernorate } from "./governorate.shared";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getCogsMap } from "./cogs.server";
 import {
@@ -368,7 +369,10 @@ export const upsertManualOrder = createServerFn({ method: "POST" })
       customer_name: data.customer_name ?? null,
       customer_phone: data.customer_phone ?? null,
       customer_email: data.customer_email ?? null,
-      shipping_governorate: data.shipping_governorate ?? null,
+      // Stored canonical, not as typed. The order form's value follows the UI
+      // language, so the same governorate arrived here as "القاهرة" or "Cairo"
+      // depending on who was entering it.
+      shipping_governorate: canonicalGovernorate(data.shipping_governorate),
       shipping_address: data.shipping_address ?? null,
       building_number: data.building_number ?? null,
       floor_number: data.floor_number ?? null,
