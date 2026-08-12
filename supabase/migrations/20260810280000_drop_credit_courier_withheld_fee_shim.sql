@@ -1,0 +1,19 @@
+-- Removes a shim that only ever existed on a live database.
+--
+-- 20260810270000 dropped credit_courier_withheld_fee, because
+-- courier_outstanding_totals derives the withheld credit from the settled
+-- charge and a second credit from the clearing path would discharge the same
+-- debt twice. But the schema change reached the database before the build that
+-- stops calling it reached the server, and in that window postOrderClearing
+-- would have failed on a missing function -- after writing the cash movement,
+-- so the operator would see a receipt succeed and the fee ledger error.
+--
+-- The function was restored for that window as an empty body, which is the
+-- correct behaviour once the derivation is in place: the old code calls it, it
+-- does nothing, the credit comes from the settled charge either way.
+--
+-- The build has since shipped and nothing calls it. This drops the shim.
+--
+-- A database that never saw the shim is unaffected -- 20260810270000 already
+-- dropped the function there, and IF EXISTS makes this a no-op.
+DROP FUNCTION IF EXISTS public.credit_courier_withheld_fee(uuid, uuid, numeric);
