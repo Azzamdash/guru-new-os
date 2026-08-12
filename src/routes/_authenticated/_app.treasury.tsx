@@ -441,6 +441,18 @@ function TreasuryPage() {
           <div className="text-xl sm:text-2xl font-bold mt-1 text-destructive">
             {fmt(s?.periodOut ?? 0)}
           </div>
+          {/*
+            This figure counts cash that left a wallet. Expenses recorded for the
+            period but never paid out are real money owed, and dropping them from
+            the card without a word makes the period look cheaper than it was —
+            so they are named here rather than folded into a cash number.
+          */}
+          {(s?.periodUnpaidExpenses ?? 0) > 0 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {T("+ مستحق لم يُدفع: ", "+ owed, not yet paid: ")}
+              <span className="num font-medium">{fmt(s?.periodUnpaidExpenses ?? 0)}</span>
+            </div>
+          )}
         </Card>
         <Card className="p-4">
           <div className="text-xs text-muted-foreground flex items-center gap-1">
@@ -459,11 +471,11 @@ function TreasuryPage() {
 
       {/*
         The headline balance and the wallet cards come from different places:
-        cash_summary_report reads the cash_daily_metrics rollup, adds every
-        wallet's opening balance and subtracts expenses never booked as cash,
-        while the wallet cards read cash_transactions and skip rows with no
-        wallet_id. Rather than leave two totals looking broken side by side,
-        name what sits between them.
+        cash_summary_report reads the cash_daily_metrics rollup and adds every
+        wallet's opening balance, while the wallet cards read cash_transactions
+        and skip rows with no wallet_id. Since 20260810250000 both are cash
+        only, so the only thing left between them is unassigned movements.
+        Rather than leave two totals looking broken side by side, name it.
       */}
       {recon && (recon.unassignedCount > 0 || reconGap > 1) && (
         <Card className="p-4 space-y-2">
