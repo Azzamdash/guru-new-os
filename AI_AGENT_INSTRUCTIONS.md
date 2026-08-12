@@ -36,7 +36,7 @@ Everything under `supabase/migrations/` must describe **structure**, never **sta
     `DO $mig$ BEGIN ... EXCEPTION WHEN duplicate_object THEN NULL; END $mig$;`
 - **Every new `public` table** gets `GRANT`s, `ENABLE ROW LEVEL SECURITY`, and its policies in the
   same migration.
-- **New files** go in `supabase/migrations/` with a timestamp *after* the baseline.
+- **New files** go in `supabase/migrations/` with a timestamp *after* the baseline, use a proper timestamp function to generate the actual current timestamp when creating migration names.
   `supabase/migrations_archive/` is history only and is never replayed — do not add to it.
 - **Zero raw SQL execution.** Manual or ad-hoc SQL against a production database is forbidden. All
   state manipulation outside pure schema happens through the application layer.
