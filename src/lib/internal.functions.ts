@@ -196,9 +196,13 @@ export const listExpenseEntries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { brandId: string | null; year?: number | null; month?: number | null; date_from?: string | null; date_to?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    let q = context.supabase
+    // expense_entries.wallet_id was added by a later migration than the one the
+    // generated Database types were produced from, so the typed client rejects
+    // the column. Same drift already worked around in couriers.functions.ts.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q = (context.supabase as any)
       .from("expense_entries")
-      .select("id, brand_id, category_id, year, month, amount, note, platform, attributed_revenue, period_type, period_date, period_end_date, created_at")
+      .select("id, brand_id, category_id, year, month, amount, note, platform, attributed_revenue, period_type, period_date, period_end_date, wallet_id, created_at")
       .order("created_at", { ascending: false });
     if (data.brandId) q = q.eq("brand_id", data.brandId);
     if (data.date_from && data.date_to) {
@@ -210,21 +214,24 @@ export const listExpenseEntries = createServerFn({ method: "GET" })
     }
     const { data: rows, error } = await q;
     if (error) throw error;
-    return rows as Array<{ id: string; brand_id: string; category_id: string; year: number; month: number; amount: number; note: string | null; platform: string | null; attributed_revenue: number; period_type: string; period_date: string | null; period_end_date: string | null }>;
+    return rows as Array<{ id: string; brand_id: string; category_id: string; year: number; month: number; amount: number; note: string | null; platform: string | null; attributed_revenue: number; period_type: string; period_date: string | null; period_end_date: string | null; wallet_id: string | null }>;
   });
 
 export const upsertExpenseEntry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id?: string; brand_id: string; category_id: string; year: number; month: number; amount: number; note?: string | null; platform?: "tiktok"|"meta"|"google"|"snapchat"|"whatsapp"|"sms"|"influencer"|"ugc"|"media_production"|"other"|null; attributed_revenue?: number; period_type?: "daily"|"weekly"|"monthly"|"yearly"|"custom"; period_date?: string | null; period_end_date?: string | null }) => d)
+  .inputValidator((d: { id?: string; brand_id: string; category_id: string; year: number; month: number; amount: number; note?: string | null; platform?: "tiktok"|"meta"|"google"|"snapchat"|"whatsapp"|"sms"|"influencer"|"ugc"|"media_production"|"other"|null; attributed_revenue?: number; period_type?: "daily"|"weekly"|"monthly"|"yearly"|"custom"; period_date?: string | null; period_end_date?: string | null; wallet_id?: string | null }) => d)
   .handler(async ({ data, context }) => {
     await assertWriter(context);
     const { id, ...rest } = data;
     const payload = { period_type: "monthly", ...rest };
+    // See listExpenseEntries: wallet_id postdates the generated Database types.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const table = () => (context.supabase as any).from("expense_entries");
     if (id) {
-      const { error } = await context.supabase.from("expense_entries").update(payload).eq("id", id);
+      const { error } = await table().update(payload).eq("id", id);
       if (error) throw error;
     } else {
-      const { error } = await context.supabase.from("expense_entries").insert(payload);
+      const { error } = await table().insert(payload);
       if (error) throw error;
     }
     return { ok: true };

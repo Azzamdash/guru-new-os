@@ -12,6 +12,8 @@ import {
   deleteExpenseEntry,
   listSuppliers,
 } from "@/lib/internal.functions";
+import { listWallets } from "@/lib/wallets.functions";
+import { isMarketingCategory } from "@/lib/expense-category.shared";
 import { getMyRole } from "@/lib/admin.functions";
 import { Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
@@ -140,6 +142,8 @@ function ExpensesPage() {
   const catsQ = useQuery({ queryKey: ["categories"], queryFn: () => listCatsFn() });
   const listSuppliersFn = useServerFn(listSuppliers);
   const suppliersQ = useQuery({ queryKey: ["suppliers"], queryFn: () => listSuppliersFn() });
+  const listWalletsFn = useServerFn(listWallets);
+  const walletsQ = useQuery({ queryKey: ["wallets"], queryFn: () => listWalletsFn() });
 
   const now = new Date();
   // Filter state
@@ -164,6 +168,7 @@ function ExpensesPage() {
     period_date: string;
     period_end_date: string;
     supplier_id: string;
+    wallet_id: string;
   }>({
     brand_id: "",
     category_id: "",
@@ -175,6 +180,7 @@ function ExpensesPage() {
     period_date: today(),
     period_end_date: today(),
     supplier_id: "",
+    wallet_id: "",
   });
 
   useEffect(() => {
@@ -235,6 +241,7 @@ function ExpensesPage() {
           period_type: payload.period_type,
           period_date: payload.period_date || null,
           period_end_date: payload.period_type === "custom" ? payload.period_end_date : null,
+          wallet_id: payload.wallet_id || null,
         },
       });
     },
@@ -292,9 +299,11 @@ function ExpensesPage() {
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? "—";
   const selectedCat = cats.find((c) => c.id === form.category_id);
   const catLabel = `${selectedCat?.name ?? ""} ${selectedCat?.slug ?? ""}`.toLowerCase();
-  const isMarketing = /market|تسويق|ماركت|إعلان|اعلان/.test(catLabel);
+  const isMarketing = isMarketingCategory(selectedCat?.name, selectedCat?.slug);
   const isPurchases = /purchas|مشترى|مشتري|مشترياة|مشتريات|شراء|مورد/.test(catLabel);
   const suppliers = suppliersQ.data ?? [];
+  const wallets = (walletsQ.data ?? []).filter((w) => w.active);
+  const walletName = (id: string | null) => wallets.find((w) => w.id === id)?.name ?? null;
   const brandSuppliers = form.brand_id
     ? suppliers.filter((s) => !s.brand_ids?.length || s.brand_ids.includes(form.brand_id))
     : suppliers;
@@ -330,6 +339,7 @@ function ExpensesPage() {
       period_date: row.period_date ?? today(),
       period_end_date: row.period_end_date ?? today(),
       supplier_id: "",
+      wallet_id: row.wallet_id ?? "",
     });
   };
 
@@ -527,6 +537,24 @@ function ExpensesPage() {
             </Select>
           </div>
           <div>
+            <Label>{T("الخزنة *", "Wallet *")}</Label>
+            <Select
+              value={form.wallet_id}
+              onValueChange={(v) => setForm({ ...form, wallet_id: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={T("اختر", "Select")} />
+              </SelectTrigger>
+              <SelectContent>
+                {wallets.map((w) => (
+                  <SelectItem key={w.id} value={w.id}>
+                    {w.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
             <Label>{T("نوع الفترة", "Period Type")}</Label>
             <Select
               value={form.period_type}
@@ -651,6 +679,10 @@ function ExpensesPage() {
                 return toast.error(
                   T("اختر بند ومبلغ صحيح", "Select a category and a valid amount"),
                 );
+              if (!form.wallet_id)
+                return toast.error(
+                  T("اختر الخزنة اللي هيتخصم منها", "Select the wallet to deduct from"),
+                );
               if (isMarketing && !form.platform)
                 return toast.error(T("اختر المنصة الإعلانية", "Select the ad platform"));
               if (isPurchases && !form.supplier_id)
@@ -716,6 +748,7 @@ function ExpensesPage() {
                 <th className="p-3">{T("البراند", "Brand")}</th>
                 <th className="p-3">{T("البند", "Category")}</th>
                 <th className="p-3">{T("المنصة", "Platform")}</th>
+                <th className="p-3">{T("الخزنة", "Wallet")}</th>
                 <th className="p-3 text-left">{T("المبلغ", "Amount")}</th>
                 <th className="p-3 text-left">{T("الإيراد المنسوب", "Attributed Revenue")}</th>
                 <th className="p-3">{T("ملاحظة", "Note")}</th>
@@ -749,6 +782,13 @@ function ExpensesPage() {
                         <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </td>
+                    <td className="p-3">
+                      {walletName(e.wallet_id) ?? (
+                        <span className="text-muted-foreground text-xs">
+                          {T("الافتراضية", "Default")}
+                        </span>
+                      )}
+                    </td>
                     <td className="p-3 num text-left">
                       {Number(e.amount).toLocaleString("en-US")}
                     </td>
@@ -767,7 +807,7 @@ function ExpensesPage() {
               })}
               {(expQ.data ?? []).length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-muted-foreground text-sm">
+                  <td colSpan={9} className="p-6 text-center text-muted-foreground text-sm">
                     {T("لا مصروفات في هذه الفترة.", "No expenses in this period.")}
                   </td>
                 </tr>
