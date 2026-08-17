@@ -15,6 +15,7 @@ import {
   type CashTxnType,
 } from "@/lib/internal.functions";
 import { listCategories, listSuppliers } from "@/lib/internal.functions";
+import { isMarketingCategory } from "@/lib/expense-category.shared";
 import { Link } from "@tanstack/react-router";
 import { getMyRole } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -195,10 +196,10 @@ function TreasuryPage() {
     () => (categoriesQ.data ?? []).find((c) => c.id === form.category_id) ?? null,
     [categoriesQ.data, form.category_id],
   );
-  const isMarketingCat = useMemo(() => {
-    const label = `${selectedCategory?.name ?? ""} ${selectedCategory?.slug ?? ""}`;
-    return /market|تسويق|ماركت|إعلان|اعلان/.test(label);
-  }, [selectedCategory]);
+  const isMarketingCat = useMemo(
+    () => isMarketingCategory(selectedCategory?.name, selectedCategory?.slug),
+    [selectedCategory],
+  );
   const isPurchasesCat = useMemo(() => {
     const label = `${selectedCategory?.name ?? ""} ${selectedCategory?.slug ?? ""}`;
     return /purchas|مشترى|مشتري|مشتريات|شراء|مورد/.test(label);
