@@ -1051,6 +1051,7 @@ function TreasuryPage() {
                   <th className="p-2 text-right">{T("التاريخ", "Date")}</th>
                   <th className="p-2 text-right">{T("النوع", "Type")}</th>
                   <th className="p-2 text-right">{T("المبلغ", "Amount")}</th>
+                  <th className="p-2 text-right">{T("البند", "Category")}</th>
                   <th className="p-2 text-right">{T("المندوب", "Courier")}</th>
                   <th className="p-2 text-right">{T("البراند", "Brand")}</th>
                   <th className="p-2 text-right">{T("الشخص", "Person")}</th>
@@ -1081,6 +1082,13 @@ function TreasuryPage() {
                       >
                         {isIn ? "+" : "-"}
                         {fmt(Number(r.amount))}
+                      </td>
+                      <td className="p-2">
+                        {rowCat ? (
+                          <Badge variant="secondary">{rowCat.name}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="p-2">
                         {r.courier_id ? (couriersMap.get(r.courier_id) ?? "—") : "—"}

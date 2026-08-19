@@ -148,6 +148,8 @@ function ExpensesPage() {
   const now = new Date();
   // Filter state
   const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [search, setSearch] = useState<string>("");
   const [filterPeriod, setFilterPeriod] = useState<PeriodType>("monthly");
   const [filterYear, setFilterYear] = useState<number>(now.getFullYear());
   const [filterMonth, setFilterMonth] = useState<number>(now.getMonth() + 1);
@@ -309,8 +311,33 @@ function ExpensesPage() {
     : suppliers;
   const selectedSupplier = suppliers.find((s) => s.id === form.supplier_id);
 
-  const totalSpend = (expQ.data ?? []).reduce((a, r) => a + Number(r.amount || 0), 0);
-  const totalAttributed = (expQ.data ?? []).reduce(
+  // Category + free-text narrowing happens client-side: the server query is
+  // already scoped to one brand and period, so this is a small row set and
+  // filtering here keeps the search instant instead of a round trip per
+  // keystroke. Everything below (list, count, totals) reads this, so the
+  // headline numbers always describe exactly the rows on screen. Deliberately
+  // a plain derived value rather than useMemo — it sits after this page's
+  // permission early-return, where a hook would break hook order, and
+  // filtering a page of rows is not worth memoising.
+  const searchTerm = search.trim().toLowerCase();
+  const visibleExpenses = (expQ.data ?? []).filter((r) => {
+    if (categoryFilter !== "all" && r.category_id !== categoryFilter) return false;
+    if (!searchTerm) return true;
+    return [
+      r.note ?? "",
+      cats.find((c) => c.id === r.category_id)?.name ?? "",
+      r.platform ? platformLabel(r.platform) : "",
+      walletName(r.wallet_id) ?? "",
+      brandName(r.brand_id),
+      String(r.amount ?? ""),
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(searchTerm);
+  });
+
+  const totalSpend = visibleExpenses.reduce((a, r) => a + Number(r.amount || 0), 0);
+  const totalAttributed = visibleExpenses.reduce(
     (a, r) => a + Number(r.attributed_revenue || 0),
     0,
   );
@@ -375,6 +402,30 @@ function ExpensesPage() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="md:col-span-2">
+            <Label>{T("البند", "Category")}</Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{T("كل البنود", "All categories")}</SelectItem>
+                {cats.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="md:col-span-2">
+            <Label>{T("بحث", "Search")}</Label>
+            <Input
+              placeholder={T("ملاحظة / بند / منصة / خزنة", "Note / category / platform / wallet")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <div>
             <Label>{T("الفترة", "Period")}</Label>
@@ -485,7 +536,7 @@ function ExpensesPage() {
           <div className="text-xs text-muted-foreground">
             {T("عدد بنود المصروفات", "Number of Expense Items")}
           </div>
-          <div className="text-2xl font-bold mt-1">{(expQ.data ?? []).length}</div>
+          <div className="text-2xl font-bold mt-1">{visibleExpenses.length}</div>
         </Card>
       </div>
 
@@ -756,7 +807,7 @@ function ExpensesPage() {
               </tr>
             </thead>
             <tbody>
-              {(expQ.data ?? []).map((e) => {
+              {visibleExpenses.map((e) => {
                 const cat = cats.find((c) => c.id === e.category_id);
                 const periodLabel =
                   e.period_type === "monthly"
@@ -805,7 +856,7 @@ function ExpensesPage() {
                   </tr>
                 );
               })}
-              {(expQ.data ?? []).length === 0 && (
+              {visibleExpenses.length === 0 && (
                 <tr>
                   <td colSpan={9} className="p-6 text-center text-muted-foreground text-sm">
                     {T("لا مصروفات في هذه الفترة.", "No expenses in this period.")}
