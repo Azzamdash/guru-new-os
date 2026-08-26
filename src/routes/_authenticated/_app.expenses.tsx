@@ -510,6 +510,121 @@ function ExpensesPage() {
         </Card>
       </div>
 
+      {/* PERIOD STATEMENT */}
+      <Card className="card-gradient p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-semibold flex items-center gap-2">
+            <PieChart className="w-5 h-5 text-primary" />
+            {T(`بيان مصروفات الفترة — ${rangeLabel}`, `Expenses statement — ${rangeLabel}`)}
+          </h3>
+          <ReportActions
+            filename={`expenses-statement-${filterPeriod}`}
+            summaryTitle={T("بيان مصروفات الفترة", "Expenses statement")}
+            summaryText={`${rangeLabel}\n${T("الإجمالي", "Total")}: ${totalSpend.toLocaleString("en-US")} EGP\n` +
+              statementByCategory.map((c) => `${c.name}: ${c.total.toLocaleString("en-US")}`).join("\n")}
+            rows={statementByCategory as unknown as Record<string, unknown>[]}
+            columns={[
+              { key: "name", label: T("البند", "Category") },
+              { key: "count", label: T("عدد البنود", "Items") },
+              { key: "total", label: T("الإجمالي", "Total") },
+              { key: "attributed", label: T("الإيراد المنسوب", "Attributed Revenue") },
+            ]}
+          />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-muted-foreground text-right border-b border-border">
+                <th className="p-3">{T("البند", "Category")}</th>
+                <th className="p-3">{T("عدد البنود", "Items")}</th>
+                <th className="p-3 text-left">{T("الإجمالي", "Total")}</th>
+                <th className="p-3 text-left">{T("النسبة", "% of Total")}</th>
+                <th className="p-3 text-left">{T("الإيراد المنسوب", "Attributed Revenue")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {statementByCategory.map((c) => (
+                <tr key={c.name} className="border-b border-border/50">
+                  <td className="p-3 font-medium">{c.name}</td>
+                  <td className="p-3 num">{c.count}</td>
+                  <td className="p-3 num text-left font-bold text-primary">
+                    {c.total.toLocaleString("en-US")}
+                  </td>
+                  <td className="p-3 num text-left">
+                    {totalSpend > 0 ? `${((c.total / totalSpend) * 100).toFixed(1)}%` : "—"}
+                  </td>
+                  <td className="p-3 num text-left">
+                    {c.attributed > 0 ? c.attributed.toLocaleString("en-US") : "—"}
+                  </td>
+                </tr>
+              ))}
+              {statementByCategory.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-muted-foreground text-sm">
+                    {T("لا مصروفات في هذه الفترة.", "No expenses in this period.")}
+                  </td>
+                </tr>
+              )}
+              {statementByCategory.length > 0 && (
+                <tr className="font-bold">
+                  <td className="p-3">{T("الإجمالي", "Total")}</td>
+                  <td className="p-3 num">
+                    {statementByCategory.reduce((a, c) => a + c.count, 0)}
+                  </td>
+                  <td className="p-3 num text-left">{totalSpend.toLocaleString("en-US")}</td>
+                  <td className="p-3 num text-left">100%</td>
+                  <td className="p-3 num text-left">
+                    {totalAttributed > 0 ? totalAttributed.toLocaleString("en-US") : "—"}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {statementByPlatform.length > 0 && (
+          <div>
+            <h4 className="font-semibold text-sm mb-2">
+              {T("مصروفات التسويق حسب المنصة", "Marketing spend by platform")}
+            </h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-right border-b border-border">
+                    <th className="p-3">{T("المنصة", "Platform")}</th>
+                    <th className="p-3">{T("عدد البنود", "Items")}</th>
+                    <th className="p-3 text-left">{T("الصرف", "Spend")}</th>
+                    <th className="p-3 text-left">{T("الإيراد المنسوب", "Attributed Revenue")}</th>
+                    <th className="p-3 text-left">ROAS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {statementByPlatform.map((p) => (
+                    <tr key={p.platform} className="border-b border-border/50">
+                      <td className="p-3">
+                        <Badge variant="secondary">{platformLabel(p.platform)}</Badge>
+                      </td>
+                      <td className="p-3 num">{p.count}</td>
+                      <td className="p-3 num text-left font-bold text-primary">
+                        {p.total.toLocaleString("en-US")}
+                      </td>
+                      <td className="p-3 num text-left">
+                        {p.attributed > 0 ? p.attributed.toLocaleString("en-US") : "—"}
+                      </td>
+                      <td className="p-3 num text-left">
+                        {p.total > 0 && p.attributed > 0
+                          ? `${(p.attributed / p.total).toFixed(2)}x`
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </Card>
+
       {/* ADD/EDIT */}
       <Card className="card-gradient p-5 space-y-4">
         <h3 className="font-semibold">
