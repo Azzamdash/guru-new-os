@@ -37,8 +37,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Plus, Lock, Wallet, Pencil } from "lucide-react";
+import { Trash2, Plus, Lock, Wallet, Pencil, PieChart } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { ReportActions } from "@/components/ReportActions";
 
 export const Route = createFileRoute("/_authenticated/_app/expenses")({
   head: () => ({
@@ -292,7 +293,8 @@ function ExpensesPage() {
   const brandName = (id: string) => brands.find((b) => b.id === id)?.name ?? "—";
   const selectedCat = cats.find((c) => c.id === form.category_id);
   const catLabel = `${selectedCat?.name ?? ""} ${selectedCat?.slug ?? ""}`.toLowerCase();
-  const isMarketing = /market|تسويق|ماركت|إعلان|اعلان/.test(catLabel);
+  const isMarketing =
+    selectedCat?.slug === "marketing" || /market|تسويق|ماركت|إعلان|اعلان/.test(catLabel);
   const isPurchases = /purchas|مشترى|مشتري|مشترياة|مشتريات|شراء|مورد/.test(catLabel);
   const suppliers = suppliersQ.data ?? [];
   const brandSuppliers = form.brand_id
