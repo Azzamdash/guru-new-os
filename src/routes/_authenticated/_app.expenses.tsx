@@ -14,6 +14,8 @@ import {
 } from "@/lib/internal.functions";
 import { listWallets } from "@/lib/wallets.functions";
 import { isMarketingCategory } from "@/lib/expense-category.shared";
+import { summariseByCategory, summariseByPlatform } from "@/lib/expense-statement.shared";
+import { ReportActions } from "@/components/ReportActions";
 import { getMyRole } from "@/lib/admin.functions";
 import { Link } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
@@ -341,6 +343,15 @@ function ExpensesPage() {
     (a, r) => a + Number(r.attributed_revenue || 0),
     0,
   );
+
+  // Period statement — reads the same filtered rows as the list above, so the
+  // statement always describes exactly the period (and category/search) on
+  // screen.
+  const categoryStatement = summariseByCategory(visibleExpenses);
+  const platformStatement = summariseByPlatform(visibleExpenses);
+  const catName = (id: string) => cats.find((c) => c.id === id)?.name ?? "—";
+  const pct = (share: number) => `${(share * 100).toFixed(1)}%`;
+  const money = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
   const rangeLabel =
     filterPeriod === "monthly"
@@ -866,6 +877,124 @@ function ExpensesPage() {
             </tbody>
           </table>
         </div>
+      </Card>
+
+      {/* PERIOD STATEMENT */}
+      <Card className="card-gradient p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="font-bold text-lg">{T("بيان مصروفات الفترة", "Period Statement")}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{rangeLabel}</p>
+          </div>
+          <ReportActions
+            filename={`expenses-statement-${rangeLabel.replace(/\s+/g, "-")}.csv`}
+            summaryTitle={T("بيان مصروفات الفترة", "Period Expense Statement")}
+            summaryText={`${rangeLabel} — ${T("إجمالي المصروفات", "Total spend")}: ${money(
+              categoryStatement.total,
+            )} ${T("جنيه", "EGP")}${
+              categoryStatement.totalAttributed > 0
+                ? ` — ${T("الإيراد المنسوب", "Attributed revenue")}: ${money(
+                    categoryStatement.totalAttributed,
+                  )} ${T("جنيه", "EGP")}`
+                : ""
+            }`}
+            rows={categoryStatement.rows.map((r) => ({
+              category: catName(r.categoryId),
+              total: r.total,
+              count: r.count,
+              share: pct(r.share),
+              attributedRevenue: r.attributedRevenue,
+            }))}
+            columns={[
+              { key: "category", label: T("البند", "Category") },
+              { key: "total", label: T("الإجمالي", "Total") },
+              { key: "count", label: T("عدد المصروفات", "Entries") },
+              { key: "share", label: T("النسبة", "Share") },
+              { key: "attributedRevenue", label: T("الإيراد المنسوب", "Attributed revenue") },
+            ]}
+          />
+        </div>
+
+        {categoryStatement.rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {T("لا مصروفات في هذه الفترة.", "No expenses in this period.")}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs text-muted-foreground border-b">
+                <tr>
+                  <th className="p-2 text-right">{T("البند", "Category")}</th>
+                  <th className="p-2 text-left">{T("الإجمالي", "Total")}</th>
+                  <th className="p-2 text-left">{T("عدد المصروفات", "Entries")}</th>
+                  <th className="p-2 text-left">{T("النسبة", "Share")}</th>
+                  <th className="p-2 text-left">{T("الإيراد المنسوب", "Attributed revenue")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categoryStatement.rows.map((r) => (
+                  <tr key={r.categoryId} className="border-b border-border/50">
+                    <td className="p-2">{catName(r.categoryId)}</td>
+                    <td className="p-2 num text-left">{money(r.total)}</td>
+                    <td className="p-2 num text-left">{r.count}</td>
+                    <td className="p-2 num text-left">{pct(r.share)}</td>
+                    <td className="p-2 num text-left">
+                      {r.attributedRevenue > 0 ? money(r.attributedRevenue) : "—"}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="font-bold border-t-2">
+                  <td className="p-2">{T("الإجمالي", "Total")}</td>
+                  <td className="p-2 num text-left">{money(categoryStatement.total)}</td>
+                  <td className="p-2 num text-left">{categoryStatement.count}</td>
+                  <td className="p-2 num text-left">100%</td>
+                  <td className="p-2 num text-left">
+                    {categoryStatement.totalAttributed > 0
+                      ? money(categoryStatement.totalAttributed)
+                      : "—"}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {platformStatement.length > 0 && (
+          <div className="mt-6">
+            <h3 className="font-semibold text-sm mb-2">
+              {T("مصروفات التسويق حسب المنصة", "Marketing spend by platform")}
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-xs text-muted-foreground border-b">
+                  <tr>
+                    <th className="p-2 text-right">{T("المنصة", "Platform")}</th>
+                    <th className="p-2 text-left">{T("الصرف", "Spend")}</th>
+                    <th className="p-2 text-left">{T("الإيراد المنسوب", "Attributed revenue")}</th>
+                    <th className="p-2 text-left">ROAS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {platformStatement.map((p) => (
+                    <tr key={p.platform} className="border-b border-border/50">
+                      <td className="p-2">
+                        <Badge variant="secondary">{platformLabel(p.platform)}</Badge>
+                      </td>
+                      <td className="p-2 num text-left">{money(p.spend)}</td>
+                      <td className="p-2 num text-left">
+                        {p.attributedRevenue > 0 ? money(p.attributedRevenue) : "—"}
+                      </td>
+                      <td className="p-2 num text-left">
+                        {/* ROAS over zero spend is undefined, not zero. */}
+                        {p.roas == null ? "—" : `${p.roas.toFixed(2)}x`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
