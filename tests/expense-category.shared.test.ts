@@ -23,6 +23,22 @@ describe("isMarketingCategory", () => {
     expect(isMarketingCategory("مصاريف الحملات", "marketing")).toBe(true);
   });
 
+  it("recognises a known marketing slug outright, whatever the name says", () => {
+    // The slug is the stable machine key, so it decides on its own — the
+    // display name can be renamed to anything without breaking the platform
+    // field.
+    expect(isMarketingCategory("بند رقم ٣", "marketing")).toBe(true);
+    expect(isMarketingCategory("مصروفات الحملات", "media_buying")).toBe(true);
+    expect(isMarketingCategory("Campaign spend", "social-media")).toBe(true);
+    expect(isMarketingCategory("أي اسم", "ADS")).toBe(true);
+    expect(isMarketingCategory("أي اسم", "  marketing  ")).toBe(true);
+  });
+
+  it("does not treat an unrelated slug as marketing", () => {
+    expect(isMarketingCategory("بند رقم ٣", "rent")).toBe(false);
+    expect(isMarketingCategory("Utilities", "utilities")).toBe(false);
+  });
+
   it("does not flag unrelated categories", () => {
     expect(isMarketingCategory("رواتب")).toBe(false);
     expect(isMarketingCategory("Salaries")).toBe(false);
