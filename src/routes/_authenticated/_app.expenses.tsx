@@ -308,6 +308,35 @@ function ExpensesPage() {
     0,
   );
 
+  // ===== Period statement: group by category, marketing broken down by platform =====
+  const statementByCategory = useMemo(() => {
+    const map = new Map<string, { name: string; count: number; total: number; attributed: number }>();
+    for (const e of expQ.data ?? []) {
+      const cat = cats.find((c) => c.id === e.category_id);
+      const name = cat?.name ?? T("غير مصنف", "Uncategorized");
+      const cur = map.get(e.category_id) ?? { name, count: 0, total: 0, attributed: 0 };
+      cur.count += 1;
+      cur.total += Number(e.amount || 0);
+      cur.attributed += Number(e.attributed_revenue || 0);
+      map.set(e.category_id, cur);
+    }
+    return [...map.values()].sort((a, b) => b.total - a.total);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expQ.data, catsQ.data, lang]);
+
+  const statementByPlatform = useMemo(() => {
+    const map = new Map<string, { platform: string; count: number; total: number; attributed: number }>();
+    for (const e of expQ.data ?? []) {
+      if (!e.platform) continue;
+      const cur = map.get(e.platform) ?? { platform: e.platform, count: 0, total: 0, attributed: 0 };
+      cur.count += 1;
+      cur.total += Number(e.amount || 0);
+      cur.attributed += Number(e.attributed_revenue || 0);
+      map.set(e.platform, cur);
+    }
+    return [...map.values()].sort((a, b) => b.total - a.total);
+  }, [expQ.data]);
+
   const rangeLabel =
     filterPeriod === "monthly"
       ? `${MONTHS[filterMonth - 1]} ${filterYear}`
